@@ -17,4 +17,6 @@ One important part of the Network App Engine is the NetIDE API Interceptor, whic
 
 At the same time, it is related to the **IDE** repository (which provides editor support for the engine) and the **Usecases** repository (which first implements three use cases with different SDN platforms, which will be later integrated into the engine).
 
+![Alt text](/NetIDE-architecture.png?raw=true " ")
+
 ##
