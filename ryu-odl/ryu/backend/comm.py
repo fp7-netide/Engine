@@ -36,21 +36,6 @@ import json
 RYU_BACKEND_PORT=41414
 TERM_CHAR='\n'
 
-ofp_port_features_rev_map = {
-  'OFPPF_10MB_HD'    : 1,
-  'OFPPF_10MB_FD'    : 2,
-  'OFPPF_100MB_HD'   : 4,
-  'OFPPF_100MB_FD'   : 8,
-  'OFPPF_1GB_HD'     : 16,
-  'OFPPF_1GB_FD'     : 32,
-  'OFPPF_10GB_FD'    : 64,
-  'OFPPF_COPPER'     : 128,
-  'OFPPF_FIBER'      : 256,
-  'OFPPF_AUTONEG'    : 512,
-  'OFPPF_PAUSE'      : 1024,
-  'OFPPF_PAUSE_ASYM' : 2048,
-}
-
 def serialize(msg):
     string = 'packet'
     if string in msg:

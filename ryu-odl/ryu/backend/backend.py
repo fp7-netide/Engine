@@ -44,10 +44,25 @@ import random
 from ryu.ofproto import nx_match
 from ryu.controller import ofp_event
 from ryu.controller import handler
-from ryu.backend.comm import *
+from ryu.backend.comm import * 
 import ryu.base.app_manager
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
+    
+ofp_port_features_rev_map={
+  'OFPPF_10MB_HD'    : 1,
+  'OFPPF_10MB_FD'    : 2,
+  'OFPPF_100MB_HD'   : 4,
+  'OFPPF_100MB_FD'   : 8,
+  'OFPPF_1GB_HD'     : 16,
+  'OFPPF_1GB_FD'     : 32,
+  'OFPPF_10GB_FD'    : 64,
+  'OFPPF_COPPER'     : 128,
+  'OFPPF_FIBER'      : 256,
+  'OFPPF_AUTONEG'    : 512,
+  'OFPPF_PAUSE'      : 1024,
+  'OFPPF_PAUSE_ASYM' : 2048,
+}
 
 class Backend(ryu.base.app_manager.RyuApp):
 
@@ -142,7 +157,6 @@ class BackendChannel(asynchat.async_chat):
     """Handles echoing messages from a single backend.
     """
     def __init__(self, backend, sock):
-        self.backend_manager = BackendManager()
         self.backend = backend
         self.received_data = []
         self.datapaths = {}
@@ -208,51 +222,6 @@ class BackendChannel(asynchat.async_chat):
         else:
             print 'ERROR: Unknown msg from backend %s' % msg
         return
-    
-class BackendManager(object):
-    def __init__(self):
-        print "Init BackendManager"
-        
-        self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
-        self.set_state(handler.HANDSHAKE_DISPATCHER)
-    
-    def set_state(self, state):
-        self.state = state
-        ev = ofp_event.EventOFPStateChange(self)
-        ev.state = state
-        self.ofp_brick.send_event_to_observers(ev, state)
-        
-        
-    def Handle_PacketIn(self, msg):
-        # Controller: _recv_loop msg:  version: 0x1 msg_type 0xa xid 0x0 
-        #OFPPacketIn(buffer_id=271,data='33\x00\x00\x00\x02J\x9b\x1f\x00\xe3J\x86\xdd`\x00\x00\x00\x00\x10:\xff\xfe\x80\x00\x00\x00\x00\x00\x00
-        #\xc8gN\xff\xfe\xbe\xd4\x9f\xff\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x85\x00D\x82\x00\x00\x00\x00\x01\x01J\x9b\x1f\x00\xe3J',
-        #in_port=65534,reason=0,total_len=70)
-        
-        #['packet', {'raw': '\xff\xff\xff\xff\xff\xffj\x1e\x99\x871@\x08\x06\x00\x01\x08\x00\x06\x04\x00\x01j\x1e\x99\x871@\n\x00\x00\x01\x00\x00\x00\x00\x00
-        #\x00\n\x00\x00\x02', 'switch': 1, 'inport': 1}]
-
-        #packet_in = packet.Packet(msg['raw'])
-        print "BackendManager: Handle_PacketIn msg:", msg
-        
-        packet_in = ofproto_parser.msg(self, 0x1,  0xa, 0xa, 0, msg['raw'])
-
-        print "BackendManager: Handle_PacketIn packet_in:", packet_in
-        if packet_in:
-            ev = ofp_event.ofp_msg_to_ev(packet_in)
-            self.ofp_brick.send_event_to_observers(ev, self.state)
-            print "BackendManager event:", ev
-            dispatchers = lambda x: x.callers[ev.__class__].dispatchers
-            
-            print "BackendManager state:", self.state
-            handlers = [handler for handler in
-                        self.ofp_brick.get_handlers(ev) if
-                        self.state in dispatchers(handler)]
-            
-            print "BackendManager handlers:", handlers
-            for handler in handlers:
-                print "BackendManager event:", ev
-                handler(ev)
         
 class BackendDatapath(ofproto_protocol.ProtocolDesc):
     def __init__(self, id, ofp, ofpp):
@@ -393,7 +362,7 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         buf_len = len(buf)
         zfill = '\x00' * 1    
         
-        # TODO: buffer_id is set to -1 since is not received from the client
+        # TODO: buffer_id is set to -1 since is not provided by the shim client
         data =  self.to_hex_string(version,1) \
                 + self.to_hex_string(msg_type,1) \
                 + self.to_hex_string(msg_len,2) \
