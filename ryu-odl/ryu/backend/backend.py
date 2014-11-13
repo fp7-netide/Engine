@@ -28,6 +28,7 @@ from ryu.lib.packet import *
 from ryu.lib.packet import packet
 from ryu.lib.dpid import dpid_to_str
 from ryu.lib import hub
+from ryu.lib.mac import *
 from ryu.ofproto import nx_match
 from ryu.controller import ofp_event
 from ryu.controller import handler
@@ -104,12 +105,9 @@ class BackendChannel(asynchat.async_chat):
         
         with self.channel_lock:
             self.push(serialized_msg)
-        
-        print "message sent to OF client!!!!!"
     
-    def pkt2match(self,pkt):
+    def pkt2dict(self,pkt):
         out_pkt = {}
-        print "raw2match input: ", pkt
         #ethernet
         eth = pkt.get_protocol(ethernet.ethernet)
         if eth != None:
@@ -123,19 +121,49 @@ class BackendChannel(asynchat.async_chat):
             out_pkt['dstip'] = _ipv4.dst
             out_pkt['protocol'] = _ipv4.proto
             out_pkt['tos'] = _ipv4.tos
-            
-        print "raw2match output: ", out_pkt
         return out_pkt
+    
+    #TODO: add more fields
+    def flowmod2dict(self,msg):
+        match = msg.match
+        out_pkt = {}
+        out_pkt['switch'] = msg.datapath.id
+        out_pkt['inport'] = match.in_port
+        # ethernet
+        out_pkt['srcmac'] = haddr_to_str(match.dl_src)
+        out_pkt['dstmac'] = haddr_to_str(match.dl_dst)
+        out_pkt['ethtype'] = match.dl_type
+        #ipv4
+        #out_pkt['srcip'] = _ipv4.src
+        #out_pkt['dstip'] = _ipv4.dst
+        #out_pkt['protocol'] = _ipv4.proto
+       # out_pkt['tos'] = _ipv4.tos
+        return out_pkt
+    
+    #TODO: add other actions
+    def buildActions(self,actions):
+        action_list = []  
+        print "Actions" , actions
+        for action in actions:
+            if type(action) is OFPActionOutput:
+                action_list.append({'outport' : action.port})
+        print "Action List: ", action_list
+        return action_list 
         
+    # packet_out messages
     def send_packet(self,msg):
         pkt = packet.Packet(msg.data)
-        match = self.pkt2match(pkt)
-                
+        match = self.pkt2dict(pkt)        
         datapath = msg.datapath
         actions = msg.actions
         
         for action in actions:
-            outport = action.port
+            if type(action) is OFPActionOutput:
+                outport = action.port
+                break
+        
+        if outport == None:
+            return
         
         packet_out = {
             'switch' : datapath.id,
@@ -149,9 +177,13 @@ class BackendChannel(asynchat.async_chat):
         print "packetOut: ", packet_out
         self.send_to_OF_client(['packet',packet_out])
 
-    def send_install(self,pred,priority,action_list):
-        print "flowMod: ", ['install',pred,priority,action_list]
-        self.send_to_OF_client(['install',pred,priority,action_list])
+    #flow_mod messages
+    def send_install(self,msg):
+        print "Ryu flowMod: ",msg
+        pred = self.flowmod2dict(msg)
+        print "send_install pred: ", pred
+        action_list = self.buildActions(msg.actions)
+        self.send_to_OF_client(['install',pred,msg.priority,action_list])
 
     def send_delete(self,pred,priority):
         self.send_to_OF_client(['delete',pred,priority])
@@ -204,7 +236,6 @@ class BackendChannel(asynchat.async_chat):
             if msg[1] == 'join':
                 datapath = self.datapaths[msg[2]]
                 datapath.ports[msg[3]] = {'port_no':msg[3], 'config':msg[4],'state':msg[5],'curr':msg[6]}
-                print "datapath ports: ", datapath.ports
             #elif msg[1] == 'mod':
             #    self.backend.runtime.handle_port_mod(msg[2],msg[3],msg[4],msg[5],msg[6])
             #elif msg[1] == 'part':
@@ -259,8 +290,7 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         return packet['raw']
         
     def close(self):
-    	print "Close Datapath: ", self.id
-        #self.set_state(handler.DEAD_DISPATCHER)
+        self.set_state(handler.DEAD_DISPATCHER)
 
     def set_state(self, state):
         self.state = state
@@ -289,10 +319,9 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
             t = threading.Thread(target=self.switch_features_handler, args=(msg,))
             t.start()
         elif msg.msg_type == ofproto.OFPT_PACKET_OUT:
-            print "packet_out message: ", msg
             self.backend_channel.send_packet(msg)
         elif msg.msg_type == ofproto.OFPT_FLOW_MOD:
-            print "flow_mod message"
+            self.backend_channel.send_install(msg)
                 
         
     def hello_handler(self):
@@ -306,8 +335,6 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         buf = struct.pack(fmt, version, msg_type, msg_len, xid) + data
         hello = OFPHello.parser(self, version, msg_type, msg_len, xid,
                               bytearray(buf))
-        
-        print "Datapath: ", self.id, " hello message: ", hello
         self.register_event(hello)
     
     def switch_features_handler(self,msg):     
@@ -357,10 +384,7 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
             + self.to_hex_string(0xFFFFFFFF,4)
         
         fmt = ofproto.OFP_SWITCH_FEATURES_PACK_STR
-        #buf = struct.pack(fmt, version, msg_type, msg_len, xid, data)
         features_reply = OFPSwitchFeatures.parser(self, version, msg_type, msg_len, xid, data)
-        
-        print "Datapath: ", self.id, " features_reply message: ", features_reply
         self.register_event(features_reply)
     
     def packet_in_handler(self,msg): 
