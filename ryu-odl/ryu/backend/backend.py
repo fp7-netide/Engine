@@ -1,33 +1,20 @@
 
 ################################################################################
-# The Pyretic Project                                                          #
-# frenetic-lang.org/pyretic                                                    #
-# author: Joshua Reich (jreich@cs.princeton.edu)                               #
+# Ryu backend for the shim client                                              #
+# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
+# author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
 ################################################################################
-# Licensed to the Pyretic Project by one or more contributors. See the         #
-# NOTICES file distributed with this work for additional information           #
-# regarding copyright and ownership. The Pyretic Project licenses this         #
-# file to you under the following license.                                     #
+# Eclipse Public License - v 1.0                                               #
 #                                                                              #
-# Redistribution and use in source and binary forms, with or without           #
-# modification, are permitted provided the following conditions are met:       #
-# - Redistributions of source code must retain the above copyright             #
-#   notice, this list of conditions and the following disclaimer.              #
-# - Redistributions in binary form must reproduce the above copyright          #
-#   notice, this list of conditions and the following disclaimer in            #
-#   the documentation or other materials provided with the distribution.       #
-# - The names of the copyright holds and contributors may not be used to       #
-#   endorse or promote products derived from this work without specific        #
-#   prior written permission.                                                  #
-#                                                                              #
-# Unless required by applicable law or agreed to in writing, software          #
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT    #
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the     #
-# LICENSE file distributed with this work for specific language governing      #
-# permissions and limitations under the License.                               #
+# THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC  #
+# LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM  #
+# CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.                        #
 ################################################################################
 
+import os
+import sys
 import time
+import random
 import threading
 import contextlib
 from ryu.ofproto import ofproto_common
@@ -38,9 +25,9 @@ from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_0_parser
 from ryu.ofproto.ofproto_v1_0_parser import *
 from ryu.lib.packet import *
+from ryu.lib.packet import packet
 from ryu.lib.dpid import dpid_to_str
 from ryu.lib import hub
-import random
 from ryu.ofproto import nx_match
 from ryu.controller import ofp_event
 from ryu.controller import handler
@@ -48,21 +35,6 @@ from ryu.backend.comm import *
 import ryu.base.app_manager
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
-    
-ofp_port_features_rev_map={
-  'OFPPF_10MB_HD'    : 1,
-  'OFPPF_10MB_FD'    : 2,
-  'OFPPF_100MB_HD'   : 4,
-  'OFPPF_100MB_FD'   : 8,
-  'OFPPF_1GB_HD'     : 16,
-  'OFPPF_1GB_FD'     : 32,
-  'OFPPF_10GB_FD'    : 64,
-  'OFPPF_COPPER'     : 128,
-  'OFPPF_FIBER'      : 256,
-  'OFPPF_AUTONEG'    : 512,
-  'OFPPF_PAUSE'      : 1024,
-  'OFPPF_PAUSE_ASYM' : 2048,
-}
 
 class Backend(ryu.base.app_manager.RyuApp):
 
@@ -73,9 +45,7 @@ class Backend(ryu.base.app_manager.RyuApp):
     def __init__(self):
         super(Backend, self).__init__()
         self.name = 'ryu_backend'
-        self.backend_channel = None
         self.runtime = None
-        self.channel_lock = threading.Lock()
         print "Ryu Backend init"
         address = ('localhost', RYU_BACKEND_PORT) # USE KNOWN PORT
         self.backend_server = BackendServer(self,address)
@@ -84,45 +54,6 @@ class Backend(ryu.base.app_manager.RyuApp):
         self.al.daemon = True
         self.al.start()
         
-    def send_to_OF_client(self,msg):
-        print "Send to OF client"
-        serialized_msg = serialize(msg)
-        #print "serialized message", serialized_msg
-        
-        with self.channel_lock:
-            if not self.backend_channel is None:
-                self.backend_channel.push(serialized_msg)
-        
-    def send_packet(self,packet):
-        self.send_to_OF_client(['packet',packet])
-
-    def send_install(self,pred,priority,action_list):
-        self.send_to_OF_client(['install',pred,priority,action_list])
-
-    def send_delete(self,pred,priority):
-        self.send_to_OF_client(['delete',pred,priority])
-        
-    def send_clear(self,switch):
-        self.send_to_OF_client(['clear',switch])
-
-    def send_flow_stats_request(self,switch):
-        self.send_to_OF_client(['flow_stats_request',switch])
-
-    def send_barrier(self,switch):
-        self.send_to_OF_client(['barrier',switch])
-
-    def inject_discovery_packet(self,dpid, port):
-        self.send_to_OF_client(['inject_discovery_packet',dpid,port])
-                
-    def send_msg_from_ryu(self,msg):
-        print "Backend: send_msg_from_ryu" , msg
-        if msg is None or msg.msg_len == 0:
-            print "ERROR: empty message"
-        elif msg.msg_type == ofproto.OFPT_HELLO:
-            print "message type: ", msg.msg_type 
-        elif msg.msg_type == ofproto.OFPT_FEATURES_REQUEST:
-            print "message type: ", msg.msg_type
-        return
 
 class BackendServer(asyncore.dispatcher):
     """Receives connections and establishes handlers for each backend.
@@ -160,22 +91,94 @@ class BackendChannel(asynchat.async_chat):
         self.backend = backend
         self.received_data = []
         self.datapaths = {}
+        self.channel_lock = threading.Lock()
         asynchat.async_chat.__init__(self, sock)
         self.ac_in_buffer_size = 4096 * 3
         self.ac_out_buffer_size = 4096 * 3
         self.set_terminator(TERM_CHAR)
         return
+    
+    def send_to_OF_client(self,msg):
+        print "Send to OF client"
+        serialized_msg = serialize(msg)
+        
+        with self.channel_lock:
+            self.push(serialized_msg)
+        
+        print "message sent to OF client!!!!!"
+    
+    def pkt2match(self,pkt):
+        out_pkt = {}
+        print "raw2match input: ", pkt
+        #ethernet
+        eth = pkt.get_protocol(ethernet.ethernet)
+        if eth != None:
+            out_pkt['srcmac'] = eth.src
+            out_pkt['dstmac'] = eth.dst
+            out_pkt['ethtype'] = eth.ethertype
+        #ipv4
+        _ipv4 = pkt.get_protocol(ipv4.ipv4)
+        if _ipv4 != None:
+            out_pkt['srcip'] = _ipv4.src
+            out_pkt['dstip'] = _ipv4.dst
+            out_pkt['protocol'] = _ipv4.proto
+            out_pkt['tos'] = _ipv4.tos
+            
+        print "raw2match output: ", out_pkt
+        return out_pkt
+        
+    def send_packet(self,msg):
+        pkt = packet.Packet(msg.data)
+        match = self.pkt2match(pkt)
+                
+        datapath = msg.datapath
+        actions = msg.actions
+        
+        for action in actions:
+            outport = action.port
+        
+        packet_out = {
+            'switch' : datapath.id,
+            'inport' : msg.in_port,
+            'raw'    : msg.data,
+            'outport': outport
+        }
+        
+        packet_out.update(match)
+        
+        print "packetOut: ", packet_out
+        self.send_to_OF_client(['packet',packet_out])
 
+    def send_install(self,pred,priority,action_list):
+        print "flowMod: ", ['install',pred,priority,action_list]
+        self.send_to_OF_client(['install',pred,priority,action_list])
+
+    def send_delete(self,pred,priority):
+        self.send_to_OF_client(['delete',pred,priority])
+        
+    def send_clear(self,switch):
+        self.send_to_OF_client(['clear',switch])
+
+    def send_flow_stats_request(self,switch):
+        self.send_to_OF_client(['flow_stats_request',switch])
+
+    def send_barrier(self,switch):
+        self.send_to_OF_client(['barrier',switch])
+
+    def inject_discovery_packet(self,dpid, port):
+        self.send_to_OF_client(['inject_discovery_packet',dpid,port])
+                
     def collect_incoming_data(self, data):
         """Read an incoming message from the backend and put it into our outgoing queue."""
-        with self.backend.channel_lock:
+        with self.channel_lock:
             self.received_data.append(data)
 
     def found_terminator(self):
         """The end of a command or message has been seen."""
-        with self.backend.channel_lock:
+        with self.channel_lock:
             msg = deserialize(self.received_data)
 
+        print "New message from the client: ", msg[0]
         # USE DESERIALIZED MSG
         if msg is None or len(msg) == 0:
             print "ERROR: empty message"
@@ -184,7 +187,7 @@ class BackendChannel(asynchat.async_chat):
                 if msg[3] == 'BEGIN':
                     print "Backend: Switch connected: ", msg
                     #TODO: i) manage the reconnection of a switch and ii) manage different versions of the protocol
-                    datapath = BackendDatapath(msg[2], ofproto_v1_0, ofproto_v1_0_parser)
+                    datapath = BackendDatapath(msg[2], self, ofproto_v1_0, ofproto_v1_0_parser)
                     self.datapaths[datapath.id] = datapath
                     datapath.hello_handler()
                     for id in self.datapaths:
@@ -224,13 +227,14 @@ class BackendChannel(asynchat.async_chat):
         return
         
 class BackendDatapath(ofproto_protocol.ProtocolDesc):
-    def __init__(self, id, ofp, ofpp):
+    def __init__(self, id, channel, ofp, ofpp):
         super(BackendDatapath, self).__init__()
         
         self.is_active = True
         self.ofproto = ofp
         self.ofproto_parser = ofpp
         self.xid = random.randint(0, self.ofproto.MAX_XID)
+        self.backend_channel = channel
         self.id = id
         self.xid = 0
         self.ports = {}
@@ -247,7 +251,7 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
       	if length < bytes:
       		decoded = '\x00' * (bytes-length) + decoded
      	return decoded
-  
+   
     def packet_from_network(self, **kwargs):
         return kwargs
 
@@ -284,8 +288,12 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         if msg.msg_type == ofproto.OFPT_FEATURES_REQUEST:
             t = threading.Thread(target=self.switch_features_handler, args=(msg,))
             t.start()
-            #self.switch_features_handler(msg)
-        
+        elif msg.msg_type == ofproto.OFPT_PACKET_OUT:
+            print "packet_out message: ", msg
+            self.backend_channel.send_packet(msg)
+        elif msg.msg_type == ofproto.OFPT_FLOW_MOD:
+            print "flow_mod message"
+                
         
     def hello_handler(self):
         version = ofproto.OFP_VERSION
@@ -307,6 +315,8 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         # 1. port hw address
         # 2. port name
         # workaorund that waits until the state is updated to 'config'
+        print sys.path
+        
         self.condition.acquire()
         while not self.state == CONFIG_DISPATCHER:
             self.condition.wait(0.1)  
