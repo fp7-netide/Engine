@@ -4,7 +4,7 @@ The API interceptor is a component of the NetIDE architecture that allows SDN ap
 
 The API interceptor is composed of two different modules: (i) the ODL shim client which is an application for ODL written in Java and (ii) the SDN controller-specific backend implemented with the language of the controller (Python for Ryu, Java for FloodLight etc.).
 
-The two modules (backend and shim client) talk each other through a TCP socket by using the same APIs used by Pyretic to talk with the of_clients.
+The two modules (backend and shim client) talk each other through a TCP socket by using the same APIs used by Pyretic (just for the first tests) to talk with the of_clients.
 
 To summarize with an example: when a packet_in message arrives to ODL from a switch, the message is converted by the ODL shim client into a Pyretic-like message and than sent to the above backend module of the, e.g. Ryu, controller. Finally the message is passed to the application that decides how to forward the related flow through either a packet_out or a flow_mod answer.
 
@@ -38,6 +38,10 @@ where port is either 7733 or 6633.
 
 #ChangeLog
 
-ryu-client: 2014-10-21 Tue Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
+ryu-backend: 2014-11-13 Thu Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
+
+* First working release of the Ryu backend. Tested with the ```simple_switch``` application, mininet and the POX client developed by the Pyretic team (http://frenetic-lang.org/pyretic/)
+
+ryu-backend: 2014-10-21 Tue Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
 
 * First release of the development branch. Not ready for testing.
