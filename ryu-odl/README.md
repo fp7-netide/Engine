@@ -12,7 +12,7 @@ To summarize with an example: when a packet_in message arrives to ODL from a swi
 The backend has been added as an additional package located in ryu/backend and has been connected to the OpenFlowController and Datapath modules in ryu/controller.
 
 #Running
-The Ryu controller can be used in two different ways:
+The Ryu controller can be run in two different ways:
 
 * Ryu waits for connections from the switches on port 7733 (the classic way, with port 7733 replacing the standard port 6633 to avoid conflicts with the ODL shim client)
 * Ryu is launched with the backend module that waits for connections from the ODL shim client on port 41414 (see ```ryu/backend/comm.py```).
