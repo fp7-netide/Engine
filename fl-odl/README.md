@@ -29,3 +29,10 @@ Compile the code:
 5) Run the jar
 	- java -jar <floodlight_folder>/target/floodlight.jar
 
+
+Test Steps:
+1-download the source code of POX (https://github.com/noxrepo/pox.git)
+2-copy the attached pox_client.py to pox/ext (this is a modified version without Pyretic dependencies) 
+3-run the BackendChannelTest.java -> main()
+4-enter the pox folder and run "python ./pox.py pox_client"
+5-This test client only prints the incoming messages from POX, confirming connections and message flow.
