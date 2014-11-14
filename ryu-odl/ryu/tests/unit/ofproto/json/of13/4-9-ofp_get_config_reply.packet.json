@@ -1,6 +1,0 @@
-{
-   "OFPGetConfigReply": {
-      "flags": 0, 
-      "miss_send_len": 128
-   }
-}
