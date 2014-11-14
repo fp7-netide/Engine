@@ -24,7 +24,7 @@ The backend module allows the Ryu controller to operate in two different ways:
 * Ryu waits for connections from the switches on port 7733 (the classic way, with port 7733 replacing the standard port 6633 to avoid conflicts with the ODL shim client)
 * Ryu is launched with the backend module that waits for connections from the ODL shim client on port 41414 (see ```backend/comm.py```).
 
-From the  ryu-backend folder, run the following command to use the Ryu controller with the ```simple_switch ``` application:
+From the  ryu's code folder, run the following command to use the Ryu controller with the ```simple_switch ``` application:
 
 ``` ryu-manager ryu/app/simple_switch.py```
 
@@ -32,7 +32,7 @@ If you want to use the backend, run the following command first:
 
 ``` ryu-manager ryu/backend/backend.py ryu/app/simple_switch.py```
 
-then start the ODL shim client.
+then start the ODL shim client (or use the POX client as explained in the "Testing" section below).
 
 As anticipated above in this section, the standard port 6633 has been replaced by port 7733. With this simple trick, Ryu can switch between the two aforementioned operation modes without any change in the code. In this way it becomes easier to debug the backend module by comparing the behavior of one application when Ryu is running with the backend (and the underlying shim client) or directly connected to the network.
 
