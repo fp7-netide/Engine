@@ -310,7 +310,7 @@ class POXClient(revent.EventMixin):
 
     def inject_discovery_packet(self,switch, port):
         try:
-            hw_addr = self.switches[switch]['ports'][port]
+            hw_addr = self.switches[long(switch)]['ports'][port]
             packet = self.create_discovery_packet(switch, port, hw_addr)
             core.openflow.sendToDPID(switch, packet)
         except KeyError:
@@ -351,12 +351,12 @@ class POXClient(revent.EventMixin):
 
         ## HANDLE PACKETS SEND ON LINKS THAT HAVE TIMED OUT
         try:
-            self.switches[switch]['connection'].send(msg)
+            self.switches[long(switch)]['connection'].send(msg)
         except RuntimeError, e:
-            print "ERROR:send_to_switch: %s to switch %d" % (str(e),switch)
+            print "ERROR:send_to_switch: %s to switch %d" % (str(e),long(switch))
             # TODO - ATTEMPT TO RECONNECT SOCKET
         except KeyError, e:
-            print "ERROR:send_to_switch: No connection to switch %d available" % switch
+            print "ERROR:send_to_switch: No connection to switch %d available" % long(switch)
             # TODO - IF SOCKET RECONNECTION, THEN WAIT AND RETRY
 
     def build_of_match(self,switch,inport,pred):
@@ -438,11 +438,11 @@ class POXClient(revent.EventMixin):
                               match=match,
                               actions=of_actions)
         try:
-            self.switches[switch]['connection'].send(msg)
+            self.switches[long(switch)]['connection'].send(msg)
         except RuntimeError, e:
-            print "WARNING:install_flow: %s to switch %d" % (str(e),switch)
+            print "WARNING:install_flow: %s to switch %d" % (str(e),long(switch))
         except KeyError, e:
-            print "WARNING:install_flow: No connection to switch %d available" % switch
+            print "WARNING:install_flow: No connection to switch %d available" % long(switch)
 
     def delete_flow(self,pred,priority):
         switch = pred['switch']
@@ -455,11 +455,11 @@ class POXClient(revent.EventMixin):
                               priority=priority,
                               match=match)
         try:
-            self.switches[switch]['connection'].send(msg)
+            self.switches[long(switch)]['connection'].send(msg)
         except RuntimeError, e:
-            print "WARNING:delete_flow: %s to switch %d" % (str(e),switch)
+            print "WARNING:delete_flow: %s to switch %d" % (str(e),long(switch))
         except KeyError, e:
-            print "WARNING:delete_flow: No connection to switch %d available" % switch
+            print "WARNING:delete_flow: No connection to switch %d available" % long(switch)
 
     def barrier(self,switch):
         b = of.ofp_barrier_request()
@@ -472,7 +472,7 @@ class POXClient(revent.EventMixin):
         sr.body.match = match
         sr.body.table_id = 0xff
         sr.body.out_port = of.OFPP_NONE
-        self.switches[switch]['connection'].send(sr) 
+        self.switches[long(switch)]['connection'].send(sr) 
     
     def clear(self,switch=None):
         if switch is None:
@@ -480,7 +480,7 @@ class POXClient(revent.EventMixin):
                 self.clear(switch)
         else:
             d = of.ofp_flow_mod(command = of.OFPFC_DELETE)
-            self.switches[switch]['connection'].send(d) 
+            self.switches[long(switch)]['connection'].send(d) 
 
     def _handle_ConnectionUp(self, event):
         assert event.dpid not in self.switches
@@ -488,9 +488,9 @@ class POXClient(revent.EventMixin):
         self.switches[event.dpid]['connection'] = event.connection
         self.switches[event.dpid]['ports'] = {}
 
-        msg = of.ofp_flow_mod(match = of.ofp_match())
-        msg.actions.append(of.ofp_action_output(port = of.OFPP_CONTROLLER))
-        self.switches[event.dpid]['connection'].send(msg) 
+        #msg = of.ofp_flow_mod(match = of.ofp_match())
+        #msg.actions.append(of.ofp_action_output(port = of.OFPP_CONTROLLER))
+        #self.switches[event.dpid]['connection'].send(msg) 
 
         self.send_to_pyretic(['switch','join',event.dpid,'BEGIN'])
 
