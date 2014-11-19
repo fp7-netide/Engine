@@ -52,18 +52,9 @@ ofp_port_features_rev_map={
 }
 
 def serialize(msg):
-    string = 'packet'
-    if string in msg:
-        print "original msg:", msg
     jsonable_msg = to_jsonable_format(msg)
-    if string in msg:
-        print "jsonable_msg:", jsonable_msg
     jsoned_msg = json.dumps(jsonable_msg)
-    if string in msg:
-        print "jsoned_msg:", jsoned_msg
     serialized_msg = jsoned_msg + TERM_CHAR
-    if string in msg:
-        print "serialized_msg:", serialized_msg
     return serialized_msg
 
 def deserialize(serialized_msgs):

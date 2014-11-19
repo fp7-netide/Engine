@@ -220,21 +220,22 @@ class BackendChannel(asynchat.async_chat):
                     print "Backend: Switch connected: ", msg
                     #TODO: i) manage the reconnection of a switch and ii) manage different versions of the protocol
                     datapath = BackendDatapath(msg[2], self, ofproto_v1_0, ofproto_v1_0_parser)
-                    self.datapaths[datapath.id] = datapath
+                    self.datapaths[long(datapath.id)] = datapath
+                    print "Datapath ID: ", self.datapaths[datapath.id]
                     datapath.hello_handler()
                     for id in self.datapaths:
             			print "Datapath id: ", self.datapaths[id].id , " state: ", self.datapaths[id].state
             elif msg[1] == 'part':
-                datapath = self.datapaths[msg[2]]
+                datapath = self.datapaths[long(msg[2])]
                 if datapath:
                     del datapath
-                    del self.datapaths[msg[2]]
+                    del self.datapaths[long(msg[2])]
             else:
                 print "ERROR: Bad switch event"
         elif msg[0] == 'port':
             print "Backend: Port status: ", msg
             if msg[1] == 'join':
-                datapath = self.datapaths[msg[2]]
+                datapath = self.datapaths[long(msg[2])]
                 datapath.ports[msg[3]] = {'port_no':msg[3], 'config':msg[4],'state':msg[5],'curr':msg[6]}
             #elif msg[1] == 'mod':
             #    self.backend.runtime.handle_port_mod(msg[2],msg[3],msg[4],msg[5],msg[6])
@@ -247,8 +248,16 @@ class BackendChannel(asynchat.async_chat):
             #self.backend.runtime.handle_link_update(msg[1],msg[2],msg[3],msg[4])
         elif msg[0] == 'packet':
             data = msg[1]
-            datapath = self.datapaths[data['switch']]
-            datapath.packet_in_handler(data)
+                
+            try:
+                datapath = self.datapaths[long(data['switch'])]
+                datapath.packet_in_handler(data)
+            except RuntimeError, e:
+                print "ERROR:found_terminator: %s to switch %d" % (str(e),long(data['switch']))
+            # TODO - ATTEMPT TO RECONNECT SOCKET
+            except KeyError, e:
+                print "ERROR:found_terminator: Switch %d not available" % long(data['switch'])
+            
             #self.backend_manager.Handle_PacketIn(packet)
         elif msg[0] == 'flow_stats_reply':
             print "Backend: Flow stat reply: ", msg
@@ -342,7 +351,6 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         # 1. port hw address
         # 2. port name
         # workaorund that waits until the state is updated to 'config'
-        print sys.path
         
         self.condition.acquire()
         while not self.state == CONFIG_DISPATCHER:
