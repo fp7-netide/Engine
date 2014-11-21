@@ -13,7 +13,15 @@
  */
 package net.floodlightcontroller.interceptor;
 
-import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.Executors;
+
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
 /**
  * Describe your class here...
@@ -26,9 +34,29 @@ public class BackendChannelTest {
 		try {
 			MessageWorker worker = new MessageWorker();
 			new Thread(worker).start();
-			new Thread(new NioServer(null, 41414, worker)).start();
+			//new Thread(new NioServer(null, 41414, worker)).start();
+			new Thread(new NioServer(null, 6633, worker)).start();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		ChannelFactory factory =
+	            new NioClientSocketChannelFactory(
+	                    Executors.newCachedThreadPool(),
+	                    Executors.newCachedThreadPool());
+
+        ClientBootstrap bootstrap = new ClientBootstrap(factory);
+
+        bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            public ChannelPipeline getPipeline() {
+                return Channels.pipeline(new MessageHandler());
+            }
+        });
+        
+        bootstrap.setOption("tcpNoDelay", true);
+        bootstrap.setOption("keepAlive", true);
+
+        //ChannelFuture conn = bootstrap.connect(new InetSocketAddress(host, port));
+        bootstrap.connect(new InetSocketAddress("localhost", 6634));
 	}
 }

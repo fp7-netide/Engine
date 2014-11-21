@@ -41,45 +41,45 @@ public class MessageWorker implements Runnable {
 			System.out.println("Msg received: " + receivedMsg);
 			
 			//POSSIBLE MULTIPLE MESSAGES - SPLIT
-			String[] messages = receivedMsg.split("\n");
-			for(String msg: messages) {
-				switch (getOFActionType(msg)) {
-					case SWITCH :
-						OFMessageSwitch switchMessage = new OFMessageSwitch(msg);
-						//CACHE SWITCH TILL END MESSAGE RECEIVED
-						if (switchMessage.getAction().equals("join")) {
-							if (switchMessage.getAction().equals("BEGIN")) {
-								DummySwitch newSwitch = new DummySwitch(switchMessage.getId());
-								pendingSwitches.put(switchMessage.getId(), newSwitch);
-							} else if (switchMessage.getAction().equals("END")) {
-								DummySwitch existingSwitch = pendingSwitches.get(switchMessage.getId());
-								//ADD SWITCH TO FLOODLIGHT
-								//backendChannel.addSwith(existingSwitch);
-								pendingSwitches.remove(switchMessage.getId());
-							}
-						} else {
-							//SWITCH.PART MSG
-							//backendChannel.removeSwitch(existingSwitch);
-						}
-						break;
-					case PORT :
-							OFMessagePort portMessage = new OFMessagePort(msg);
-							if (portMessage.getAction().equals("join")) {
-								//ADD THE PORT INFO TO ITS SWITCH
-								OFPhysicalPort portInfo = portMessage.getOfPort();
-								pendingSwitches.get(portMessage.getSwitchId()).setPort(portInfo);
-							} else {
-								//PART MSG
-								//backendChannel.removeSwitchPort(portMessage.getSwitchId(), portMessage.getOfPort());
-							}
-						break;
-					case PACKET :
-						
-						break;
-					default:
-						//NOT SUPPORTED YET
-				}
-			}
+//			String[] messages = receivedMsg.split("\n");
+//			for(String msg: messages) {
+//				switch (getOFActionType(msg)) {
+//					case SWITCH :
+//						OFMessageSwitch switchMessage = new OFMessageSwitch(msg);
+//						//CACHE SWITCH TILL END MESSAGE RECEIVED
+//						if (switchMessage.getAction().equals("join")) {
+//							if (switchMessage.getAction().equals("BEGIN")) {
+//								DummySwitch newSwitch = new DummySwitch(switchMessage.getId());
+//								pendingSwitches.put(switchMessage.getId(), newSwitch);
+//							} else if (switchMessage.getAction().equals("END")) {
+//								DummySwitch existingSwitch = pendingSwitches.get(switchMessage.getId());
+//								//ADD SWITCH TO FLOODLIGHT
+//								//backendChannel.addSwith(existingSwitch);
+//								pendingSwitches.remove(switchMessage.getId());
+//							}
+//						} else {
+//							//SWITCH.PART MSG
+//							//backendChannel.removeSwitch(existingSwitch);
+//						}
+//						break;
+//					case PORT :
+//							OFMessagePort portMessage = new OFMessagePort(msg);
+//							if (portMessage.getAction().equals("join")) {
+//								//ADD THE PORT INFO TO ITS SWITCH
+//								OFPhysicalPort portInfo = portMessage.getOfPort();
+//								pendingSwitches.get(portMessage.getSwitchId()).setPort(portInfo);
+//							} else {
+//								//PART MSG
+//								//backendChannel.removeSwitchPort(portMessage.getSwitchId(), portMessage.getOfPort());
+//							}
+//						break;
+//					case PACKET :
+//						
+//						break;
+//					default:
+//						//NOT SUPPORTED YET
+//				}
+//			}
 					
 			// Return to sender
 			dataEvent.data = "my response to you".getBytes();

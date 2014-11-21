@@ -36,13 +36,13 @@ public class TestClient {
 	public static void main(String[] args) {
 		try {
 			//NioClient client = new NioClient(InetAddress.getByName("www.google.com"), 80);
-			NioClient client = new NioClient(InetAddress.getByName("localhost"), 41414);
+			NioClient client = new NioClient(InetAddress.getByName("localhost"), 66333);
 			Thread t = new Thread(client);
 			t.setDaemon(true);
 			t.start();
 			RspHandler handler = new RspHandler();
 			
-			client.send(SWITCH_JOIN.getBytes(), handler);
+			//client.send(SWITCH_JOIN.getBytes(), handler);
 			//client.send(SWITCH_PART.getBytes(), handler);
 			//client.send(PACKET_IN.getBytes(), handler);
 			handler.waitForResponse();

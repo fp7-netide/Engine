@@ -69,7 +69,7 @@ public class TestOFMessageParsing {
 		assertEquals("Port Feature 1 not set correctly", "OFPPF_COPPER", msgPort.getPortFeatures().get(0));
 		assertEquals("Port Feature 1 not set correctly", "OFPPF_10GB_FD", msgPort.getPortFeatures().get(1));
 		assertEquals("OFPort no not set correctly", 1, msgPort.getOfPort().getPortNumber());
-		assertEquals("OFPort no not set correctly", 13, msgPort.getOfPort().getSupportedFeatures());
+		assertEquals("OFPort Features not set correctly", 192, msgPort.getOfPort().getSupportedFeatures());
 	}
 	
 	@Test
