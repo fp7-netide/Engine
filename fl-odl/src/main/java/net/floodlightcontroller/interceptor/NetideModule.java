@@ -13,10 +13,18 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
+import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.openflow.protocol.OFError;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFType;
@@ -39,7 +47,7 @@ import net.floodlightcontroller.packet.Ethernet;
  *
  *
  */
-public class BackendChannel implements IFloodlightModule, IOFSwitchListener, IOFMessageListener {
+public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMessageListener {
 
 	protected IFloodlightProviderService floodlightProvider;
 	protected static Logger logger;
@@ -67,7 +75,7 @@ public class BackendChannel implements IFloodlightModule, IOFSwitchListener, IOF
 	@Override
 	public void init(FloodlightModuleContext context) throws FloodlightModuleException {
 		floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
-		logger = LoggerFactory.getLogger(BackendChannel.class);
+		logger = LoggerFactory.getLogger(NetideModule.class);
 	}
 	
 	@Override
@@ -80,6 +88,22 @@ public class BackendChannel implements IFloodlightModule, IOFSwitchListener, IOF
 		floodlightProvider.addOFMessageListener(OFType.PACKET_OUT, this);
 		floodlightProvider.addOFMessageListener(OFType.FLOW_MOD, this);
         floodlightProvider.addOFMessageListener(OFType.ERROR, this);
+        
+        //START UP THE SERVER FOR THE ODL-SHIM
+        ChannelFactory serverFactory = new NioServerSocketChannelFactory(
+	                    Executors.newCachedThreadPool(),
+	                    Executors.newCachedThreadPool());
+
+        ServerBootstrap serverBootstrap = new ServerBootstrap(serverFactory);
+        serverBootstrap.setOption("child.tcpNoDelay", true);
+        serverBootstrap.setOption("child.keepAlive", true);
+        serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            public ChannelPipeline getPipeline() {
+                return Channels.pipeline(new BackendChannelHandler());
+            }
+        });
+        logger.info("NetIDE Module binding to 41414..." );
+        serverBootstrap.bind(new InetSocketAddress(41414));
 	}
 
 	/////////////////////////// IOFSwitchListener methods /////////////////////////
@@ -101,7 +125,7 @@ public class BackendChannel implements IFloodlightModule, IOFSwitchListener, IOF
 	/////////////////////////// IOFMessageListener methods ////////////////////
 	@Override
 	public String getName() {
-		return BackendChannel.class.getSimpleName();
+		return NetideModule.class.getSimpleName();
 	}
 	
 	@Override

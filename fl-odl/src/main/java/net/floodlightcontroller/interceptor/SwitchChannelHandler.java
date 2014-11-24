@@ -13,6 +13,7 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -28,10 +29,14 @@ import org.openflow.protocol.OFFeaturesReply;
 import org.openflow.protocol.OFGetConfigReply;
 import org.openflow.protocol.OFHello;
 import org.openflow.protocol.OFMessage;
+import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
+import org.openflow.protocol.statistics.OFStatisticsType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Describe your class here...
@@ -39,13 +44,14 @@ import org.openflow.protocol.factory.MessageParseException;
  * @author aleckey
  *
  */
-public class SwitchMessageHandler extends SimpleChannelHandler {
+public class SwitchChannelHandler extends SimpleChannelHandler {
 
 	//private OFMessageFactory messageFactory;
 	private BasicFactory factory; 
 	private DummySwitch dummySwitch;
+	protected static Logger logger;
+	
 	/**@return the dummySwitch */
-
 	public DummySwitch getDummySwitch() {
 		return dummySwitch;
 	}
@@ -56,20 +62,18 @@ public class SwitchMessageHandler extends SimpleChannelHandler {
 	}
 	
 	
-	public SwitchMessageHandler() {
-		//messageFactory = new BasicFactory();
+	public SwitchChannelHandler() {
+		logger = LoggerFactory.getLogger(SwitchChannelHandler.class);
 		factory = new BasicFactory();
 	}
 	
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-    	System.out.println("MessageReceived: " );
+    	logger.debug("MessageReceived: " );
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
-        
 		try {
 			List<OFMessage> listMessages = factory.parseMessage(buf);
 			handleMessage(listMessages, e.getChannel());
-			
 		} catch (MessageParseException ex) {
 			ex.printStackTrace();
 		}
@@ -83,57 +87,54 @@ public class SwitchMessageHandler extends SimpleChannelHandler {
     
     @Override
     public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("Bound: " + e.getChannel().isBound());
+    	logger.debug("Bound: " + e.getChannel().isBound());
     }
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("Connected: " + e.getChannel().isConnected());
-        System.out.println("Connected: " + e.getChannel().getRemoteAddress());
+    	logger.debug("Connected: " + e.getChannel().isConnected());
+    	logger.debug("Connected: " + e.getChannel().getRemoteAddress());
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("Closed: " + e.getChannel());
+    	logger.debug("Closed: " + e.getChannel());
     }
 
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("Disconnected: " + e.getChannel());
+    	logger.debug("Disconnected: " + e.getChannel());
     }
 
     @Override
     public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("Open: " + e.getChannel().isOpen());
+    	logger.debug("Open: " + e.getChannel().isOpen());
     }
     
     private void handleMessage(List<OFMessage> listMessages, Channel channel) {
 		for (OFMessage m : listMessages) {
             // Always handle ECHO REQUESTS, regardless of state
-			System.out.println(m.toString());
+			logger.debug(m.toString());
 			ChannelBuffer sendData;
             switch (m.getType()) {
             	case HELLO:
-            		System.out.println("Sending Hello...");
+            		logger.debug("Sending Hello reply...");
             		OFHello hello = (OFHello) factory.getMessage(OFType.HELLO);
             		sendData = ChannelBuffers.buffer(hello.getLength());
             		hello.writeTo(sendData);
-//        			helloData.writeByte(hello.getVersion());
-//        			helloData.writeByte(hello.getType().getTypeValue());
-//        			helloData.writeShort(hello.getLength());
-//        			helloData.writeInt(hello.getXid());
             		channel.write(sendData);
             		break;
             	case FEATURES_REQUEST:
-            		System.out.println("Sending Features Request...");
+            		logger.debug("Sending Features reply...");
             		OFFeaturesReply featuresReply = (OFFeaturesReply) factory.getMessage(OFType.FEATURES_REPLY);
             		featuresReply.setXid(m.getXid());
+            		//featuresReply.setPorts(new ArrayList<OFPhysicalPort>(dummySwitch.getPorts()));
             		sendData = ChannelBuffers.buffer(featuresReply.getLength());
             		featuresReply.writeTo(sendData);
             		channel.write(sendData);
             		break;
             	case GET_CONFIG_REQUEST:
-            		System.out.println("Sending Features Request...");
+            		logger.debug("Sending Config reply...");
                 	OFGetConfigReply configReply = (OFGetConfigReply) factory.getMessage(OFType.GET_CONFIG_REPLY);
                 	configReply.setXid(m.getXid());
                 	sendData = ChannelBuffers.buffer(configReply.getLength());
@@ -141,16 +142,21 @@ public class SwitchMessageHandler extends SimpleChannelHandler {
                 	channel.write(sendData);
                 	break;
                 case STATS_REQUEST:
+                	logger.debug("Sending Stats reply...");
                 	OFStatisticsReply statsReply = (OFStatisticsReply) factory.getMessage(OFType.STATS_REPLY);
                 	statsReply.setXid(m.getXid());
+                	statsReply.setStatisticType(OFStatisticsType.PORT);
                 	sendData = ChannelBuffers.buffer(statsReply.getLength());
                 	statsReply.writeTo(sendData);
                 	channel.write(sendData);
                 	break;
                 case ECHO_REQUEST:
+                	logger.debug("Sending Echo reply...");
                     OFEchoReply echo = (OFEchoReply) factory.getMessage(OFType.ECHO_REPLY);
                     echo.setXid(m.getXid());
-                    //send(echo, null);
+                    sendData = ChannelBuffers.buffer(echo.getLength());
+                    echo.writeTo(sendData);
+                	channel.write(sendData);
                     break;
                 case BARRIER_REQUEST:
                 	

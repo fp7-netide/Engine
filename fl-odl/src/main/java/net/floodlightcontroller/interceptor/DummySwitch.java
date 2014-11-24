@@ -15,9 +15,11 @@ package net.floodlightcontroller.interceptor;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.jboss.netty.channel.Channel;
@@ -42,11 +44,17 @@ import net.floodlightcontroller.core.IOFSwitch;
 public class DummySwitch implements IOFSwitch {
 
 	protected long datapathId;
+	protected ConcurrentHashMap<Short, OFPhysicalPort> portsByNumber;
+	private Object portLock;
 	
-	public DummySwitch() { }
+	public DummySwitch() { 
+		this.portsByNumber = new ConcurrentHashMap<Short, OFPhysicalPort>();
+		this.portLock = new Object();
+	}
 	
-	public DummySwitch(long id) { 
-		datapathId = id;
+	public DummySwitch(long id) {
+		this();
+		this.datapathId = id;
 	}
 	
 	/* (non-Javadoc)
@@ -142,17 +150,14 @@ public class DummySwitch implements IOFSwitch {
 	 */
 	@Override
 	public Collection<Short> getEnabledPortNumbers() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getPort(short)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getPort(short) */
 	@Override
 	public OFPhysicalPort getPort(short portNumber) {
-		// TODO Auto-generated method stub
-		return null;
+		return portsByNumber.get(portNumber);
 	}
 
 	/* (non-Javadoc)
@@ -168,7 +173,9 @@ public class DummySwitch implements IOFSwitch {
 	 */
 	@Override
 	public void setPort(OFPhysicalPort port) {
-		
+		synchronized(portLock) {
+            portsByNumber.put(port.getPortNumber(), port);
+        }
 	}
 
 	/* (non-Javadoc)
@@ -176,7 +183,9 @@ public class DummySwitch implements IOFSwitch {
 	 */
 	@Override
 	public void deletePort(short portNumber) {
-		
+		synchronized(portLock) {
+            portsByNumber.remove(portNumber);
+        }
 	}
 
 	/* (non-Javadoc)
@@ -191,7 +200,7 @@ public class DummySwitch implements IOFSwitch {
 	 * @see net.floodlightcontroller.core.IOFSwitch#getPorts() */
 	@Override
 	public Collection<OFPhysicalPort> getPorts() {
-		return null;
+		return Collections.unmodifiableCollection(portsByNumber.values());
 	}
 
 	/* (non-Javadoc)
@@ -213,8 +222,7 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#portEnabled(org.openflow.protocol.OFPhysicalPort)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#portEnabled(org.openflow.protocol.OFPhysicalPort) */
 	@Override
 	public boolean portEnabled(OFPhysicalPort port) {
 		// TODO Auto-generated method stub
@@ -222,17 +230,14 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getId()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getId() */
 	@Override
 	public long getId() {
-		// TODO Auto-generated method stub
-		return 0;
+		return datapathId;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getStringId()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getStringId() */
 	@Override
 	public String getStringId() {
 		// TODO Auto-generated method stub
@@ -240,8 +245,7 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getAttributes()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getAttributes() */
 	@Override
 	public Map<Object, Object> getAttributes() {
 		// TODO Auto-generated method stub

@@ -26,6 +26,8 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Describe your class here...
@@ -33,17 +35,11 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
  * @author aleckey
  *
  */
-public class BackendChannelTest {
+public class NetideModuleTester {
+	protected static Logger logger;
+	
 	public static void main(String[] args) {
-		//OLD SERVER
-//		try {
-//			MessageWorker worker = new MessageWorker();
-//			new Thread(worker).start();
-//			//new Thread(new NioServer(null, 41414, worker)).start();
-//			new Thread(new NioServer(null, 6633, worker)).start();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		logger = LoggerFactory.getLogger(NetideModuleTester.class);
 		
         //START UP THE SERVER TO THE ODL-SHIM
         ChannelFactory serverFactory =
@@ -56,10 +52,10 @@ public class BackendChannelTest {
         serverBootstrap.setOption("child.keepAlive", true);
         serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             public ChannelPipeline getPipeline() {
-                return Channels.pipeline(new BackendServerHandler());
+                return Channels.pipeline(new BackendChannelHandler());
             }
         });
-        System.out.println("Server binding to 41414..." );
+        logger.debug("NetIDE Module binding to 41414...");
         serverBootstrap.bind(new InetSocketAddress(41414));
         
 		//START UP THE OPENFLOW CLIENT - DUMMY SWITCH

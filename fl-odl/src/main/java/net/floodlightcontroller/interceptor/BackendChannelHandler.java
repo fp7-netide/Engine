@@ -32,6 +32,8 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.openflow.protocol.OFPhysicalPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Describe your class here...
@@ -39,13 +41,18 @@ import org.openflow.protocol.OFPhysicalPort;
  * @author aleckey
  *
  */
-public class BackendServerHandler extends SimpleChannelHandler {
+public class BackendChannelHandler extends SimpleChannelHandler {
 	private Map<Long, DummySwitch> pendingSwitches = new HashMap<Long, DummySwitch>();
-	private Map<Long, SwitchMessageHandler> managedSwitches = new HashMap<Long, SwitchMessageHandler>();
+	private Map<Long, SwitchChannelHandler> managedSwitches = new HashMap<Long, SwitchChannelHandler>();
+	protected static Logger logger;
+	
+	public BackendChannelHandler() {
+		logger = LoggerFactory.getLogger(BackendChannelHandler.class);
+	}
 	
 	@Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-		System.out.println("MessageReceived: " );
+		logger.debug("MessageReceived: " );
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
         String msg = new String(buf.array());
         handleMessage(msg);
@@ -59,28 +66,28 @@ public class BackendServerHandler extends SimpleChannelHandler {
     
     @Override
     public void channelBound(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("channelBound: " + e.getChannel().isBound());
+    	logger.debug("channelBound: " + e.getChannel().isBound());
     }
 
     @Override
     public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("channelConnected: " + e.getChannel().isConnected() + " to: " +
+    	logger.debug("channelConnected: " + e.getChannel().isConnected() + " to: " +
         						e.getChannel().getRemoteAddress());
     }
 
     @Override
     public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("channelClosed: " + e.getChannel());
+    	logger.debug("channelClosed: " + e.getChannel());
     }
 
     @Override
     public void channelDisconnected(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("channelDisconnected: " + e.getChannel());
+    	logger.debug("channelDisconnected: " + e.getChannel());
     }
 
     @Override
     public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) {
-        System.out.println("channelOpen: " + e.getChannel().isOpen());
+    	logger.debug("channelOpen: " + e.getChannel().isOpen());
     }
 
     private void handleMessage(String receivedMsg) {
@@ -93,11 +100,11 @@ public class BackendServerHandler extends SimpleChannelHandler {
 					OFMessageSwitch switchMessage = new OFMessageSwitch(msg);
 					//CACHE SWITCH TILL END MESSAGE RECEIVED
 					if (switchMessage.getAction().equals("join")) {
-						if (switchMessage.getAction().equals("BEGIN")) {
+						if (switchMessage.isBegin()) {
 							DummySwitch newSwitch = new DummySwitch(switchMessage.getId());
 							pendingSwitches.put(switchMessage.getId(), newSwitch);
 							
-						} else if (switchMessage.getAction().equals("END")) {
+						} else {
 							//READY TO ADD DUMMY SWITCH TO FLOODLIGHT
 							DummySwitch existingSwitch = pendingSwitches.get(switchMessage.getId());
 							addNewSwitch(existingSwitch);
@@ -117,7 +124,7 @@ public class BackendServerHandler extends SimpleChannelHandler {
 						pendingSwitches.get(portMessage.getSwitchId()).setPort(portInfo);
 					} else {
 						//PART MSG
-						SwitchMessageHandler switchHandler = managedSwitches.get(portMessage.getSwitchId());
+						SwitchChannelHandler switchHandler = managedSwitches.get(portMessage.getSwitchId());
 						//switchHandler...
 					}
 					break;
@@ -136,13 +143,12 @@ public class BackendServerHandler extends SimpleChannelHandler {
      * @param dummySwitch the switch to be managed
      */
     private void addNewSwitch(DummySwitch dummySwitch) {
-    	final SwitchMessageHandler switchHandler = new SwitchMessageHandler();
-    	switchHandler.setDummySwitch(dummySwitch);
+    	final SwitchChannelHandler switchHandler = new SwitchChannelHandler();
+    	switchHandler.setDummySwitch(dummySwitch); //CONTAINS ALL THE INFO ABOUT THIS SWITCH
     	
     	ChannelFactory factory = new NioClientSocketChannelFactory(
 		                    Executors.newCachedThreadPool(),
 		                    Executors.newCachedThreadPool());
-
         ClientBootstrap bootstrap = new ClientBootstrap(factory);
         bootstrap.setOption("tcpNoDelay", true);
         bootstrap.setOption("keepAlive", true);
@@ -151,7 +157,7 @@ public class BackendServerHandler extends SimpleChannelHandler {
                 return Channels.pipeline(switchHandler);
             }
         });
-        //CONNECT AND ADD TO MAP OF MANAGED SWITCHES 
+        //CONNECT AND ADD TO HASHMAP OF MANAGED SWITCHES
         bootstrap.connect(new InetSocketAddress("localhost", 6634));
         managedSwitches.put(dummySwitch.getId(), switchHandler);
     }
