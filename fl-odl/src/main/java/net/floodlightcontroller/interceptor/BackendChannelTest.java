@@ -18,11 +18,14 @@ import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
 import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 /**
  * Describe your class here...
@@ -32,32 +35,47 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
  */
 public class BackendChannelTest {
 	public static void main(String[] args) {
-		try {
-			MessageWorker worker = new MessageWorker();
-			new Thread(worker).start();
-			//new Thread(new NioServer(null, 41414, worker)).start();
-			new Thread(new NioServer(null, 6633, worker)).start();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		//OLD SERVER
+//		try {
+//			MessageWorker worker = new MessageWorker();
+//			new Thread(worker).start();
+//			//new Thread(new NioServer(null, 41414, worker)).start();
+//			new Thread(new NioServer(null, 6633, worker)).start();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		
-		ChannelFactory factory =
-	            new NioClientSocketChannelFactory(
-	                    Executors.newCachedThreadPool(),
-	                    Executors.newCachedThreadPool());
+        //START UP THE SERVER TO THE ODL-SHIM
+        ChannelFactory serverFactory =
+            new NioServerSocketChannelFactory(
+                    Executors.newCachedThreadPool(),
+                    Executors.newCachedThreadPool());
 
-        ClientBootstrap bootstrap = new ClientBootstrap(factory);
-
-        bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+        ServerBootstrap serverBootstrap = new ServerBootstrap(serverFactory);
+        serverBootstrap.setOption("child.tcpNoDelay", true);
+        serverBootstrap.setOption("child.keepAlive", true);
+        serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
             public ChannelPipeline getPipeline() {
-                return Channels.pipeline(new MessageHandler());
+                return Channels.pipeline(new BackendServerHandler());
             }
         });
+        System.out.println("Server binding to 41414..." );
+        serverBootstrap.bind(new InetSocketAddress(41414));
         
-        bootstrap.setOption("tcpNoDelay", true);
-        bootstrap.setOption("keepAlive", true);
-
-        //ChannelFuture conn = bootstrap.connect(new InetSocketAddress(host, port));
-        bootstrap.connect(new InetSocketAddress("localhost", 6634));
+		//START UP THE OPENFLOW CLIENT - DUMMY SWITCH
+//		ChannelFactory factory =
+//	            new NioClientSocketChannelFactory(
+//	                    Executors.newCachedThreadPool(),
+//	                    Executors.newCachedThreadPool());
+//
+//        ClientBootstrap bootstrap = new ClientBootstrap(factory);
+//        bootstrap.setOption("tcpNoDelay", true);
+//        bootstrap.setOption("keepAlive", true);
+//        bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+//            public ChannelPipeline getPipeline() {
+//                return Channels.pipeline(new MessageHandler());
+//            }
+//        });
+//        ChannelFuture conn = bootstrap.connect(new InetSocketAddress("localhost", 6634));
 	}
 }

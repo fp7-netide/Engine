@@ -39,12 +39,24 @@ import org.openflow.protocol.factory.MessageParseException;
  * @author aleckey
  *
  */
-public class MessageHandler extends SimpleChannelHandler {
+public class SwitchMessageHandler extends SimpleChannelHandler {
 
 	//private OFMessageFactory messageFactory;
 	private BasicFactory factory; 
+	private DummySwitch dummySwitch;
+	/**@return the dummySwitch */
+
+	public DummySwitch getDummySwitch() {
+		return dummySwitch;
+	}
+
+	/**@param dummySwitch the dummySwitch to set */
+	public void setDummySwitch(DummySwitch dummySwitch) {
+		this.dummySwitch = dummySwitch;
+	}
 	
-	public MessageHandler() {
+	
+	public SwitchMessageHandler() {
 		//messageFactory = new BasicFactory();
 		factory = new BasicFactory();
 	}
@@ -150,4 +162,5 @@ public class MessageHandler extends SimpleChannelHandler {
             }
         }
 	}
+
 }
