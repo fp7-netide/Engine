@@ -34,6 +34,8 @@ import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
+import org.openflow.protocol.statistics.OFDescriptionStatistics;
+import org.openflow.protocol.statistics.OFStatistics;
 import org.openflow.protocol.statistics.OFStatisticsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +115,6 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     
     private void handleMessage(List<OFMessage> listMessages, Channel channel) {
 		for (OFMessage m : listMessages) {
-            // Always handle ECHO REQUESTS, regardless of state
 			logger.debug(m.toString());
 			ChannelBuffer sendData;
             switch (m.getType()) {
@@ -128,7 +129,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
             		logger.debug("Sending Features reply...");
             		OFFeaturesReply featuresReply = (OFFeaturesReply) factory.getMessage(OFType.FEATURES_REPLY);
             		featuresReply.setXid(m.getXid());
-            		//featuresReply.setPorts(new ArrayList<OFPhysicalPort>(dummySwitch.getPorts()));
+            		featuresReply.setDatapathId(dummySwitch.getId());
+            		featuresReply.setPorts(new ArrayList<OFPhysicalPort>(dummySwitch.getPorts()));
             		sendData = ChannelBuffers.buffer(featuresReply.getLength());
             		featuresReply.writeTo(sendData);
             		channel.write(sendData);
@@ -137,6 +139,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
             		logger.debug("Sending Config reply...");
                 	OFGetConfigReply configReply = (OFGetConfigReply) factory.getMessage(OFType.GET_CONFIG_REPLY);
                 	configReply.setXid(m.getXid());
+                	configReply.setMissSendLength((short)0xffff);
                 	sendData = ChannelBuffers.buffer(configReply.getLength());
                 	configReply.writeTo(sendData);
                 	channel.write(sendData);
@@ -145,8 +148,20 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 	logger.debug("Sending Stats reply...");
                 	OFStatisticsReply statsReply = (OFStatisticsReply) factory.getMessage(OFType.STATS_REPLY);
                 	statsReply.setXid(m.getXid());
-                	statsReply.setStatisticType(OFStatisticsType.PORT);
-                	sendData = ChannelBuffers.buffer(statsReply.getLength());
+                	statsReply.setStatisticType(OFStatisticsType.DESC);
+					statsReply.setStatisticsFactory(factory);				
+					List<OFStatistics> statistics = new ArrayList<OFStatistics>();
+					OFDescriptionStatistics description = new OFDescriptionStatistics();
+					description.setDatapathDescription("A");
+					description.setHardwareDescription("B");
+					description.setManufacturerDescription("C");
+					description.setSerialNumber("D");
+					description.setSoftwareDescription("E");
+					statistics.add(description);
+					statsReply.setStatistics(statistics);
+					statsReply.setLength((short) 1068);
+                	
+					sendData = ChannelBuffers.buffer(statsReply.getLength());
                 	statsReply.writeTo(sendData);
                 	channel.write(sendData);
                 	break;
@@ -158,7 +173,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                     echo.writeTo(sendData);
                 	channel.write(sendData);
                     break;
-                case BARRIER_REQUEST:
+                case FLOW_MOD:
                 	
                 	break;
                 case ERROR:

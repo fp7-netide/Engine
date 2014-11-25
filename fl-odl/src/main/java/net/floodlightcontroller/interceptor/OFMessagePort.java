@@ -98,8 +98,15 @@ public class OFMessagePort {
 		for (String feature: this.portFeatures) {
 			totalFeatures += OFPhysicalPort.OFPortFeatures.valueOf(feature).getValue();		
 		}
-		ofPort.setSupportedFeatures(totalFeatures);
-		ofPort.setAdvertisedFeatures(totalFeatures);
+		ofPort.setCurrentFeatures(totalFeatures);
+		ofPort.setSupportedFeatures(0);
+		ofPort.setAdvertisedFeatures(0);
+		ofPort.setConfig(0);
+		ofPort.setState(0);
+		byte[] hardwareAddress = new String("00000" + portNo).getBytes();
+		if (portNo > 9)
+			hardwareAddress = new String("0000" + portNo).getBytes();
+		ofPort.setHardwareAddress(hardwareAddress);
 	}
 
 }
