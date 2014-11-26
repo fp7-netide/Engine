@@ -24,6 +24,8 @@ public enum OFActionType {
      SWITCH("switch"),
      PORT("port"),
      PACKET("packet"),
+     LINK("link"),
+     FLOW_STATS_REPLY("flow_stats_reply"),
      UNSUPPORTED("unsupported");
      
  private final String value;

@@ -29,8 +29,10 @@ import org.openflow.protocol.OFFeaturesReply;
 import org.openflow.protocol.OFGetConfigReply;
 import org.openflow.protocol.OFHello;
 import org.openflow.protocol.OFMessage;
+import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFStatisticsReply;
+import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
@@ -41,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Describe your class here...
+ * Message handler for comms between Floodlight and Switch
  *
  * @author aleckey
  *
@@ -52,6 +54,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	private BasicFactory factory; 
 	private DummySwitch dummySwitch;
 	protected static Logger logger;
+	private Channel shimChannel;
 	
 	/**@return the dummySwitch */
 	public DummySwitch getDummySwitch() {
@@ -63,6 +66,12 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 		this.dummySwitch = dummySwitch;
 	}
 	
+	/**Set the channel used for comms to Shim
+	 * @param channel
+	 */
+	public void setShimChannel(Channel shimChannel) {
+		this.shimChannel = shimChannel;
+	}
 	
 	public SwitchChannelHandler() {
 		logger = LoggerFactory.getLogger(SwitchChannelHandler.class);
@@ -118,6 +127,14 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 			logger.debug(m.toString());
 			ChannelBuffer sendData;
             switch (m.getType()) {
+	            case ECHO_REQUEST:
+	            	logger.debug("Sending Echo reply...");
+	                OFEchoReply echo = (OFEchoReply) factory.getMessage(OFType.ECHO_REPLY);
+	                echo.setXid(m.getXid());
+	                sendData = ChannelBuffers.buffer(echo.getLength());
+	                echo.writeTo(sendData);
+	            	channel.write(sendData);
+	                break;
             	case HELLO:
             		logger.debug("Sending Hello reply...");
             		OFHello hello = (OFHello) factory.getMessage(OFType.HELLO);
@@ -145,6 +162,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 	channel.write(sendData);
                 	break;
                 case STATS_REQUEST:
+                	//TODO: EVENTUALLY SEND TO SHIM FOR REPLY
+                	//sendMessageToShim(m);
                 	logger.debug("Sending Stats reply...");
                 	OFStatisticsReply statsReply = (OFStatisticsReply) factory.getMessage(OFType.STATS_REPLY);
                 	statsReply.setXid(m.getXid());
@@ -165,16 +184,9 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 	statsReply.writeTo(sendData);
                 	channel.write(sendData);
                 	break;
-                case ECHO_REQUEST:
-                	logger.debug("Sending Echo reply...");
-                    OFEchoReply echo = (OFEchoReply) factory.getMessage(OFType.ECHO_REPLY);
-                    echo.setXid(m.getXid());
-                    sendData = ChannelBuffers.buffer(echo.getLength());
-                    echo.writeTo(sendData);
-                	channel.write(sendData);
-                    break;
                 case FLOW_MOD:
-                	
+                case PACKET_OUT:
+                	sendMessageToShim(m);
                 	break;
                 case ERROR:
                     //logError(sw, (OFError)m);
@@ -184,4 +196,15 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
         }
 	}
 
+    /**Sends a message to Shim for action
+	 *  
+	 * @param switchId the relevant switch's id
+	 * @param message the Openflow message to be sent
+	 */
+	private void sendMessageToShim(OFMessage message) {
+		logger.debug("Sending message to Shim: " + message.getType().toString());
+		ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
+		message.writeTo(sendData);
+		this.shimChannel.write(sendData);
+	}
 }

@@ -88,7 +88,7 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 		floodlightProvider.addOFMessageListener(OFType.PACKET_OUT, this);
 		floodlightProvider.addOFMessageListener(OFType.FLOW_MOD, this);
         floodlightProvider.addOFMessageListener(OFType.ERROR, this);
-        
+
         //START UP THE SERVER FOR THE ODL-SHIM
         ChannelFactory serverFactory = new NioServerSocketChannelFactory(
 	                    Executors.newCachedThreadPool(),
@@ -103,23 +103,23 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
             }
         });
         logger.info("NetIDE Module binding to 41414..." );
-        serverBootstrap.bind(new InetSocketAddress(41414));
+        serverBootstrap.bind(new InetSocketAddress(41414)); //TODO: REMOVE HARD CODING
 	}
 
 	/////////////////////////// IOFSwitchListener methods /////////////////////////
 	@Override
 	public void addedSwitch(IOFSwitch sw) {
-		
+		logger.info("Seeing switch added, ID: " + sw.getStringId());
 	}
 
 	@Override
 	public void removedSwitch(IOFSwitch sw) {
-		
+		logger.info("Seeing switch removed, ID: " + sw.getStringId());
 	}
 
 	@Override
 	public void switchPortChanged(Long switchId) {
-		
+		logger.info("Seeing Port modification on switch ID: " + switchId);
 	}
 
 	/////////////////////////// IOFMessageListener methods ////////////////////
@@ -141,7 +141,7 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
 		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
-		logger.info(msg.toString());
+		logger.info("Seeing Message received: " + msg.toString());
 		
 		switch (msg.getType()) {
 	        case PACKET_IN:

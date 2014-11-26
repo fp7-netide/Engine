@@ -25,7 +25,7 @@ import org.junit.Test;
  */
 public class TestOFMessageParsing {
 
-	private final String PACKET_IN = "[\"packet\", {\"raw\": [186, 100, 113, 119, 229, 86, 190, 234, 9, 83, 209, 248, 8, 0, 69, 0, 0, 84, 110, 53, 0, 0, 64, 1, 248, 113, 10, 0, 0, 2, 10, 0, 0, 1, 0, 0, 157, 245, 111, 210, 0, 4, 13, 76, 53, 84, 190, 144, 6, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55], \"switch\": 1, \"inport\": 1}]";
+	private final String PACKET_IN = "[\"packet\", {\"raw\": [186, 100, 113, 119, 229, 86, 190, 234, 9, 83, 209, 248, 8, 0, 69, 0, 0, 84, 110, 53, 0, 0, 64, 1, 248, 113, 10, 0, 0, 2, 10, 0, 0, 1, 0, 0, 157, 245, 111, 210, 0, 4, 13, 76, 53, 84, 190, 144, 6, 0, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55], \"switch\": 1, \"inport\": 2}]";
 	
 	private final String SWITCH_JOIN_BEGIN = "[\"switch\", \"join\", 1, \"BEGIN\"]"; 
 	private final String SWITCH_JOIN_END   = "[\"switch\", \"join\", 1, \"END\"]";
@@ -69,7 +69,8 @@ public class TestOFMessageParsing {
 		assertEquals("Port Feature 1 not set correctly", "OFPPF_COPPER", msgPort.getPortFeatures().get(0));
 		assertEquals("Port Feature 1 not set correctly", "OFPPF_10GB_FD", msgPort.getPortFeatures().get(1));
 		assertEquals("OFPort no not set correctly", 1, msgPort.getOfPort().getPortNumber());
-		assertEquals("OFPort Features not set correctly", 192, msgPort.getOfPort().getSupportedFeatures());
+		assertEquals("OFPort Features not set correctly", 0, msgPort.getOfPort().getSupportedFeatures());
+		assertEquals("OFPort Features not set correctly", 192, msgPort.getOfPort().getCurrentFeatures());
 	}
 	
 	@Test
@@ -80,5 +81,15 @@ public class TestOFMessageParsing {
 		assertEquals("Port number not set correctly", 1, msgPort.getPortNo());
 		assertEquals("Port Features is not empty", 0, msgPort.getPortFeatures().size());
 		assertNull(msgPort.getOfPort());
+	}
+	
+	@Test
+	public void testMessagePacket() {
+		OFMessagePacket msg = new OFMessagePacket(PACKET_IN);
+		assertEquals("Switch ID not set correctly", 1L, msg.getSwitchId());
+		assertEquals("Port number not set correctly", 2, msg.getInPort());
+		//assertEquals("Port number not set correctly", 1, msgPort.getPortNo());
+		//assertEquals("Port Features is not empty", 0, msgPort.getPortFeatures().size());
+		//assertNull(msgPort.getOfPort());
 	}
 }
