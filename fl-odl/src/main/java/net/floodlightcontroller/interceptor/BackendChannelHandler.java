@@ -56,8 +56,8 @@ import org.slf4j.LoggerFactory;
  */
 public class BackendChannelHandler extends SimpleChannelHandler {
 	private Map<Long, DummySwitch> pendingSwitches = new HashMap<Long, DummySwitch>();
-	//private Map<Long, SwitchChannelHandler> managedSwitches = new HashMap<Long, SwitchChannelHandler>();
-	private Map<Long, ClientBootstrap> managedSwitches = new HashMap<Long, ClientBootstrap>();
+	private Map<Long, ClientBootstrap> managedBootstraps = new HashMap<Long, ClientBootstrap>();
+	private Map<Long, ChannelFuture> managedSwitches = new HashMap<Long, ChannelFuture>();
 	private BasicFactory factory;
 	private Channel channel;
 	protected static Logger logger;
@@ -72,7 +72,14 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 		logger.debug("MessageReceived: " );
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
         String msg = new String(buf.array());
+        logger.debug(msg);
         handleMessage(msg);
+        try {
+        	List<OFMessage> listMessages = factory.parseMessage(buf);
+        	logger.debug(listMessages.get(0).toString());
+        } catch(Exception ex) {
+        	//ex.printStackTrace();
+        }
     }
 
     @Override
@@ -130,14 +137,16 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 						}
 					} else {
 						//SWITCH PART MSG
-						final ClientBootstrap bootstrap = managedSwitches.get(switchMessage.getId());
-						bootstrap.getPipeline().getChannel().close().addListener(new ChannelFutureListener() {
+						final long switchID = switchMessage.getId();
+						ChannelFuture future = managedSwitches.get(switchID);
+						future.getChannel().close().addListener(new ChannelFutureListener() {
 							@Override
 							public void operationComplete(ChannelFuture future) throws Exception {
-								bootstrap.releaseExternalResources();
+								managedBootstraps.get(switchID).releaseExternalResources();
+								managedBootstraps.remove(switchID);
 							}
 						});
-						managedSwitches.remove(switchMessage.getId());
+						managedSwitches.remove(switchID);
 					}
 					break;
 				case PORT :
@@ -164,6 +173,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					break;
 				case FLOW_STATS_REPLY:
 				case LINK:
+					
 				default:
 					//NOT SUPPORTED YET
 			}
@@ -176,10 +186,11 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 	 * @param message the Openflow message to be sent
 	 */
 	private void sendMessageToController(long switchId, OFMessage message) {
-		ClientBootstrap bootstrap = managedSwitches.get(switchId);
+		//USE THE CORRECT CHANNEL TO SEND MESSAGE
+		ChannelFuture future = managedSwitches.get(switchId);
 		ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
 		message.writeTo(sendData);
-		bootstrap.getPipeline().getChannel().write(sendData);
+		future.getChannel().write(sendData);
 	}
     
     /**
@@ -204,9 +215,9 @@ public class BackendChannelHandler extends SimpleChannelHandler {
             }
         });
         //CONNECT AND ADD TO HASHMAP OF MANAGED SWITCHES
-        bootstrap.connect(new InetSocketAddress("localhost", 6634));
-        managedSwitches.put(dummySwitch.getId(), bootstrap);
-        //managedSwitches.put(dummySwitch.getId(), switchHandler);
+        ChannelFuture future = bootstrap.connect(new InetSocketAddress("localhost", 6634));
+        managedSwitches.put(dummySwitch.getId(), future);
+        managedBootstraps.put(dummySwitch.getId(), bootstrap);
     }
     
     /**

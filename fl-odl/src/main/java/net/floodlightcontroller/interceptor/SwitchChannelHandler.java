@@ -16,6 +16,8 @@ package net.floodlightcontroller.interceptor;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.floodlightcontroller.core.IOFSwitch;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -82,6 +84,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
     	logger.debug("MessageReceived: " );
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
+        String msg = new String(buf.array());
+        logger.debug(msg);
 		try {
 			List<OFMessage> listMessages = factory.parseMessage(buf);
 			handleMessage(listMessages, e.getChannel());
@@ -206,5 +210,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 		ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
 		message.writeTo(sendData);
 		this.shimChannel.write(sendData);
+		
+		logger.debug("data: " + OFMessage.getDataAsString(dummySwitch, message, null));
 	}
 }

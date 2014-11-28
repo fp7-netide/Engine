@@ -33,6 +33,8 @@ public class TestClient {
 	
 	private final static String SWITCH_PART = "[\"switch\", \"part\", 1]\n";
 	
+	private final static String FLOW_STATS_REPLY = "[\"flow_stats_reply\", 3, [{\"packet_count\": 0, \"hard_timeout\": 0, \"byte_count\": 0, \"idle_timeout\": 0, \"actions\": \"[{'output': 65533}]\", \"duration_nsec\": 27000000, \"priority\": 0, \"duration_sec\": 0, \"table_id\": 0, \"cookie\": 0, \"match\": \"{}\"}]]\n";
+	
 	public static void main(String[] args) {
 		try {
 			//NioClient client = new NioClient(InetAddress.getByName("www.google.com"), 80);
@@ -42,8 +44,8 @@ public class TestClient {
 			t.start();
 			RspHandler handler = new RspHandler();
 			
-			client.send(SWITCH_JOIN.getBytes(), handler);
-			client.send(SWITCH_PART.getBytes(), handler);
+			//client.send(SWITCH_JOIN.getBytes(), handler);
+			client.send(FLOW_STATS_REPLY.getBytes(), handler);
 			//client.send(PACKET_IN.getBytes(), handler);
 			handler.waitForResponse();
 		} catch (Exception e) {
