@@ -17,7 +17,7 @@ package net.floodlightcontroller.interceptor;
  * Parses an OF Switch message into its relevant properties
  *
  */
-public class OFMessageSwitch {
+public class MessageSwitch {
 	private String action;
 	private long id;
 	private boolean begin = false;
@@ -37,14 +37,14 @@ public class OFMessageSwitch {
 		return begin;
 	}
 		
-	public OFMessageSwitch() { }
+	public MessageSwitch() { }
 	
 	/**
 	 * Parses message into relevant properties
 	 * @param rawMessage Assumes the following format: ["switch", "join", 1, "BEGIN"] and parses into properties
 	 * @return
 	 */
-	public OFMessageSwitch(String rawMessage) {
+	public MessageSwitch(String rawMessage) {
 		parseMessage(rawMessage);
 	}
 	

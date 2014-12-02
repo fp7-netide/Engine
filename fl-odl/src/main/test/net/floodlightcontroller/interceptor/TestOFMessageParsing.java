@@ -15,7 +15,17 @@ package net.floodlightcontroller.interceptor;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
+import org.openflow.protocol.OFFlowMod;
+import org.openflow.protocol.OFMatch;
+import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionType;
+import org.openflow.protocol.factory.BasicFactory;
+import org.openflow.protocol.factory.OFActionFactory;
+import org.openflow.util.HexString;
 
 /**
  * Describe your class here...
@@ -38,7 +48,7 @@ public class TestOFMessageParsing {
 	
 	@Test
 	public void testSwitchBegin() {
-		OFMessageSwitch msgSwitch = new OFMessageSwitch(SWITCH_JOIN_BEGIN);
+		MessageSwitch msgSwitch = new MessageSwitch(SWITCH_JOIN_BEGIN);
 		assertEquals("Switch ID not set correctly", 1L, msgSwitch.getId());
 		assertEquals("Switch action not set correctly", "join", msgSwitch.getAction());
 		assertTrue(msgSwitch.isBegin());
@@ -46,7 +56,7 @@ public class TestOFMessageParsing {
 
 	@Test
 	public void testSwitchEnd() {
-		OFMessageSwitch msgSwitch = new OFMessageSwitch(SWITCH_JOIN_END);
+		MessageSwitch msgSwitch = new MessageSwitch(SWITCH_JOIN_END);
 		assertEquals("Switch ID not set correctly", 1L, msgSwitch.getId());
 		assertEquals("Switch action not set correctly", "join", msgSwitch.getAction());
 		assertFalse(msgSwitch.isBegin());
@@ -54,7 +64,7 @@ public class TestOFMessageParsing {
 	
 	@Test
 	public void testSwitchPart() {
-		OFMessageSwitch msgSwitch = new OFMessageSwitch(SWITCH_PART);
+		MessageSwitch msgSwitch = new MessageSwitch(SWITCH_PART);
 		assertEquals("Switch ID not set correctly", 1L, msgSwitch.getId());
 		assertEquals("Switch action not set correctly", "part", msgSwitch.getAction());
 		assertFalse(msgSwitch.isBegin());
@@ -62,7 +72,7 @@ public class TestOFMessageParsing {
 	
 	@Test
 	public void testPortJoin() {
-		OFMessagePort msgPort = new OFMessagePort(PORT_JOIN_BEGIN1);
+		MessagePort msgPort = new MessagePort(PORT_JOIN_BEGIN1);
 		assertEquals("Switch ID not set correctly", 1L, msgPort.getSwitchId());
 		assertEquals("Port action not set correctly", "join", msgPort.getAction());
 		assertEquals("Port number not set correctly", 1, msgPort.getPortNo());
@@ -75,7 +85,7 @@ public class TestOFMessageParsing {
 	
 	@Test
 	public void testPortPart() {
-		OFMessagePort msgPort = new OFMessagePort(PORT_PART);
+		MessagePort msgPort = new MessagePort(PORT_PART);
 		assertEquals("Switch ID not set correctly", 1L, msgPort.getSwitchId());
 		assertEquals("Port action not set correctly", "part", msgPort.getAction());
 		assertEquals("Port number not set correctly", 1, msgPort.getPortNo());
@@ -85,11 +95,87 @@ public class TestOFMessageParsing {
 	
 	@Test
 	public void testMessagePacket() {
-		OFMessagePacket msg = new OFMessagePacket(PACKET_IN);
+		MessagePacket msg = new MessagePacket(PACKET_IN);
 		assertEquals("Switch ID not set correctly", 1L, msg.getSwitchId());
 		assertEquals("Port number not set correctly", 2, msg.getInPort());
 		//assertEquals("Port number not set correctly", 1, msgPort.getPortNo());
 		//assertEquals("Port Features is not empty", 0, msgPort.getPortFeatures().size());
 		//assertNull(msgPort.getOfPort());
 	}
+	
+	@Test
+	public void testMessageFlowMod() {
+		OFFlowMod flowMod = createFlowMod();
+		MessageSerializer msg = new MessageSerializer();
+		String output = msg.serializeMessage(flowMod);
+		System.out.println(output);
+	}
+	
+	private OFFlowMod createFlowMod() {
+		//["install", 0, [{"outport": 2}], 
+		//  {"dstip": [49, 48, 46, 48, 46, 48, 46, 49], "srcip": [49, 48, 46, 48, 46, 48, 46, 50],
+		//   "dstmac": [54, 97, 58, 50, 100, 58, 55, 102, 58, 50, 57, 58, 99, 56, 58, 54, 49], "srcmac": [49, 50, 58, 57, 51, 58, 50, 99, 58, 52, 97, 58, 52, 56, 58, 50, 52],
+		//   "dstport": 0, "srcport": 0
+		//   "protocol": 1,  "tos": 0, "inport": 1, "switch": 2, "ethtype": 2048} ]
+		byte[] dstIp = new byte[] {49, 48, 46, 48, 46, 48, 46, 49}; //10.0.0.1
+		byte[] srcIp = new byte[] {49, 48, 46, 48, 46, 48, 46, 50}; //10.0.0.2
+		byte[] dstMac = new byte[] {54, 97, 58, 50, 100, 58, 55, 102, 58, 50, 57, 58, 99, 56, 58, 54, 49}; //6a:2d:7f:29:c8:61
+		byte[] srcMac = new byte[] {49, 50, 58, 57, 51, 58, 50, 99, 58, 52, 97, 58, 52, 56, 58, 50, 52};   //12:93:2c:4a:48:24
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("dl_src=").append(new String(srcMac)).append(",dl_dst=").append(new String(dstMac)).append(",");
+		sb.append("nw_src=").append(new String(srcIp)).append(",nw_dst=").append(new String(dstIp)).append(",");
+		sb.append("nw_proto=1,");
+		sb.append("nw_tos=0,");
+		sb.append("in_port=2,");
+		sb.append("eth_type=2048,");
+		sb.append("tp_src=1234,");
+		sb.append("tp_dst=8080");
+		
+		OFFlowMod flowMod = new OFFlowMod();
+		OFMatch match = new OFMatch();
+		match.fromString(sb.toString());
+		flowMod.setMatch(match);
+		
+		BasicFactory factory = new BasicFactory();
+		flowMod.setActionFactory(factory.getActionFactory());
+		List<OFAction> actions = new ArrayList<OFAction>();
+		
+		OFAction action = new OFAction();
+		action.setType(OFActionType.SET_DL_DST);
+		actions.add(action);
+		
+		action = new OFAction();
+		action.setType(OFActionType.SET_DL_SRC);
+		actions.add(action);
+		
+		action = new OFAction();
+		action.setType(OFActionType.SET_NW_SRC);
+		actions.add(action);
+		
+		action = new OFAction();
+		action.setType(OFActionType.SET_NW_DST);
+		actions.add(action);
+		
+		action = new OFAction();
+		action.setType(OFActionType.SET_NW_TOS);
+		actions.add(action);
+		
+		action = new OFAction();
+		action.setType(OFActionType.SET_TP_DST);
+		actions.add(action);
+		
+		action = new OFAction();
+		action.setType(OFActionType.SET_TP_SRC);
+		actions.add(action);
+		
+		flowMod.setActions(actions);
+		flowMod.setOutPort((short) 2);
+		flowMod.setCommand(OFFlowMod.OFPFC_ADD);
+		flowMod.setBufferId(-1);
+		flowMod.setFlags(OFFlowMod.OFPFF_SEND_FLOW_REM);
+		
+		return flowMod;
+	}
+
 }

@@ -22,7 +22,7 @@ import org.openflow.protocol.OFPhysicalPort;
  * Parses an OF Port message into its relevant properties
  *
  */
-public class OFMessagePort {
+public class MessagePort {
 	private String action;
 	private long switchId;
 	private short portNo;
@@ -54,14 +54,14 @@ public class OFMessagePort {
 		return ofPort;
 	}
 	
-	public OFMessagePort() { }
+	public MessagePort() { }
 	
 	/**
 	 * Parses message into relevant properties
 	 * @param rawMessage Assumes the following format: ["port", "join", 1, 3, true, true, ["OFPPF_COPPER", "OFPPF_10GB_FD"]] and parses into properties
 	 * @return
 	 */
-	public OFMessagePort(String rawMessage) {
+	public MessagePort(String rawMessage) {
 		parseMessage(rawMessage);
 	}
 	

@@ -24,7 +24,7 @@ import org.openflow.protocol.OFPacketIn.OFPacketInReason;
  * @author aleckey
  *
  */
-public class OFMessagePacket {
+public class MessagePacket {
 	private long switchId;
 	private short inPort;
 	private byte[] packetData;
@@ -50,13 +50,13 @@ public class OFMessagePacket {
 		return packetIn;
 	}
 
-	public OFMessagePacket() {	}
+	public MessagePacket() {	}
 
 	/**
 	 * Parses message into relevant properties
 	 * @param rawMessage string to be parsed
 	 */
-	public OFMessagePacket(String rawMessage) {
+	public MessagePacket(String rawMessage) {
 		parseMessage(rawMessage);
 	}
 

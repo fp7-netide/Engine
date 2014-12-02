@@ -119,10 +119,10 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 		//POSSIBLE MULTIPLE MESSAGES - SPLIT
 		String[] messages = receivedMsg.split("\n");
 		for(String msg: messages) {
-			switch (getOFActionType(msg)) {
+			switch (getActionType(msg)) {
 				case SWITCH :
 					//COULD BE SWITCH JOIN(BEGIN/END) OR PART
-					OFMessageSwitch switchMessage = new OFMessageSwitch(msg);
+					MessageSwitch switchMessage = new MessageSwitch(msg);
 					//CACHE SWITCH TILL END MESSAGE RECEIVED
 					if (switchMessage.getAction().equals("join")) {
 						if (switchMessage.isBegin()) {
@@ -151,7 +151,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					break;
 				case PORT :
 					//COULD BE PORT JOIN/PART	
-					OFMessagePort portMessage = new OFMessagePort(msg);
+					MessagePort portMessage = new MessagePort(msg);
 					if (portMessage.getAction().equals("join")) {
 						//ADD THE PORT INFO TO ITS SWITCH
 						OFPhysicalPort portInfo = portMessage.getOfPort();
@@ -167,7 +167,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					break;
 				case PACKET :
 					//PARSE INCOMING MESSAGE
-					OFMessagePacket receivedPacket = new OFMessagePacket(msg);
+					MessagePacket receivedPacket = new MessagePacket(msg);
 					OFPacketIn packetIn = receivedPacket.getPacketIn();
 					sendMessageToController(receivedPacket.getSwitchId(), packetIn);
 					break;
@@ -225,14 +225,14 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 	 * @param msg
 	 * @return
 	 */
-	private OFActionType getOFActionType(String msg) {
+	private MessageType getActionType(String msg) {
 		String tmp = msg.substring(2);
 		tmp = tmp.substring(0, tmp.indexOf("\""));
 		
-		if (tmp.equals("switch")) return OFActionType.SWITCH;
-		if (tmp.equals("packet")) return OFActionType.PACKET;
-		if (tmp.equals("port")) return OFActionType.PORT;
+		if (tmp.equals("switch")) return MessageType.SWITCH;
+		if (tmp.equals("packet")) return MessageType.PACKET;
+		if (tmp.equals("port")) return MessageType.PORT;
 		
-		return OFActionType.UNSUPPORTED;
+		return MessageType.UNSUPPORTED;
 	}
 }

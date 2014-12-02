@@ -30,7 +30,7 @@ import org.openflow.protocol.statistics.OFStatisticsType;
  * @author aleckey
  *
  */
-public class OFMessageFlowStats {
+public class MessageFlowStats {
 
 	OFStatisticsReply statsReply; 
 	
@@ -39,13 +39,13 @@ public class OFMessageFlowStats {
 		return statsReply;
 	}
 
-	public OFMessageFlowStats() { }
+	public MessageFlowStats() { }
 	
 	/**
 	 * Parses message into relevant properties
 	 * @param rawMessage string to be parsed
 	 */
-	public OFMessageFlowStats(String rawMessage) { 
+	public MessageFlowStats(String rawMessage) { 
 		parseMessage(rawMessage);
 	}
 	

@@ -28,6 +28,7 @@ import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 import org.openflow.protocol.OFEchoReply;
 import org.openflow.protocol.OFFeaturesReply;
+import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFGetConfigReply;
 import org.openflow.protocol.OFHello;
 import org.openflow.protocol.OFMessage;
@@ -36,6 +37,7 @@ import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
+import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
 import org.openflow.protocol.statistics.OFDescriptionStatistics;
@@ -207,10 +209,23 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	 */
 	private void sendMessageToShim(OFMessage message) {
 		logger.debug("Sending message to Shim: " + message.getType().toString());
-		ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
-		message.writeTo(sendData);
-		this.shimChannel.write(sendData);
-		
+		//ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
+		//message.writeTo(sendData);
+		//this.shimChannel.write(sendData);
 		logger.debug("data: " + OFMessage.getDataAsString(dummySwitch, message, null));
+		this.shimChannel.write(serializeMessage(message));
+	}
+	
+	private String serializeMessage(OFMessage message) {
+		String serializedMsg = "";
+		if (message instanceof OFPacketOut) {
+			message.toString();
+		}
+		else if (message instanceof OFFlowMod) {
+			OFFlowMod flowMod = (OFFlowMod)message;			
+			serializedMsg = MessageSerializer.serializeMessage(flowMod);
+		}
+		logger.debug("serialized: " + serializedMsg);
+		return serializedMsg;
 	}
 }
