@@ -11,28 +11,30 @@ Setup Eclipse:
 2) Import the project into Eclipse
 
 Import NetIDE code
-3) Copy the net.floodlightcontroller.interceptor namespace (and *.java files) into the Floodlight project. 
-4) Copy the java classes (ElementsConfigurator.java and IElementsConfiguratorService.java) in the new folder
+3) Create the "net.floodlightcontroller.interceptor" namespace and copy the .java files into this namespace.
 
 Edit Config Files:
-5) Modify the floodlight properties files:
+4) Modify the floodlight properties files:
 	- META-INF
 		- <floodlight_folder>/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule
-		- add the line: "net.floodlightcontroller.interceptor.BackendChannel" at the end of Module section, before the port setting
+		- add the line: "net.floodlightcontroller.interceptor.NetideModule" at the end of Module section, before the port setting
 	- floodlightdefault.properties
 		- <floodlight_folder>/src/main/resources/floodlightdefault.properties
-		- add the line: "net.floodlightcontroller.interceptor" at the end of the file
+		- add the line: "net.floodlightcontroller.NetideModule" at the end of the file
+		- Change the port number to 6634 (we don't want the switches connecting)
 
 Compile the code:
 	- Floodlight uses ant as its build tool, you can build by issuing the ant command within a shell/command window
-	- I have provided a POM file so that Maven can be used, mvn clean install
+	- I have provided a POM file so that Maven can be used: copy the floodlight-pom.xml file into the root of the 
+	      floodlight project and rename to "pom.xml". Now you can issue the command "mvn clean install"
 5) Run the jar
 	- java -jar <floodlight_folder>/target/floodlight.jar
 
 
 Test Steps:
-1-download the source code of POX (https://github.com/noxrepo/pox.git)
-2-copy the attached pox_client.py to pox/ext (this is a modified version without Pyretic dependencies) 
-3-run the BackendChannelTest.java -> main()
-4-enter the pox folder and run "python ./pox.py pox_client"
-5-This test client only prints the incoming messages from POX, confirming connections and message flow.
+1 download the source code of POX (https://github.com/noxrepo/pox.git)
+2 copy the pox_client.py to pox/ext (this is a modified version without Pyretic dependencies)
+3 enter the pox folder and run "python ./pox.py pox_client"
+4 Start your mininet config.
+
+You should now be able to run your floodlight application/module on top of the POX SDN controller. 

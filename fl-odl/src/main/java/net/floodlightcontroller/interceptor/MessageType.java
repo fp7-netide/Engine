@@ -19,16 +19,18 @@ package net.floodlightcontroller.interceptor;
  * @author aleckey
  *
  */
-public enum OFActionType {
+public enum MessageType {
 
      SWITCH("switch"),
      PORT("port"),
      PACKET("packet"),
+     LINK("link"),
+     FLOW_STATS_REPLY("flow_stats_reply"),
      UNSUPPORTED("unsupported");
      
  private final String value;
 
-     OFActionType(String v) {
+     MessageType(String v) {
      value = v;
  }
 
@@ -36,8 +38,8 @@ public enum OFActionType {
      return value;
  }
 
- public static OFActionType fromValue(String v) {
-     for (OFActionType c: OFActionType.values()) {
+ public static MessageType fromValue(String v) {
+     for (MessageType c: MessageType.values()) {
          if (c.value.equals(v)) {
              return c;
          }

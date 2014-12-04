@@ -22,7 +22,7 @@ import org.openflow.protocol.OFPhysicalPort;
  * Parses an OF Port message into its relevant properties
  *
  */
-public class OFMessagePort {
+public class MessagePort {
 	private String action;
 	private long switchId;
 	private short portNo;
@@ -54,15 +54,15 @@ public class OFMessagePort {
 		return ofPort;
 	}
 	
-	public OFMessagePort() { }
+	public MessagePort() { }
 	
 	/**
 	 * Parses message into relevant properties
 	 * @param rawMessage Assumes the following format: ["port", "join", 1, 3, true, true, ["OFPPF_COPPER", "OFPPF_10GB_FD"]] and parses into properties
 	 * @return
 	 */
-	public OFMessagePort(String rawMessage) {
-		processMessage(rawMessage);
+	public MessagePort(String rawMessage) {
+		parseMessage(rawMessage);
 	}
 	
 	/**
@@ -70,19 +70,19 @@ public class OFMessagePort {
 	 * @param rawMessage Assumes the following format: ["port", "join", 1, 3, true, true, ["OFPPF_COPPER", "OFPPF_10GB_FD"]] and parses into properties
 	 * @return
 	 */
-	public void processMessage(String rawMessage) {
+	public void parseMessage(String rawMessage) {
 		String tmp = rawMessage.substring(1, rawMessage.length()-1); //STRIP [ ]
 		String[] props = tmp.split(","); 
 
-		this.action = props[0].substring(props[0].indexOf("\"")+1, props[1].length()-2); //STRIP " "
+		this.action = props[1].trim().substring(1, props[1].trim().length()-1); //STRIP " "
 		this.switchId = Long.parseLong(props[2].trim());
 		this.portNo = Short.parseShort(props[3].trim());
 		//PORT PROPERTIES
 		if (props.length > 6) { 
 			for (int i=6; i<props.length; i++) {
-				String portProp = props[i].substring(props[i].indexOf("\"")+1, props[i].length()-1);
-				if (portProp.startsWith("[")) portProp = props[i].substring(1); //STRIP STARTING [
-				if (portProp.endsWith("\"")) portProp = props[i].substring(0, props[i].length()-1); //STRIP ENDING ]
+				String portProp = props[i].trim().substring(1, props[i].trim().length()-1);
+				if (portProp.startsWith("\"")) portProp = portProp.substring(1); //STRIP STARTING [
+				if (portProp.endsWith("\"")) portProp = portProp.substring(0, portProp.length()-1); //STRIP ENDING ]
 				this.portFeatures.add(portProp);
 			}
 		}
@@ -98,8 +98,15 @@ public class OFMessagePort {
 		for (String feature: this.portFeatures) {
 			totalFeatures += OFPhysicalPort.OFPortFeatures.valueOf(feature).getValue();		
 		}
-		ofPort.setSupportedFeatures(totalFeatures);
-		ofPort.setAdvertisedFeatures(totalFeatures);
+		ofPort.setCurrentFeatures(totalFeatures);
+		ofPort.setSupportedFeatures(0);
+		ofPort.setAdvertisedFeatures(0);
+		ofPort.setConfig(0);
+		ofPort.setState(0);
+		byte[] hardwareAddress = new String("00000" + portNo).getBytes();
+		if (portNo > 9)
+			hardwareAddress = new String("0000" + portNo).getBytes();
+		ofPort.setHardwareAddress(hardwareAddress);
 	}
 
 }
