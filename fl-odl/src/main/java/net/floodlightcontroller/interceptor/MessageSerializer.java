@@ -30,9 +30,26 @@ public class MessageSerializer {
 	public MessageSerializer() { }
 	
 	public static String serializeMessage(OFPacketOut packetOut) {
-		StringBuilder sb = new StringBuilder();
-		//TODO: to be implemented
+		//["packet", {"outport": 1, "protocol": 2, "header_len": 14, "inport": 2, 
+		// "dstip": [49, 48, 46, 48, 46, 48, 46, 49], 
+		// "srcmac": [99, 101, 58, 97, 56, 58, 100, 100, 58, 99, 102, 58, 49, 99, 58, 97, 101], "dstmac": [99, 101, 58, 97, 54, 58, 99, 51, 58, 100, 100, 58, 56, 57, 58, 99, 51], 
+		// "raw": [206, 166, 195, 221, 137, 195, 206, 168, 221, 207, 28, 174, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 206, 168, 221, 207, 28, 174, 10, 0, 0, 2, 206, 166, 195, 221, 137, 195, 10, 0, 0, 1], 
+		// "payload_len": 42, "switch": 1, "ethtype": 2054, "srcip": [49, 48, 46, 48, 46, 48, 46, 50] }] + TERM_CHAR
+
+		JSONObject json = new JSONObject();
+		json.put("buf", packetOut.getBufferId());
+		json.put("inport", packetOut.getInPort());
+		json.put("raw", packetOut.getPacketData());
+		json.put("header_len", packetOut.getActionsLength());
+		String[] actionArray = new String[packetOut.getActions().size()];
+		for (int i=0; i<packetOut.getActions().size(); i++) {
+			actionArray[i] = packetOut.getActions().get(i).getType().toString();
+		}
+		json.put("actions", actionArray);
 		
+		StringBuilder sb = new StringBuilder("[\"packet\", ");
+		sb.append(json.toString());
+		sb.append("]\n");
 		return sb.toString();
 	}
 

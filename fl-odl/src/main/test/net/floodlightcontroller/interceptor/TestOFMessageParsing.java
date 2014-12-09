@@ -21,6 +21,7 @@ import java.util.List;
 import org.junit.Test;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFMatch;
+import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
@@ -106,9 +107,38 @@ public class TestOFMessageParsing {
 	@Test
 	public void testMessageFlowMod() {
 		OFFlowMod flowMod = createFlowMod();
-		MessageSerializer msg = new MessageSerializer();
-		String output = msg.serializeMessage(flowMod);
+		String output = MessageSerializer.serializeMessage(flowMod);
 		System.out.println(output);
+	}
+	
+	@Test
+	public void testMessagePacketOut() {
+		OFPacketOut packetOut = createPacketOut();
+		String output = MessageSerializer.serializeMessage(packetOut);
+		System.out.println(output);
+	}
+	
+	private OFPacketOut createPacketOut() {
+		//["packet", {"outport": 1, "protocol": 2, "header_len": 14, "inport": 2, 
+		// "dstip": [49, 48, 46, 48, 46, 48, 46, 49], 
+		// "srcmac": [99, 101, 58, 97, 56, 58, 100, 100, 58, 99, 102, 58, 49, 99, 58, 97, 101], "dstmac": [99, 101, 58, 97, 54, 58, 99, 51, 58, 100, 100, 58, 56, 57, 58, 99, 51], 
+		// "raw": [206, 166, 195, 221, 137, 195, 206, 168, 221, 207, 28, 174, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 206, 168, 221, 207, 28, 174, 10, 0, 0, 2, 206, 166, 195, 221, 137, 195, 10, 0, 0, 1], 
+		// "payload_len": 42, "switch": 1, "ethtype": 2054, "srcip": [49, 48, 46, 48, 46, 48, 46, 50] }] + TERM_CHAR
+
+		OFPacketOut packetOut = new OFPacketOut();
+		packetOut.setBufferId(10);
+		packetOut.setInPort((short)2);
+		packetOut.setPacketData(new byte[] {28, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 28, 10, 0, 0, 2, 10, 0, 0, 1});
+		
+		BasicFactory factory = new BasicFactory();
+		packetOut.setActionFactory(factory.getActionFactory());
+		List<OFAction> actions = new ArrayList<OFAction>();
+		OFAction action = new OFAction();
+		action.setType(OFActionType.SET_DL_DST);
+		actions.add(action);
+		packetOut.setActions(actions);
+		
+		return packetOut;
 	}
 	
 	private OFFlowMod createFlowMod() {

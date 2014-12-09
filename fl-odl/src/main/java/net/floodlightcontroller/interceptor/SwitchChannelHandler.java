@@ -16,8 +16,6 @@ package net.floodlightcontroller.interceptor;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.floodlightcontroller.core.IOFSwitch;
-
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -35,9 +33,7 @@ import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFStatisticsReply;
-import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
-import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
 import org.openflow.protocol.statistics.OFDescriptionStatistics;
