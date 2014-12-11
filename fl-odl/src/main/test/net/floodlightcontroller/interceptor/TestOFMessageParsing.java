@@ -22,10 +22,12 @@ import org.junit.Test;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFPacketOut;
+import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.OFActionFactory;
+import org.openflow.protocol.statistics.OFStatisticsType;
 import org.openflow.util.HexString;
 
 /**
@@ -116,6 +118,24 @@ public class TestOFMessageParsing {
 		OFPacketOut packetOut = createPacketOut();
 		String output = MessageSerializer.serializeMessage(packetOut);
 		System.out.println(output);
+	}
+	
+	@Test
+	public void createStatsFlow() {
+		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 0, \"hard_timeout\": 0, \"byte_count\": 0, \"idle_timeout\": 0, \"actions\": \"[{'output': 65533}]\", " + 
+						 "\"duration_nsec\": 27000000, \"priority\": 0, \"duration_sec\": 0, \"table_id\": 0, \"cookie\": 0, \"match\": \"{}\"}]]";
+
+		OFStatisticsReply reply = MessageParser.parseStatsReply(OFStatisticsType.FLOW, message);
+		//TODO: TEST REPLY!		
+	}
+
+	@Test
+	public void createStatsDesc() {
+		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 0, \"hard_timeout\": 0, \"byte_count\": 0, \"idle_timeout\": 0, \"actions\": \"[{'output': 65533}]\", " + 
+						 "\"duration_nsec\": 27000000, \"priority\": 0, \"duration_sec\": 0, \"table_id\": 0, \"cookie\": 0, \"match\": \"{}\"}]]";
+
+		OFStatisticsReply reply = MessageParser.parseStatsReply(OFStatisticsType.DESC, message);
+		//TODO: TEST REPLY!		
 	}
 	
 	private OFPacketOut createPacketOut() {

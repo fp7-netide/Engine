@@ -19,10 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import net.floodlightcontroller.core.IFloodlightProviderService;
-import net.floodlightcontroller.core.IOFMessageListener;
-import net.floodlightcontroller.core.IOFSwitch;
-
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -43,8 +39,10 @@ import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFPortMod;
+import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.factory.BasicFactory;
+import org.openflow.protocol.statistics.OFStatisticsType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,6 +170,8 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					sendMessageToController(receivedPacket.getSwitchId(), packetIn);
 					break;
 				case FLOW_STATS_REPLY:
+					OFStatisticsReply OFStatisticsReply = MessageParser.parseStatsReply(OFStatisticsType.FLOW, msg);
+					sendMessageToController(1, OFStatisticsReply);
 				case LINK:
 					
 				default:

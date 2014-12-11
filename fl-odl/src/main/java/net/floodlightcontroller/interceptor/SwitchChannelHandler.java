@@ -215,7 +215,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	private String serializeMessage(OFMessage message) {
 		String serializedMsg = "";
 		if (message instanceof OFPacketOut) {
-			message.toString();
+			OFPacketOut packetOut = (OFPacketOut)message;
+			serializedMsg = MessageSerializer.serializeMessage(packetOut);
 		}
 		else if (message instanceof OFFlowMod) {
 			OFFlowMod flowMod = (OFFlowMod)message;			
