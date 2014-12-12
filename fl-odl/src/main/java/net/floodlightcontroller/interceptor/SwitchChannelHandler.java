@@ -33,6 +33,7 @@ import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFStatisticsReply;
+import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
@@ -164,27 +165,32 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 	channel.write(sendData);
                 	break;
                 case STATS_REQUEST:
-                	//TODO: EVENTUALLY SEND TO SHIM FOR REPLY
-                	//sendMessageToShim(m);
-                	logger.debug("Sending Stats reply...");
-                	OFStatisticsReply statsReply = (OFStatisticsReply) factory.getMessage(OFType.STATS_REPLY);
-                	statsReply.setXid(m.getXid());
-                	statsReply.setStatisticType(OFStatisticsType.DESC);
-					statsReply.setStatisticsFactory(factory);				
-					List<OFStatistics> statistics = new ArrayList<OFStatistics>();
-					OFDescriptionStatistics description = new OFDescriptionStatistics();
-					description.setDatapathDescription("A");
-					description.setHardwareDescription("B");
-					description.setManufacturerDescription("C");
-					description.setSerialNumber("D");
-					description.setSoftwareDescription("E");
-					statistics.add(description);
-					statsReply.setStatistics(statistics);
-					statsReply.setLength((short) 1068);
-                	
-					sendData = ChannelBuffers.buffer(statsReply.getLength());
-                	statsReply.writeTo(sendData);
-                	channel.write(sendData);
+                	OFStatisticsRequest statsRequest = (OFStatisticsRequest) m;
+                	if (statsRequest.getStatisticType().equals(OFStatisticsType.DESC)) {
+                		//TODO: EVENTUALLY SEND desc TO SHIM FOR REPLY INSTEAD OF HANDLING LOCALLY
+                		logger.debug("Sending Stats reply...");
+                    	OFStatisticsReply statsReply = (OFStatisticsReply) factory.getMessage(OFType.STATS_REPLY);
+                    	statsReply.setXid(m.getXid());
+                    	statsReply.setStatisticType(OFStatisticsType.DESC);
+    					statsReply.setStatisticsFactory(factory);				
+    					List<OFStatistics> statistics = new ArrayList<OFStatistics>();
+    					OFDescriptionStatistics description = new OFDescriptionStatistics();
+    					description.setDatapathDescription("A");
+    					description.setHardwareDescription("B");
+    					description.setManufacturerDescription("C");
+    					description.setSerialNumber("D");
+    					description.setSoftwareDescription("E");
+    					statistics.add(description);
+    					statsReply.setStatistics(statistics);
+    					statsReply.setLength((short) 1068);
+                    	
+    					sendData = ChannelBuffers.buffer(statsReply.getLength());
+                    	statsReply.writeTo(sendData);
+                    	channel.write(sendData);
+                	} else {
+                		logger.debug("Sending Stats request to shim: " + statsRequest.getStatisticType().toString());
+                		sendMessageToShim(m);
+                	}
                 	break;
                 case FLOW_MOD:
                 case PACKET_OUT:
@@ -221,6 +227,10 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 		else if (message instanceof OFFlowMod) {
 			OFFlowMod flowMod = (OFFlowMod)message;			
 			serializedMsg = MessageSerializer.serializeMessage(flowMod);
+		} 
+		else if (message instanceof OFStatisticsRequest) {
+			OFStatisticsRequest statRequest = (OFStatisticsRequest)message;			
+			serializedMsg = MessageSerializer.serializeMessage(statRequest);
 		}
 		logger.debug("serialized: " + serializedMsg);
 		return serializedMsg;

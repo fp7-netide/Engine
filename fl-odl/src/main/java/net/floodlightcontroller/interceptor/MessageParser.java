@@ -17,11 +17,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionDataLayerDestination;
+import org.openflow.protocol.action.OFActionDataLayerSource;
+import org.openflow.protocol.action.OFActionNetworkLayerDestination;
+import org.openflow.protocol.action.OFActionNetworkLayerSource;
+import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.OFStatisticsFactory;
@@ -58,7 +64,8 @@ public class MessageParser {
 		//EXTRACT THE JSON
 		String tmp = rawMessage.substring(rawMessage.indexOf(",")+2, rawMessage.length()-2);
 		String flagStr = tmp.substring(0, 1);
-		JSONObject json = new JSONObject(tmp.indexOf(",")+2);
+		String jsonStr = tmp.substring(tmp.indexOf(",")+3);
+		JSONObject json = new JSONObject(jsonStr);
 		
 		//ADD PROPS TO STATS_REPLY OBJECT
 		OFStatisticsReply statsReply = new OFStatisticsReply();
@@ -80,18 +87,21 @@ public class MessageParser {
 				OFFlowStatisticsReply flowStats = new OFFlowStatisticsReply();
 				flowStats.setByteCount(json.getLong("byte_count"));
 				flowStats.setActionFactory(new BasicFactory());
-				OFAction action = new OFAction();
-				action.setType(OFActionType.OUTPUT);
-				flowStats.setActions(Collections.singletonList((OFAction)action));
+				//FORMATTING SEEMS OFF (why is it in " "), NEED TO CONVERT STRING TO JSON ARRAY
+				String tmpArrayStr = json.getString("actions");
+				JSONArray jsonArray = new JSONArray(tmpArrayStr);
+				flowStats.setActions(parseActionsArray(jsonArray));
+				//
 				flowStats.setCookie(json.getLong("cookie"));
 				flowStats.setDurationNanoseconds(json.getInt("duration_nsec"));
 				flowStats.setDurationSeconds(json.getInt("duration_sec"));
-				flowStats.setHardTimeout(Short.parseShort(json.getString("hard_timeout")));
-				flowStats.setIdleTimeout(Short.parseShort(json.getString("idle_timeout")));
+				flowStats.setHardTimeout((short)json.getInt("hard_timeout"));
+				flowStats.setIdleTimeout((short)json.getInt("idle_timeout"));
 				flowStats.setPacketCount(json.getLong("packet_count"));
-				flowStats.setPriority(Short.parseShort(json.getString("priority")));
-				flowStats.setTableId(Byte.parseByte(json.getString("table_id")));
-				flowStats.setMatch(new OFMatch());
+				flowStats.setPriority((short)json.getInt("priority"));
+				flowStats.setTableId((byte)json.getInt("table_id"));
+				OFMatch match = new OFMatch();
+				flowStats.setMatch(match);
 				statistics.add(flowStats);
 				break;
 			case TABLE:
@@ -119,4 +129,75 @@ public class MessageParser {
 		return statsReply;
 	}
 	
+	/**
+	 * Assumes input of [{'output': 65533}] and generates a list of OFActions
+	 * @param array
+	 * @return
+	 */
+	private static List<OFAction> parseActionsArray(JSONArray array) {
+		List<OFAction> listActions = new ArrayList<OFAction>();
+		
+		for (int i=0; i<array.length(); i++) {
+			JSONObject json = array.getJSONObject(i);
+			String[] elementNames = JSONObject.getNames(json);
+			for (String name: elementNames) {
+				switch (name) {
+					case "output" :
+						OFActionOutput output = new OFActionOutput((short)json.getInt(name));
+						listActions.add(output);
+						break;
+					case "dstmac":
+						byte[] dlDestArr = parseByteArray(json.getJSONArray(name));
+						OFActionDataLayerDestination dlDest = new OFActionDataLayerDestination(dlDestArr);
+						listActions.add(dlDest);
+						break;
+					case "srcmac":
+						byte[] dlSrcArr = parseByteArray(json.getJSONArray(name));
+						OFActionDataLayerSource dlSrc = new OFActionDataLayerSource(dlSrcArr);
+						listActions.add(dlSrc);
+						break;
+					case "dstip":
+						int dstip = fromCIDR(json.getString(name));
+						OFActionNetworkLayerDestination netDes = new OFActionNetworkLayerDestination(dstip);
+						listActions.add(netDes);
+						break;
+					case "srcip":
+						int srcip = fromCIDR(json.getString(name));
+						OFActionNetworkLayerSource netSrc = new OFActionNetworkLayerSource(srcip);
+						listActions.add(netSrc);
+						break;
+					case "dstport":
+					case "srcport":
+					case "tos":
+					default:
+				}
+			}
+		}
+		return listActions;
+	}
+	
+	private static byte[] parseByteArray(JSONArray jArray) {
+		byte[] bArr = new byte[jArray.length()];
+		for (int i=0; i<jArray.length(); i++) {
+			int number = Integer.parseInt(jArray.get(i).toString());
+			bArr[i] = (byte)number;
+		}
+		return bArr;
+	}
+	
+	/**
+     * Generates an integer version of the IP address
+     * @param cidr "192.168.0.0/16" or "172.16.1.5"
+     * @throws IllegalArgumentException
+     */
+    private static int fromCIDR(String cidr) throws IllegalArgumentException {
+        String values[] = cidr.split("/");
+        String[] ip_str = values[0].split("\\.");
+        int ip = 0;
+        ip += Integer.valueOf(ip_str[0]) << 24;
+        ip += Integer.valueOf(ip_str[1]) << 16;
+        ip += Integer.valueOf(ip_str[2]) << 8;
+        ip += Integer.valueOf(ip_str[3]);
+        return ip;
+    }
 }

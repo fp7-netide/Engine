@@ -24,9 +24,13 @@ import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.OFActionFactory;
+import org.openflow.protocol.statistics.OFDescriptionStatistics;
+import org.openflow.protocol.statistics.OFFlowStatisticsReply;
+import org.openflow.protocol.statistics.OFStatistics;
 import org.openflow.protocol.statistics.OFStatisticsType;
 import org.openflow.util.HexString;
 
@@ -121,21 +125,50 @@ public class TestOFMessageParsing {
 	}
 	
 	@Test
-	public void createStatsFlow() {
-		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 0, \"hard_timeout\": 0, \"byte_count\": 0, \"idle_timeout\": 0, \"actions\": \"[{'output': 65533}]\", " + 
-						 "\"duration_nsec\": 27000000, \"priority\": 0, \"duration_sec\": 0, \"table_id\": 0, \"cookie\": 0, \"match\": \"{}\"}]]";
+	public void testStatsFlow() {
+		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 1, \"hard_timeout\": 0, \"byte_count\": 4, \"idle_timeout\": 5, \"actions\": \"[{'output': 65533}]\", " + 
+						 "\"duration_nsec\": 27000000, \"priority\": 6, \"duration_sec\": 0, \"table_id\": 25, \"cookie\": 2, \"match\": \"{}\"}]]";
 
 		OFStatisticsReply reply = MessageParser.parseStatsReply(OFStatisticsType.FLOW, message);
-		//TODO: TEST REPLY!		
+		
+		//TESTS
+		assertEquals("Flags not set correctly", 3, reply.getFlags());
+		assertEquals("Statistics type not set correctly", OFStatisticsType.FLOW, reply.getStatisticType());
+		OFStatistics stat = reply.getStatistics().get(0);
+		assertTrue("Returned stat is not a FlowStat class", (stat instanceof OFFlowStatisticsReply));
+		OFFlowStatisticsReply flowStat = (OFFlowStatisticsReply) stat;
+		//TEST FLOWS STATS REPY
+		assertEquals("'byte_count' not set correctly", 4, flowStat.getByteCount());
+		assertEquals("'cookie' not set correctly", 2, flowStat.getCookie());
+		assertEquals("'duration_nsec' not set correctly", 27000000, flowStat.getDurationNanoseconds());
+		assertEquals("'idle_timeout' not set correctly", 5, flowStat.getIdleTimeout());
+		assertEquals("'packet_count' not set correctly", 1, flowStat.getPacketCount());
+		assertEquals("'table_id' not set correctly", (byte)25, flowStat.getTableId());
+		assertEquals("'priority' not set correctly", 6, flowStat.getPriority());
+		OFAction action = flowStat.getActions().get(0);
+		assertEquals("Output type not set properly not set correctly", OFActionType.OUTPUT, action.getType());
+		assertTrue("Output class type not set properly", (action instanceof OFActionOutput));
+		OFActionOutput actionOut = (OFActionOutput)action;
+		//PORT IS A SHORT, SO MUST BE CONVERTED FROM INT
+		assertEquals("Port not set properly in ActionOut", 65533, (0x0FFFF&(actionOut.getPort())));
 	}
 
 	@Test
-	public void createStatsDesc() {
-		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 0, \"hard_timeout\": 0, \"byte_count\": 0, \"idle_timeout\": 0, \"actions\": \"[{'output': 65533}]\", " + 
-						 "\"duration_nsec\": 27000000, \"priority\": 0, \"duration_sec\": 0, \"table_id\": 0, \"cookie\": 0, \"match\": \"{}\"}]]";
-
+	public void testStatsDesc() {
+		//TODO: NEED A SAMPLE OF A DESCRIPTION REPLY TO TEST AGAINST
+		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 1, \"hard_timeout\": 0, \"byte_count\": 4, \"idle_timeout\": 5, \"actions\": \"[{'output': 65533}]\", " + 
+				 "\"duration_nsec\": 27000000, \"priority\": 6, \"duration_sec\": 0, \"table_id\": 25, \"cookie\": 2, \"match\": \"{}\"}]]";
 		OFStatisticsReply reply = MessageParser.parseStatsReply(OFStatisticsType.DESC, message);
-		//TODO: TEST REPLY!		
+		//TESTS
+		OFStatistics stat = reply.getStatistics().get(0);
+		assertTrue("Returned stat is not a FlowStat class", (stat instanceof OFDescriptionStatistics));
+		OFDescriptionStatistics desc = (OFDescriptionStatistics) stat;
+		
+		assertEquals("Datapath Description not set correctly", "A", desc.getDatapathDescription());
+		assertEquals("Hardware Description not set correctly", "B", desc.getHardwareDescription());
+		assertEquals("Manufacturer Description not set correctly", "C", desc.getManufacturerDescription());
+		assertEquals("Serial Number not set correctly", "D", desc.getSerialNumber());
+		assertEquals("Software Description not set correctly", "E", desc.getSoftwareDescription());
 	}
 	
 	private OFPacketOut createPacketOut() {

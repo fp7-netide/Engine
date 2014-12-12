@@ -16,7 +16,9 @@ package net.floodlightcontroller.interceptor;
 import org.json.JSONObject;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFPacketOut;
+import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.statistics.OFStatisticsType;
 import org.openflow.util.U8;
 
 /**
@@ -28,6 +30,23 @@ import org.openflow.util.U8;
 public class MessageSerializer {
 
 	public MessageSerializer() { }
+	
+	public static String serializeMessage(OFStatisticsRequest statsRequest) {
+		String retString="";
+		switch (statsRequest.getStatisticType()) {
+			case DESC: 
+				break;
+			case FLOW:
+				retString = "[\"flow_stats_request\", 3]" + "\n";
+				break;
+			case AGGREGATE:
+			case PORT:
+			case TABLE:
+			case VENDOR:
+			case QUEUE:
+		}
+		return retString;
+	}
 	
 	public static String serializeMessage(OFPacketOut packetOut) {
 		//["packet", {"outport": 1, "protocol": 2, "header_len": 14, "inport": 2, 
@@ -74,7 +93,7 @@ public class MessageSerializer {
 					json.put("dstip", cidrToString(flowMod.getMatch().getNetworkDestination(), flowMod.getMatch().getNetworkDestination()));
 					break;
 				case SET_NW_SRC:
-					json.put("srcip", cidrToString(flowMod.getMatch().getNetworkSource(), flowMod.getMatch().getNetworkDestination()));
+					json.put("srcip", cidrToString(flowMod.getMatch().getNetworkSource(), flowMod.getMatch().getNetworkSource()));
 					break;
 				case SET_TP_DST:
 					json.put("dstport", flowMod.getMatch().getTransportDestination());
@@ -114,7 +133,7 @@ public class MessageSerializer {
 		return sb.toString();
 	}
 	
-	private static String cidrToString(int ip, int prefix) {
+	public static String cidrToString(int ip, int prefix) {
         String str;
         if (prefix >= 32) {
             str = ipToString(ip);
@@ -126,7 +145,7 @@ public class MessageSerializer {
 
         return str;
 	}
-	protected static String ipToString(int ip) {
+	public static String ipToString(int ip) {
         return Integer.toString(U8.f((byte) ((ip & 0xff000000) >> 24))) + "."
                 + Integer.toString((ip & 0x00ff0000) >> 16) + "."
                 + Integer.toString((ip & 0x0000ff00) >> 8) + "."
