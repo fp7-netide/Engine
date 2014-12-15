@@ -4,7 +4,8 @@ Import the code into Floodlight
 -------------------------------------------------------------------------
 
 When developing with Floodlight, you must download the Floodlight source code and add your module as a new namespace.
-There doesn't seem to be a way to develop independently and reference the Floodlight project from within your own.
+However, to allow you to develop independently, a POM is included that references the Floodlight project from 
+within this project.
 
 Setup Eclipse:
 1) Download Floodlight (version 0.90) from their Github repo: https://github.com/floodlight/floodlight.git
