@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.floodlightcontroller.packet.IPv4;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openflow.protocol.OFMatch;
@@ -157,12 +159,14 @@ public class MessageParser {
 						listActions.add(dlSrc);
 						break;
 					case "dstip":
-						int dstip = fromCIDR(json.getString(name));
+						//int dstip = fromCIDR(json.getString(name));
+						int dstip = IPv4.toIPv4Address(json.getString(name));
 						OFActionNetworkLayerDestination netDes = new OFActionNetworkLayerDestination(dstip);
 						listActions.add(netDes);
 						break;
 					case "srcip":
-						int srcip = fromCIDR(json.getString(name));
+						//int srcip = fromCIDR(json.getString(name));
+						int srcip = IPv4.toIPv4Address(json.getString(name));
 						OFActionNetworkLayerSource netSrc = new OFActionNetworkLayerSource(srcip);
 						listActions.add(netSrc);
 						break;

@@ -113,15 +113,17 @@ public class TestOFMessageParsing {
 	@Test
 	public void testMessageFlowMod() {
 		OFFlowMod flowMod = createFlowMod();
-		String output = MessageSerializer.serializeMessage(flowMod);
+		String output = MessageSerializer.serializeMessage(1, flowMod);
 		System.out.println(output);
+		//TODO: TEST THIS OUPUT
 	}
 	
 	@Test
 	public void testMessagePacketOut() {
 		OFPacketOut packetOut = createPacketOut();
-		String output = MessageSerializer.serializeMessage(packetOut);
+		String output = MessageSerializer.serializeMessage(1, packetOut);
 		System.out.println(output);
+		//TODO: TEST THIS OUPUT
 	}
 	
 	@Test
@@ -195,11 +197,11 @@ public class TestOFMessageParsing {
 	}
 	
 	private OFFlowMod createFlowMod() {
-		//["install", 0, [{"outport": 2}], 
+		//["install",  
 		//  {"dstip": [49, 48, 46, 48, 46, 48, 46, 49], "srcip": [49, 48, 46, 48, 46, 48, 46, 50],
 		//   "dstmac": [54, 97, 58, 50, 100, 58, 55, 102, 58, 50, 57, 58, 99, 56, 58, 54, 49], "srcmac": [49, 50, 58, 57, 51, 58, 50, 99, 58, 52, 97, 58, 52, 56, 58, 50, 52],
 		//   "dstport": 0, "srcport": 0
-		//   "protocol": 1,  "tos": 0, "inport": 1, "switch": 2, "ethtype": 2048} ]
+		//   "protocol": 1,  "tos": 0, "inport": 1, "switch": 2, "ethtype": 2048}, 0, [{"outport": 2}],]
 		byte[] dstIp = new byte[] {49, 48, 46, 48, 46, 48, 46, 49}; //10.0.0.1
 		byte[] srcIp = new byte[] {49, 48, 46, 48, 46, 48, 46, 50}; //10.0.0.2
 		byte[] dstMac = new byte[] {54, 97, 58, 50, 100, 58, 55, 102, 58, 50, 57, 58, 99, 56, 58, 54, 49}; //6a:2d:7f:29:c8:61

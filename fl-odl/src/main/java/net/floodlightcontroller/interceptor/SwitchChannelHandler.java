@@ -215,24 +215,26 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 		//message.writeTo(sendData);
 		//this.shimChannel.write(sendData);
 		logger.debug("data: " + OFMessage.getDataAsString(dummySwitch, message, null));
-		this.shimChannel.write(serializeMessage(message));
+		byte[] bMessage = serializeMessage(message);
+		this.shimChannel.write(ChannelBuffers.copiedBuffer(bMessage));
+		logger.debug("Sent message to Shim");
 	}
 	
-	private String serializeMessage(OFMessage message) {
+	private byte[] serializeMessage(OFMessage message) {
 		String serializedMsg = "";
 		if (message instanceof OFPacketOut) {
 			OFPacketOut packetOut = (OFPacketOut)message;
-			serializedMsg = MessageSerializer.serializeMessage(packetOut);
+			serializedMsg = MessageSerializer.serializeMessage(this.dummySwitch.getId(), packetOut);
 		}
 		else if (message instanceof OFFlowMod) {
 			OFFlowMod flowMod = (OFFlowMod)message;			
-			serializedMsg = MessageSerializer.serializeMessage(flowMod);
+			serializedMsg = MessageSerializer.serializeMessage(this.dummySwitch.getId(), flowMod);
 		} 
 		else if (message instanceof OFStatisticsRequest) {
 			OFStatisticsRequest statRequest = (OFStatisticsRequest)message;			
-			serializedMsg = MessageSerializer.serializeMessage(statRequest);
+			serializedMsg = MessageSerializer.serializeMessage(this.dummySwitch.getId(), statRequest);
 		}
 		logger.debug("serialized: " + serializedMsg);
-		return serializedMsg;
+		return serializedMsg.getBytes();
 	}
 }
