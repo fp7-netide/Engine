@@ -140,7 +140,7 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 	
 	@Override
 	public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-		Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
+		//Ethernet eth = IFloodlightProviderService.bcStore.get(cntx, IFloodlightProviderService.CONTEXT_PI_PAYLOAD);
 		logger.info("Seeing Message received: " + msg.toString());
 		
 		switch (msg.getType()) {

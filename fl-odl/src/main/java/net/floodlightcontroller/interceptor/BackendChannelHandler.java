@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import net.floodlightcontroller.packetstreamer.thrift.OFMessageType;
+
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -39,6 +41,7 @@ import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFPhysicalPort;
 import org.openflow.protocol.OFPortMod;
+import org.openflow.protocol.OFPortStatus;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFType;
 import org.openflow.protocol.factory.BasicFactory;
@@ -153,7 +156,15 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					if (portMessage.getAction().equals("join")) {
 						//ADD THE PORT INFO TO ITS SWITCH
 						OFPhysicalPort portInfo = portMessage.getOfPort();
-						pendingSwitches.get(portMessage.getSwitchId()).setPort(portInfo);
+						if (pendingSwitches.containsKey(portMessage.getSwitchId())) {
+							pendingSwitches.get(portMessage.getSwitchId()).setPort(portInfo);
+						} else {
+							//SWITCH ALREADY ADDED TO CONTROLLER - NEED TO SEND port_status MESSAGE
+							OFPortStatus portStatMsg = (OFPortStatus)factory.getMessage(OFType.PORT_STATUS);
+							portStatMsg.setDesc(portInfo);
+							portStatMsg.setReason((byte)OFPortStatus.OFPortReason.OFPPR_MODIFY.ordinal());
+							sendMessageToController(portMessage.getSwitchId(), portStatMsg);
+						}
 					} else {
 						//PART MSG
 						OFPortMod portMod = (OFPortMod) factory.getMessage(OFType.PORT_MOD);

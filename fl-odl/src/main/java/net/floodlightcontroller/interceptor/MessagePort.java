@@ -26,6 +26,8 @@ public class MessagePort {
 	private String action;
 	private long switchId;
 	private short portNo;
+	private boolean conf_up = true;
+	private boolean stat_up = true;
 	private List<String> portFeatures = new ArrayList<String>();
 	private OFPhysicalPort ofPort;
 
@@ -77,6 +79,8 @@ public class MessagePort {
 		this.action = props[1].trim().substring(1, props[1].trim().length()-1); //STRIP " "
 		this.switchId = Long.parseLong(props[2].trim());
 		this.portNo = Short.parseShort(props[3].trim());
+		this.conf_up = Boolean.parseBoolean(props[4].trim());
+		this.stat_up = Boolean.parseBoolean(props[5].trim());
 		//PORT PROPERTIES
 		if (props.length > 6) { 
 			for (int i=6; i<props.length; i++) {
@@ -101,8 +105,8 @@ public class MessagePort {
 		ofPort.setCurrentFeatures(totalFeatures);
 		ofPort.setSupportedFeatures(0);
 		ofPort.setAdvertisedFeatures(0);
-		ofPort.setConfig(0);
-		ofPort.setState(0);
+		ofPort.setConfig( (this.conf_up ? 1 : 0));
+		ofPort.setState( (this.stat_up ? 1 : 0));
 		byte[] hardwareAddress = new String("00000" + portNo).getBytes();
 		if (portNo > 9)
 			hardwareAddress = new String("0000" + portNo).getBytes();

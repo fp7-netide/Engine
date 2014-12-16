@@ -14,13 +14,20 @@
 package net.floodlightcontroller.interceptor;
 
 import net.floodlightcontroller.packet.Ethernet;
+import net.floodlightcontroller.packet.IPv4;
 
 import org.json.JSONObject;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionDataLayerDestination;
+import org.openflow.protocol.action.OFActionDataLayerSource;
+import org.openflow.protocol.action.OFActionNetworkLayerDestination;
+import org.openflow.protocol.action.OFActionNetworkLayerSource;
+import org.openflow.protocol.action.OFActionNetworkTypeOfService;
 import org.openflow.protocol.action.OFActionOutput;
+import org.openflow.protocol.action.OFActionTransportLayer;
 import org.openflow.protocol.statistics.OFStatisticsType;
 import org.openflow.util.U8;
 
@@ -93,11 +100,13 @@ public class MessageSerializer {
 					json.put("srcmac", flowMod.getMatch().getDataLayerSource());
 					break;
 				case SET_NW_DST:
-					String ipDst = cidrToString(flowMod.getMatch().getNetworkDestination(), flowMod.getMatch().getNetworkDestination());
+					//String ipDst = cidrToString(flowMod.getMatch().getNetworkDestination(), flowMod.getMatch().getNetworkDestination());
+					String ipDst = IPv4.fromIPv4Address(flowMod.getMatch().getNetworkDestination());
 					json.put("dstip", ipDst.getBytes());
 					break;
 				case SET_NW_SRC:
-					String ipSrc = cidrToString(flowMod.getMatch().getNetworkSource(), flowMod.getMatch().getNetworkSource());
+					//String ipSrc = cidrToString(flowMod.getMatch().getNetworkSource(), flowMod.getMatch().getNetworkSource());
+					String ipSrc = IPv4.fromIPv4Address(flowMod.getMatch().getNetworkSource());
 					json.put("srcip", ipSrc.getBytes());
 					break;
 				case SET_TP_DST:
@@ -160,12 +169,27 @@ public class MessageSerializer {
 				json.append("outport", ((OFActionOutput)action).getPort());
 				break;
 			case SET_DL_DST:
-			case SET_NW_DST:
+				json.append("dstmac", ((OFActionDataLayerDestination)action).getDataLayerAddress());
+				break;
 			case SET_DL_SRC:
+				json.append("srcmac", ((OFActionDataLayerSource)action).getDataLayerAddress());
+				break;
+			case SET_NW_DST:
+				int ipDst = ((OFActionNetworkLayerDestination)action).getNetworkAddress();
+				json.append("dstip", IPv4.toIPv4AddressBytes(ipDst));
+				break;
 			case SET_NW_SRC:
+				int ipSrc = ((OFActionNetworkLayerSource)action).getNetworkAddress();
+				json.append("dstmac", IPv4.toIPv4AddressBytes(ipSrc));
+				break;
 			case SET_NW_TOS:
+				json.append("tos", ((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
 			case SET_TP_DST:
+				json.append("dstport", ((OFActionTransportLayer)action).getTransportPort());
+				break;
 			case SET_TP_SRC:
+				json.append("srcport", ((OFActionTransportLayer)action).getTransportPort());
+				break;
 			case SET_VLAN_ID:
 			case SET_VLAN_PCP:
 			case STRIP_VLAN:

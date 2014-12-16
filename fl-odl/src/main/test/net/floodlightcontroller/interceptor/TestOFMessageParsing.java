@@ -83,11 +83,13 @@ public class TestOFMessageParsing {
 		assertEquals("Switch ID not set correctly", 1L, msgPort.getSwitchId());
 		assertEquals("Port action not set correctly", "join", msgPort.getAction());
 		assertEquals("Port number not set correctly", 1, msgPort.getPortNo());
-		assertEquals("Port Feature 1 not set correctly", "OFPPF_COPPER", msgPort.getPortFeatures().get(0));
+		assertEquals("Port Feature 0 not set correctly", "OFPPF_COPPER", msgPort.getPortFeatures().get(0));
 		assertEquals("Port Feature 1 not set correctly", "OFPPF_10GB_FD", msgPort.getPortFeatures().get(1));
 		assertEquals("OFPort no not set correctly", 1, msgPort.getOfPort().getPortNumber());
 		assertEquals("OFPort Features not set correctly", 0, msgPort.getOfPort().getSupportedFeatures());
 		assertEquals("OFPort Features not set correctly", 192, msgPort.getOfPort().getCurrentFeatures());
+		assertEquals("Port conf up not set correctly", 1, msgPort.getOfPort().getConfig());
+		assertEquals("Port stat up not set correctly", 1, msgPort.getOfPort().getState());
 	}
 	
 	@Test
