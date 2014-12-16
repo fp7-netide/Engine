@@ -13,7 +13,6 @@
  */
 package net.floodlightcontroller.interceptor;
 
-import net.floodlightcontroller.packet.Ethernet;
 import net.floodlightcontroller.packet.IPv4;
 
 import org.json.JSONObject;
@@ -28,8 +27,6 @@ import org.openflow.protocol.action.OFActionNetworkLayerSource;
 import org.openflow.protocol.action.OFActionNetworkTypeOfService;
 import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionTransportLayer;
-import org.openflow.protocol.statistics.OFStatisticsType;
-import org.openflow.util.U8;
 
 /**
  * Describe your class here...
@@ -47,7 +44,7 @@ public class MessageSerializer {
 			case DESC: 
 				break;
 			case FLOW:
-				retString = "[\"flow_stats_request\", 3]" + "\n";
+				retString = "[\"flow_stats_request\", " + switchID + "]" + "\n";
 				break;
 			case AGGREGATE:
 			case PORT:
@@ -73,7 +70,9 @@ public class MessageSerializer {
 		JSONObject[] actionArray = new JSONObject[packetOut.getActions().size()];
 		for (int i=0; i<packetOut.getActions().size(); i++) {
 			actionArray[i] = getAction(packetOut.getActions().get(i));
-			
+			String key = JSONObject.getNames(actionArray[i])[0];
+			Object value = actionArray[i].get(key);
+			json.put(key, value);
 		}
 		json.put("actions", actionArray);
 		
@@ -100,12 +99,10 @@ public class MessageSerializer {
 					json.put("srcmac", flowMod.getMatch().getDataLayerSource());
 					break;
 				case SET_NW_DST:
-					//String ipDst = cidrToString(flowMod.getMatch().getNetworkDestination(), flowMod.getMatch().getNetworkDestination());
 					String ipDst = IPv4.fromIPv4Address(flowMod.getMatch().getNetworkDestination());
 					json.put("dstip", ipDst.getBytes());
 					break;
 				case SET_NW_SRC:
-					//String ipSrc = cidrToString(flowMod.getMatch().getNetworkSource(), flowMod.getMatch().getNetworkSource());
 					String ipSrc = IPv4.fromIPv4Address(flowMod.getMatch().getNetworkSource());
 					json.put("srcip", ipSrc.getBytes());
 					break;
@@ -123,7 +120,7 @@ public class MessageSerializer {
 		}
 		json.put("switch", switchID);
 		json.put("inport", flowMod.getMatch().getInputPort());
-		json.put("nw_proto", Integer.parseInt(Byte.toString(flowMod.getMatch().getNetworkProtocol())));
+		json.put("nw_proto", flowMod.getMatch().getNetworkProtocol());
 		json.put("ethtype", flowMod.getMatch().getDataLayerType());	
 		
 		StringBuilder sb = new StringBuilder("[\"");
@@ -150,11 +147,6 @@ public class MessageSerializer {
 		for (int i=0; i<flowMod.getActions().size(); i++) {
 			actionArray[i] = flowMod.getActions().get(i).getType().toString();
 		}
-//		JSONArray jArray = new JSONArray(actionArray);
-//		sb.append(", ")
-//		  .append(jArray)
-//		  .append("");
-		
 		sb.append(", [{\"outport\": ")
 		  .append(flowMod.getOutPort())
 		  .append("}]");
@@ -162,33 +154,34 @@ public class MessageSerializer {
 		return sb.toString();
 	}
 	
+
 	public static JSONObject getAction(OFAction action) {
 		JSONObject json = new JSONObject();
 		switch (action.getType()) {
 			case OUTPUT:
-				json.append("outport", ((OFActionOutput)action).getPort());
+				json.put("outport", Integer.toString(0x0FFFF&(((OFActionOutput)action).getPort())));
 				break;
 			case SET_DL_DST:
-				json.append("dstmac", ((OFActionDataLayerDestination)action).getDataLayerAddress());
+				json.put("dstmac", ((OFActionDataLayerDestination)action).getDataLayerAddress());
 				break;
 			case SET_DL_SRC:
-				json.append("srcmac", ((OFActionDataLayerSource)action).getDataLayerAddress());
+				json.put("srcmac", ((OFActionDataLayerSource)action).getDataLayerAddress());
 				break;
 			case SET_NW_DST:
 				int ipDst = ((OFActionNetworkLayerDestination)action).getNetworkAddress();
-				json.append("dstip", IPv4.toIPv4AddressBytes(ipDst));
+				json.put("dstip", IPv4.toIPv4AddressBytes(ipDst));
 				break;
 			case SET_NW_SRC:
 				int ipSrc = ((OFActionNetworkLayerSource)action).getNetworkAddress();
-				json.append("dstmac", IPv4.toIPv4AddressBytes(ipSrc));
+				json.put("dstmac", IPv4.toIPv4AddressBytes(ipSrc));
 				break;
 			case SET_NW_TOS:
-				json.append("tos", ((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
+				json.put("tos", ((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
 			case SET_TP_DST:
-				json.append("dstport", ((OFActionTransportLayer)action).getTransportPort());
+				json.put("dstport", (int)((OFActionTransportLayer)action).getTransportPort());
 				break;
 			case SET_TP_SRC:
-				json.append("srcport", ((OFActionTransportLayer)action).getTransportPort());
+				json.put("srcport", (int)((OFActionTransportLayer)action).getTransportPort());
 				break;
 			case SET_VLAN_ID:
 			case SET_VLAN_PCP:
@@ -198,24 +191,5 @@ public class MessageSerializer {
 		}
 		return json;
 	}
-	
-	public static String cidrToString(int ip, int prefix) {
-        String str;
-        if (prefix >= 32) {
-            str = ipToString(ip);
-        } else {
-            // use the negation of mask to fake endian magic
-            int mask = ~((1 << (32 - prefix)) - 1);
-            str = ipToString(ip & mask) + "/" + prefix;
-        }
-
-        return str;
-	}
-	public static String ipToString(int ip) {
-        return Integer.toString(U8.f((byte) ((ip & 0xff000000) >> 24))) + "."
-                + Integer.toString((ip & 0x00ff0000) >> 16) + "."
-                + Integer.toString((ip & 0x0000ff00) >> 8) + "."
-                + Integer.toString(ip & 0x000000ff);
-    }
 	
 }

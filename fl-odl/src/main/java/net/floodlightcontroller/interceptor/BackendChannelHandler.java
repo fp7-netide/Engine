@@ -181,8 +181,10 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					sendMessageToController(receivedPacket.getSwitchId(), packetIn);
 					break;
 				case FLOW_STATS_REPLY:
-					OFStatisticsReply OFStatisticsReply = MessageParser.parseStatsReply(OFStatisticsType.FLOW, msg);
-					sendMessageToController(1, OFStatisticsReply);
+					MessageParser mp = new MessageParser();
+					OFStatisticsReply OFStatisticsReply = mp.parseStatsReply(OFStatisticsType.FLOW, msg);
+					sendMessageToController(mp.getSwitchId(), OFStatisticsReply);
+					break;
 				case LINK:
 					
 				default:

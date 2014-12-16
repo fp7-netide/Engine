@@ -145,14 +145,11 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 		
 		switch (msg.getType()) {
 	        case PACKET_IN:
-	        	
 	        case FLOW_REMOVED:
-	        	
+	        	break;
 	        case ERROR:
 	            logger.info("received an error {} from switch {}", (OFError) msg, sw);
-	            return Command.CONTINUE;
 	        default:
-	        	break;
 		}
 		return Command.CONTINUE;
 	}

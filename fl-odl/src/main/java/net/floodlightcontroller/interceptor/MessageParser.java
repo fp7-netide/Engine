@@ -14,7 +14,6 @@
 package net.floodlightcontroller.interceptor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import net.floodlightcontroller.packet.IPv4;
@@ -23,7 +22,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFStatisticsReply;
-import org.openflow.protocol.OFType;
 import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionDataLayerDestination;
 import org.openflow.protocol.action.OFActionDataLayerSource;
@@ -32,7 +30,6 @@ import org.openflow.protocol.action.OFActionNetworkLayerSource;
 import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
-import org.openflow.protocol.factory.OFStatisticsFactory;
 import org.openflow.protocol.statistics.OFDescriptionStatistics;
 import org.openflow.protocol.statistics.OFFlowStatisticsReply;
 import org.openflow.protocol.statistics.OFPortStatisticsReply;
@@ -48,8 +45,13 @@ import org.openflow.protocol.statistics.OFTableStatistics;
  */
 public class MessageParser {
 
-	/**
-	 * Parses message into relevant properties
+	private long switchId = 0;
+	/**@return the switchId */
+	public long getSwitchId() {
+		return switchId;
+	}
+	
+	/** Parses message into relevant properties
 	 * @param rawMessage string to be parsed
 	 */
 	public MessageParser() { }
@@ -62,16 +64,17 @@ public class MessageParser {
 	 * "["flow_stats_reply", 3, [{"packet_count": 0, "hard_timeout": 0, "byte_count": 0, "idle_timeout": 0, "actions": "[{'output': 65533}]", 
 	 * 							  "duration_nsec": 27000000, "priority": 0, "duration_sec": 0, "table_id": 0, "cookie": 0, "match": "{}"}]]"
 	 */
-	public static OFStatisticsReply parseStatsReply(OFStatisticsType statsType, String rawMessage) {
+	public OFStatisticsReply parseStatsReply(OFStatisticsType statsType, String rawMessage) {
 		//EXTRACT THE JSON
 		String tmp = rawMessage.substring(rawMessage.indexOf(",")+2, rawMessage.length()-2);
-		String flagStr = tmp.substring(0, 1);
+		String switchStr = tmp.substring(0, 1);
+		this.switchId = Long.parseLong(switchStr);
 		String jsonStr = tmp.substring(tmp.indexOf(",")+3);
 		JSONObject json = new JSONObject(jsonStr);
 		
 		//ADD PROPS TO STATS_REPLY OBJECT
 		OFStatisticsReply statsReply = new OFStatisticsReply();
-		statsReply.setFlags(Short.parseShort(flagStr));
+		//statsReply.setFlags(Short.parseShort(flagStr));
 		statsReply.setStatisticType(statsType);
 		statsReply.setStatisticsFactory(new BasicFactory());
 		List<OFStatistics> statistics = new ArrayList<OFStatistics>();
@@ -136,7 +139,7 @@ public class MessageParser {
 	 * @param array
 	 * @return
 	 */
-	private static List<OFAction> parseActionsArray(JSONArray array) {
+	private List<OFAction> parseActionsArray(JSONArray array) {
 		List<OFAction> listActions = new ArrayList<OFAction>();
 		
 		for (int i=0; i<array.length(); i++) {
@@ -159,13 +162,11 @@ public class MessageParser {
 						listActions.add(dlSrc);
 						break;
 					case "dstip":
-						//int dstip = fromCIDR(json.getString(name));
 						int dstip = IPv4.toIPv4Address(json.getString(name));
 						OFActionNetworkLayerDestination netDes = new OFActionNetworkLayerDestination(dstip);
 						listActions.add(netDes);
 						break;
 					case "srcip":
-						//int srcip = fromCIDR(json.getString(name));
 						int srcip = IPv4.toIPv4Address(json.getString(name));
 						OFActionNetworkLayerSource netSrc = new OFActionNetworkLayerSource(srcip);
 						listActions.add(netSrc);
@@ -179,8 +180,13 @@ public class MessageParser {
 		}
 		return listActions;
 	}
-	
-	private static byte[] parseByteArray(JSONArray jArray) {
+
+	/**
+	 * Converts a JSON array of bytes to a Byte array
+	 * @param jArray json array
+	 * @return byte array
+	 */
+	private byte[] parseByteArray(JSONArray jArray) {
 		byte[] bArr = new byte[jArray.length()];
 		for (int i=0; i<jArray.length(); i++) {
 			int number = Integer.parseInt(jArray.get(i).toString());
@@ -188,20 +194,20 @@ public class MessageParser {
 		}
 		return bArr;
 	}
-	
-	/**
-     * Generates an integer version of the IP address
-     * @param cidr "192.168.0.0/16" or "172.16.1.5"
-     * @throws IllegalArgumentException
-     */
-    private static int fromCIDR(String cidr) throws IllegalArgumentException {
-        String values[] = cidr.split("/");
-        String[] ip_str = values[0].split("\\.");
-        int ip = 0;
-        ip += Integer.valueOf(ip_str[0]) << 24;
-        ip += Integer.valueOf(ip_str[1]) << 16;
-        ip += Integer.valueOf(ip_str[2]) << 8;
-        ip += Integer.valueOf(ip_str[3]);
-        return ip;
-    }
+
+	public static List<OFAction> setAction(OFActionType type, Object value) {
+		List<OFAction> list = new ArrayList<OFAction>();
+		OFAction action = null;
+	    switch (type) {
+	    case OUTPUT:
+	    	action = new OFActionOutput((short)value);
+	        break;
+	    case SET_DL_SRC:
+	    	action = new OFActionNetworkLayerSource((int)value);
+	    	break;
+	    // etc ...
+	    }
+	    list.add(action);
+	    return list;
+	}
 }

@@ -79,10 +79,10 @@ public class MessagePort {
 		this.action = props[1].trim().substring(1, props[1].trim().length()-1); //STRIP " "
 		this.switchId = Long.parseLong(props[2].trim());
 		this.portNo = Short.parseShort(props[3].trim());
-		this.conf_up = Boolean.parseBoolean(props[4].trim());
-		this.stat_up = Boolean.parseBoolean(props[5].trim());
 		//PORT PROPERTIES
-		if (props.length > 6) { 
+		if (props.length > 4) {
+			this.conf_up = Boolean.parseBoolean(props[4].trim());
+			this.stat_up = Boolean.parseBoolean(props[5].trim());
 			for (int i=6; i<props.length; i++) {
 				String portProp = props[i].trim().substring(1, props[i].trim().length()-1);
 				if (portProp.startsWith("\"")) portProp = portProp.substring(1); //STRIP STARTING [

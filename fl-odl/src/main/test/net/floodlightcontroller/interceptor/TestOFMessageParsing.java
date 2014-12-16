@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONObject;
 import org.junit.Test;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFMatch;
@@ -116,7 +117,7 @@ public class TestOFMessageParsing {
 	public void testMessageFlowMod() {
 		OFFlowMod flowMod = createFlowMod();
 		String output = MessageSerializer.serializeMessage(1, flowMod);
-		System.out.println(output);
+		System.out.println("FlowMod: " + output);
 		//TODO: TEST THIS OUPUT
 	}
 	
@@ -124,7 +125,7 @@ public class TestOFMessageParsing {
 	public void testMessagePacketOut() {
 		OFPacketOut packetOut = createPacketOut();
 		String output = MessageSerializer.serializeMessage(1, packetOut);
-		System.out.println(output);
+		System.out.println("PacketOut: " + output);
 		//TODO: TEST THIS OUPUT
 	}
 	
@@ -133,10 +134,10 @@ public class TestOFMessageParsing {
 		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 1, \"hard_timeout\": 0, \"byte_count\": 4, \"idle_timeout\": 5, \"actions\": \"[{'output': 65533}]\", " + 
 						 "\"duration_nsec\": 27000000, \"priority\": 6, \"duration_sec\": 0, \"table_id\": 25, \"cookie\": 2, \"match\": \"{}\"}]]";
 
-		OFStatisticsReply reply = MessageParser.parseStatsReply(OFStatisticsType.FLOW, message);
+		MessageParser mp = new MessageParser();
+		OFStatisticsReply reply = mp.parseStatsReply(OFStatisticsType.FLOW, message);
 		
 		//TESTS
-		assertEquals("Flags not set correctly", 3, reply.getFlags());
 		assertEquals("Statistics type not set correctly", OFStatisticsType.FLOW, reply.getStatisticType());
 		OFStatistics stat = reply.getStatistics().get(0);
 		assertTrue("Returned stat is not a FlowStat class", (stat instanceof OFFlowStatisticsReply));
@@ -162,7 +163,8 @@ public class TestOFMessageParsing {
 		//TODO: NEED A SAMPLE OF A DESCRIPTION REPLY TO TEST AGAINST
 		String message = "[\"flow_stats_reply\", 3, [{\"packet_count\": 1, \"hard_timeout\": 0, \"byte_count\": 4, \"idle_timeout\": 5, \"actions\": \"[{'output': 65533}]\", " + 
 				 "\"duration_nsec\": 27000000, \"priority\": 6, \"duration_sec\": 0, \"table_id\": 25, \"cookie\": 2, \"match\": \"{}\"}]]";
-		OFStatisticsReply reply = MessageParser.parseStatsReply(OFStatisticsType.DESC, message);
+		MessageParser mp = new MessageParser();
+		OFStatisticsReply reply = mp.parseStatsReply(OFStatisticsType.DESC, message);
 		//TESTS
 		OFStatistics stat = reply.getStatistics().get(0);
 		assertTrue("Returned stat is not a FlowStat class", (stat instanceof OFDescriptionStatistics));
@@ -173,6 +175,22 @@ public class TestOFMessageParsing {
 		assertEquals("Manufacturer Description not set correctly", "C", desc.getManufacturerDescription());
 		assertEquals("Serial Number not set correctly", "D", desc.getSerialNumber());
 		assertEquals("Software Description not set correctly", "E", desc.getSoftwareDescription());
+	}
+	
+	@Test
+	public void testActions() {
+		List<OFAction> listUT = MessageParser.setAction(OFActionType.OUTPUT, (short)3);
+		
+		OFActionOutput actionToTest = (OFActionOutput) listUT.get(0); //<-- ClassCastException
+		assertEquals("OutPort not set correctly", 3, actionToTest.getPort());
+	}
+	
+	@Test
+	public void testActionCast() {
+		OFAction action = new OFActionOutput((short)3);
+		
+		JSONObject json = MessageSerializer.getAction(action);
+		assertEquals("Action not set correctly", 3, json.getInt("outport"));
 	}
 	
 	private OFPacketOut createPacketOut() {
@@ -190,8 +208,7 @@ public class TestOFMessageParsing {
 		BasicFactory factory = new BasicFactory();
 		packetOut.setActionFactory(factory.getActionFactory());
 		List<OFAction> actions = new ArrayList<OFAction>();
-		OFAction action = new OFAction();
-		action.setType(OFActionType.SET_DL_DST);
+		OFAction action = new OFActionOutput((short)3);
 		actions.add(action);
 		packetOut.setActions(actions);
 		
