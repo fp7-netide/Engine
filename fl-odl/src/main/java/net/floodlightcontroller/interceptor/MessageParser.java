@@ -28,7 +28,6 @@ import org.openflow.protocol.action.OFActionDataLayerSource;
 import org.openflow.protocol.action.OFActionNetworkLayerDestination;
 import org.openflow.protocol.action.OFActionNetworkLayerSource;
 import org.openflow.protocol.action.OFActionOutput;
-import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.statistics.OFDescriptionStatistics;
 import org.openflow.protocol.statistics.OFFlowStatisticsReply;
@@ -195,19 +194,4 @@ public class MessageParser {
 		return bArr;
 	}
 
-	public static List<OFAction> setAction(OFActionType type, Object value) {
-		List<OFAction> list = new ArrayList<OFAction>();
-		OFAction action = null;
-	    switch (type) {
-	    case OUTPUT:
-	    	action = new OFActionOutput((short)value);
-	        break;
-	    case SET_DL_SRC:
-	    	action = new OFActionNetworkLayerSource((int)value);
-	    	break;
-	    // etc ...
-	    }
-	    list.add(action);
-	    return list;
-	}
 }

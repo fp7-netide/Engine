@@ -178,14 +178,6 @@ public class TestOFMessageParsing {
 	}
 	
 	@Test
-	public void testActions() {
-		List<OFAction> listUT = MessageParser.setAction(OFActionType.OUTPUT, (short)3);
-		
-		OFActionOutput actionToTest = (OFActionOutput) listUT.get(0); //<-- ClassCastException
-		assertEquals("OutPort not set correctly", 3, actionToTest.getPort());
-	}
-	
-	@Test
 	public void testActionCast() {
 		OFAction action = new OFActionOutput((short)3);
 		

@@ -38,6 +38,12 @@ public class MessageSerializer {
 
 	public MessageSerializer() { }
 	
+	/**
+	 * Serializes an Openflow Statistics Request message for Pyretic
+	 * @param switchID switch id
+	 * @param statsRequest object to be serialized
+	 * @return
+	 */
 	public static String serializeMessage(long switchID, OFStatisticsRequest statsRequest) {
 		String retString="";
 		switch (statsRequest.getStatisticType()) {
@@ -55,6 +61,12 @@ public class MessageSerializer {
 		return retString;
 	}
 	
+	/**
+	 * Serializes an Openflow OFPacketOut message for Pyretic
+	 * @param switchID switch id
+	 * @param packetOut object to be serialized
+	 * @return
+	 */
 	public static String serializeMessage(long switchID, OFPacketOut packetOut) {
 		//["packet", {"outport": 1, "protocol": 2, "header_len": 14, "inport": 2, 
 		// "dstip": [49, 48, 46, 48, 46, 48, 46, 49], 
@@ -82,6 +94,12 @@ public class MessageSerializer {
 		return sb.toString();
 	}
 
+	/**
+	 * Serializes an Openflow OFFlowMod message for Pyretic
+	 * @param switchID switch id
+	 * @param OFFlowMod object to be serialized
+	 * @return
+	 */
 	public static String serializeMessage(long switchID, OFFlowMod flowMod) {
 		//["install",  
 		//  {"dstip": [49, 48, 46, 48, 46, 48, 46, 49], "srcip": [49, 48, 46, 48, 46, 48, 46, 50],
@@ -154,7 +172,11 @@ public class MessageSerializer {
 		return sb.toString();
 	}
 	
-
+	/**
+	 * Returns a JSON object of the provided OF Action
+	 * @param action to be serialized to JSON
+	 * @return
+	 */
 	public static JSONObject getAction(OFAction action) {
 		JSONObject json = new JSONObject();
 		switch (action.getType()) {

@@ -83,8 +83,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
     	logger.debug("MessageReceived: " );
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
-        String msg = new String(buf.array());
-        logger.debug(msg);
+        //String msg = new String(buf.array());
+        //logger.debug(msg);
 		try {
 			List<OFMessage> listMessages = factory.parseMessage(buf);
 			handleMessage(listMessages, e.getChannel());
@@ -210,14 +210,9 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	 * @param message the Openflow message to be sent
 	 */
 	private void sendMessageToShim(OFMessage message) {
-		logger.debug("Sending message to Shim: " + message.getType().toString());
-		//ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
-		//message.writeTo(sendData);
-		//this.shimChannel.write(sendData);
-		logger.debug("data: " + OFMessage.getDataAsString(dummySwitch, message, null));
+		logger.debug("Sending message to Shim: " + OFMessage.getDataAsString(dummySwitch, message, null));
 		byte[] bMessage = serializeMessage(message);
 		this.shimChannel.write(ChannelBuffers.copiedBuffer(bMessage));
-		logger.debug("Sent message to Shim");
 	}
 	
 	private byte[] serializeMessage(OFMessage message) {
