@@ -159,7 +159,7 @@ public class MessageSerializer {
 		JSONObject json = new JSONObject();
 		switch (action.getType()) {
 			case OUTPUT:
-				json.put("outport", Integer.toString(0x0FFFF&(((OFActionOutput)action).getPort())));
+				json.put("outport", (0x0FFFF&(((OFActionOutput)action).getPort())));
 				break;
 			case SET_DL_DST:
 				json.put("dstmac", ((OFActionDataLayerDestination)action).getDataLayerAddress());
@@ -178,10 +178,10 @@ public class MessageSerializer {
 			case SET_NW_TOS:
 				json.put("tos", ((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
 			case SET_TP_DST:
-				json.put("dstport", (int)((OFActionTransportLayer)action).getTransportPort());
+				json.put("dstport", (0x0FFFF&((OFActionTransportLayer)action).getTransportPort()));
 				break;
 			case SET_TP_SRC:
-				json.put("srcport", (int)((OFActionTransportLayer)action).getTransportPort());
+				json.put("srcport", (0x0FFFF&((OFActionTransportLayer)action).getTransportPort()));
 				break;
 			case SET_VLAN_ID:
 			case SET_VLAN_PCP:
