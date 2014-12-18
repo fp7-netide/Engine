@@ -76,10 +76,15 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
      */
     @Override
     public void setPacketProcessingService(
-            PacketProcessingService packetProcessingService) {
+            PacketProcessingService packetProcessingService)
+    {
         this.packetProcessingService = packetProcessingService;
     }
 
+
+    public PacketProcessingService getPacketProcessingService() {
+        return this.packetProcessingService;
+    }
     /**
      * @param data the data to set
      */
@@ -110,6 +115,8 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
         odlHandler.setPacketInDispatcher(packetInDispatcher);
         odlHandler.setBackendChannel(channel); //////// new
         packetInRegistration = notificationService.registerNotificationListener(packetInDispatcher);
+
+        channel.setHandler(odlHandler); // new
 
         WakeupOnNode wakeupListener = new WakeupOnNode();
         wakeupListener.setODLHandler(odlHandler);
@@ -153,11 +160,5 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
     @Override
     public void setBackendChannel(BackendChannel channel) {
         this.channel = channel;
-    }
-
-    // not important now
-    public void sendToSwitch(JSONObject json) {
-        ODLHandlerSimpleImpl simple = new ODLHandlerSimpleImpl();
-        simple.sendToSwitch(json);
     }
 }

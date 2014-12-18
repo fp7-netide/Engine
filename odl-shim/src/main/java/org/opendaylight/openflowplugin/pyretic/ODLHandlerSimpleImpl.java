@@ -21,23 +21,21 @@
 
 package org.opendaylight.openflowplugin.pyretic;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.*;
 
+import org.opendaylight.openflowplugin.pyretic.Utils.FlowUtils;
+import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.FlowKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.FlowCookie;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
@@ -46,11 +44,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.No
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.*;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,12 +53,23 @@ import org.json.simple.JSONObject;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import com.telefonica.pyretic.backendchannel.BackendChannel;
 
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
+import java.util.ArrayList;
+import java.util.List;
+import org.opendaylight.openflowplugin.pyretic.Utils.OutputUtils;
 
 
 /**
  * Simple Learning Switch implementation which does mac learning for one switch.
- * 
- * 
+ *
+ /**
+ * Created by Jennifer Hernández Bécares
  */
 public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListener {
 
@@ -95,12 +100,10 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     private Set<String> coveredMacPaths;
 
     private BackendChannel channel;
-
+    private int switches = 0;
 
     @Override
     public synchronized void onSwitchAppeared(InstanceIdentifier<Table> appearedTablePath) {
-
-        System.out.println("------> On switch appeared... LearningSwitchHandlerSimpleImp");
 
         if (iAmLearning) {
             LOG.debug("already learning a node, skipping {}", nodeId.getValue());
@@ -118,6 +121,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 LOG.error("closing registration upon flowCapable node update listener failed: " + e.getMessage(), e);
             }
         }
+
 
         iAmLearning = true;
         
@@ -141,7 +145,38 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         System.out.println("--->writing packetForwardToController flow");
         LOG.debug("writing packetForwardToController flow");
         dataStoreAccessor.writeFlowToConfig(flowPath, allToCtrlFlow.build());
+
+
+        // FIXME
+        switches++;
+        String p = "[\"switch\", \"join\", " + switches + ", \"BEGIN\"]";
+        String p21 = "[\"port\", \"join\", " + switches + ", 1, true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
+        String p22 = "[\"port\", \"join\", " + switches + ", 2, true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
+        String p23 = "[\"port\", \"join\", " + switches + ", 3, true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
+        String p3 = "[\"switch\", \"join\", " + switches + ", \"END\"]";
+        this.channel.push(p);
+        sleep();
+        this.channel.push(p21);
+        sleep();
+        this.channel.push(p22);
+        sleep();
+        this.channel.push(p23);
+        sleep();
+        this.channel.push(p3);
+        System.out.println(p + "\n" + p21 + "\n" + p22 + "\n" + p23 + "\n" + p3);
+
     }
+
+    // new
+    private void sleep() {
+        try {
+            Thread.sleep(1000);                 //1000 milliseconds is one second.
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+    // end new
+
 
     @Override
     public void setRegistrationPublisher(DataChangeListenerRegistrationHolder registrationPublisher) {
@@ -158,71 +193,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         this.packetProcessingService = packetProcessingService;
     }
 
-    @Override
- /*   public void onPacketReceived(PacketReceived notification) {
-
-        System.out.println("---> On packet received in LSHandler Simple impl");
-        if (!iAmLearning) {
-            // ignoring packets - this should not happen
-            return;
-        }
-
-        LOG.debug("Received packet via match: {}", notification.getMatch());
-
-        // detect and compare node - we support one switch
-        if (!nodePath.contains(notification.getIngress().getValue())) {
-            return;
-        }
-
-        // read src MAC and dst MAC
-        byte[] dstMacRaw = PacketUtils.extractDstMac(notification.getPayload());
-        byte[] srcMacRaw = PacketUtils.extractSrcMac(notification.getPayload());
-        byte[] etherType = PacketUtils.extractEtherType(notification.getPayload());
-
-        MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
-        MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
-
-        NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
-
-        LOG.debug("Received packet from MAC match: {}, ingress: {}", srcMac, ingressKey.getId());
-        LOG.debug("Received packet to   MAC match: {}", dstMac);
-        LOG.debug("Ethertype: {}", Integer.toHexString(0x0000ffff & ByteBuffer.wrap(etherType).getShort()));
-
-        // learn by IPv4 traffic only
-        if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
-            NodeConnectorRef previousPort = mac2portMapping.put(srcMac, notification.getIngress());
-            if (previousPort != null && !notification.getIngress().equals(previousPort)) {
-                NodeConnectorKey previousPortKey = InstanceIdentifierUtils.getNodeConnectorKey(previousPort.getValue());
-                LOG.debug("mac2port mapping changed by mac {}: {} -> {}", srcMac, previousPortKey, ingressKey.getId());
-            }
-            // if dst MAC mapped:
-            NodeConnectorRef destNodeConnector = mac2portMapping.get(dstMac);
-            if (destNodeConnector != null) {
-                synchronized (coveredMacPaths) {
-                    if (!destNodeConnector.equals(notification.getIngress())) {
-                        // add flow
-                        addBridgeFlow(srcMac, dstMac, destNodeConnector);
-                        addBridgeFlow(dstMac, srcMac, notification.getIngress());
-                    } else {
-                        LOG.debug("useless rule ignoring - both MACs are behind the same port");
-                    }
-                }
-                LOG.debug("packetIn-directing.. to {}",
-                        InstanceIdentifierUtils.getNodeConnectorKey(destNodeConnector.getValue()).getId());
-                sendPacketOut(notification.getPayload(), notification.getIngress(), destNodeConnector);
-            } else {
-                // flood
-                LOG.debug("packetIn-still flooding.. ");
-                flood(notification.getPayload(), notification.getIngress());
-            }
-        } else {
-            // non IPv4 package
-            flood(notification.getPayload(), notification.getIngress());
-        }
-
-    }*/
     public void onPacketReceived(PacketReceived notification) {
-        System.out.println("--------------New packet arrived");
+        System.out.println("-----New packet arrived");
 
         byte[] etherType = PacketUtils.extractEtherType(notification.getPayload());
         byte[] dstMacRaw = PacketUtils.extractDstMac(notification.getPayload());
@@ -230,12 +202,17 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
 
         MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
         MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
+
+
+        // Debug
+        System.out.println("srcmac init");
+        System.out.println(srcMac.getValue());
+        System.out.println("dstmac init");
+        System.out.println(dstMac.getValue());
+
 
         NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
         String path  = ingressKey.getId().getValue();
-
-        //System.out.println("Received packet from MAC match: " + srcMac + " ingress: {}" +ingressKey.getId());
-        //System.out.println("Received packet to   MAC match: " + dstMac);
 
         String [] msg = null;
         String switch_s = null;
@@ -252,13 +229,13 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                     aux = 256 + aux;
                 }
                 raw.add(aux);
-
             }
 
             System.out.print("Ethertype: " ); // + etherType.toString());
             for(int i = 0; i < etherType.length; i++) {
                 System.out.printf("%02x ",0xff & etherType[i]);
             }
+            System.out.println("");
 
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
                 LOG.debug("IPV4 packet arrived");
@@ -274,13 +251,10 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 System.out.println(p);
 
                 this.channel.push(p.toString() + "\n");
-
                 mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
                 // Handle IPV6 packet
-                /*LOG.debug("IPV6 packet arrived");
-
                 JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
@@ -291,10 +265,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 p.add("\"packet\"");
                 p.add(json.toString());
                 System.out.println(p);
-                this.channel.push(p.toString() + "\n");
 
                 mac2portMapping.put(srcMac, notification.getIngress());
-                System.out.println("--> json" + json.toJSONString());*/
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
                 // Handle ARP packet
@@ -308,13 +280,15 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 List<String> p = new ArrayList<String>();
                 p.add("\"packet\"");
                 p.add(json.toString());
-                System.out.println(p);
+
 
                 if (this.channel == null) System.out.println("Impossible to push");
+                else {
+                    System.out.println("Pushing arp packet");
+                    System.out.println(p);
+                }
                 this.channel.push(p.toString() + "\n");
-
                 mac2portMapping.put(srcMac, notification.getIngress());
-                System.out.println("--> json" + json.toJSONString());
 
             }
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
@@ -347,148 +321,110 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     }
 
 
-    /**
-
-
-    private void addBridgeFlow(MacAddress srcMac, MacAddress dstMac, NodeConnectorRef destNodeConnector) {
-        synchronized (coveredMacPaths) {
-            String macPath = srcMac.toString() + dstMac.toString();
-            if (!coveredMacPaths.contains(macPath)) {
-                LOG.debug("covering mac path: {} by [{}]", macPath,
-                        destNodeConnector.getValue().firstKeyOf(NodeConnector.class, NodeConnectorKey.class).getId());
-
-                coveredMacPaths.add(macPath);
-                FlowId flowId = new FlowId(String.valueOf(flowIdInc.getAndIncrement()));
-                FlowKey flowKey = new FlowKey(flowId);
-
-                InstanceIdentifier<Flow> flowPath = InstanceIdentifierUtils.createFlowPath(tablePath, flowKey);
-
-                Short tableId = InstanceIdentifierUtils.getTableId(tablePath);
-                FlowBuilder srcToDstFlow = FlowUtils.createDirectMacToMacFlow(tableId, DIRECT_FLOW_PRIORITY, srcMac,
-                        dstMac, destNodeConnector);
-                srcToDstFlow.setCookie(new FlowCookie(BigInteger.valueOf(flowCookieInc.getAndIncrement())));
-
-                dataStoreAccessor.writeFlowToConfig(flowPath, srcToDstFlow.build());
-            }
-        }
-    }
-
-    private void flood(byte[] payload, NodeConnectorRef ingress) {
-        NodeConnectorKey nodeConnectorKey = new NodeConnectorKey(nodeConnectorId("0xfffffffb"));
-        InstanceIdentifier<?> nodeConnectorPath = InstanceIdentifierUtils.createNodeConnectorPath(nodePath, nodeConnectorKey);
-        NodeConnectorRef egressConnectorRef = new NodeConnectorRef(nodeConnectorPath);
-
-        sendPacketOut(payload, ingress, egressConnectorRef);
-    }
-
-    private NodeConnectorId nodeConnectorId(String connectorId) {
-        NodeKey nodeKey = nodePath.firstKeyOf(Node.class, NodeKey.class);
-        StringBuilder stringId = new StringBuilder(nodeKey.getId().getValue()).append(":").append(connectorId);
-        return new NodeConnectorId(stringId.toString());
-    }
-
-    private void sendPacketOut(byte[] payload, NodeConnectorRef ingress, NodeConnectorRef egress) {
-        InstanceIdentifier<Node> egressNodePath = InstanceIdentifierUtils.getNodePath(egress.getValue());
-        TransmitPacketInput input = new TransmitPacketInputBuilder() //
-                .setPayload(payload) //
-                .setNode(new NodeRef(egressNodePath)) //
-                .setEgress(egress) //
-                .setIngress(ingress) //
-                .build();
-        packetProcessingService.transmitPacket(input);
-    }*/
-
-    public void sendToSwitch(JSONObject json) {
-        /*Here we have to write all the code to send packet to the switch*/
-        System.out.println("Send to switch --------");
-        Integer inport = ((Long) json.get("inport")).intValue();
-        Integer outport = ((Long) json.get("outport")).intValue();
-
-        Integer swtch = ((Long) json.get("switch")).intValue();
-        Integer dstport = ((Long) json.get("dstport")).intValue();
-        Integer srcport = ((Long) json.get("srcport")).intValue();
-
-
-        //////////////
-        /// Payload
-        List<Long> raw = (List<Long>) json.get("raw");
-        StringBuffer sb = new StringBuffer("");
-        for(Long b:raw){
-            sb.append(b.byteValue());
-        }
-        byte[] payload = sb.toString().getBytes();
-        ///////////////////
-
-        ///////////////////
-        /// Egress - dstMac
-        /*List<Long> dstMacRaw = (List<Long>) json.get("dstmac");
-        StringBuffer sbdstmac = new StringBuffer("");
-        for(Long b:dstMacRaw){
-            sbdstmac.append(b.byteValue());
-        }
-        byte[] dstMac = sbdstmac.toString().getBytes();
-
-        NodeConnectorRef egress = mac2portMapping.get(dstMac); // ok? estaba mal ->  es null*/
-        //////////////////////
-
-        ///////////////////
-        ///
-        /*List<Long> srcMacRaw = (List<Long>) json.get("srcmac");
-        StringBuffer sbsrcmac = new StringBuffer("");
-        for(Long b:dstMacRaw){
-            sbsrcmac.append(b.byteValue());
-        }
-        byte[] srcMac = sbsrcmac.toString().getBytes();
-
-        NodeConnectorRef ingress = mac2portMapping.get(srcMac);*/
-
-        /////////////////////////
-
-        // FIXME port name and node id?
-        // TODO
-        //// We create the egress node
-        NodeConnectorId egressConnectorId = new NodeConnectorId(swtch.toString());
-        NodeId egressNodeId = new NodeId(inport.toString());
-        InstanceIdentifier<NodeConnector> egressInstanceIdentifier = InstanceIdentifier.builder(Nodes.class)
-                .child(Node.class, new NodeKey(egressNodeId))
-                .child(NodeConnector.class, new NodeConnectorKey(egressConnectorId)).toInstance();
-        NodeConnectorRef egress = new NodeConnectorRef(egressInstanceIdentifier);
-        ////
-
-
-        //// We create the ingress node
-        NodeConnectorId ingressConnectorId = new NodeConnectorId(swtch.toString());
-        NodeId ingressNodeId = new NodeId(outport.toString());
-        InstanceIdentifier<NodeConnector> ingressInstanceIdentifier = InstanceIdentifier.builder(Nodes.class)
-                .child(Node.class, new NodeKey(ingressNodeId))
-                .child(NodeConnector.class, new NodeConnectorKey(ingressConnectorId)).toInstance();
-        NodeConnectorRef ingress = new NodeConnectorRef(ingressInstanceIdentifier);
-        ////
-
-        InstanceIdentifier<Node> egressNodePath = InstanceIdentifierUtils.getNodePath(egress.getValue());
-
-        TransmitPacketInput packet_out = new TransmitPacketInputBuilder().
-                setPayload(payload).
-                setNode(new NodeRef(egressNodePath)).
-                setEgress(egress).
-                setIngress(ingress).
-                build();
-
-
-        System.out.println("<----------- DEBUG -------------->");
-        System.out.println("Egress: " + egress.getValue());
-        System.out.println("Ingress: " + ingress.getValue());
-        System.out.println("outport: " + outport +
-                            ", switch: " + swtch + ", raw: " + raw);
-
-
-
-        packetProcessingService.transmitPacket(packet_out);
-
-    }
-
     public void setBackendChannel(BackendChannel channel)
     {
         this.channel = channel;
+    }
+
+    // basurilla
+    static InstanceIdentifier<NodeConnector> createNodeConnectorId(String nodeKey, String nodeConnectorKey) {
+        return InstanceIdentifier.builder(Nodes.class)
+                .child(Node.class, new NodeKey(new NodeId(nodeKey)))
+                .child(NodeConnector.class, new NodeConnectorKey(new NodeConnectorId(nodeConnectorKey)))
+                .build();
+    }
+    //
+
+    @Override
+    public void sendToSwitch(JSONObject json, String type) {
+
+        if (type.equals("packet")) {
+
+            Integer swtch = ((Long) json.get("switch")).intValue();
+            Integer inport = ((Long) json.get("inport")).intValue();
+
+            String inNodeKey = swtch.toString();
+            String inPort = inport.toString();
+            // We set the outport in case we have to flood
+            String outPort = "0xfffffffb"; // flood
+
+            System.out.println("innodekey: " + inNodeKey);
+            System.out.println("inport: " + inPort);
+            System.out.println("outport: " + outPort);
+
+            List<Long> raw = (List<Long>) json.get("raw");
+            StringBuilder sb = new StringBuilder();
+            for (Long b : raw) {
+                sb.append(b.byteValue());
+            }
+            byte[] payload = sb.toString().getBytes();
+
+            // Get the source mac from the json
+            raw = (List<Long>) json.get("srcmac");
+            sb = new StringBuilder("");
+            for (Long b : raw) {
+                sb.append((char) b.byteValue());
+            }
+            System.out.println("My sb dst: " + sb.toString().toUpperCase());
+            MacAddress srcMac = new MacAddress(sb.toString().toUpperCase());
+
+            // Get the dst mac from the json
+            raw = (List<Long>) json.get("dstmac");
+            sb = new StringBuilder();
+            for (Long b : raw) {
+                sb.append((char) b.byteValue());
+            }
+            MacAddress dstMac = new MacAddress(sb.toString().toUpperCase());
+            System.out.println("My sb src: " + sb.toString().toUpperCase());
+
+
+            NodeConnectorRef srcnode = mac2portMapping.get(srcMac);
+            NodeConnectorRef dstnode = mac2portMapping.get(dstMac);
+
+            TransmitPacketInputBuilder packet_out = new TransmitPacketInputBuilder();
+
+            // Creates action such as send to all
+            List<Action> actionList = new ArrayList<Action>();
+            ActionBuilder ab = new ActionBuilder();
+            OutputActionBuilder output = new OutputActionBuilder();
+            output.setMaxLength(Integer.valueOf(0xffff));
+            Uri value = new Uri(OutputPortValues.ALL.toString());
+            output.setOutputNodeConnector(value);
+            ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
+            ab.setOrder(0);
+            ab.setKey(new ActionKey(0));
+            actionList.add(ab.build());
+
+
+            if (srcnode == null) System.out.println("null ingress");
+            if (dstnode == null) System.out.println("null egress");
+
+            packet_out.setPayload(payload);
+
+            InstanceIdentifier<Node> egressNodePath;
+            // FIXME
+            if (dstnode != null) {
+                egressNodePath = InstanceIdentifierUtils.getNodePath(dstnode.getValue());
+                packet_out.setNode(new NodeRef(egressNodePath));
+            }
+            else {
+                NodeConnectorRef _createNodeConnRef_2 = OutputUtils.createNodeConnRef(inNodeKey, outPort);
+                NodeConnectorRef _nodeConnectorRef_2 = new NodeConnectorRef(_createNodeConnRef_2);
+                NodeConnectorRef nEngressConRef = _nodeConnectorRef_2;
+                egressNodePath = InstanceIdentifierUtils.getNodePath(nEngressConRef.getValue());
+                packet_out.setNode(new NodeRef(egressNodePath));
+            }
+
+            packet_out.setAction(actionList);
+            if (srcnode != null)
+                packet_out.setIngress(srcnode);
+            if (dstnode != null)
+                packet_out.setEgress(dstnode);
+
+            System.out.println("Going to transmit packet");
+
+            packetProcessingService.transmitPacket(packet_out.build());
+            System.out.println("Transmitted <<<<");
+        }
     }
 }

@@ -11,7 +11,7 @@
  * Authors:
  *     Telefonica I+D
  */
-package org.opendaylight.openflowplugin.pyretic;
+package org.opendaylight.openflowplugin.pyretic.Utils;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;

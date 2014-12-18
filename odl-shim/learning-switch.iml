@@ -9,26 +9,34 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-inventory:1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:yang-binding:0.6.1" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:concepts:0.6.2-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="model-flow-base-1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-flow-base:1.2.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-inventory:1.2.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:yang-binding:0.7.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:concepts:0.7.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:util:0.7.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:2.0.3" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.2" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:14.0.1" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:yang-common:0.6.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:object-cache-api:0.6.2-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:ietf-inet-types:2010.09.24.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:ietf-yang-types:2010.09.24.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:yang-ext:2013.09.07.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:opendaylight-l2-types:2013.08.27.4-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-flow-service:1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.controller:sal-binding-api:1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.opendaylight.controller:sal-common-api:1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.github.romix:java-concurrent-hash-trie-map:0.2.23" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:yang-common:0.7.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools:object-cache-api:0.7.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:ietf-inet-types:2010.09.24.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:ietf-yang-types:2010.09.24.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:yang-ext:2013.09.07.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.yangtools.model:opendaylight-l2-types:2013.08.27.7-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-flow-service:1.2.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.controller:sal-binding-api:1.2.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.controller:sal-common-api:1.2.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.11" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1" level="project" />
+    <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.opendaylight.controller:sal:0.8.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.felix:org.apache.felix.dependencymanager:3.1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.osgi:org.osgi.compendium:5.0.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.codehaus.sonar-plugins.java:sonar-jacoco-listeners:2.4" level="project" />
-    <orderEntry type="library" name="model-flow-base-1.1-SNAPSHOT" level="project" />
   </component>
 </module>
 

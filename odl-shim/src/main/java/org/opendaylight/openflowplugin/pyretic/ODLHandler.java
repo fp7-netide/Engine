@@ -14,6 +14,7 @@
 package org.opendaylight.openflowplugin.pyretic;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
+import org.json.simple.JSONObject;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -43,4 +44,7 @@ public interface ODLHandler {
     void setRegistrationPublisher(DataChangeListenerRegistrationHolder registrationPublisher);
 
     public void setBackendChannel(BackendChannel channel);
+
+    void sendToSwitch(JSONObject json, String type);
+
 }

@@ -11,7 +11,7 @@
  * Authors:
  *     Telefonica I+D
  */
-package org.opendaylight.openflowplugin.pyretic;
+package org.opendaylight.openflowplugin.pyretic.Utils;
 
 import com.google.common.collect.ImmutableList;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;

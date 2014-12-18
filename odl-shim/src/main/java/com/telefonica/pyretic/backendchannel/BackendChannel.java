@@ -19,21 +19,13 @@ import org.json.simple.JSONValue;
 
 import java.io.IOException;
 
-import org.opendaylight.openflowplugin.pyretic.ODLHandlerSimpleImpl;
-import org.opendaylight.openflowplugin.pyretic.ODLManagerSimpleImpl;
-import org.opendaylight.openflowplugin.pyretic.multi.ODLManagerMultiImpl;
+import org.opendaylight.openflowplugin.pyretic.ODLHandler;
 import org.opendaylight.openflowplugin.pyretic.ODLManager;
 
-/**
- * Created by Álvaro Felipe Melchor on 01/08/14.
- */
+
 public class BackendChannel extends Connection implements Runnable{
 
-    //private ODLClient client;
-    //private ODLHandlerSimpleImpl handler;
-    //private ODLManagerSimpleImpl manager;
-
-    // private ODLManagerMultiImpl multiManager; // 1
+    private ODLHandler multiHandler;
     private ODLManager multiManager;
 
     String TERM_CHAR = "\n";
@@ -59,7 +51,13 @@ public class BackendChannel extends Connection implements Runnable{
 
         System.out.println("Message type: " + type);
         if(type.equals("packet")){
-           // multiManager.sendToSwitch((JSONObject)array.get(1));
+            multiHandler.sendToSwitch((JSONObject)array.get(1), type);
+        }
+        else if (type.equals("inject_discovery_packet")) {
+            JSONObject newObj = new JSONObject();
+            newObj.put("switch", array.get(1));
+            newObj.put("inport", array.get(2));
+            multiHandler.sendToSwitch(newObj, type);
         }
         else if (type.equals("install")){
             System.out.println("install");
@@ -81,30 +79,20 @@ public class BackendChannel extends Connection implements Runnable{
         }
 
     }
-
-    /*public void setODLClient(ODLClient client){
-        this.client = client;
-    }
-    public void setHandler(ODLHandlerSimpleImpl handler) {
-        this.handler = handler;
-    }
-
-    public void setManager(ODLManagerSimpleImpl manager) {
-        this.manager = manager;
-    }*/
-
-    //public void setManager(ODLManagerMultiImpl multiManager) { // 1
-      //  this.multiManager = multiManager;
-    //}
-    public void setManager(ODLManager multiManager) {
+    public void setMultiManager(ODLManager multiManager) {
         this.multiManager = multiManager;
+    }
+    public void setHandler(ODLHandler multiHandler) {
+        this.multiHandler = multiHandler;
     }
 
     //have other definition of push with different arguments types
     public void push(String msg){
-        System.out.println("Gonna push in the backend channel ");
-        super.send(msg);
-        System.out.println("Pushed");
+        if (msg != "") {
+            System.out.println("Gonna push in the backend channel ");
+            super.send(msg);
+            System.out.println("Pushed");
+        }
     }
 
     @Override

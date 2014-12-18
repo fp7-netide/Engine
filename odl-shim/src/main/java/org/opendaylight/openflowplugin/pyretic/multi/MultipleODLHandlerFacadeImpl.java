@@ -22,20 +22,15 @@
 package org.opendaylight.openflowplugin.pyretic.multi;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
-import org.opendaylight.openflowplugin.pyretic.FlowCommitWrapper;
-import org.opendaylight.openflowplugin.pyretic.ODLHandler;
+import org.json.simple.JSONObject;
+import org.opendaylight.openflowplugin.pyretic.*;
+import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketReceived;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.opendaylight.openflowplugin.pyretic.DataChangeListenerRegistrationHolder;
-import org.opendaylight.openflowplugin.pyretic.InstanceIdentifierUtils;
-import org.opendaylight.openflowplugin.pyretic.ODLHandlerSimpleImpl;
 
 
 /**
@@ -57,6 +52,10 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
         private FlowCommitWrapper dataStoreAccessor;
         private PacketProcessingService packetProcessingService;
         private PacketInDispatcherImpl packetInDispatcher;
+
+
+        // FIXME
+        private ODLHandlerSimpleImpl simpleLearningSwitch; // I shouldn't have a global one
 
         @Override
         public synchronized void onSwitchAppeared(InstanceIdentifier<Table> appearedTablePath) {
@@ -84,10 +83,10 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
             * We propagate table event to newly instantiated instance of learning switch
             */
 
-            simpleLearningSwitch.setBackendChannel(channel);// new
+            simpleLearningSwitch.setBackendChannel(channel);// new!!!!
             simpleLearningSwitch.onSwitchAppeared(appearedTablePath);
 
-
+            this.simpleLearningSwitch = simpleLearningSwitch;
             /**
             * We update mapping of already instantiated LearningSwitchHanlders
             */
@@ -119,7 +118,17 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
         this.packetInDispatcher = packetInDispatcher;
     }
 
+    @Override
     public void setBackendChannel(BackendChannel channel) {
         this.channel = channel;
+    }
+
+    @Override
+    public void sendToSwitch(JSONObject json, String type) {
+       // ODLHandlerSimpleImpl simple = new ODLHandlerSimpleImpl();
+        //simple.setBackendChannel(channel);
+        //simple.setPacketProcessingService(this.packetProcessingService);
+        //simple.sendToSwitch(json, type);
+        this.simpleLearningSwitch.sendToSwitch(json, type);
     }
 }

@@ -75,7 +75,7 @@ public class Activator extends AbstractBindingAwareConsumer implements AutoClose
         BackendChannel channel = null;
         try {
             channel = new BackendChannel("localhost",41414);
-            channel.setManager(this.multiManager);
+            channel.setMultiManager(this.multiManager);
         } catch (IOException e) {
             e.printStackTrace();
         }

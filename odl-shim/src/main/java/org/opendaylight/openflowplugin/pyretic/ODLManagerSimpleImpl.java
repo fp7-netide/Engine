@@ -21,20 +21,28 @@
 package org.opendaylight.openflowplugin.pyretic;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
+import org.json.simple.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInputBuilder;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 /**
  * Listens to packetIn notification and 
@@ -77,7 +85,12 @@ public class ODLManagerSimpleImpl implements DataChangeListenerRegistrationHolde
             PacketProcessingService packetProcessingService) {
         this.packetProcessingService = packetProcessingService;
     }
-    
+
+    @Override
+    public PacketProcessingService getPacketProcessingService() {
+        return this.packetProcessingService;
+    }
+
     /**
      * @param data the data to set
      */
@@ -101,7 +114,9 @@ public class ODLManagerSimpleImpl implements DataChangeListenerRegistrationHolde
         odlHandler.setPacketProcessingService(packetProcessingService);
         odlHandler.setBackendChannel(channel); //////// new
         packetInRegistration = notificationService.registerNotificationListener(odlHandler);
-        
+
+        channel.setHandler(odlHandler); // new
+
         WakeupOnNode wakeupListener = new WakeupOnNode();
         wakeupListener.setODLHandler(odlHandler);
         dataChangeListenerRegistration = data.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL,
