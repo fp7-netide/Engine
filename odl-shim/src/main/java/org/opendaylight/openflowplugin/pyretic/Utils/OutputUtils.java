@@ -68,6 +68,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.Tr
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.TransmitPacketInputBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
+import java.util.List;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
+
 /**
  * Created by Jennifer Hernández Bécares on 11/12/14.
  */
@@ -205,5 +208,86 @@ public class OutputUtils {
             }
         }
 
+
+    /**
+     * This function is similar to buildTransmitInputPacket, but it's personalised
+     * @param nodeId
+     * @param payload
+     * @param outPort
+     * @param inPort
+     * @param dstmac
+     * @param srcmac
+     * @return
+     */
+        public static TransmitPacketInput createPacketOut(final String nodeId,
+                                                          final byte[] payload,
+                                                          final String outPort,
+                                                          final String inPort,
+                                                          final byte[] dstmac,
+                                                          final byte[] srcmac) {
+            ArrayList<Byte> list = new ArrayList<Byte>(40);
+
+            //byte[] msg = new byte[0];
+
+            int index = 0;
+
+            /*for (byte b : msg) {
+                list.add(b);
+                index = index < 7 ? index + 1 : 0;
+            }*/
+            // type
+
+            for (byte b : dstmac) {
+                list.add(b);
+                index = index < 7 ? index + 1 : 0;
+            }
+
+            for (byte b : srcmac) {
+                list.add(b);
+                index = index < 7 ? index + 1 : 0;
+            }
+
+
+            list.add((byte)8);
+            list.add((byte)6);
+
+            for (byte b : payload) {
+                list.add(b);
+                index = index < 7 ? index + 1 : 0;
+            }
+
+            while (index < 8) {
+                list.add((byte) 0);
+                index++;
+            }
+
+            NodeRef ref = createNodeRef(nodeId);
+            NodeConnectorRef nEgressConfRef = new NodeConnectorRef(createNodeConnRef(nodeId, outPort));
+            NodeConnectorRef nIngressConRef = new NodeConnectorRef(createNodeConnRef(nodeId, inPort));
+            TransmitPacketInputBuilder tPackBuilder = new TransmitPacketInputBuilder();
+            final ArrayList<Byte> _converted_list = list;
+            byte[] _primitive = ArrayUtils.toPrimitive(_converted_list.toArray(new Byte[0]));
+
+            List<Action> actionList = new ArrayList<Action>();
+            ActionBuilder ab = new ActionBuilder();
+            OutputActionBuilder output = new OutputActionBuilder();
+            output.setMaxLength(Integer.valueOf(0xffff));
+            Uri value = new Uri(OutputPortValues.FLOOD.toString());
+            output.setOutputNodeConnector(value);
+            ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
+            ab.setOrder(0);
+            ab.setKey(new ActionKey(0));
+            actionList.add(ab.build());
+
+            tPackBuilder.setConnectionCookie(null);
+            tPackBuilder.setAction(actionList);
+            tPackBuilder.setPayload(_primitive);
+            tPackBuilder.setNode(ref);
+            tPackBuilder.setEgress(nEgressConfRef);
+            tPackBuilder.setIngress(nIngressConRef);
+            tPackBuilder.setBufferId(Long.valueOf(0xffffffffL));
+
+            return tPackBuilder.build();
+        }
 
 }

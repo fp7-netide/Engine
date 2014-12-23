@@ -30,6 +30,9 @@ In addition, it is inside the target folder that has just being created in Engin
 Go to the karaf console (which you opened before, just after running ```./bin/karaf```, right?) and install the json bundle (which is a dependency that the odl shim has) like this:
 ```bundle:install -s mvn:com.googlecode.json-simple/json-simple/1.1.1```
 
+Now, install the following bundle:
+```bundle:install -s mvn:org.apache.commons/commons-lang3/3.3.2```
+
 After that, you can install the odl shim bundle just fine:
 ```bundle:install -s mvn:org.opendaylight.openflowplugin/pyretic-odl/0.1.0-SNAPSHOT```
 

@@ -131,6 +131,10 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         mac2portMapping = new HashMap<>();
         coveredMacPaths = new HashSet<>();
 
+        System.out.println("Value: " + nodeId.getValue());
+
+
+
         // start forwarding all packages to controller
         FlowId flowId = new FlowId(String.valueOf(flowIdInc.getAndIncrement()));
         FlowKey flowKey = new FlowKey(flowId);
@@ -342,20 +346,21 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
 
             Integer swtch = ((Long) json.get("switch")).intValue();
             Integer inport = ((Long) json.get("inport")).intValue();
+            Integer outport = ((Long) json.get("outport")).intValue();
 
-            String inNodeKey = swtch.toString();
+            String inNodeKey = "openflow:" + swtch.toString();
             String inPort = inport.toString();
-            // We set the outport in case we have to flood
-            String outPort = "0xfffffffb"; // flood
+            String outPort = outport.toString(); //
 
             System.out.println("innodekey: " + inNodeKey);
             System.out.println("inport: " + inPort);
             System.out.println("outport: " + outPort);
 
+            // Get the raw from the json
             List<Long> raw = (List<Long>) json.get("raw");
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder("");
             for (Long b : raw) {
-                sb.append(b.byteValue());
+                sb.append(b); // antes b.getBytes()
             }
             byte[] payload = sb.toString().getBytes();
 
@@ -363,68 +368,31 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             raw = (List<Long>) json.get("srcmac");
             sb = new StringBuilder("");
             for (Long b : raw) {
-                sb.append((char) b.byteValue());
+                if (b != 58) sb.append((char)b.byteValue());
             }
-            System.out.println("My sb dst: " + sb.toString().toUpperCase());
-            MacAddress srcMac = new MacAddress(sb.toString().toUpperCase());
+            byte[] srcMac = sb.toString().getBytes();
+            System.out.println("My sb src: " + sb.toString().toUpperCase());
 
             // Get the dst mac from the json
             raw = (List<Long>) json.get("dstmac");
-            sb = new StringBuilder();
+            sb = new StringBuilder("");
             for (Long b : raw) {
-                sb.append((char) b.byteValue());
+                if (b != 58) sb.append((char)b.byteValue());
             }
-            MacAddress dstMac = new MacAddress(sb.toString().toUpperCase());
-            System.out.println("My sb src: " + sb.toString().toUpperCase());
+            byte[] dstMac = sb.toString().getBytes();
+            System.out.println("My sb dst: " + sb.toString().toUpperCase());
 
 
-            NodeConnectorRef srcnode = mac2portMapping.get(srcMac);
-            NodeConnectorRef dstnode = mac2portMapping.get(dstMac);
+            TransmitPacketInput input = OutputUtils.createPacketOut(inNodeKey, payload,
+                    outPort, inPort, dstMac, srcMac);
 
-            TransmitPacketInputBuilder packet_out = new TransmitPacketInputBuilder();
+            packetProcessingService.transmitPacket(input);
 
-            // Creates action such as send to all
-            List<Action> actionList = new ArrayList<Action>();
-            ActionBuilder ab = new ActionBuilder();
-            OutputActionBuilder output = new OutputActionBuilder();
-            output.setMaxLength(Integer.valueOf(0xffff));
-            Uri value = new Uri(OutputPortValues.ALL.toString());
-            output.setOutputNodeConnector(value);
-            ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
-            ab.setOrder(0);
-            ab.setKey(new ActionKey(0));
-            actionList.add(ab.build());
-
-
-            if (srcnode == null) System.out.println("null ingress");
-            if (dstnode == null) System.out.println("null egress");
-
-            packet_out.setPayload(payload);
-
-            InstanceIdentifier<Node> egressNodePath;
-            // FIXME
-            if (dstnode != null) {
-                egressNodePath = InstanceIdentifierUtils.getNodePath(dstnode.getValue());
-                packet_out.setNode(new NodeRef(egressNodePath));
-            }
-            else {
-                NodeConnectorRef _createNodeConnRef_2 = OutputUtils.createNodeConnRef(inNodeKey, outPort);
-                NodeConnectorRef _nodeConnectorRef_2 = new NodeConnectorRef(_createNodeConnRef_2);
-                NodeConnectorRef nEngressConRef = _nodeConnectorRef_2;
-                egressNodePath = InstanceIdentifierUtils.getNodePath(nEngressConRef.getValue());
-                packet_out.setNode(new NodeRef(egressNodePath));
-            }
-
-            packet_out.setAction(actionList);
-            if (srcnode != null)
-                packet_out.setIngress(srcnode);
-            if (dstnode != null)
-                packet_out.setEgress(dstnode);
-
-            System.out.println("Going to transmit packet");
-
-            packetProcessingService.transmitPacket(packet_out.build());
             System.out.println("Transmitted <<<<");
+        }
+
+        else {
+            System.out.println("Different type <<<<<< " + type);
         }
     }
 }
