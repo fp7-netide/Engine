@@ -224,42 +224,67 @@ public class OutputUtils {
                                                           final String outPort,
                                                           final String inPort,
                                                           final byte[] dstmac,
-                                                          final byte[] srcmac) {
+                                                          final byte[] srcmac,
+                                                          final byte[] dstip,
+                                                          final byte[] srcip) {
             ArrayList<Byte> list = new ArrayList<Byte>(40);
 
-            //byte[] msg = new byte[0];
-
-            int index = 0;
-
-            /*for (byte b : msg) {
+            // Dst mac for ethernet
+            for (byte b : dstmac)
                 list.add(b);
-                index = index < 7 ? index + 1 : 0;
-            }*/
-            // type
 
-            for (byte b : dstmac) {
+            // src mac for ethernet
+            for (byte b : srcmac)
                 list.add(b);
-                index = index < 7 ? index + 1 : 0;
-            }
 
-            for (byte b : srcmac) {
-                list.add(b);
-                index = index < 7 ? index + 1 : 0;
-            }
-
-
+            // ARP type
             list.add((byte)8);
             list.add((byte)6);
 
-            for (byte b : payload) {
+            // Hardware type
+            list.add((byte)0); list.add((byte)1);
+
+            // Protocol type
+            list.add((byte)8); list.add((byte)0);
+
+            // Hardware size
+            list.add((byte)6);
+
+            // Protocol size
+            list.add((byte)4);
+
+            // OP code
+            list.add((byte)0); list.add((byte)2);
+
+            // Sender mac
+            for (byte b : srcmac) {
+                list.add(b);
+            }
+
+            // Ip sender address
+            // FIXME This works, but not always. It should be the srcip
+            list.add((byte)10); list.add((byte)0); list.add((byte)0); list.add((byte)(Integer.parseInt(inPort)));
+
+            // Target mac
+            for (byte b : dstmac) {
+                list.add(b);
+            }
+
+            // Ip dst address
+            // FIXME This works, but not always. It should be the dstip
+            list.add((byte)10); list.add((byte)0); list.add((byte)0); list.add((byte)(Integer.parseInt(outPort)));
+
+
+
+            /*for (byte b : payload) {
                 list.add(b);
                 index = index < 7 ? index + 1 : 0;
             }
 
-            while (index < 8) {
+         /*   while (index < 8) {
                 list.add((byte) 0);
                 index++;
-            }
+            }*/
 
             NodeRef ref = createNodeRef(nodeId);
             NodeConnectorRef nEgressConfRef = new NodeConnectorRef(createNodeConnRef(nodeId, outPort));
@@ -288,6 +313,27 @@ public class OutputUtils {
             tPackBuilder.setBufferId(Long.valueOf(0xffffffffL));
 
             return tPackBuilder.build();
+        }
+
+    /**
+     * Receives a string with nibbles and creates an array of bytes
+     * @param hexString
+     * @return
+     */
+        public static final byte[] toByteArray( String hexString )
+        {
+            int arrLength = hexString.length() >> 1;
+            byte buf[] = new byte[arrLength];
+
+            for ( int ii = 0; ii < arrLength; ii++ )
+            {
+                int index = ii << 1;
+
+                String l_digit = hexString.substring( index, index + 2 );
+                buf[ii] = ( byte ) Integer.parseInt( l_digit, 16 );
+            }
+
+            return buf;
         }
 
 }

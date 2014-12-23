@@ -356,6 +356,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             System.out.println("inport: " + inPort);
             System.out.println("outport: " + outPort);
 
+            ////////////////////////////////////////////////////////
             // Get the raw from the json
             List<Long> raw = (List<Long>) json.get("raw");
             StringBuilder sb = new StringBuilder("");
@@ -363,28 +364,57 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 sb.append(b); // antes b.getBytes()
             }
             byte[] payload = sb.toString().getBytes();
+            ////////////////////////////////////////////////////////
 
+
+            ////////////////////////////////////////////////////////
             // Get the source mac from the json
             raw = (List<Long>) json.get("srcmac");
             sb = new StringBuilder("");
             for (Long b : raw) {
                 if (b != 58) sb.append((char)b.byteValue());
             }
-            byte[] srcMac = sb.toString().getBytes();
+            byte[] srcMac = OutputUtils.toByteArray(sb.toString());
             System.out.println("My sb src: " + sb.toString().toUpperCase());
+            ////////////////////////////////////////////////////////
 
+
+            ////////////////////////////////////////////////////////
             // Get the dst mac from the json
             raw = (List<Long>) json.get("dstmac");
             sb = new StringBuilder("");
             for (Long b : raw) {
                 if (b != 58) sb.append((char)b.byteValue());
             }
-            byte[] dstMac = sb.toString().getBytes();
+            byte[] dstMac = OutputUtils.toByteArray(sb.toString());
             System.out.println("My sb dst: " + sb.toString().toUpperCase());
+            ////////////////////////////////////////////////////////
 
+            ////////////////////////////////////////////////////////
+            // Get the src ip from the json
+            raw = (List<Long>) json.get("srcip");
+            sb = new StringBuilder("");
+            for (Long b : raw) {
+                if (b != 46) sb.append((char)b.byteValue());
+            }
+            byte[] srcip = OutputUtils.toByteArray(sb.toString());
+            System.out.println("My src ip: " + sb.toString().toUpperCase());
+            ////////////////////////////////////////////////////////
+
+
+            ////////////////////////////////////////////////////////
+            // Get the dst ip from the json
+            raw = (List<Long>) json.get("dstip");
+            sb = new StringBuilder("");
+            for (Long b : raw) {
+                if (b != 46) sb.append((char)b.byteValue());
+            }
+            byte[] dstip = OutputUtils.toByteArray(sb.toString());
+            System.out.println("My dst ip: " + sb.toString().toUpperCase());
+            ////////////////////////////////////////////////////////
 
             TransmitPacketInput input = OutputUtils.createPacketOut(inNodeKey, payload,
-                    outPort, inPort, dstMac, srcMac);
+                    outPort, inPort, dstMac, srcMac, dstip, srcip);
 
             packetProcessingService.transmitPacket(input);
 
@@ -395,4 +425,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             System.out.println("Different type <<<<<< " + type);
         }
     }
+
+
 }
