@@ -87,7 +87,7 @@ public class BackendChannel extends Connection implements Runnable{
     }
 
     //have other definition of push with different arguments types
-    public void push(String msg){
+    public synchronized void push(String msg){
         if (msg != "") {
             System.out.println("Gonna push in the backend channel ");
             super.send(msg);
@@ -98,6 +98,14 @@ public class BackendChannel extends Connection implements Runnable{
     @Override
     public void run() {
         Dispatcher.loop();
+    }
+
+    private void sleep(int time) {
+        try {
+            Thread.sleep(time);                 //1000 milliseconds is one second.
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 }
 

@@ -80,32 +80,6 @@ public class OutputUtils {
             throw new UnsupportedOperationException("Utility class. Instantiation is not allowed.");
         }
 
-        public static TransmitPacketInput buildTransmitInputPacket(final String nodeId, final byte[] packValue,
-                                                                   final String outPort, final String inPort) {
-            ArrayList<Byte> list = new ArrayList<Byte>(40);
-            byte[] msg = new String("sendOutputMsg_TEST").getBytes();
-            int index = 0;
-            for (byte b : msg) {
-                list.add(b);
-                index = index < 7 ? index + 1 : 0;
-            }
-            while (index < 8) {
-                list.add((byte) 0);
-                index++;
-            }
-            NodeRef ref = createNodeRef(nodeId);
-            NodeConnectorRef nEgressConfRef = new NodeConnectorRef(createNodeConnRef(nodeId, outPort));
-            NodeConnectorRef nIngressConRef = new NodeConnectorRef(createNodeConnRef(nodeId, inPort));
-            TransmitPacketInputBuilder tPackBuilder = new TransmitPacketInputBuilder();
-            final ArrayList<Byte> _converted_list = list;
-            byte[] _primitive = ArrayUtils.toPrimitive(_converted_list.toArray(new Byte[0]));
-            tPackBuilder.setPayload(_primitive);
-            tPackBuilder.setNode(ref);
-            tPackBuilder.setConnectionCookie(null);
-            tPackBuilder.setEgress(nEgressConfRef);
-            tPackBuilder.setIngress(nIngressConRef);
-            return tPackBuilder.build();
-        }
         public static String makePingFlowForNode(final String nodeId, final ProviderContext pc) {
             NodeBuilder nodeBuilder = createNodeBuilder(nodeId);
             FlowBuilder flowBuilder = createFlowBuilder(1235, null, "ping");
@@ -210,7 +184,6 @@ public class OutputUtils {
 
 
     /**
-     * This function is similar to buildTransmitInputPacket, but it's personalised
      * @param nodeId
      * @param payload
      * @param outPort
@@ -218,8 +191,8 @@ public class OutputUtils {
      * @param dstmac
      * @param srcmac
      * @return
-     */
-        public static TransmitPacketInput createPacketOut(final String nodeId,
+     * */
+        public synchronized static TransmitPacketInput createArpOut(final String nodeId,
                                                           final byte[] payload,
                                                           final String outPort,
                                                           final String inPort,
@@ -238,8 +211,8 @@ public class OutputUtils {
                 list.add(b);
 
             // ARP type
-            list.add((byte)8);
-            list.add((byte)6);
+            list.add((byte) 8);
+            list.add((byte) 6);
 
             // Hardware type
             list.add((byte)0); list.add((byte)1);
@@ -254,7 +227,24 @@ public class OutputUtils {
             list.add((byte)4);
 
             // OP code
-            list.add((byte)0); list.add((byte)2);
+            boolean broadcast = true;
+            for (byte b : dstmac) {
+                if (((0xff & b) != (byte)0) && ((0xff & b) != 0xFF) && ((0xff & b) != 0xff)) {
+                    broadcast = false;
+                    break;
+                }
+            }
+            // ARP request
+            if (broadcast) {
+                list.add((byte) 0);
+                list.add((byte) 1);
+            }
+            // ARP reply
+            else {
+                list.add((byte) 0);
+                list.add((byte) 2);
+            }
+            // OP code ends
 
             // Sender mac
             for (byte b : srcmac) {
@@ -262,7 +252,7 @@ public class OutputUtils {
             }
 
             // Ip sender address
-            // FIXME This works, but not always. It should be the srcip
+            // FIXME This works, but not always. It should be the srcip normalised
             list.add((byte)10); list.add((byte)0); list.add((byte)0); list.add((byte)(Integer.parseInt(inPort)));
 
             // Target mac
@@ -271,20 +261,16 @@ public class OutputUtils {
             }
 
             // Ip dst address
-            // FIXME This works, but not always. It should be the dstip
+            // FIXME This works, but not always. It should be the dstip normalised
             list.add((byte)10); list.add((byte)0); list.add((byte)0); list.add((byte)(Integer.parseInt(outPort)));
 
 
-
-            /*for (byte b : payload) {
+            // FIXME payload should be added to packet
+           /* for (byte b : payload) {
                 list.add(b);
-                index = index < 7 ? index + 1 : 0;
-            }
-
-         /*   while (index < 8) {
-                list.add((byte) 0);
-                index++;
+                //index = index < 7 ? index + 1 : 0;
             }*/
+
 
             NodeRef ref = createNodeRef(nodeId);
             NodeConnectorRef nEgressConfRef = new NodeConnectorRef(createNodeConnRef(nodeId, outPort));
@@ -297,7 +283,7 @@ public class OutputUtils {
             ActionBuilder ab = new ActionBuilder();
             OutputActionBuilder output = new OutputActionBuilder();
             output.setMaxLength(Integer.valueOf(0xffff));
-            Uri value = new Uri(OutputPortValues.FLOOD.toString());
+            Uri value = new Uri(OutputPortValues.NORMAL.toString());
             output.setOutputNodeConnector(value);
             ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
             ab.setOrder(0);

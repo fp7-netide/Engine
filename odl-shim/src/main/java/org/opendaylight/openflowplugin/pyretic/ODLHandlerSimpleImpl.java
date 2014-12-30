@@ -53,13 +53,6 @@ import org.json.simple.JSONObject;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import com.telefonica.pyretic.backendchannel.BackendChannel;
 
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.output.action._case.OutputActionBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
 import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.openflowplugin.pyretic.Utils.OutputUtils;
@@ -197,7 +190,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         this.packetProcessingService = packetProcessingService;
     }
 
-    public void onPacketReceived(PacketReceived notification) {
+    public synchronized void onPacketReceived(PacketReceived notification) {
         System.out.println("-----New packet arrived");
 
         byte[] etherType = PacketUtils.extractEtherType(notification.getPayload());
@@ -320,7 +313,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         }
         else
         {
-            throw new IllegalArgumentException("String " + path+ " does not contain -");
+            throw new IllegalArgumentException("String " + path + " does not contain -");
         }
     }
 
@@ -413,12 +406,31 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             System.out.println("My dst ip: " + sb.toString().toUpperCase());
             ////////////////////////////////////////////////////////
 
-            TransmitPacketInput input = OutputUtils.createPacketOut(inNodeKey, payload,
-                    outPort, inPort, dstMac, srcMac, dstip, srcip);
+            /*
+                Ethernet types in pyretic:
+                             HEX    -> Decimal
+                LLDP_TYPE  = 0x88cc -> 35020
+                ARP_TYPE   = 0x806  -> 2054
+                IP_TYPE    = 0x800  -> 2048
+                IPV6_TYPE  = 0x86dd -> 34525
+            */
+            TransmitPacketInput input = null;
+            Integer ethtype = ((Long) json.get("ethtype")).intValue();
+            // Create ARP packet out
+            if (ethtype == 2054) {
+                input = OutputUtils.createArpOut(inNodeKey, payload,
+                        outPort, inPort, dstMac, srcMac, dstip, srcip);
+            }
+            // Create IP packet out
+            else if (ethtype == 2048) {
+
+            }
+
 
             packetProcessingService.transmitPacket(input);
 
             System.out.println("Transmitted <<<<");
+
         }
 
         else {

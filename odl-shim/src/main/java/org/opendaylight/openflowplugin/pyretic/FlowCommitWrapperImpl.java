@@ -21,19 +21,13 @@
 
 package org.opendaylight.openflowplugin.pyretic;
 
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.TransactionStatus;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.sal.binding.api.data.DataBrokerService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.sal.binding.api.data.DataModificationTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-//import org.opendaylight.yangtools.yang.common.RpcResult;
 
 import com.google.common.util.concurrent.CheckedFuture;
-import java.util.concurrent.Future;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 
 /**
