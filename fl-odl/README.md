@@ -21,6 +21,7 @@ Import NetIDE code
 Edit Config Files:
 
 5) Modify the floodlight properties files:
+
 	- META-INF
 		- <floodlight_folder>/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule
 		- add the line: "net.floodlightcontroller.interceptor.NetideModule" at the end of Module section, before the port setting
