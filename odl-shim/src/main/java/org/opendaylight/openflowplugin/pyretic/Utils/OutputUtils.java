@@ -188,88 +188,23 @@ public class OutputUtils {
      * @param payload
      * @param outPort
      * @param inPort
-     * @param dstmac
-     * @param srcmac
      * @return
      * */
-        public synchronized static TransmitPacketInput createArpOut(final String nodeId,
+        public synchronized static TransmitPacketInput createPacketOut(final String nodeId,
                                                           final byte[] payload,
                                                           final String outPort,
-                                                          final String inPort,
-                                                          final byte[] dstmac,
-                                                          final byte[] srcmac,
-                                                          final byte[] dstip,
-                                                          final byte[] srcip) {
+                                                          final String inPort) {
             ArrayList<Byte> list = new ArrayList<Byte>(40);
 
-            // Dst mac for ethernet
-            for (byte b : dstmac)
-                list.add(b);
-
-            // src mac for ethernet
-            for (byte b : srcmac)
-                list.add(b);
-
-            // ARP type
-            list.add((byte) 8);
-            list.add((byte) 6);
-
-            // Hardware type
-            list.add((byte)0); list.add((byte)1);
-
-            // Protocol type
-            list.add((byte)8); list.add((byte)0);
-
-            // Hardware size
-            list.add((byte)6);
-
-            // Protocol size
-            list.add((byte)4);
-
-            // OP code
-            boolean broadcast = true;
-            for (byte b : dstmac) {
-                if (((0xff & b) != (byte)0) && ((0xff & b) != 0xFF) && ((0xff & b) != 0xff)) {
-                    broadcast = false;
-                    break;
-                }
-            }
-            // ARP request
-            if (broadcast) {
-                list.add((byte) 0);
-                list.add((byte) 1);
-            }
-            // ARP reply
-            else {
-                list.add((byte) 0);
-                list.add((byte) 2);
-            }
-            // OP code ends
-
-            // Sender mac
-            for (byte b : srcmac) {
-                list.add(b);
-            }
-
-            // Ip sender address
-            // FIXME This works, but not always. It should be the srcip normalised
-            list.add((byte)10); list.add((byte)0); list.add((byte)0); list.add((byte)(Integer.parseInt(inPort)));
-
-            // Target mac
-            for (byte b : dstmac) {
-                list.add(b);
-            }
-
-            // Ip dst address
-            // FIXME This works, but not always. It should be the dstip normalised
-            list.add((byte)10); list.add((byte)0); list.add((byte)0); list.add((byte)(Integer.parseInt(outPort)));
-
-
             // FIXME payload should be added to packet
-           /* for (byte b : payload) {
+            for (byte b : payload) {
                 list.add(b);
-                //index = index < 7 ? index + 1 : 0;
-            }*/
+            }
+            /*
+            System.out.print("My super duper payload: ");
+            for (int i = 0; i < list.size(); i++) System.out.printf("%02x ",0xff & list.get(i));
+            System.out.println("");
+*/
 
 
             NodeRef ref = createNodeRef(nodeId);
@@ -306,7 +241,7 @@ public class OutputUtils {
      * @param hexString
      * @return
      */
-        public static final byte[] toByteArray( String hexString )
+        public static final byte[] toByteArray (String hexString)
         {
             int arrLength = hexString.length() >> 1;
             byte buf[] = new byte[arrLength];
@@ -322,4 +257,23 @@ public class OutputUtils {
             return buf;
         }
 
+     public static final String fromDecimalToHex (Long num)
+     {
+         int rem;
+
+         // For storing result
+         String str="";
+
+         // Digits in hexadecimal number system
+         char hex[]={'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+         while(num>0)
+         {
+             rem=Integer.parseInt(num.toString())%16;
+             str=hex[rem]+str;
+             num=num/16;
+         }
+         while (str.length() < 2) str = "0" + str;
+         return str;
+     }
 }

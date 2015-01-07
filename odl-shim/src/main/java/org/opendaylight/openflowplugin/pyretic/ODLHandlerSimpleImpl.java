@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.opendaylight.controller.sal.action.Output;
 import org.opendaylight.openflowplugin.pyretic.Utils.FlowUtils;
 import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
@@ -248,7 +249,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 System.out.println(p);
 
                 this.channel.push(p.toString() + "\n");
-                mac2portMapping.put(srcMac, notification.getIngress());
+                //mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
                 // Handle IPV6 packet
@@ -262,8 +263,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 p.add("\"packet\"");
                 p.add(json.toString());
                 System.out.println(p);
-
-                mac2portMapping.put(srcMac, notification.getIngress());
+                this.channel.push(p.toString() + "\n");
+                //mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
                 // Handle ARP packet
@@ -345,21 +346,22 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             String inPort = inport.toString();
             String outPort = outport.toString(); //
 
-            System.out.println("innodekey: " + inNodeKey);
-            System.out.println("inport: " + inPort);
-            System.out.println("outport: " + outPort);
+            //System.out.println("innodekey: " + inNodeKey);
+            //System.out.println("inport: " + inPort);
+            //System.out.println("outport: " + outPort);
 
             ////////////////////////////////////////////////////////
             // Get the raw from the json
             List<Long> raw = (List<Long>) json.get("raw");
             StringBuilder sb = new StringBuilder("");
             for (Long b : raw) {
-                sb.append(b); // antes b.getBytes()
+                sb.append(OutputUtils.fromDecimalToHex(b));
             }
-            byte[] payload = sb.toString().getBytes();
+            byte[] payload = OutputUtils.toByteArray(sb.toString());
+            //System.out.println("My payload: " + sb.toString().toUpperCase());
             ////////////////////////////////////////////////////////
 
-
+/*
             ////////////////////////////////////////////////////////
             // Get the source mac from the json
             raw = (List<Long>) json.get("srcmac");
@@ -405,7 +407,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             byte[] dstip = OutputUtils.toByteArray(sb.toString());
             System.out.println("My dst ip: " + sb.toString().toUpperCase());
             ////////////////////////////////////////////////////////
-
+*/
             /*
                 Ethernet types in pyretic:
                              HEX    -> Decimal
@@ -415,20 +417,24 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 IPV6_TYPE  = 0x86dd -> 34525
             */
             TransmitPacketInput input = null;
-            Integer ethtype = ((Long) json.get("ethtype")).intValue();
+           // Integer ethtype = ((Long) json.get("ethtype")).intValue();
             // Create ARP packet out
-            if (ethtype == 2054) {
-                input = OutputUtils.createArpOut(inNodeKey, payload,
-                        outPort, inPort, dstMac, srcMac, dstip, srcip);
+            /*if (ethtype == 2054) {
+                System.out.println("ARP");
             }
-            // Create IP packet out
-            else if (ethtype == 2048) {
+            else if (ethtype == 2048)
+                System.out.println("IP");*/
 
-            }
+            input = OutputUtils.createPacketOut(inNodeKey, payload,
+                        outPort, inPort);
+            //}
+            // Create IP packet out
+            //else if (ethtype == 2048) {
+
+            //}
 
 
             packetProcessingService.transmitPacket(input);
-
             System.out.println("Transmitted <<<<");
 
         }

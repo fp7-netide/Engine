@@ -86,12 +86,10 @@ public class BackendChannel extends Connection implements Runnable{
         this.multiHandler = multiHandler;
     }
 
-    //have other definition of push with different arguments types
     public synchronized void push(String msg){
         if (msg != "") {
-            System.out.println("Gonna push in the backend channel ");
             super.send(msg);
-            System.out.println("Pushed");
+            sleep(150);
         }
     }
 
