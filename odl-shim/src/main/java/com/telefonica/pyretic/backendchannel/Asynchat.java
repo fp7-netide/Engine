@@ -147,7 +147,6 @@ abstract class Asynchat extends Dispatcher {
             return;
         }
 
-        System.out.println("----- handle read: str->" + str);
         int pos = 0;
         int len = str.length();
         while (pos < len) {

@@ -125,7 +125,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         mac2portMapping = new HashMap<>();
         coveredMacPaths = new HashSet<>();
 
-        System.out.println("Value: " + nodeId.getValue());
 
 
 
@@ -168,7 +167,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     // new
     private void sleep() {
         try {
-            Thread.sleep(1000);                 //1000 milliseconds is one second.
+            Thread.sleep(800);
         } catch(InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
@@ -192,7 +191,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     }
 
     public synchronized void onPacketReceived(PacketReceived notification) {
-        System.out.println("-----New packet arrived");
+        //LOG.debug("-----New packet arrived");
 
         byte[] etherType = PacketUtils.extractEtherType(notification.getPayload());
         byte[] dstMacRaw = PacketUtils.extractDstMac(notification.getPayload());
@@ -202,11 +201,10 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
 
 
-        // Debug
-        System.out.println("srcmac init");
-        System.out.println(srcMac.getValue());
-        System.out.println("dstmac init");
-        System.out.println(dstMac.getValue());
+       /* LOG.debug("srcmac init");
+        LOG.debug(srcMac.getValue());
+        LOG.debug("dstmac init");
+        LOG.debug(dstMac.getValue());*/
 
 
         NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
@@ -229,14 +227,14 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 raw.add(aux);
             }
 
-            System.out.print("Ethertype: " ); // + etherType.toString());
+            /*LOG.debug("Ethertype: " ); // + etherType.toString());
             for(int i = 0; i < etherType.length; i++) {
-                System.out.printf("%02x ",0xff & etherType[i]);
+                LOG.debug("%02x ",0xff & etherType[i]);
             }
-            System.out.println("");
+            LOG.debug("");*/
 
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
-                LOG.debug("IPV4 packet arrived");
+                //LOG.debug("IPV4 packet arrived");
 
                 JSONObject json = new JSONObject();
                 json.put("switch", Integer.parseInt(switch_s));
@@ -246,7 +244,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 List<String> p = new ArrayList<String>();
                 p.add("\"packet\"");
                 p.add(json.toString());
-                System.out.println(p);
+               // LOG.debug("" + p);
 
                 this.channel.push(p.toString() + "\n");
                 //mac2portMapping.put(srcMac, notification.getIngress());
@@ -262,13 +260,13 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 List<String> p = new ArrayList<String>();
                 p.add("\"packet\"");
                 p.add(json.toString());
-                System.out.println(p);
+               // LOG.debug("" + p);
                 this.channel.push(p.toString() + "\n");
                 //mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
                 // Handle ARP packet
-                LOG.debug("ARP packet arrived");
+               // LOG.debug("ARP packet arrived");
                 JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
@@ -279,19 +277,13 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 p.add("\"packet\"");
                 p.add(json.toString());
 
-
-                if (this.channel == null) System.out.println("Impossible to push");
-                else {
-                    System.out.println("Pushing arp packet");
-                    System.out.println(p);
-                }
                 this.channel.push(p.toString() + "\n");
                 mac2portMapping.put(srcMac, notification.getIngress());
 
             }
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
                 //Handle lldp packet
-                LOG.debug("LLDP packet arrived");
+                //LOG.debug("LLDP packet arrived");
 
                 JSONObject json = new JSONObject();
 
@@ -302,11 +294,9 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 List<String> p = new ArrayList<String>();
                 p.add("\"packet\"");
                 p.add(json.toString());
-                System.out.println(p);
                 this.channel.push(p.toString() + "\n");
 
                 mac2portMapping.put(srcMac, notification.getIngress());
-                System.out.println("--> json" + json.toJSONString());
             }
             else {
                 LOG.debug("Unknown packet arrived.\nThis shouldn't be happening");
@@ -346,9 +336,9 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             String inPort = inport.toString();
             String outPort = outport.toString(); //
 
-            //System.out.println("innodekey: " + inNodeKey);
-            //System.out.println("inport: " + inPort);
-            //System.out.println("outport: " + outPort);
+           /* LOG.debug("innodekey: " + inNodeKey);
+            LOG.debug("inport: " + inPort);
+            LOG.debug("outport: " + outPort);*/
 
             ////////////////////////////////////////////////////////
             // Get the raw from the json
@@ -417,30 +407,22 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 IPV6_TYPE  = 0x86dd -> 34525
             */
             TransmitPacketInput input = null;
-           // Integer ethtype = ((Long) json.get("ethtype")).intValue();
-            // Create ARP packet out
-            /*if (ethtype == 2054) {
-                System.out.println("ARP");
+           /* Integer ethtype = ((Long) json.get("ethtype")).intValue();
+            if (ethtype == 2054) {
+                LOG.debug("ARP");
             }
             else if (ethtype == 2048)
-                System.out.println("IP");*/
+                LOG.debug("IP");*/
 
             input = OutputUtils.createPacketOut(inNodeKey, payload,
                         outPort, inPort);
-            //}
-            // Create IP packet out
-            //else if (ethtype == 2048) {
-
-            //}
-
 
             packetProcessingService.transmitPacket(input);
-            System.out.println("Transmitted <<<<");
-
+           // LOG.debug("Transmitted <<<");
         }
 
         else {
-            System.out.println("Different type <<<<<< " + type);
+            LOG.debug("Different type <<<<<< " + type);
         }
     }
 

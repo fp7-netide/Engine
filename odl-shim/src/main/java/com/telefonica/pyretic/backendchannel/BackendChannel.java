@@ -44,12 +44,10 @@ public class BackendChannel extends Connection implements Runnable{
     void foundTerminator() {
         /*The end of a command or message has been seen.
         * */
-        //System.out.println("Packet from pyretic");
         Object obj= JSONValue.parse(this.getBuff());
         JSONArray array=(JSONArray)obj;
         String type = array.get(0).toString();
 
-        System.out.println("Message type: " + type);
         if(type.equals("packet")){
             multiHandler.sendToSwitch((JSONObject)array.get(1), type);
         }
@@ -89,7 +87,7 @@ public class BackendChannel extends Connection implements Runnable{
     public synchronized void push(String msg){
         if (msg != "") {
             super.send(msg);
-            sleep(150);
+            //sleep(150);
         }
     }
 
