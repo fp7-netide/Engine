@@ -21,12 +21,12 @@
 package org.opendaylight.openflowplugin.pyretic.multi;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
-import org.json.simple.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationService;
 import org.opendaylight.openflowplugin.pyretic.*;
+import org.opendaylight.openflowplugin.pyretic.observers.NodeConnectorListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
@@ -60,6 +60,7 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
     private Registration packetInRegistration;
 
     private ListenerRegistration<DataChangeListener> dataChangeListenerRegistration;
+
 
     BackendChannel channel;
 
@@ -128,6 +129,9 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
                         .child(Table.class).toInstance(),
                 wakeupListener,
                 DataBroker.DataChangeScope.SUBTREE);
+
+        NodeConnectorListener nodeListener = new NodeConnectorListener(this.data);
+
         LOG.debug("start() <--");
     }
 
