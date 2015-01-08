@@ -35,11 +35,18 @@ Modify the floodlight properties files:
 		- Change the port number to 7733 (we don't want the switches connecting)
 
 5) Compile the code:
-
-	- Floodlight uses ant as its build tool, you can build by issuing the ant command within a shell/command window
-	- I have provided a POM file so that Maven can be used: copy the floodlight-pom.xml file into the root of the 
-	      floodlight project and rename to "pom.xml". Now you can issue the command "mvn clean install"
-	- the current pom.xml in this directory allows you to develop outside of the Floodlight project
+    - ANT
+		- Out of the box, Floodlight uses ant as its build tool. The NetIDE code uses one additional dependency which you need to add to he build.xml file
+		- You can copy the build.xml from this folder overwriting the Floodlight one or 
+		- Add the following entry under <patternset id="lib"> entry: 
+			<include name="json-20140107.jar"/>
+		- you can now build by issuing the ant command within a shell/command window
+	  
+	- MAVEN
+		- I have also provided a POM file so that Maven can be used to build
+		- copy the floodlight-pom.xml file into the root of the floodlight project and rename to "pom.xml"
+		- Now you can issue the command: mvn clean install
+		- the existing pom.xml in this directory will only build this project, allowing you to develop outside of the Floodlight project
 	
 6) Run the jar
 
