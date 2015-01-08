@@ -5,7 +5,7 @@ Import the code into Floodlight
 
 When developing with Floodlight, you must download the Floodlight source code and add your module as a new namespace.
 However, to allow you to develop independently, a POM is included that references the Floodlight project from 
-within this project. You will still need to copy the source code into the Floodlight project to run it!
+within this project. It only allows you to develop/unit test. You still need to copy this code into the Floodlight project to run it!
 
 Setup Eclipse
 -------------
@@ -27,10 +27,12 @@ However, you may have additional settings configured in Floodlight that you don'
 Modify the floodlight properties files:
 
 META-INF
+
 	- <floodlight_folder>/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule
 	- add the line: "net.floodlightcontroller.interceptor.NetideModule" at the end of Module section, before the port setting
 
 floodlightdefault.properties
+
 	- <floodlight_folder>/src/main/resources/floodlightdefault.properties
 	- add the line: "net.floodlightcontroller.interceptor.NetideModule" at the end of the file
 	- Change the port number to 7733 (we don't want the switches connecting)
