@@ -69,6 +69,7 @@ public class MessageParser {
 		String switchStr = tmp.substring(0, 1);
 		this.switchId = Long.parseLong(switchStr);
 		String jsonStr = tmp.substring(tmp.indexOf(",")+3);
+		try{
 		JSONObject json = new JSONObject(jsonStr);
 		
 		//ADD PROPS TO STATS_REPLY OBJECT
@@ -131,6 +132,7 @@ public class MessageParser {
 		}
 		statsReply.setStatistics(statistics);
 		return statsReply;
+		}catch(Exception e){return null;}
 	}
 	
 	/**
@@ -140,7 +142,7 @@ public class MessageParser {
 	 */
 	private List<OFAction> parseActionsArray(JSONArray array) {
 		List<OFAction> listActions = new ArrayList<OFAction>();
-		
+		try{
 		for (int i=0; i<array.length(); i++) {
 			JSONObject json = array.getJSONObject(i);
 			String[] elementNames = JSONObject.getNames(json);
@@ -177,6 +179,7 @@ public class MessageParser {
 				}
 			}
 		}
+		}catch(Exception e){}
 		return listActions;
 	}
 
@@ -187,10 +190,12 @@ public class MessageParser {
 	 */
 	private byte[] parseByteArray(JSONArray jArray) {
 		byte[] bArr = new byte[jArray.length()];
+		try{
 		for (int i=0; i<jArray.length(); i++) {
 			int number = Integer.parseInt(jArray.get(i).toString());
 			bArr[i] = (byte)number;
 		}
+		}catch(Exception e){}
 		return bArr;
 	}
 
