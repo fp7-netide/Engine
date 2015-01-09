@@ -73,6 +73,7 @@ public class MessageSerializer {
 		// "srcmac": [99, 101, 58, 97, 56, 58, 100, 100, 58, 99, 102, 58, 49, 99, 58, 97, 101], "dstmac": [99, 101, 58, 97, 54, 58, 99, 51, 58, 100, 100, 58, 56, 57, 58, 99, 51], 
 		// "raw": [206, 166, 195, 221, 137, 195, 206, 168, 221, 207, 28, 174, 8, 6, 0, 1, 8, 0, 6, 4, 0, 2, 206, 168, 221, 207, 28, 174, 10, 0, 0, 2, 206, 166, 195, 221, 137, 195, 10, 0, 0, 1], 
 		// "payload_len": 42, "switch": 1, "ethtype": 2054, "srcip": [49, 48, 46, 48, 46, 48, 46, 50] }] + TERM_CHAR  
+		try{
 		JSONObject json = new JSONObject();
 		json.put("switch", switchID); 
 		json.put("buf", packetOut.getBufferId());
@@ -92,6 +93,7 @@ public class MessageSerializer {
 		sb.append(json.toString());
 		sb.append("]\n");
 		return sb.toString();
+		}catch(Exception e){return "";}
 	}
 
 	/**
@@ -106,7 +108,7 @@ public class MessageSerializer {
 		//   "dstmac": [54, 97, 58, 50, 100, 58, 55, 102, 58, 50, 57, 58, 99, 56, 58, 54, 49], "srcmac": [49, 50, 58, 57, 51, 58, 50, 99, 58, 52, 97, 58, 52, 56, 58, 50, 52],
 		//   "dstport": 0, "srcport": 0
 		//   "protocol": 1,  "tos": 0, "inport": 1, "switch": 2, "ethtype": 2048}, 0, [{"outport": 2}],]
-		
+		try{
 		JSONObject json = new JSONObject();
 		for (OFAction action: flowMod.getActions()) {
 			switch (action.getType()) {
@@ -170,6 +172,7 @@ public class MessageSerializer {
 		  .append("}]");
 		sb.append("]\n");
 		return sb.toString();
+		}catch(Exception e){return "";}
 	}
 	
 	/**
@@ -178,6 +181,7 @@ public class MessageSerializer {
 	 * @return
 	 */
 	public static JSONObject getAction(OFAction action) {
+		try{
 		JSONObject json = new JSONObject();
 		switch (action.getType()) {
 			case OUTPUT:
@@ -212,6 +216,7 @@ public class MessageSerializer {
 			case OPAQUE_ENQUEUE:
 		}
 		return json;
+		}catch(Exception e){return null;}
 	}
 	
 }
