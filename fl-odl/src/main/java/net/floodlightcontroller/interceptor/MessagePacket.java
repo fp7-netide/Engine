@@ -67,6 +67,7 @@ public class MessagePacket {
 	 */
 	public void parseMessage(String rawMessage) {
 		//EXTRACT THE JSON
+		try{
 		String tmp = rawMessage.substring(rawMessage.indexOf(",")+1, rawMessage.length()-1);
 		JSONObject json = new JSONObject(tmp.trim());
 		this.switchId = json.getLong("switch");
@@ -78,6 +79,8 @@ public class MessagePacket {
 			int number = (int) arr.get(i);
 			this.packetData[i] = (byte)number;
 		}
+		}catch(Exception e){return;}
+		
 		//ADD PROPS TO PACKET_IN OBJECT
 		packetIn = new OFPacketIn(); 
 		packetIn.setInPort(inPort);
