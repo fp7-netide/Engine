@@ -7,8 +7,10 @@
  */
 
 package org.opendaylight.openflowplugin.pyretic.observers;
+import java.util.ArrayList;
 import java.util.Map;
 
+import com.telefonica.pyretic.backendchannel.BackendChannel;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.AsyncDataBroker;
@@ -36,6 +38,8 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
     private static final Logger LOG = LoggerFactory.getLogger(NodeConnectorListener.class);
 
     private final ListenerRegistration<DataChangeListener> dataChangeListenerRegistration;
+    private BackendChannel channel;
+    private HashMap<Integer, ArrayList<Integer>> port2switchMapping;
 
     public NodeConnectorListener(DataBroker dataBroker) {
         dataChangeListenerRegistration = dataBroker.registerDataChangeListener(
@@ -46,6 +50,7 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
                         .augmentation(FlowCapableNodeConnector.class)
                         .toInstance(),
                 this, AsyncDataBroker.DataChangeScope.BASE);
+        port2switchMapping = new HashMap<>();
     }
 
     @Override
@@ -55,6 +60,7 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
 
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> change) {
+        sleep(2000);
         LOG.trace("Node connectors in inventory changed: {} created, {} updated, {} removed",
                 change.getCreatedData().size(), change.getUpdatedData().size(), change.getRemovedPaths().size());
 
@@ -126,19 +132,66 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
         return map;
     }
 
+    /**
+     * Makes switch and port joins from the information received from onDataChanged
+     * @param value
+     */
     private void createTopology (String value)
     {
         String del1 = "-";
         // Interface appeared
         if (value.contains(del1))
         {
-            System.out.println("New interface with name " + value);
+            ArrayList<Integer> ports = new ArrayList<>();
 
+            int switchNum = Integer.parseInt(Character.toString(value.charAt(1)));
+            int newPort = Integer.parseInt(Character.toString(value.charAt(6)));
+
+            if (this.port2switchMapping.size() > 0 && this.port2switchMapping.containsKey(switchNum)) {
+                ports = this.port2switchMapping.get(switchNum);
+                ports.add(newPort);
+            }
+            else {
+                ports.add(newPort);
+            }
+            this.port2switchMapping.put(switchNum, ports);
+
+            // Switch join begins
+            System.out.println("New interface with name " + value);
+            String stringToChannel = "[\"switch\", \"join\", " + switchNum + ", \"BEGIN\"]";
+            System.out.println(stringToChannel);
+            this.channel.push(stringToChannel);
+            sleep(2000);
+
+            // All existing ports join
+            for (int i = 0; i < ports.size(); i++) {
+                stringToChannel = "[\"port\", \"join\", " + switchNum + ", " + ports.get(i) + ", true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
+                System.out.println(stringToChannel);
+                this.channel.push(stringToChannel);
+                sleep(2000);
+            }
+
+            // Switch join ends
+            stringToChannel = "[\"switch\", \"join\", " + switchNum + ", \"END\"]";
+            System.out.println(stringToChannel);
+            this.channel.push(stringToChannel);
+            sleep(2000);
         }
         else // Switch appeared
         {
-            System.out.println("New switch with name " + value);
+            //System.out.println("New switch with name " + value);
+        }
+    }
 
+    public void setBackendChannel(BackendChannel channel) {
+        this.channel = channel;
+    }
+
+    private void sleep(long time) {
+        try {
+            Thread.sleep(time);
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
         }
     }
 }

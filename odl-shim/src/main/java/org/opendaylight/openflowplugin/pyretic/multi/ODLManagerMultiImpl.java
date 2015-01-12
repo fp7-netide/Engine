@@ -107,21 +107,21 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
         FlowCommitWrapper dataStoreAccessor = new FlowCommitWrapperImpl(data);
 
         PacketInDispatcherImpl packetInDispatcher = new PacketInDispatcherImpl();
-        packetInDispatcher.setMultiManager(this); // new
+        packetInDispatcher.setMultiManager(this);
 
         MultipleODLHandlerFacadeImpl odlHandler = new MultipleODLHandlerFacadeImpl();
         odlHandler.setRegistrationPublisher(this);
         odlHandler.setDataStoreAccessor(dataStoreAccessor);
         odlHandler.setPacketProcessingService(packetProcessingService);
         odlHandler.setPacketInDispatcher(packetInDispatcher);
-        odlHandler.setBackendChannel(channel); //////// new
+        odlHandler.setBackendChannel(channel);
         packetInRegistration = notificationService.registerNotificationListener(packetInDispatcher);
 
-        channel.setHandler(odlHandler); // new
+        channel.setHandler(odlHandler);
 
         WakeupOnNode wakeupListener = new WakeupOnNode();
         wakeupListener.setODLHandler(odlHandler);
-        wakeupListener.setPacketInDispatcher(packetInDispatcher); ///// new
+        wakeupListener.setPacketInDispatcher(packetInDispatcher);
         dataChangeListenerRegistration = data.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL,
                 InstanceIdentifier.builder(Nodes.class)
                         .child(Node.class)
@@ -130,7 +130,9 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
                 wakeupListener,
                 DataBroker.DataChangeScope.SUBTREE);
 
+        // Needed to know where data changes in the network
         NodeConnectorListener nodeListener = new NodeConnectorListener(this.data);
+        nodeListener.setBackendChannel(channel);
 
         LOG.debug("start() <--");
     }

@@ -94,7 +94,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     private Set<String> coveredMacPaths;
 
     private BackendChannel channel;
-    private int switches = 0;
 
     @Override
     public synchronized void onSwitchAppeared(InstanceIdentifier<Table> appearedTablePath) {
@@ -116,7 +115,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             }
         }
 
-
         iAmLearning = true;
         
         tablePath = appearedTablePath;
@@ -124,9 +122,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         nodeId = nodePath.firstKeyOf(Node.class, NodeKey.class).getId();
         mac2portMapping = new HashMap<>();
         coveredMacPaths = new HashSet<>();
-
-
-
 
         // start forwarding all packages to controller
         FlowId flowId = new FlowId(String.valueOf(flowIdInc.getAndIncrement()));
@@ -139,29 +134,9 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         FlowBuilder allToCtrlFlow = FlowUtils.createFwdAllToControllerFlow(
                 InstanceIdentifierUtils.getTableId(tablePath), priority, flowId);
 
-        System.out.println("--->writing packetForwardToController flow");
+        //System.out.println("--->writing packetForwardToController flow");
         LOG.debug("writing packetForwardToController flow");
         dataStoreAccessor.writeFlowToConfig(flowPath, allToCtrlFlow.build());
-
-
-        // FIXME
-        switches++;
-        String p = "[\"switch\", \"join\", " + switches + ", \"BEGIN\"]";
-        String p21 = "[\"port\", \"join\", " + switches + ", 1, true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
-        String p22 = "[\"port\", \"join\", " + switches + ", 2, true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
-        String p23 = "[\"port\", \"join\", " + switches + ", 3, true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
-        String p3 = "[\"switch\", \"join\", " + switches + ", \"END\"]";
-        this.channel.push(p);
-        sleep();
-        this.channel.push(p21);
-        sleep();
-        this.channel.push(p22);
-        sleep();
-        this.channel.push(p23);
-        sleep();
-        this.channel.push(p3);
-        System.out.println(p + "\n" + p21 + "\n" + p22 + "\n" + p23 + "\n" + p3);
-
     }
 
     // new
