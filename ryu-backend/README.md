@@ -6,10 +6,7 @@ The API interceptor is composed of two different modules: (i) the ODL shim clien
 
 The two modules (backend and shim client) talk each other through a TCP socket by using the same APIs used by Pyretic (just for the first tests) to talk with the of_clients.
 
-To summarize with an example: when a packet_in message arrives to ODL from a switch, the message is converted by the ODL shim client into a Pyretic-like message and than sent to the above backend module of the, e.g. Ryu, controller. Finally the message is passed to the application that decides how to forward the related flow through either a packet_out or a flow_mod answer.
-
-#Implementation details
-The backend has been added as an additional package located in ryu/backend and has been connected to the OpenFlowController and Datapath modules in ryu/controller.
+To summarize with an example: when a packet_in message arrives to ODL from a switch, the message is converted by the ODL shim client into a Pyretic-like message and then sent to the above backend module of the, e.g. Ryu, controller. Finally the message is passed to the application that decides how to forward the related flow through either a packet_out or a flow_mod answer.
 
 #Installation
 
@@ -17,6 +14,13 @@ The Ryu backend is provided as an additional module for the Ryu controller. In o
 After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just downloaded and add the Ryu's code path to the PYTHONPATH variable (e.g. in ~/.profile file). Finally, install the Ryu controller by entering the ```ryu``` folder and by running the command:
 
 ```python ./setup.py install```
+
+Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed: 
+``` apt-get install python-dev
+apt-get install python-repoze.lru
+pip install ecdsa
+pip install stevedore
+pip install greenlet```
 
 #Running
 From the  ryu's code folder, run the following command to use the Ryu backend with the, e.g., ```simple_switch ``` application on top of it (port 7733 is used to avoid conflicts with the ODL shim client):
