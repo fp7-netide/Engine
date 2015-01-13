@@ -46,6 +46,10 @@ To use the POX client follow this procedure:
 
 #ChangeLog
 
+ryu-backend: 2015-01-13 Tue Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
+
+* Updated README
+
 ryu-backend: 2014-11-13 Thu Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
 
 * First working release of the Ryu backend. Tested with the ```simple_switch``` application, mininet and the POX client developed by the Pyretic team (http://frenetic-lang.org/pyretic/)
