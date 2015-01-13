@@ -19,16 +19,7 @@ After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just dow
 ```python ./setup.py install```
 
 #Running
-The backend module allows the Ryu controller to operate in two different ways:
-
-* Ryu waits for connections from the switches on port 7733 (the classic way, with port 7733 replacing the standard port 6633 to avoid conflicts with the ODL shim client)
-* Ryu is launched with the backend module that waits for connections from the ODL shim client on port 41414 (see ```backend/comm.py```).
-
-From the  ryu's code folder, run the following command to use the Ryu controller with the ```simple_switch ``` application:
-
-``` ryu-manager ryu/app/simple_switch.py```
-
-If you want to use the backend, run the following command first:
+From the  ryu's code folder, run the following command to use the Ryu backend with the, e.g., ```simple_switch ``` application on top of it (port 7733 is used to avoid conflicts with the ODL shim client):
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu/backend/backend.py ryu/app/simple_switch.py```
 
