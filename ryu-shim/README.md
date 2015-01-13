@@ -19,7 +19,7 @@ sudo mn --custom netenv.py --topo netenv  --controller remote,port=6633
 ```
 ## Testing
 
-To use the ryu_shim, clone the Pyretic (from [here](https://github.com/frenetic-lang/pyretic)) source code on a local machine.
+The ryu_shim can be tested with the Pyretic framework by replacing the POX client that Pyretic uses to communicate with the OpenFlow switches. After the installation of Ryu described above, clone the Pyretic (from [here](https://github.com/frenetic-lang/pyretic)) source code on the same local machine.
 
 Add the Ryu shim to the Pyretic's source code by:
 
