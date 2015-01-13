@@ -30,7 +30,7 @@ From the  ryu's code folder, run the following command to use the Ryu controller
 
 If you want to use the backend, run the following command first:
 
-``` ryu-manager --ofp-tcp-listen-port 7733ryu/backend/backend.py ryu/app/simple_switch.py```
+``` ryu-manager --ofp-tcp-listen-port 7733 ryu/backend/backend.py ryu/app/simple_switch.py```
 
 then start the ODL shim client (or use the POX client as explained in the "Testing" section below).
 
