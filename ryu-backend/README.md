@@ -14,7 +14,7 @@ The backend has been added as an additional package located in ryu/backend and h
 #Installation
 
 The Ryu backend is provided as an additional module for the Ryu controller. In order to use it, download the Ryu's source code first (```git clone https://github.com/osrg/ryu.git```).
-After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just downloaded. Finally, install the Ryu controller by entering the ```ryu``` folder and by running the command:
+After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just downloaded and add the Ryu's code path to the PYTHONPATH variable (e.g. in ~/.profile file). Finally, install the Ryu controller by entering the ```ryu``` folder and by running the command:
 
 ```python ./setup.py install```
 
