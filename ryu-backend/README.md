@@ -25,14 +25,6 @@ From the  ryu's code folder, run the following command to use the Ryu backend wi
 
 then start the ODL shim client (or use the POX client as explained in the "Testing" section below).
 
-As anticipated above in this section, the standard port 6633 has been replaced by port 7733. With this simple trick, Ryu can switch between the two aforementioned operation modes without any change in the code. In this way it becomes easier to debug the backend module by comparing the behavior of one application when Ryu is running with the backend (and the underlying shim client) or directly connected to the network.
-
-Of course the OpenFlow switches must be properly configured to connect either directly to Ryu (listening on port 7733) or to the shim client (listening on port 6633). For instance, when using Mininet, use the following option:
-
-```--controller remote,port=PORT```
-
-where port is either 7733 or 6633.
-
 #Testing
 
 The folder ```tests``` contains the tools to test the Ryu backend (and any other backend with the same southbound interface).
