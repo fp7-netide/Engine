@@ -37,7 +37,7 @@ To use the POX client follow this procedure:
 * download the source code of POX (https://github.com/noxrepo/pox.git)
 * copy the file pox_client.py into the pox/ext folder
 * run the ryu backend as described in the "Running" section of this README
-* enter the pox folder and run "python ./pox pox_client" 
+* enter the pox folder and run "./pox.py pox_client" 
  
 
 
