@@ -4,7 +4,7 @@ The Ryu shim layer is one of the two layers of the NetIDE API interceptor and is
 
 ## Installation
 
-To use the client, first clone the Ryu code (from [here](https://github.com/osrg/ryu)) on a local machine and install Ryu by following the procedure described in this [README](https://github.com/osrg/ryu/blob/master/README.rst) file.
+To use the shim, first clone the Ryu code (from [here](https://github.com/osrg/ryu)) on a local machine and install Ryu by following the procedure described in this [README](https://github.com/osrg/ryu/blob/master/README.rst) file.
 After that, do not forget to add the Ryu's code path to the ```PYTHONPATH``` variable (e.g. in ```~/.profile``` file).
 
 ## Running
@@ -17,7 +17,19 @@ The Ryu shim layer listens for connections from the switches on the port 6633. T
 ```
 sudo mn --custom netenv.py --topo netenv  --controller remote,port=6633
 ```
+## Testing
 
+To use the ryu_shim, clone the Pyretic (from [here](https://github.com/frenetic-lang/pyretic)) source code on a local machine.
+
+Add the Ryu shim to the Pyretic's source code by:
+
+* copying the ```ryu_shim.py``` file from this repo to the ```pyretic/of_client``` folder
+* replacing the original ```pyretic.py``` with the one contained in the "test" folder in order to add support for the Ryu client.
+
+For instance, run the following command to use the Ryu shim and the Pyretic's mac_learner application:
+```
+./pyretic.py -v low -c ryu  pyretic.modules.mac_learner
+```
 
 ## TODO
 
