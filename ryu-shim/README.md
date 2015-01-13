@@ -24,7 +24,7 @@ The ryu_shim can be tested with the Pyretic framework by replacing the POX clien
 Add the Ryu shim to the Pyretic's source code by:
 
 * copying the ```ryu_shim.py``` file from this repo to the ```pyretic/of_client``` folder
-* replacing the original ```pyretic.py``` with the one contained in the "test" folder in order to add support for the Ryu client.
+* replacing the original ```pyretic.py``` with the one contained in the "test" folder in order to add support for the Ryu shim (so that Pyretic can launch ryu_shim automatically).
 
 For instance, run the following command to use the Ryu shim and the Pyretic's mac_learner application:
 ```
