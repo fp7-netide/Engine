@@ -38,7 +38,7 @@ The POX client can replace the ODL shim client in the API interceptor implementa
 To use the POX client follow this procedure:
 
 * download the source code of POX (https://github.com/noxrepo/pox.git)
-* copy the file pox_client.py into the pox/ext folder
+* copy the file pox_client.py into the ```pox/ext``` folder
 * run the ryu backend as described in the "Running" section of this README
 * enter the pox folder and run ```./pox.py pox_client"```
  
