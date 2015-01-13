@@ -11,7 +11,7 @@ After that, do not forget to add the Ryu's code path to the ```PYTHONPATH``` var
 
 In the current implementation of the NetIDE API interceptor, the shim layer is the client of the TCP connection while the backend is the server (listening by default on port 41414). Therefore, to test the Ryu shim layer, run the backend first (see the Ryu and FloodLight backends READMEs) and than start the shim layer with the following command:
 ```
-ryu-manager ryu-shim.py
+ryu-manager ryu_shim.py
 ```
 The Ryu shim layer listens for connections from the switches on the port 6633. Therefore, when using mininet for testing purposes, start mininet by specifying the controller information as follows:
 ```
