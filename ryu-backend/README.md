@@ -16,8 +16,7 @@ After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just dow
 ```python ./setup.py install```
 
 Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed: 
-* ```apt-get install python-dev```
-* ```apt-get install python-repoze.lru```
+* ```apt-get install python-pip python-dev python-repoze.lru```
 * ```pip install ecdsa```
 * ```pip install stevedore```
 * ```pip install greenlet```
