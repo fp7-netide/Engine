@@ -15,9 +15,11 @@ package net.floodlightcontroller.interceptor;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
 import org.jboss.netty.channel.Channel;
@@ -41,6 +43,20 @@ import net.floodlightcontroller.core.IOFSwitch;
  */
 public class DummySwitch implements IOFSwitch {
 
+	protected long datapathId;
+	protected ConcurrentHashMap<Short, OFPhysicalPort> portsByNumber;
+	private Object portLock;
+	
+	public DummySwitch() { 
+		this.portsByNumber = new ConcurrentHashMap<Short, OFPhysicalPort>();
+		this.portLock = new Object();
+	}
+	
+	public DummySwitch(long id) {
+		this();
+		this.datapathId = id;
+	}
+	
 	/* (non-Javadoc)
 	 * @see net.floodlightcontroller.core.IOFSwitch#write(org.openflow.protocol.OFMessage, net.floodlightcontroller.core.FloodlightContext)
 	 */
@@ -134,17 +150,14 @@ public class DummySwitch implements IOFSwitch {
 	 */
 	@Override
 	public Collection<Short> getEnabledPortNumbers() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getPort(short)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getPort(short) */
 	@Override
 	public OFPhysicalPort getPort(short portNumber) {
-		// TODO Auto-generated method stub
-		return null;
+		return portsByNumber.get(portNumber);
 	}
 
 	/* (non-Javadoc)
@@ -160,7 +173,9 @@ public class DummySwitch implements IOFSwitch {
 	 */
 	@Override
 	public void setPort(OFPhysicalPort port) {
-		
+		synchronized(portLock) {
+            portsByNumber.put(port.getPortNumber(), port);
+        }
 	}
 
 	/* (non-Javadoc)
@@ -168,7 +183,9 @@ public class DummySwitch implements IOFSwitch {
 	 */
 	@Override
 	public void deletePort(short portNumber) {
-		
+		synchronized(portLock) {
+            portsByNumber.remove(portNumber);
+        }
 	}
 
 	/* (non-Javadoc)
@@ -180,12 +197,10 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getPorts()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getPorts() */
 	@Override
 	public Collection<OFPhysicalPort> getPorts() {
-		// TODO Auto-generated method stub
-		return null;
+		return Collections.unmodifiableCollection(portsByNumber.values());
 	}
 
 	/* (non-Javadoc)
@@ -207,8 +222,7 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#portEnabled(org.openflow.protocol.OFPhysicalPort)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#portEnabled(org.openflow.protocol.OFPhysicalPort) */
 	@Override
 	public boolean portEnabled(OFPhysicalPort port) {
 		// TODO Auto-generated method stub
@@ -216,17 +230,14 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getId()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getId() */
 	@Override
 	public long getId() {
-		// TODO Auto-generated method stub
-		return 0;
+		return datapathId;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getStringId()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getStringId() */
 	@Override
 	public String getStringId() {
 		// TODO Auto-generated method stub
@@ -234,8 +245,7 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getAttributes()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getAttributes() */
 	@Override
 	public Map<Object, Object> getAttributes() {
 		// TODO Auto-generated method stub
@@ -243,203 +253,153 @@ public class DummySwitch implements IOFSwitch {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getConnectedSince()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getConnectedSince()  */
 	@Override
 	public Date getConnectedSince() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getNextTransactionId()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getNextTransactionId()  */
 	@Override
 	public int getNextTransactionId() {
-		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getStatistics(org.openflow.protocol.OFStatisticsRequest)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getStatistics(org.openflow.protocol.OFStatisticsRequest) */
 	@Override
-	public Future<List<OFStatistics>> getStatistics(OFStatisticsRequest request)
-			throws IOException {
-		// TODO Auto-generated method stub
+	public Future<List<OFStatistics>> getStatistics(OFStatisticsRequest request) throws IOException {
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getFeaturesReplyFromSwitch()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getFeaturesReplyFromSwitch() */
 	@Override
-	public Future<OFFeaturesReply> getFeaturesReplyFromSwitch()
-			throws IOException {
-		// TODO Auto-generated method stub
+	public Future<OFFeaturesReply> getFeaturesReplyFromSwitch() throws IOException {
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#deliverOFFeaturesReply(org.openflow.protocol.OFMessage)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#deliverOFFeaturesReply(org.openflow.protocol.OFMessage) */
 	@Override
 	public void deliverOFFeaturesReply(OFMessage reply) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#cancelFeaturesReply(int)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#cancelFeaturesReply(int) */
 	@Override
 	public void cancelFeaturesReply(int transactionId) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#isConnected()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#isConnected() */
 	@Override
 	public boolean isConnected() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#setConnected(boolean)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#setConnected(boolean) */
 	@Override
 	public void setConnected(boolean connected) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getRole()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getRole() */
 	@Override
 	public Role getRole() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#isActive()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#isActive() */
 	@Override
 	public boolean isActive() {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#deliverStatisticsReply(org.openflow.protocol.OFMessage)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#deliverStatisticsReply(org.openflow.protocol.OFMessage)	 */
 	@Override
 	public void deliverStatisticsReply(OFMessage reply) {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#cancelStatisticsReply(int)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#cancelStatisticsReply(int) */
 	@Override
-	public void cancelStatisticsReply(int transactionId) {
-		// TODO Auto-generated method stub
-		
+	public void cancelStatisticsReply(int transactionId) { 
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#cancelAllStatisticsReplies()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#cancelAllStatisticsReplies() */
 	@Override
 	public void cancelAllStatisticsReplies() {
-		// TODO Auto-generated method stub
-		
+
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#hasAttribute(java.lang.String)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#hasAttribute(java.lang.String) */
 	@Override
-	public boolean hasAttribute(String name) {
-		// TODO Auto-generated method stub
+	public boolean hasAttribute(String name) { 
 		return false;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getAttribute(java.lang.String)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getAttribute(java.lang.String) */
 	@Override
 	public Object getAttribute(String name) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#setAttribute(java.lang.String, java.lang.Object)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#setAttribute(java.lang.String, java.lang.Object) */
 	@Override
 	public void setAttribute(String name, Object value) {
-		// TODO Auto-generated method stub
 		
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#removeAttribute(java.lang.String)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#removeAttribute(java.lang.String) */
 	@Override
 	public Object removeAttribute(String name) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#clearAllFlowMods()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#clearAllFlowMods() */
 	@Override
 	public void clearAllFlowMods() {
-		// TODO Auto-generated method stub
 		
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#updateBroadcastCache(java.lang.Long, java.lang.Short)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#updateBroadcastCache(java.lang.Long, java.lang.Short) */
 	@Override
 	public boolean updateBroadcastCache(Long entry, Short port) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#getPortBroadcastHits()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#getPortBroadcastHits() */
 	@Override
 	public Map<Short, Long> getPortBroadcastHits() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#sendStatsQuery(org.openflow.protocol.OFStatisticsRequest, int, net.floodlightcontroller.core.IOFMessageListener)
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#sendStatsQuery(org.openflow.protocol.OFStatisticsRequest, int, net.floodlightcontroller.core.IOFMessageListener) */
 	@Override
-	public void sendStatsQuery(OFStatisticsRequest request, int xid,
-			IOFMessageListener caller) throws IOException {
-		// TODO Auto-generated method stub
+	public void sendStatsQuery(OFStatisticsRequest request, int xid, IOFMessageListener caller) throws IOException {
 		
 	}
 
 	/* (non-Javadoc)
-	 * @see net.floodlightcontroller.core.IOFSwitch#flush()
-	 */
+	 * @see net.floodlightcontroller.core.IOFSwitch#flush() */
 	@Override
 	public void flush() {
-		// TODO Auto-generated method stub
 		
 	}
 

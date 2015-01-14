@@ -32,7 +32,6 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.opendaylight.openflowplugin.pyretic.multi.PacketInDispatcherImpl;
-
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 
 /**

@@ -161,7 +161,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         sleep();
         this.channel.push(p3);
         System.out.println(p + "\n" + p21 + "\n" + p22 + "\n" + p23 + "\n" + p3);
-
     }
 
     // new
