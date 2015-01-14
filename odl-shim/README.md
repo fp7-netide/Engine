@@ -2,7 +2,7 @@
 This version of the ODL shim client is prepared to work with the Helium version of Opendaylight, and particularly using Karaf. 
 
 # Getting OpenDaylight
-First of all, we want to be able to use OpenDaylight, which already uses Openflow, and for this we will follow the second step from the following guide: https://wiki.opendaylight.org/view/OpenDaylight_OpenFlow_Plugin::Running_controller_with_the_new_OF_plugin
+First of all, we want to be able to use OpenDaylight, which already uses OpenFlow, and for this we will follow the second step from the following guide: https://wiki.opendaylight.org/view/OpenDaylight_OpenFlow_Plugin::Running_controller_with_the_new_OF_plugin (which allows the use of the OpenFlow plugin for versions 1.0 and 1.3).
 
 So clone the following repository for getting the OpenDaylight distribution:
 ```
