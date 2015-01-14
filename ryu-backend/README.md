@@ -11,12 +11,14 @@ To summarize with an example: when a packet_in message arrives to ODL from a swi
 #Installation
 
 The Ryu backend is provided as an additional module for the Ryu controller. In order to use it, download the Ryu's source code first (```git clone https://github.com/osrg/ryu.git```).
-After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just downloaded and add the Ryu's code path to the PYTHONPATH variable (e.g. in ~/.profile file). Finally, install the Ryu controller by entering the ```ryu``` folder and by running the command:
+After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just downloaded and add the Ryu's code path to the PYTHONPATH variable in your ~/.profile or ~/.bashrc (e.g. ```export PYTHONPATH="$HOME/ryu"```).
+
+Finally, install the Ryu controller by entering the ```ryu``` folder and by running the command:
 
 ```python ./setup.py install```
 
 Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed: 
-* ```apt-get install python-pip python-dev python-repoze.lru```
+* ```apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev```
 * ```pip install ecdsa```
 * ```pip install stevedore```
 * ```pip install greenlet```
