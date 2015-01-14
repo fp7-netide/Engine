@@ -9,7 +9,7 @@ git clone https://git.opendaylight.org/gerrit/p/openflowplugin.git
 
 After that, run ```git checkout stable/helium```. Go to the openflowplugin directory and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
 
-At this point, you have your Opendaylight Helium ready to be run. Now cd to openflowplugin/distribution/karaf/target/assembly/ and here launch karaf by running ```./bin/karaf```
+At this point, you have your Opendaylight Helium ready to be run. Now cd to ```openflowplugin/distribution/karaf/target/assembly/``` and here launch karaf by running ```./bin/karaf```
 
 > **Note:** Each time you recompile the ODL bundle and generate the .jar, all the contents inside data folder (in openflowplugin/distribution/karaf/target/assembly/) need to be removed. Otherwise, your bundle will automatically be installed inside karaf and you won't be able to see any of the changes. 
 
