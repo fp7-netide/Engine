@@ -7,7 +7,7 @@ First of all, we want to be able to use an Opendaylight which already uses Openf
 git clone https://git.opendaylight.org/gerrit/p/openflowplugin.git
 ```
 
-After that, run ```git checkout helium/stable```. Go to the openflowplugin directory and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
+After that, run ```git checkout stable/helium```. Go to the openflowplugin directory and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
 
 At this point, you have your Opendaylight Helium ready to be run. Now cd to openflowplugin/distribution/karaf/target/assembly/ and here launch karaf by running ```./bin/karaf```
 
