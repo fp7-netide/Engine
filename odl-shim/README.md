@@ -4,14 +4,14 @@ This version of the ODL shim client is prepared to work with the Helium version 
 # Getting OpenDaylight
 First of all, we want to be able to use OpenDaylight, which already uses Openflow, and for this we will follow the second step from the following guide: https://wiki.opendaylight.org/view/OpenDaylight_OpenFlow_Plugin::Running_controller_with_the_new_OF_plugin
 
-So clone the following repository for getting the Opendaylight distribution:
+So clone the following repository for getting the OpenDaylight distribution:
 ```
 git clone https://git.opendaylight.org/gerrit/p/openflowplugin.git
 ```
 
 After that, go to the openflowplugin directory and run ```git checkout stable/helium``` and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
 
-At this point, you have OpenDaylight Helium ready to be run. Now cd to /openflowplugin/distribution/karaf/target/assembly/bin/ (omit openflowplugin/ if you were already in this folder)  and here launch Karaf by running ```./karaf```
+At this point, you have OpenDaylight Helium ready to be run. Now cd to /openflowplugin/distribution/karaf/target/assembly/bin/ (omit /openflowplugin/ if you were already in this folder)  and here launch Karaf by running ```./karaf```
 
 > **Note:** Each time you recompile the ODL bundle and generate the .jar, all the contents inside data folder (in openflowplugin/distribution/karaf/target/assembly/) need to be removed. Otherwise, your bundle will automatically be installed inside karaf and you won't be able to see any of the changes. 
 
