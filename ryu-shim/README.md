@@ -5,10 +5,14 @@ The Ryu shim layer is one of the two layers of the NetIDE API interceptor and is
 ## Installation
 
 To use the shim, first clone the Ryu code (from [here](https://github.com/osrg/ryu)) on a local machine and install Ryu by following the procedure described in this [README](https://github.com/osrg/ryu/blob/master/README.rst) file.
-After that, do not forget to add the Ryu's code path to the ```PYTHONPATH``` variable (e.g. in ```~/.profile``` file).
+After that, copy the ```backend``` folder into the ```ryu/ryu``` folder just downloaded and add the Ryu's code path to the PYTHONPATH variable in your ~/.profile or ~/.bashrc (e.g. ```export PYTHONPATH="$HOME/ryu"```).
+
+Finally, install the Ryu controller by entering the ```ryu``` folder and by running the command:
+
+```python ./setup.py install```
 
 Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed: 
-* ```apt-get install python-pip python-dev python-repoze.lru```
+* ```apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev```
 * ```pip install ecdsa```
 * ```pip install stevedore```
 * ```pip install greenlet```
