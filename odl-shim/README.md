@@ -9,7 +9,7 @@ So clone the following repository for getting the OpenDaylight distribution:
 git clone https://git.opendaylight.org/gerrit/p/openflowplugin.git
 ```
 
-After that, go to the openflowplugin directory and run ```git checkout stable/helium``` and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
+After that, go to the openflowplugin directory ```cd openflowplugin``` and run ```git checkout stable/helium``` and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
 
 At this point, you have OpenDaylight Helium ready to be run. Now cd to /openflowplugin/distribution/karaf/target/assembly/bin/ (omit /openflowplugin/ if you were already in this folder)  and here launch Karaf by running ```./karaf```
 
