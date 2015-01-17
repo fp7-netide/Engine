@@ -69,6 +69,6 @@ Test Steps
 
 4) Start your mininet config. The command that can be used and builds a simple configuration with 3 hosts is
 	
-	mn --topo simple,3 --controller remote,ip=<IP of the host where pox is running>
+	mn --topo single,3 --controller remote,ip=<IP of the host where pox is running>
 
 You should now be able to run your floodlight application/module on top of the POX SDN controller. 
