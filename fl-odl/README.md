@@ -35,7 +35,7 @@ floodlightdefault.properties
 
 	- <floodlight_folder>/src/main/resources/floodlightdefault.properties
 	- add the line: "net.floodlightcontroller.interceptor.NetideModule" at the end of the file
-	- Change the port number to 7733 (we don't want the switches connecting)
+	- Change the port number to 6634 (we don't want the switches connecting)
 
 Build the code
 --------------
@@ -67,6 +67,8 @@ Test Steps
 
 	python ./pox.py pox_client
 
-4) Start your mininet config.
+4) Start your mininet config. The command that can be used and builds a simple configuration with 3 hosts is
+	
+	mn --topo simple,3 --controller remote,ip=<IP of the host where pox is running>
 
 You should now be able to run your floodlight application/module on top of the POX SDN controller. 
