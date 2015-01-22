@@ -13,6 +13,8 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import java.util.ArrayList;
+
 import net.floodlightcontroller.packet.IPv4;
 
 import org.json.JSONObject;
@@ -75,9 +77,19 @@ public class MessageSerializer {
 		// "payload_len": 42, "switch": 1, "ethtype": 2054, "srcip": [49, 48, 46, 48, 46, 48, 46, 50] }] + TERM_CHAR  
 		JSONObject json = new JSONObject();
 		json.put("switch", switchID); 
-		json.put("buf", packetOut.getBufferId());
-		json.put("inport", packetOut.getInPort());
-		json.put("raw", packetOut.getPacketData());
+		json.put("buf",  packetOut.getBufferId());
+		json.put("inport",  packetOut.getInPort());
+	    byte[] raw =  packetOut.getPacketData();
+	    // The array that we need to pass to pyretic must have unsigned values 
+	    // so we need to change the range of the array returned by getPacketData (range -127, 127) to
+	    // (0,255). Otherwise pyretic will not be able to read the of packet's payload. 
+	    ArrayList<Integer> new_raw = new ArrayList<Integer>();
+		for (byte x: raw){
+			int y =  (x & 0xff);
+			new_raw.add(y);	
+		};
+		
+		json.put("raw",  new_raw);
 		json.put("header_len", packetOut.getActionsLength());
 		JSONObject[] actionArray = new JSONObject[packetOut.getActions().size()];
 		for (int i=0; i<packetOut.getActions().size(); i++) {
