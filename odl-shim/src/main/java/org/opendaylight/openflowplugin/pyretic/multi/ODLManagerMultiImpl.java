@@ -126,7 +126,7 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
                 InstanceIdentifier.builder(Nodes.class)
                         .child(Node.class)
                         .augmentation(FlowCapableNode.class)
-                        .child(Table.class).toInstance(),
+                        .child(Table.class).build(),
                 wakeupListener,
                 DataBroker.DataChangeScope.SUBTREE);
 
