@@ -30,6 +30,8 @@ import org.openflow.protocol.action.OFActionNetworkLayerSource;
 import org.openflow.protocol.action.OFActionNetworkTypeOfService;
 import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionTransportLayer;
+import org.openflow.protocol.action.OFActionTransportLayerDestination;
+import org.openflow.protocol.action.OFActionTransportLayerSource;
 
 /**
  * Describe your class here...
@@ -63,7 +65,13 @@ public class MessageSerializer {
 		}
 		return retString;
 	}
-	
+	/**
+	 * byte in Java is in the range [-127, 127]. Pyretic can only process values that
+	 * are in the range [0, 255]. This functions converts the array from one format to
+	 * the other.
+	 * @param raw byte[]
+	 * @return ArrayList<Integer>
+	 */
 	public static ArrayList<Integer> ByteArrayConvert(byte[] raw){
 		ArrayList<Integer> new_raw = new ArrayList<Integer>();
 		for (byte x: raw){
@@ -89,15 +97,12 @@ public class MessageSerializer {
 		json.put("buf",  packetOut.getBufferId());
 		json.put("inport",  packetOut.getInPort());
 	    byte[] raw =  packetOut.getPacketData();
+
 	    // The array that we need to pass to pyretic must have unsigned values 
 	    // so we need to change the range of the array returned by getPacketData (range -127, 127) to
 	    // (0,255). Otherwise pyretic will not be able to read the of packet's payload. 
-	    ArrayList<Integer> new_raw = ByteArrayConvert(raw); //new ArrayList<Integer>();
-		//for (byte x: raw){
-		//	int y =  (x & 0xff);
-		//	new_raw.add(y);	
-		//};
-		
+	    ArrayList<Integer> new_raw = ByteArrayConvert(raw); 
+			
 		json.put("raw",  new_raw);
 		json.put("header_len", packetOut.getActionsLength());
 		JSONObject[] actionArray = new JSONObject[packetOut.getActions().size()];
@@ -129,6 +134,7 @@ public class MessageSerializer {
 		//   "protocol": 1,  "tos": 0, "inport": 1, "switch": 2, "ethtype": 2048}, 0, [{"outport": 2}],]
 		
 		JSONObject json = new JSONObject();
+		// Configure match fields in the flowmod message
 		OFMatch match = flowMod.getMatch();
 		if (match.getDataLayerDestination().length !=0 )
 			json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
@@ -138,19 +144,19 @@ public class MessageSerializer {
 			json.put("dstip", match.getNetworkDestination());
 		if (match.getNetworkSource()!=0 )
 			json.put("srcip", match.getNetworkSource());
-		if (match.getTransportDestination() > 0)
-			json.put("dstport", match.getTransportDestination());
+		if (match.getTransportDestination() > 0) 
+			json.put("dstport", 0x0FFFF & match.getTransportDestination());
 		if (match.getTransportSource() > 0 )
 			json.put("srcport", match.getTransportSource());
 		if ((match.getNetworkTypeOfService() & 0xff) > 0 )
 			json.put("tos", (match.getNetworkTypeOfService() & 0xff));
-		
 		json.put("switch", switchID);
 		json.put("inport", flowMod.getMatch().getInputPort());
 		json.put("nw_proto", flowMod.getMatch().getNetworkProtocol());
 		json.put("ethtype", flowMod.getMatch().getDataLayerType());
 		json.put("outPort", flowMod.getOutPort());
 		StringBuilder sb = new StringBuilder("[\"");
+		
 		//COMMAND
 		switch (flowMod.getCommand()) {
 			case OFFlowMod.OFPFC_ADD: 
@@ -165,55 +171,73 @@ public class MessageSerializer {
 			default:
 		}
 		sb.append("\", ");
+		
 		//MATCH
 		sb.append(json.toString());
+		
 		//PRIORITY
 		sb.append(", ").append("65000"); //flowMod.getPriority());
+		
 		//ACTION LIST
-		/*if (flowMod.getOutPort()==-1){
-			sb.append(", [{\"outport\": ")
-			  .append(flowMod.getOutPort())
-			  .append("}]");
-			sb.append("]\n");	
-		} else {*/
-		String[] actionArray = new String[flowMod.getActions().size()];
 		if (flowMod.getActions().size() == 0){
 			sb.append("]\n");
-		}
-		for (int i=0; i<flowMod.getActions().size(); i++) {
-			actionArray[i] = flowMod.getActions().get(i).getType().toString();
-			switch (flowMod.getActions().get(i).getType()) {
+		} else {
+		int action_list_length = flowMod.getActions().size();	
+		for (int i=0; i<action_list_length; i++) {
+			sb.append(", [{");
+			OFAction action = flowMod.getActions().get(i);
+			switch (action.getType()) {
 			case OUTPUT:
-				if (i==0){
-				  sb.append(", [{\"outport\": ")
-			        .append((0x0FFFF&(((OFActionOutput)flowMod.getActions().get(i)).getPort())));
-				}
-				if (i==(flowMod.getActions().size()-1)){
-					sb.append("}]");
-					sb.append("]\n");
-				}
-				//json.put("outport", (0x0FFFF&(((OFActionOutput)action).getPort())));
+				sb.append("\"outport\": ")
+			    	.append((0x0FFFF&(((OFActionOutput)action).getPort())));
+				if (i != action_list_length-1)
+					sb.append(", ");
 				break;
 			case SET_DL_DST:
-				//json.put("dstmac", ((OFActionDataLayerDestination)action).getDataLayerAddress());
+				sb.append("\"dstmac\": ")
+		    		.append(((OFActionDataLayerDestination)action).getDataLayerAddress());
+				if (i != action_list_length-1)
+					sb.append(", ");
 				break;
 			case SET_DL_SRC:
-				//json.put("srcmac", ((OFActionDataLayerSource)action).getDataLayerAddress());
+				sb.append("\"srcmac\": ")
+	    			.append(((OFActionDataLayerSource)action).getDataLayerAddress());
+				if (i != action_list_length-1)
+					sb.append(", ");
 				break;
 			case SET_NW_DST:
-				//int ipDst = ((OFActionNetworkLayerDestination)action).getNetworkAddress();
+				sb.append("\"dstip\": ")
+	    			.append(((OFActionNetworkLayerDestination)action).getNetworkAddress());
+				if (i != action_list_length-1)
+				sb.append(", ");
 				//json.put("dstip", IPv4.toIPv4AddressBytes(ipDst));
 				break;
 			case SET_NW_SRC:
-				//int ipSrc = ((OFActionNetworkLayerSource)action).getNetworkAddress();
+				sb.append("\"srcip\": ")
+    				.append(((OFActionNetworkLayerSource)action).getNetworkAddress());
+			if (i != action_list_length-1)
+			sb.append(", ");
 				//json.put("dstmac", IPv4.toIPv4AddressBytes(ipSrc));
 				break;
 			case SET_NW_TOS:
+				sb.append("\"tos\": ")
+					.append(((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
+				if (i != action_list_length-1)
+					sb.append(", ");				
+				break;			
 				//json.put("tos", ((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
 			case SET_TP_DST:
+				sb.append("\"dstport\": ")
+					.append(((OFActionTransportLayerDestination)action).getTransportPort());
+				if (i != action_list_length-1)
+					sb.append(", ");				
+				break;			
 				//json.put("dstport", (0x0FFFF&((OFActionTransportLayer)action).getTransportPort()));
-				break;
 			case SET_TP_SRC:
+				sb.append("\"srcport\": ")
+					.append(((OFActionTransportLayerSource)action).getTransportPort());
+				if (i != action_list_length-1)
+					sb.append(", ");		
 				//json.put("srcport", (0x0FFFF&((OFActionTransportLayer)action).getTransportPort()));
 				break;
 			case SET_VLAN_ID:
@@ -223,7 +247,8 @@ public class MessageSerializer {
 			case OPAQUE_ENQUEUE:
 			}
 		}
-		
+		sb.append("}]]\n");
+		}
 		
 		
 		return sb.toString();
