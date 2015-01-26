@@ -27,6 +27,7 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.openflow.protocol.OFError;
 import org.openflow.protocol.OFMessage;
+import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

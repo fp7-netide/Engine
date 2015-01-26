@@ -14,7 +14,10 @@
 package net.floodlightcontroller.interceptor;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+
+import net.floodlightcontroller.packet.Ethernet;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -29,12 +32,16 @@ import org.openflow.protocol.OFFeaturesReply;
 import org.openflow.protocol.OFFlowMod;
 import org.openflow.protocol.OFGetConfigReply;
 import org.openflow.protocol.OFHello;
+import org.openflow.protocol.OFMatch;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketOut;
 import org.openflow.protocol.OFPhysicalPort;
+import org.openflow.protocol.OFPort;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFStatisticsRequest;
 import org.openflow.protocol.OFType;
+import org.openflow.protocol.action.OFAction;
+import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.factory.MessageParseException;
 import org.openflow.protocol.statistics.OFDescriptionStatistics;
@@ -193,9 +200,12 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 	}
                 	break;
                 case FLOW_MOD:
-                case PACKET_OUT:
                 	sendMessageToShim(m);
                 	break;
+                case PACKET_OUT:               	
+                	sendMessageToShim(m);
+                	break;
+                	
                 case ERROR:
                     //logError(sw, (OFError)m);
                     // fall through intentionally so error can be listened for
