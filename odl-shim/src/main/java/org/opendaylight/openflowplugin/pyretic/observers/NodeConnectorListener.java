@@ -48,7 +48,7 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
                         .child(Node.class)
                         .child(NodeConnector.class)
                         .augmentation(FlowCapableNodeConnector.class)
-                        .toInstance(),
+                        .build(),
                 this, AsyncDataBroker.DataChangeScope.BASE);
         port2switchMapping = new HashMap<>();
     }

@@ -110,7 +110,7 @@ public class OutputUtils {
             NodeKey key = new NodeKey(new NodeId(nodeId));
             InstanceIdentifier<Node> path = InstanceIdentifier.<Nodes>builder(Nodes.class)
                     .<Node, NodeKey>child(Node.class, key)
-                    .toInstance();
+                    .build();
             return new NodeRef(path);
         }
         public static NodeConnectorRef createNodeConnRef(final String nodeId, final String port) {
@@ -120,7 +120,7 @@ public class OutputUtils {
             InstanceIdentifier<NodeConnector> path = InstanceIdentifier.<Nodes>builder(Nodes.class)
                     .<Node, NodeKey>child(Node.class, new NodeKey(new NodeId(nodeId)))
                     .<NodeConnector, NodeConnectorKey>child(NodeConnector.class, nConKey)
-                    .toInstance();
+                    .build();
             return new NodeConnectorRef(path);
         }
         private static NodeBuilder createNodeBuilder(final String nodeId) {
