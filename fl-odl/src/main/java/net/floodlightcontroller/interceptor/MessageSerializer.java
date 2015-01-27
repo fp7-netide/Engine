@@ -158,7 +158,8 @@ public class MessageSerializer {
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_PROTO) == 0)
 			json.put("nw_proto", flowMod.getMatch().getNetworkProtocol());
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_VLAN) == 0)
-			json.put("vlan_id", match.getDataLayerVirtualLan());
+			if (match.getDataLayerVirtualLan() != -1 )
+				json.put("vlan_id", match.getDataLayerVirtualLan());
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_VLAN_PCP) == 0)
 			json.put("vlan_pcp", match.getDataLayerVirtualLanPriorityCodePoint());
 		json.put("switch", switchID);
