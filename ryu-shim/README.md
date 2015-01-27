@@ -4,20 +4,38 @@ The Ryu shim layer is one of the two layers of the NetIDE API interceptor and is
 
 ## Installation
 
-To use the client, first clone the Ryu code (from [here](https://github.com/osrg/ryu)) on a local machine and install Ryu by following the procedure described in this [README](https://github.com/osrg/ryu/blob/master/README.rst) file.
-After that, do not forget to add the Ryu's code path to the ```PYTHONPATH``` variable (e.g. in ```~/.profile``` file).
+To use the shim, first clone the Ryu code (from [here](https://github.com/osrg/ryu)) on a local machine and copy the ```netide``` folder into the ```ryu/ryu``` folder. After that install Ryu by running the command ```python ./setup.py install``` from the ```ryu``` folder.
+Then add the Ryu's installation path to the PYTHONPATH variable in your ~/.profile or ~/.bashrc (e.g. in a Ubuntu 14.04 Linux OS: ```export PYTHONPATH=/usr/local/lib/python2.7/dist-packages/ryu```).
+
+Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed: 
+* ```apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev```
+* ```pip install ecdsa```
+* ```pip install stevedore```
+* ```pip install greenlet```
 
 ## Running
 
-In the current implementation of the NetIDE API interceptor, the shim layer is the client of the TCP connection while the backend is the server (listening by default on port 41414). Therefore, to test the Ryu shim layer, run the backend first (see the Ryu and FloodLight backends READMEs) and than start the shim layer with the following command:
+In the current implementation of the NetIDE API interceptor, the shim layer is the client of the TCP connection while the backend is the server (listening by default on port 41414). Therefore, to test the Ryu shim layer, run the backend first (see the Ryu and FloodLight backends READMEs) and then start the shim layer with the following command:
 ```
-ryu-manager ryu-shim.py
+ryu-manager ryu_shim.py
 ```
 The Ryu shim layer listens for connections from the switches on the port 6633. Therefore, when using mininet for testing purposes, start mininet by specifying the controller information as follows:
 ```
 sudo mn --custom netenv.py --topo netenv  --controller remote,port=6633
 ```
+## Testing
 
+The ryu_shim can be tested with the Pyretic framework by replacing the POX client that Pyretic uses to communicate with the OpenFlow switches. After the installation of Ryu described above, clone the Pyretic (from [here](https://github.com/frenetic-lang/pyretic)) source code on the same local machine.
+
+Add the Ryu shim to the Pyretic's source code by:
+
+* copying the ```ryu_shim.py``` file from this repo to the ```pyretic/of_client``` folder
+* replacing the original ```pyretic.py``` with the one contained in the ```tests``` folder in order to add support for the Ryu shim (so that Pyretic can launch ryu_shim automatically).
+
+For instance, run the following command to use the Ryu shim and the Pyretic's mac_learner application:
+```
+./pyretic.py -v low -c ryu  pyretic.modules.mac_learner
+```
 
 ## TODO
 
@@ -29,6 +47,10 @@ See the LICENSE file.
 
 ## ChangeLog
 
+ryu-client: 2015-01-13 Tue Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Updated README by adding a new ```Testing``` session 
+
 ryu-shim: 2014-12-04 Thu Antonio Marsico <antonio.marsico@create-net.org>
 
   * Renamed the project from ryu-client into ryu-shim
@@ -37,5 +59,4 @@ ryu-shim: 2014-12-04 Thu Antonio Marsico <antonio.marsico@create-net.org>
 ryu-client: 2014-08-27 Wed Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
   * First public release of the ryu-client. Tested with the master branch of Pyretic (commit 376f63a6d249c9a2e434b87f565982cab24fb6ad of 7th Aug 2014) 
-
 

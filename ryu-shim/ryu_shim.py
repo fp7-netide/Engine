@@ -26,13 +26,13 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_0, ether, ofproto_v1_0_parser, nx_match
-from ryu.lib.mac import haddr_to_bin
+from ryu.lib.mac import haddr_to_bin, DONTCARE_STR
 from ryu.lib.dpid import dpid_to_str, str_to_dpid
-from ryu.lib.ip import ipv4_to_bin
+from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
-from pyretic.backend.comm import *
+from ryu.netide.comm import *
 
 
 def inport_value_hack(outport):
@@ -43,65 +43,28 @@ def inport_value_hack(outport):
     
 class OF10Match(object):
     def __init__(self):
-        self.in_port = 0
-        self.dl_src = 0
-        self.dl_dst = 0
-        self.dl_type = 0
-        self.dl_vlan = 0
-        self.dl_vlan_pcp = 0
-        self.nw_tos = 0
-        self.nw_proto = 0
-        self.nw_src = 0
-        self.nw_dst = 0
-        self.tp_dst = 0
-        self.tp_src = 0
+        self.wildcards=None
+        self.in_port = None
+        self.dl_src = None
+        self.dl_dst = None
+        self.dl_type = None
+        self.dl_vlan = None
+        self.dl_vlan_pcp = None
+        self.nw_tos = None
+        self.nw_proto = None
+        self.nw_src = None
+        self.nw_dst = None
+        self.tp_dst = None
+        self.tp_src = None
     
     def match_tuple(self):
         """return a tuple which can be used as *args for
         ofproto_v1_0_parser.OFPMatch.__init__().
         see Datapath.send_flow_mod.
         """
-        wildcards = ofproto_v1_0.OFPFW_ALL
-
-        if self.in_port != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_IN_PORT
-
-        if self.dl_src != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_DL_SRC
-
-        if self.dl_dst != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_DL_DST
-
-        if not self.dl_type !=0:
-            wildcards &= ~ofproto_v1_0.OFPFW_DL_TYPE
-
-        if self.dl_vlan != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_DL_VLAN
-
-        if self.dl_vlan_pcp != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_DL_VLAN_PCP
-
-        if self.nw_tos != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_NW_TOS
-
-        if self.nw_proto != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_NW_PROTO
-
-        if self.nw_src != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_NW_SRC_ALL
-
-        if self.nw_dst != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_NW_DST_ALL
-
-        if self.tp_src != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_TP_SRC
-
-        if self.tp_dst != 0:
-            wildcards &= ~ofproto_v1_0.OFPFW_TP_DST
-
-        return (wildcards, self.in_port, self.dl_src,
+        return (self.wildcards, self.in_port, self.dl_src,
                 self.dl_dst, self.dl_vlan, self.dl_vlan_pcp,
-                self.dl_type, self.nw_tos & 0xfc,
+                self.dl_type, self.nw_tos,
                 self.nw_proto, self.nw_src, self.nw_dst,
                 self.tp_src, self.tp_dst)
 
@@ -225,7 +188,7 @@ class RYUClient(app_manager.RyuApp):
         }
         
         self.channel_lock = threading.Lock()
-        self.backend_channel = BackendChannel('127.0.0.1', BACKEND_PORT, self) 
+        self.backend_channel = BackendChannel('127.0.0.1', RYU_BACKEND_PORT, self) 
         self.al = asyncore_loop()
         self.al.start()   
         
@@ -319,8 +282,8 @@ class RYUClient(app_manager.RyuApp):
     def send_to_pyretic(self,msg):
         serialized_msg = serialize(msg)
         try:
-            #with self.channel_lock:
-            self.backend_channel.push(serialized_msg)
+            with self.channel_lock:
+                self.backend_channel.push(serialized_msg)
         except IndexError as e:
             print "ERROR PUSHING MESSAGE %s" % msg
             pass
@@ -328,6 +291,10 @@ class RYUClient(app_manager.RyuApp):
     def send_to_switch(self,packet):
         switch = packet["switch"]
         outPort = packet["outport"]
+        buffer_id = ofproto_v1_0.OFP_NO_BUFFER
+        
+        if 'buffer_id' in packet:
+            buffer_id = packet["buffer_id"]
         
         try:
             inport = packet["inport"]
@@ -337,11 +304,12 @@ class RYUClient(app_manager.RyuApp):
             inport = inport_value_hack(outPort)
         
         
+        
          ## HANDLE PACKETS SEND ON LINKS THAT HAVE TIMED OUT
         try:
             datapath = self.switches[switch]['connection']
             po_actions = [datapath.ofproto_parser.OFPActionOutput(outPort)]
-            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, in_port=inport, buffer_id=ofproto_v1_0.OFP_NO_BUFFER, actions=po_actions, data = self.packet_to_network(packet))      
+            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, in_port=inport, buffer_id=buffer_id, actions=po_actions, data = self.packet_to_network(packet))      
             datapath.send_msg(pkt_out)
         except RuntimeError, e:
             print "ERROR:send_to_switch: %s to switch %d" % (str(e),switch)
@@ -357,27 +325,38 @@ class RYUClient(app_manager.RyuApp):
         if inport != None:
             rule.in_port = inport
         if 'srcmac' in pred:
-            rule.dl_src = haddr_to_bin(pred['srcmac'])
+            if pred['srcmac'] != DONTCARE_STR:
+                rule.dl_src = haddr_to_bin(pred['srcmac'])
         if 'dstmac' in pred:
-            rule.dl_dst = haddr_to_bin(pred['dstmac'])
+            if pred['dstmac'] != DONTCARE_STR:
+                rule.dl_dst = haddr_to_bin(pred['dstmac'])        
         if 'ethtype' in pred:
-            rule.dl_type = pred['ethtype']
+            if pred['ethtype'] != 0:
+                rule.dl_type = pred['ethtype']
         if 'vlan_id' in pred:
-            rule.dl_vlan = pred['vlan_id']
+            if pred['vlan_id'] != 0:
+                rule.dl_vlan = pred['vlan_id']
         if 'vlan_pcp' in pred:
-            rule.dl_vlan_pcp = pred['vlan_pcp']
+            if pred['vlan_pcp'] != 0:
+                rule.dl_vlan_pcp = pred['vlan_pcp']
         if 'protocol' in pred:
-            rule.nw_proto = pred['protocol']
+            if pred['protocol'] != 0:
+                rule.nw_proto = pred['protocol']
         if 'srcip' in pred:
-            rule.nw_src = self.ipv4_to_int(pred['srcip'])
+            if self.ipv4_to_int(pred['srcip']) != 0:
+                rule.nw_src = self.ipv4_to_int(pred['srcip'])
         if 'dstip' in pred:
-            rule.nw_dst = self.ipv4_to_int(pred['dstip'])
+            if self.ipv4_to_int(pred['dstip']) != 0:
+                rule.nw_dst = self.ipv4_to_int(pred['dstip'])
         if 'tos' in pred:
-            rule.nw_tos = pred['tos']
+            if pred['tos'] != 0:
+                rule.nw_tos = pred['tos']
         if 'srcport' in pred:
-            rule.tp_src = pred['srcport']
+            if pred['srcport'] != 0:
+                rule.tp_src = pred['srcport']
         if 'dstport' in pred:
-            rule.tp_dst = pred['dstport']
+            if pred['dstport'] != 0:
+                rule.tp_dst = pred['dstport']
         
         match_tuple = rule.match_tuple()
         match = datapath.ofproto_parser.OFPMatch(*match_tuple)
@@ -420,20 +399,32 @@ class RYUClient(app_manager.RyuApp):
         return of_actions
     
     def install_flow(self,pred,priority,action_list):
+        
         switch = pred['switch']
         if 'inport' in pred:        
             inport = pred['inport']
         else:
             inport = None
+        if 'idle_timeout' in pred:        
+            idle_timeout = pred['idle_timeout']
+        else:
+            idle_timeout = 0
+
+        if 'hard_timeout' in pred:        
+            hard_timeout = pred['hard_timeout']
+        else:
+            hard_timeout = 0
+
+
             
         datapath = self.switches[switch]['connection']
         ofproto = datapath.ofproto
         match = self.build_of_match(datapath,inport,pred)
         of_actions = self.build_of_actions(inport,action_list)
-        msg = datapath.ofproto_parser.OFPFlowMod(idle_timeout=0, hard_timeout=0,
+        msg = datapath.ofproto_parser.OFPFlowMod(idle_timeout=idle_timeout, hard_timeout=hard_timeout,
             datapath=datapath, match=match, cookie=0,
             command=ofproto.OFPFC_ADD,
-            priority=ofproto.OFP_DEFAULT_PRIORITY,
+            priority=priority,
             flags=ofproto.OFPFF_SEND_FLOW_REM, actions=of_actions)
         try:
             datapath.send_msg(msg)
@@ -635,7 +626,7 @@ class RYUClient(app_manager.RyuApp):
         
     def handle_lldp(self,ev):
         
-        print "handle_lldp"
+        #print "handle_lldp"
         
         CHASSIS_ID_PREFIX = 'dpid:'
         CHASSIS_ID_PREFIX_LEN = len(CHASSIS_ID_PREFIX)
