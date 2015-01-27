@@ -68,8 +68,6 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
         for (Map.Entry<InstanceIdentifier<?>, DataObject> entry : change.getCreatedData().entrySet()) {
             System.out.println("Node created");
 
-            //System.out.println("Entry key: " + entry.getKey().toString());
-            //System.out.println("Entry value:" + entry.getValue().toString());
 
             HashMap<String, String> valueMap = this.getValueMap(entry.getValue().toString());
 
@@ -176,10 +174,6 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
             System.out.println(stringToChannel);
             this.channel.push(stringToChannel);
             sleep(2000);
-        }
-        else // Switch appeared
-        {
-            //System.out.println("New switch with name " + value);
         }
     }
 
