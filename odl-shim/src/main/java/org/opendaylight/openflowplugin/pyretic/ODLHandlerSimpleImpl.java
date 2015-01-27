@@ -175,13 +175,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
         MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
 
-
-       /* LOG.debug("srcmac init");
-        LOG.debug(srcMac.getValue());
-        LOG.debug("dstmac init");
-        LOG.debug(dstMac.getValue());*/
-
-
         NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
         String path  = ingressKey.getId().getValue();
 
@@ -202,15 +195,11 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 raw.add(aux);
             }
 
-            /*LOG.debug("Ethertype: " ); // + etherType.toString());
-            for(int i = 0; i < etherType.length; i++) {
-                LOG.debug("%02x ",0xff & etherType[i]);
-            }
-            LOG.debug("");*/
-
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
                 //LOG.debug("IPV4 packet arrived");
 
+                System.out.println("IPV4 arrived");
+
                 JSONObject json = new JSONObject();
                 json.put("switch", Integer.parseInt(switch_s));
                 json.put("inport", Integer.parseInt(inport));
@@ -219,14 +208,15 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 List<String> p = new ArrayList<String>();
                 p.add("\"packet\"");
                 p.add(json.toString());
-               // LOG.debug("" + p);
 
                 this.channel.push(p.toString() + "\n");
-                //mac2portMapping.put(srcMac, notification.getIngress());
+                mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
+                System.out.println("IPV6 arrived - not handling ipv6");
+
                 // Handle IPV6 packet
-                JSONObject json = new JSONObject();
+               /* JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
                 json.put("inport", Integer.parseInt(inport));
@@ -236,7 +226,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 p.add("\"packet\"");
                 p.add(json.toString());
                // LOG.debug("" + p);
-                this.channel.push(p.toString() + "\n");
+                this.channel.push(p.toString() + "\n");*/
                 //mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
@@ -259,6 +249,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
                 //Handle lldp packet
                 //LOG.debug("LLDP packet arrived");
+
+                System.out.println("LLDP packet arrived");
 
                 JSONObject json = new JSONObject();
 
@@ -289,15 +281,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         this.channel = channel;
     }
 
-    // basurilla
-    static InstanceIdentifier<NodeConnector> createNodeConnectorId(String nodeKey, String nodeConnectorKey) {
-        return InstanceIdentifier.builder(Nodes.class)
-                .child(Node.class, new NodeKey(new NodeId(nodeKey)))
-                .child(NodeConnector.class, new NodeConnectorKey(new NodeConnectorId(nodeConnectorKey)))
-                .build();
-    }
-    //
-
     @Override
     public void sendToSwitch(JSONObject json, String type) {
 
@@ -309,11 +292,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
 
             String inNodeKey = "openflow:" + swtch.toString();
             String inPort = inport.toString();
-            String outPort = outport.toString(); //
-
-           /* LOG.debug("innodekey: " + inNodeKey);
-            LOG.debug("inport: " + inPort);
-            LOG.debug("outport: " + outPort);*/
+            String outPort = outport.toString();
 
             ////////////////////////////////////////////////////////
             // Get the raw from the json
@@ -323,56 +302,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 sb.append(OutputUtils.fromDecimalToHex(b));
             }
             byte[] payload = OutputUtils.toByteArray(sb.toString());
-            //System.out.println("My payload: " + sb.toString().toUpperCase());
-            ////////////////////////////////////////////////////////
 
-/*
-            ////////////////////////////////////////////////////////
-            // Get the source mac from the json
-            raw = (List<Long>) json.get("srcmac");
-            sb = new StringBuilder("");
-            for (Long b : raw) {
-                if (b != 58) sb.append((char)b.byteValue());
-            }
-            byte[] srcMac = OutputUtils.toByteArray(sb.toString());
-            System.out.println("My sb src: " + sb.toString().toUpperCase());
-            ////////////////////////////////////////////////////////
-
-
-            ////////////////////////////////////////////////////////
-            // Get the dst mac from the json
-            raw = (List<Long>) json.get("dstmac");
-            sb = new StringBuilder("");
-            for (Long b : raw) {
-                if (b != 58) sb.append((char)b.byteValue());
-            }
-            byte[] dstMac = OutputUtils.toByteArray(sb.toString());
-            System.out.println("My sb dst: " + sb.toString().toUpperCase());
-            ////////////////////////////////////////////////////////
-
-            ////////////////////////////////////////////////////////
-            // Get the src ip from the json
-            raw = (List<Long>) json.get("srcip");
-            sb = new StringBuilder("");
-            for (Long b : raw) {
-                if (b != 46) sb.append((char)b.byteValue());
-            }
-            byte[] srcip = OutputUtils.toByteArray(sb.toString());
-            System.out.println("My src ip: " + sb.toString().toUpperCase());
-            ////////////////////////////////////////////////////////
-
-
-            ////////////////////////////////////////////////////////
-            // Get the dst ip from the json
-            raw = (List<Long>) json.get("dstip");
-            sb = new StringBuilder("");
-            for (Long b : raw) {
-                if (b != 46) sb.append((char)b.byteValue());
-            }
-            byte[] dstip = OutputUtils.toByteArray(sb.toString());
-            System.out.println("My dst ip: " + sb.toString().toUpperCase());
-            ////////////////////////////////////////////////////////
-*/
             /*
                 Ethernet types in pyretic:
                              HEX    -> Decimal
@@ -382,22 +312,15 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 IPV6_TYPE  = 0x86dd -> 34525
             */
             TransmitPacketInput input = null;
-           /* Integer ethtype = ((Long) json.get("ethtype")).intValue();
-            if (ethtype == 2054) {
-                LOG.debug("ARP");
-            }
-            else if (ethtype == 2048)
-                LOG.debug("IP");*/
 
             input = OutputUtils.createPacketOut(inNodeKey, payload,
                         outPort, inPort);
 
             packetProcessingService.transmitPacket(input);
-           // LOG.debug("Transmitted <<<");
         }
 
         else {
-            LOG.debug("Different type <<<<<< " + type);
+            System.out.println("Different type <<<<<< " + type);
         }
     }
 
