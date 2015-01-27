@@ -28,11 +28,12 @@ from ryu.lib.packet import *
 from ryu.lib.packet import packet
 from ryu.lib.dpid import dpid_to_str
 from ryu.lib import hub
+from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.mac import *
 from ryu.ofproto import nx_match
 from ryu.controller import ofp_event
 from ryu.controller import handler
-from ryu.backend.comm import * 
+from ryu.netide.comm import * 
 import ryu.base.app_manager
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
     MAIN_DISPATCHER
@@ -129,17 +130,26 @@ class BackendChannel(asynchat.async_chat):
         out_pkt = {}
         out_pkt['switch'] = msg.datapath.id
         out_pkt['inport'] = match.in_port
+        out_pkt['idle_timeout'] = msg.idle_timeout
+        out_pkt['hard_timeout'] = msg.hard_timeout
         # ethernet
         out_pkt['srcmac'] = haddr_to_str(match.dl_src)
         out_pkt['dstmac'] = haddr_to_str(match.dl_dst)
         out_pkt['ethtype'] = match.dl_type
         #ipv4
-        #out_pkt['srcip'] = _ipv4.src
-        #out_pkt['dstip'] = _ipv4.dst
-        #out_pkt['protocol'] = _ipv4.proto
-       # out_pkt['tos'] = _ipv4.tos
+        out_pkt['srcip'] = self.ipv4_to_string(match.nw_src)
+        out_pkt['dstip'] = self.ipv4_to_string(match.nw_dst)
+        out_pkt['protocol'] = match.nw_proto
+        out_pkt['tos'] = match.nw_tos
+        # transport
+        out_pkt['srcport'] = match.tp_src
+        out_pkt['dstport'] = match.tp_dst
         return out_pkt
     
+    def ipv4_to_string(self,ip):
+        "Convert 32-bit integer to dotted IPv4 address."
+        return ".".join(map(lambda n: str(ip>>n & 0xFF), [24,16,8,0]))
+
     #TODO: add other actions
     def buildActions(self,actions):
         action_list = []  
@@ -166,10 +176,11 @@ class BackendChannel(asynchat.async_chat):
             return
         
         packet_out = {
-            'switch' : datapath.id,
-            'inport' : msg.in_port,
-            'raw'    : msg.data,
-            'outport': outport
+            'switch'    : datapath.id,
+            'inport'    : msg.in_port,
+            'raw'       : msg.data,
+            'buffer_id' : msg.buffer_id,
+            'outport'   : outport
         }
         
         packet_out.update(match)
@@ -320,8 +331,10 @@ class BackendDatapath(ofproto_protocol.ProtocolDesc):
         
     def send_msg(self, msg):
         assert isinstance(msg, self.ofproto_parser.MsgBase)
+        
         if msg.xid is None:
             self.set_xid(msg)
+
         msg.serialize()
         
         if msg.msg_type == ofproto.OFPT_FEATURES_REQUEST:
