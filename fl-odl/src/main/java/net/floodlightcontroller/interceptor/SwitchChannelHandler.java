@@ -224,7 +224,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 			serializedMsg = MessageSerializer.serializeMessage(this.dummySwitch.getId(), packetOut);
 		}
 		else if (message instanceof OFFlowMod) {
-			OFFlowMod flowMod = (OFFlowMod)message;			
+			OFFlowMod flowMod = (OFFlowMod)message;
 			serializedMsg = MessageSerializer.serializeMessage(this.dummySwitch.getId(), flowMod);
 		} 
 		else if (message instanceof OFStatisticsRequest) {

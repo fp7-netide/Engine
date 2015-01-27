@@ -136,24 +136,32 @@ public class MessageSerializer {
 		JSONObject json = new JSONObject();
 		// Configure match fields in the flowmod message
 		OFMatch match = flowMod.getMatch();
-		if (match.getDataLayerDestination().length !=0 )
+		if ((match.getWildcards() & OFMatch.OFPFW_DL_TYPE) == 0)
+			//This will cause packet losses if set...
+			json.put("ethtype", flowMod.getMatch().getDataLayerType());
+		if ((match.getWildcards() & OFMatch.OFPFW_DL_DST) == 0)
 			json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
-		if (match.getDataLayerSource().length !=0 )
+		if ((match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0)
 			json.put("srcmac", ByteArrayConvert(match.getDataLayerSource()));
-		if (match.getNetworkDestination()!=0 )
+		if ((match.getWildcards() & OFMatch.OFPFW_NW_DST_BITS) == 0 )
 			json.put("dstip", match.getNetworkDestination());
-		if (match.getNetworkSource()!=0 )
-			json.put("srcip", match.getNetworkSource());
-		if (match.getTransportDestination() > 0) 
+		if ((match.getWildcards() & OFMatch.OFPFW_NW_SRC_BITS) == 0 )
+			json.put("srcip", match.getNetworkSource()); 
+		if ((match.getWildcards() & OFMatch.OFPFW_TP_DST) == 0) 
 			json.put("dstport", 0x0FFFF & match.getTransportDestination());
-		if (match.getTransportSource() > 0 )
+		if ((match.getWildcards() & OFMatch.OFPFW_TP_SRC) == 0)
 			json.put("srcport", match.getTransportSource());
-		if ((match.getNetworkTypeOfService() & 0xff) > 0 )
+		if ((match.getWildcards() & OFMatch.OFPFW_NW_TOS) == 0)
 			json.put("tos", (match.getNetworkTypeOfService() & 0xff));
+		if ((match.getWildcards() & OFMatch.OFPFW_IN_PORT) == 0)
+			json.put("inport", flowMod.getMatch().getInputPort());
+		if ((match.getWildcards() & OFMatch.OFPFW_NW_PROTO) == 0)
+			json.put("nw_proto", flowMod.getMatch().getNetworkProtocol());
+		if ((match.getWildcards() & OFMatch.OFPFW_DL_VLAN) == 0)
+			json.put("vlan_id", match.getDataLayerVirtualLan());
+		if ((match.getWildcards() & OFMatch.OFPFW_DL_VLAN_PCP) == 0)
+			json.put("vlan_pcp", match.getDataLayerVirtualLanPriorityCodePoint());
 		json.put("switch", switchID);
-		json.put("inport", flowMod.getMatch().getInputPort());
-		json.put("nw_proto", flowMod.getMatch().getNetworkProtocol());
-		json.put("ethtype", flowMod.getMatch().getDataLayerType());
 		json.put("outPort", flowMod.getOutPort());
 		StringBuilder sb = new StringBuilder("[\"");
 		
