@@ -69,7 +69,6 @@ public class BackendChannelHandler extends SimpleChannelHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
 		logger.debug("MessageReceived: " );
         String msg = (String) e.getMessage();
-        System.out.println("msg length is "+ msg.length());
         logger.debug(msg);
         handleMessage(msg);
         /*try {
@@ -115,7 +114,6 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 
     private void handleMessage(String receivedMsg) {
 		//POSSIBLE MULTIPLE MESSAGES - SPLIT
-    	System.out.println("RECEIVED MESSAGES FIRST STEP "+ receivedMsg);
 		String[] messages = receivedMsg.split("\n");
 		for(String msg: messages) {
 			switch (getActionType(msg)) {
@@ -174,7 +172,6 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					break;
 				case PACKET :
 					//PARSE INCOMING MESSAGE
-					System.out.println("size of received packet is "+ msg.length());
 					MessagePacket receivedPacket = new MessagePacket(msg);
 					OFPacketIn packetIn = receivedPacket.getPacketIn();
 					sendMessageToController(receivedPacket.getSwitchId(), packetIn);
