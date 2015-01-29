@@ -194,7 +194,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 case FLOW_MOD:
                 	sendMessageToShim(m);
                 	break;
-                case PACKET_OUT:               	
+                case PACKET_OUT: 
+                	System.out.println("This is the packet out that I am missing ....");
                 	sendMessageToShim(m);
                 	break;
                 	

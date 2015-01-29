@@ -67,7 +67,10 @@ public class MessagePacket {
 	 */
 	public void parseMessage(String rawMessage) {
 		//EXTRACT THE JSON
+		System.out.println("rawMessage size is "+ rawMessage.length());
+		System.out.println(rawMessage);
 		String tmp = rawMessage.substring(rawMessage.indexOf(",")+1, rawMessage.length()-1);
+		System.out.println("index and size of raw "+ rawMessage.indexOf(",") +" "+tmp.length());
 		JSONObject json = new JSONObject(tmp.trim());
 		this.switchId = json.getLong("switch");
 		this.inPort = (short)json.getInt("inport");

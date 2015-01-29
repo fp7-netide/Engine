@@ -185,7 +185,7 @@ public class MessageSerializer {
 		sb.append(json.toString());
 		
 		//PRIORITY
-		sb.append(", ").append("65000"); //flowMod.getPriority());
+		sb.append(", ").append("65000");  //flowMod.getPriority()
 		
 		//ACTION LIST
 		if (flowMod.getActions().size() == 0){

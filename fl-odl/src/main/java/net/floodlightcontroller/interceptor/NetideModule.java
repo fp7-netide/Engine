@@ -21,9 +21,9 @@ import java.util.concurrent.Executors;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.ChannelFactory;
-import org.jboss.netty.channel.ChannelPipeline;
+/*import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.Channels;*/
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.openflow.protocol.OFError;
 import org.openflow.protocol.OFMessage;
@@ -96,11 +96,7 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         ServerBootstrap serverBootstrap = new ServerBootstrap(serverFactory);
         serverBootstrap.setOption("child.tcpNoDelay", true);
         serverBootstrap.setOption("child.keepAlive", true);
-        serverBootstrap.setPipelineFactory(new ChannelPipelineFactory() {
-            public ChannelPipeline getPipeline() {
-                return Channels.pipeline(new BackendChannelHandler());
-            }
-        });
+        serverBootstrap.setPipelineFactory(new NetIdePipelineFactory());
         logger.info("NetIDE Module binding to 41414..." );
         serverBootstrap.bind(new InetSocketAddress(41414)); //TODO: REMOVE HARD CODING
 	}
