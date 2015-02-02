@@ -80,6 +80,23 @@ public class MessageSerializer {
 		};
 		return new_raw;
 	}
+	
+	public static String convert_mac(byte[] raw) {
+		StringBuilder sb = new StringBuilder(18);
+		    for (byte b : raw) {
+		        if (sb.length() > 0)
+		            sb.append(':');
+		        sb.append(String.format("%02x", b));
+		    }
+		    return sb.toString();
+	}
+	
+	public static String convert_ip (int bytes) {
+		StringBuffer to_return = new StringBuffer();
+		to_return.append((byte)((bytes >>> 24) & 0xff)).append(".").append((byte)((bytes >>> 16) & 0xff)).
+		append(".").append((byte)((bytes >>>  8) & 0xff)).append(".").append((byte)((bytes       ) & 0xff));
+		return to_return.toString();
+	}
 	/**
 	 * Serializes an Openflow OFPacketOut message for Pyretic
 	 * @param switchID switch id
@@ -102,7 +119,6 @@ public class MessageSerializer {
 	    // so we need to change the range of the array returned by getPacketData (range -127, 127) to
 	    // (0,255). Otherwise pyretic will not be able to read the of packet's payload. 
 	    ArrayList<Integer> new_raw = ByteArrayConvert(raw); 
-			
 		json.put("raw",  new_raw);
 		json.put("header_len", packetOut.getActionsLength());
 		JSONObject[] actionArray = new JSONObject[packetOut.getActions().size()];
@@ -140,13 +156,17 @@ public class MessageSerializer {
 			//This will cause packet losses if set...
 			json.put("ethtype", flowMod.getMatch().getDataLayerType());
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_DST) == 0)
-			json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
+			//json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
+			json.put("dstmac", convert_mac(match.getDataLayerDestination()));
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0)
-			json.put("srcmac", ByteArrayConvert(match.getDataLayerSource()));
+			//json.put("srcmac", ByteArrayConvert(match.getDataLayerSource()));
+			json.put("srcmac", convert_mac(match.getDataLayerSource()));
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_DST_BITS) == 0 )
-			json.put("dstip", match.getNetworkDestination());
+			//json.put("dstip", match.getNetworkDestination());
+			json.put("dstip", convert_ip(match.getNetworkDestination()));
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_SRC_BITS) == 0 )
-			json.put("srcip", match.getNetworkSource()); 
+			//json.put("srcip", match.getNetworkSource());
+			json.put("srcip", convert_ip(match.getNetworkSource())); 
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_DST) == 0) 
 			json.put("dstport", 0x0FFFF & match.getTransportDestination());
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_SRC) == 0)

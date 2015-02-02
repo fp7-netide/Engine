@@ -30,6 +30,7 @@ public class MessagePort {
 	private boolean stat_up = true;
 	private List<String> portFeatures = new ArrayList<String>();
 	private OFPhysicalPort ofPort;
+	private byte[] HWAddress;
 
 	/**@return the action */
 	public String getAction() {
@@ -56,6 +57,10 @@ public class MessagePort {
 		return ofPort;
 	}
 	
+	public byte[] getHWAddress(){
+		return HWAddress;
+	}
+	
 	public MessagePort() { }
 	
 	/**
@@ -80,6 +85,10 @@ public class MessagePort {
 		this.switchId = Long.parseLong(props[2].trim());
 		this.portNo = Short.parseShort(props[3].trim());
 		//PORT PROPERTIES
+		if (this.portNo <= 9)
+			this.HWAddress = new String("00000" + portNo).getBytes();
+		else 
+			 this.HWAddress = new String("0000" + portNo).getBytes();
 		if (props.length > 4) {
 			this.conf_up = Boolean.parseBoolean(props[4].trim());
 			this.stat_up = Boolean.parseBoolean(props[5].trim());

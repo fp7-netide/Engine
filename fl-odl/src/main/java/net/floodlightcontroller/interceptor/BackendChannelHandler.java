@@ -167,6 +167,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 						portMod.setPortNumber(portMessage.getPortNo());
 						portMod.setXid(portMessage.getPortNo());
 						portMod.setConfig(1); //1: DOWN
+						portMod.setHardwareAddress(portMessage.getHWAddress());
 						sendMessageToController(portMessage.getSwitchId(), portMod);
 					}
 					break;
