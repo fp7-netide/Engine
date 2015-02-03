@@ -156,16 +156,24 @@ public class MessageSerializer {
 			//This will cause packet losses if set...
 			json.put("ethtype", flowMod.getMatch().getDataLayerType());
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_DST) == 0)
+			//Use this line with POX
 			//json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
+			//Use this line with Ryu
 			json.put("dstmac", convert_mac(match.getDataLayerDestination()));
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0)
+			//Use this line with POX
 			//json.put("srcmac", ByteArrayConvert(match.getDataLayerSource()));
+			//Use this line with Ryu
 			json.put("srcmac", convert_mac(match.getDataLayerSource()));
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_DST_BITS) == 0 )
+			//Use this line with POX
 			//json.put("dstip", match.getNetworkDestination());
+			//Use this line with Ryu
 			json.put("dstip", convert_ip(match.getNetworkDestination()));
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_SRC_BITS) == 0 )
+			//Use this line with POX
 			//json.put("srcip", match.getNetworkSource());
+			//Use this line with Ryu
 			json.put("srcip", convert_ip(match.getNetworkSource())); 
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_DST) == 0) 
 			json.put("dstport", 0x0FFFF & match.getTransportDestination());
