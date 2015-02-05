@@ -13,7 +13,7 @@ At this point, you have your Opendaylight Helium ready to be run. Now cd to open
 
 > **Note:** Each time you recompile the ODL bundle and generate the .jar, all the contents inside data folder (in openflowplugin/distribution/karaf/target/assembly/) need to be removed. Otherwise, your bundle will automatically be installed inside karaf and you won't be able to see any of the changes. 
 
-# Getting the ODL bundle and running ODL shim client inside Karaf
+# Getting the ODL bundle 
 Now that you have your karaf distribution running, you will have to clone the odl-shim:
 With authentication:
 ```git clone https://username:password@github.com/fp7-netide/Engine/```
@@ -23,9 +23,11 @@ Without authentication:
 
 Now, navigate to Engine/odl-shim and perform ```mvn clean install``` 
 
-The .jar should be in this path:
-~/.m2/repository/org/opendaylight/openflowplugin/pyretic-odl/0.1.0-SNAPSHOT
+The .jar should be in this path: `~/.m2/repository/org/opendaylight/openflowplugin/pyretic-odl/0.1.0-SNAPSHOT`
+
 In addition, it is inside the target folder that has just being created in Engine/odl-shim. 
+
+# Running ODL shim client inside Karaf
 
 Go to the karaf console (which you opened before, just after running ```./bin/karaf```, right?) and install the json bundle (which is a dependency that the odl shim has) like this:
 ```bundle:install -s mvn:com.googlecode.json-simple/json-simple/1.1.1```
@@ -44,5 +46,24 @@ You can avoid installing the json bundle if you copy .the jar (which is this one
 
 That should be everything. Now, when you create a new topology in mininet and ping between any of the nodes, you should be seeing things happening in the karaf console. 
 
+# Versions, branches, etc.
 
+This guide has been produced based on out experience with the HEAD version of the OpenFlow plugin. However, it is advisable to use a more stable version at times when massive changes are being introduced there. This will force you to use other version numbers when installing the ODL shim. Here is a table:
 
+<table>
+	<tr>
+		<td></td> 
+		<td>git branch for the checkout</td>
+		<td>version number to use</td>
+	</tr>
+	<tr>
+		<td>Bleeding development ODL</td> 
+		<td><pre>helium/stable</pre></td>
+		<td><pre>0.1.0-SNAPSHOT</pre></td>
+	</tr>
+	<tr>
+		<td>Last Helium that compiles</td> 
+		<td><pre>release/helium-sr1.1</pre></td>
+		<td><pre>0.0.4-Helium-SR1.1</pre></td>
+	</tr>
+</table>
