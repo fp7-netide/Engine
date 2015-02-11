@@ -11,7 +11,7 @@
  * Authors:
  *     ...
  */
-package net.floodlightcontroller.interceptor;
+package org.openflow.protocol.pyretic.impl;
 
 import java.util.ArrayList;
 
@@ -32,6 +32,7 @@ import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionTransportLayer;
 import org.openflow.protocol.action.OFActionTransportLayerDestination;
 import org.openflow.protocol.action.OFActionTransportLayerSource;
+import org.openflow.protocol.pyretic.OpenFlowToPyretic;
 
 /**
  * Describe your class here...
@@ -39,7 +40,7 @@ import org.openflow.protocol.action.OFActionTransportLayerSource;
  * @author aleckey
  *
  */
-public class MessageSerializer {
+public class MessageSerializer implements OpenFlowToPyretic {
 
 	public MessageSerializer() { }
 	
@@ -49,7 +50,7 @@ public class MessageSerializer {
 	 * @param statsRequest object to be serialized
 	 * @return
 	 */
-	public static String serializeMessage(long switchID, OFStatisticsRequest statsRequest) {
+	public String serializeMessage(long switchID, OFStatisticsRequest statsRequest) {
 		String retString="";
 		switch (statsRequest.getStatisticType()) {
 			case DESC: 
@@ -72,7 +73,7 @@ public class MessageSerializer {
 	 * @param raw byte[]
 	 * @return ArrayList<Integer>
 	 */
-	public static ArrayList<Integer> ByteArrayConvert(byte[] raw){
+	private ArrayList<Integer> ByteArrayConvert(byte[] raw){
 		ArrayList<Integer> new_raw = new ArrayList<Integer>();
 		for (byte x: raw){
 			int y =  (x & 0xff);
@@ -81,7 +82,7 @@ public class MessageSerializer {
 		return new_raw;
 	}
 	
-	public static String convert_mac(byte[] raw) {
+	private String convert_mac(byte[] raw) {
 		StringBuilder sb = new StringBuilder(18);
 		    for (byte b : raw) {
 		        if (sb.length() > 0)
@@ -91,7 +92,7 @@ public class MessageSerializer {
 		    return sb.toString();
 	}
 	
-	public static String convert_ip (int bytes) {
+	private String convert_ip (int bytes) {
 		StringBuffer to_return = new StringBuffer();
 		to_return.append((byte)((bytes >>> 24) & 0xff)).append(".").append((byte)((bytes >>> 16) & 0xff)).
 		append(".").append((byte)((bytes >>>  8) & 0xff)).append(".").append((byte)((bytes       ) & 0xff));
@@ -103,7 +104,7 @@ public class MessageSerializer {
 	 * @param packetOut object to be serialized
 	 * @return
 	 */
-	public static String serializeMessage(long switchID, OFPacketOut packetOut) {
+	public String serializeMessage(long switchID, OFPacketOut packetOut) {
 		//["packet", {"outport": 1, "protocol": 2, "header_len": 14, "inport": 2, 
 		// "dstip": [49, 48, 46, 48, 46, 48, 46, 49], 
 		// "srcmac": [99, 101, 58, 97, 56, 58, 100, 100, 58, 99, 102, 58, 49, 99, 58, 97, 101], "dstmac": [99, 101, 58, 97, 54, 58, 99, 51, 58, 100, 100, 58, 56, 57, 58, 99, 51], 
@@ -142,7 +143,7 @@ public class MessageSerializer {
 	 * @param OFFlowMod object to be serialized
 	 * @return
 	 */
-	public static String serializeMessage(long switchID, OFFlowMod flowMod) {
+	public String serializeMessage(long switchID, OFFlowMod flowMod) {
 		//["install",  
 		//  {"dstip": [49, 48, 46, 48, 46, 48, 46, 49], "srcip": [49, 48, 46, 48, 46, 48, 46, 50],
 		//   "dstmac": [54, 97, 58, 50, 100, 58, 55, 102, 58, 50, 57, 58, 99, 56, 58, 54, 49], "srcmac": [49, 50, 58, 57, 51, 58, 50, 99, 58, 52, 97, 58, 52, 56, 58, 50, 52],
@@ -296,7 +297,7 @@ public class MessageSerializer {
 	 * @param action to be serialized to JSON
 	 * @return
 	 */
-	public static JSONObject getAction(OFAction action) {
+	private JSONObject getAction(OFAction action) {
 		JSONObject json = new JSONObject();
 		switch (action.getType()) {
 			case OUTPUT:

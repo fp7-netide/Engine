@@ -28,12 +28,11 @@ import org.openflow.protocol.action.OFAction;
 import org.openflow.protocol.action.OFActionOutput;
 import org.openflow.protocol.action.OFActionType;
 import org.openflow.protocol.factory.BasicFactory;
-import org.openflow.protocol.factory.OFActionFactory;
 import org.openflow.protocol.statistics.OFDescriptionStatistics;
 import org.openflow.protocol.statistics.OFFlowStatisticsReply;
 import org.openflow.protocol.statistics.OFStatistics;
 import org.openflow.protocol.statistics.OFStatisticsType;
-import org.openflow.util.HexString;
+
 
 /**
  * Describe your class here...
@@ -49,7 +48,7 @@ public class TestOFMessageParsing {
 	private final String SWITCH_JOIN_END   = "[\"switch\", \"join\", 1, \"END\"]";
 	
 	private final String PORT_JOIN_BEGIN1 = "[\"port\", \"join\", 1, 1, true, true, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
-	private final String PORT_JOIN_BEGIN2 = "[\"port\", \"join\", 1, 2, true, true, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
+	//private final String PORT_JOIN_BEGIN2 = "[\"port\", \"join\", 1, 2, true, true, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
 	
 	private final String SWITCH_PART = "[\"switch\", \"part\", 1]";
 	private final String PORT_PART = "[\"port\", \"part\", 1, 1]";
