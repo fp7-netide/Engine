@@ -28,20 +28,6 @@
 # permissions and limitations under the License.                               #
 ################################################################################
 
-
-
-################################################################################
-# Ryu client for Pyretic                                                       #
-# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide     		       #
-# author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
-################################################################################
-# Eclipse Public License - v 1.0					       #
-#									       #
-# THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC  #
-# LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM  #
-# CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.			       #
-################################################################################
-
 from pyretic.core.runtime import Runtime
 from pyretic.backend.backend import Backend
 import sys
@@ -55,8 +41,10 @@ import os
 import logging
 from multiprocessing import Queue, Process
 import pyretic.core.util as util
+import yappi
 
 of_client = None
+enable_profile = False
 
 def signal_handler(signal, frame):
     print '\n----starting pyretic shutdown------'
@@ -68,6 +56,12 @@ def signal_handler(signal, frame):
     # output = of_client.communicate()[0]
     # print output
     print "pyretic.py done"
+    # Print profile information if enabled
+    if enable_profile:
+        funcstats = yappi.get_func_stats()
+        funcstats.sort("tsub")
+        funcstats.print_all(columns={0:("name",38), 1:("ncall",8), 2:("tsub",8),
+                                     3:("ttot",8), 4:("tavg", 8)})
     sys.exit(0)
 
 
@@ -90,25 +84,28 @@ def parseArgs():
     op = OptionParser( description=desc, usage=usage )
     op.add_option( '--frontend-only', '-f', action="store_true", 
                      dest="frontend_only", help = 'only start the frontend'  )
-    op.add_option( '--client', '-c', type='choice', 
-                     choices=['pox','ryu'], 
-                     help = '|'.join( ['pox','ryu'] )  )
     op.add_option( '--mode', '-m', type='choice',
                      choices=['interpreted','i','reactive0','r0','proactive0','p0','proactive1','p1'], 
                      help = '|'.join( ['interpreted/i','reactive0/r0','proactiveN/pN for N={0,1}'] )  )
+    op.add_option( '--client', '-c', type='choice', 
+                     choices=['pox','ryu'], 
+                     help = '|'.join( ['pox','ryu'] )  )
     op.add_option( '--verbosity', '-v', type='choice',
                    choices=['low','normal','high','please-make-it-stop'],
                    default = 'low',
                    help = '|'.join( ['low','normal','high','please-make-it-stop'] )  )
+    op.add_option( '--enable_profile', '-p', action="store_true",
+                   dest="enable_profile",
+                   help = 'enable yappi multithreaded profiler' )
 
-    op.set_defaults(frontend_only=False,mode='reactive0',client='pox')
+    op.set_defaults(frontend_only=False,mode='reactive0',enable_profile=False,client='pox')
     options, args = op.parse_args()
 
     return (op, options, args, kwargs_to_pass)
 
 
 def main():
-    global of_client
+    global of_client, enable_profile
     (op, options, args, kwargs_to_pass) = parseArgs()
     if options.mode == 'i':
         options.mode = 'interpreted'
@@ -138,20 +135,24 @@ def main():
         sys.exit(1)
 
     main = module.main
+    try:
+        path_main = module.path_main
+    except:
+        path_main = None
     kwargs = { k : v for [k,v] in [ i.lstrip('--').split('=') for i in kwargs_to_pass ]}
 
     sys.setrecursionlimit(1500) #INCREASE THIS IF "maximum recursion depth exceeded"
 
     # Set up multiprocess logging.
-    verbosity_map = { 'low' : logging.WARNING,
-                      'normal' : logging.INFO,
-                      'high' : logging.DEBUG,
+    verbosity_map = { 'low' : logging.ERROR,
+                      'normal' : logging.WARNING,
+                      'high' : logging.INFO,
                       'please-make-it-stop' : logging.DEBUG }
     logging_queue = Queue()
 
     # Make a logging process.
     def log_writer(queue, log_level):
-        formatter = logging.Formatter('%(levelname)s:%(name)s: %(message)s')
+        formatter = logging.Formatter('%(levelname)s:%(name)s:%(asctime)s: %(message)s')
         handler = logging.StreamHandler()
         handler.setFormatter(formatter)
         handler.setLevel(log_level)
@@ -177,7 +178,7 @@ def main():
     logger.addHandler(handler)
     logger.setLevel(log_level)
     
-    runtime = Runtime(Backend(),main,kwargs,options.mode,options.verbosity)
+    runtime = Runtime(Backend(),main,path_main,kwargs,options.mode,options.verbosity)
     if not options.frontend_only:
         if options.client == "pox":
             try:
@@ -194,6 +195,9 @@ def main():
                 print 'Error: pox not found in PYTHONPATH'
                 sys.exit(1)
             client_exec = os.path.join(poxpath,'pox.py')
+            of_client_string = "of_client.pox_client"
+
+        
         elif options.client == "ryu":   
             try:
                 output = subprocess.check_output('which ryu-manager',shell=True).strip()
@@ -202,21 +206,20 @@ def main():
                 print 'Error: Unable to find ryu-manager'
                 sys.exit(1)
             client_exec = output
-        
+            of_client_string = "of_client.ryu_shim"
+            
         python=sys.executable
-        of_client_string = None
-        
-        if options.client == "ryu":
-        	of_client_string = "of_client." + options.client + "_shim"    
-        else:
-        	of_client_string = "of_client." + options.client + "_client" 
-        
+        # TODO(josh): pipe pox_client stdout to subprocess.PIPE or
+        # other log file descriptor if necessary
         of_client = subprocess.Popen([python, 
                                       client_exec,
                                       of_client_string],
-                                      stdout=sys.stdout,
-                                      stderr=subprocess.STDOUT)
-    
+                                     stdout=sys.stdout,
+                                     stderr=subprocess.STDOUT)
+
+    if options.enable_profile:
+        enable_profile = True
+        yappi.start()
     signal.signal(signal.SIGINT, signal_handler)
     signal.pause()
 
