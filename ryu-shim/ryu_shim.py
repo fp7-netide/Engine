@@ -32,7 +32,7 @@ from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
-from pyretic.backend.comm import *
+from ryu.netide.comm import *
 
 
 def inport_value_hack(outport):
@@ -188,7 +188,7 @@ class RYUClient(app_manager.RyuApp):
         }
         
         self.channel_lock = threading.Lock()
-        self.backend_channel = BackendChannel('127.0.0.1', BACKEND_PORT, self) 
+        self.backend_channel = BackendChannel('127.0.0.1', RYU_BACKEND_PORT, self) 
         self.al = asyncore_loop()
         self.al.start()   
         
