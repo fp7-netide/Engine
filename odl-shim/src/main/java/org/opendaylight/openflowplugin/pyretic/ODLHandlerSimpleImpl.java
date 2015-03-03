@@ -28,10 +28,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.opendaylight.controller.sal.action.Output;
+import org.json.simple.JSONArray;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
+import org.opendaylight.openflowplugin.pyretic.Utils.FlowModUtils;
 import org.opendaylight.openflowplugin.pyretic.Utils.FlowUtils;
 import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.table.Flow;
@@ -40,7 +44,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.ta
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeRef;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
@@ -57,6 +60,8 @@ import com.telefonica.pyretic.backendchannel.BackendChannel;
 import java.util.ArrayList;
 import java.util.List;
 import org.opendaylight.openflowplugin.pyretic.Utils.OutputUtils;
+import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
 
 
 /**
@@ -94,6 +99,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     private Set<String> coveredMacPaths;
 
     private BackendChannel channel;
+    private DataBroker dataBroker;
 
     @Override
     public synchronized void onSwitchAppeared(InstanceIdentifier<Table> appearedTablePath) {
@@ -175,6 +181,13 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
         MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
 
+
+       /* LOG.debug("srcmac init");
+        LOG.debug(srcMac.getValue());
+        LOG.debug("dstmac init");
+        LOG.debug(dstMac.getValue());*/
+
+
         NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
         String path  = ingressKey.getId().getValue();
 
@@ -195,10 +208,14 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 raw.add(aux);
             }
 
+            /*LOG.debug("Ethertype: " ); // + etherType.toString());
+            for(int i = 0; i < etherType.length; i++) {
+                LOG.debug("%02x ",0xff & etherType[i]);
+            }
+            LOG.debug("");*/
+
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
                 //LOG.debug("IPV4 packet arrived");
-
-                System.out.println("IPV4 arrived");
 
                 JSONObject json = new JSONObject();
                 json.put("switch", Integer.parseInt(switch_s));
@@ -213,10 +230,9 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
-                System.out.println("IPV6 arrived - not handling ipv6");
-
+		System.out.println("IPV6 arrived - not handling ipv6");
                 // Handle IPV6 packet
-               /* JSONObject json = new JSONObject();
+                /*JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
                 json.put("inport", Integer.parseInt(inport));
@@ -226,8 +242,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 p.add("\"packet\"");
                 p.add(json.toString());
                // LOG.debug("" + p);
-                this.channel.push(p.toString() + "\n");*/
-                //mac2portMapping.put(srcMac, notification.getIngress());
+                this.channel.push(p.toString() + "\n");
+                //mac2portMapping.put(srcMac, notification.getIngress());*/
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
                 // Handle ARP packet
@@ -249,8 +265,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
                 //Handle lldp packet
                 //LOG.debug("LLDP packet arrived");
-
-                System.out.println("LLDP packet arrived");
 
                 JSONObject json = new JSONObject();
 
@@ -281,22 +295,30 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         this.channel = channel;
     }
 
+    static InstanceIdentifier<NodeConnector> createNodeConnectorId(String nodeKey, String nodeConnectorKey) {
+        return InstanceIdentifier.builder(Nodes.class)
+                .child(Node.class, new NodeKey(new NodeId(nodeKey)))
+                .child(NodeConnector.class, new NodeConnectorKey(new NodeConnectorId(nodeConnectorKey)))
+                .build();
+    }
+    //
+
     @Override
-    public void sendToSwitch(JSONObject json, String type) {
+    public void sendToSwitch(JSONArray json) {
+        String type = json.get(0).toString();
 
         if (type.equals("packet")) {
-
-            Integer swtch = ((Long) json.get("switch")).intValue();
-            Integer inport = ((Long) json.get("inport")).intValue();
-            Integer outport = ((Long) json.get("outport")).intValue();
+            JSONObject packet = (JSONObject)json.get(1);
+            Integer swtch = ((Long) packet.get("switch")).intValue();
+            Integer inport = ((Long) packet.get("inport")).intValue();
+            Integer outport = ((Long) packet.get("outport")).intValue();
 
             String inNodeKey = "openflow:" + swtch.toString();
             String inPort = inport.toString();
             String outPort = outport.toString();
 
-            ////////////////////////////////////////////////////////
-            // Get the raw from the json
-            List<Long> raw = (List<Long>) json.get("raw");
+            // Get the raw packet from the json
+            List<Long> raw = (List<Long>) packet.get("raw");
             StringBuilder sb = new StringBuilder("");
             for (Long b : raw) {
                 sb.append(OutputUtils.fromDecimalToHex(b));
@@ -317,12 +339,39 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                         outPort, inPort);
 
             packetProcessingService.transmitPacket(input);
+            LOG.debug("Packet transmitted");
+        }
+
+        else if (type.equals("install")) {
+            System.out.println("install packet -----------------");
+            System.out.println(json.toString());
+            JSONObject match = (JSONObject) json.get(1);
+            int priority = Integer.parseInt(json.get(2).toString());
+            JSONArray actions = (JSONArray)json.get(3);
+            LOG.debug("Actions size: " + actions.size());
+            for (int i = 0; i < actions.size(); i++) {
+                FlowBuilder fb = FlowModUtils.createFlowBuilder(match, priority, (JSONObject)actions.get(i));
+                if (!(fb == null)) {
+                    final Flow flow = fb.build();
+                    ReadWriteTransaction transaction = this.dataBroker.newReadWriteTransaction();
+                    transaction.put(LogicalDatastoreType.CONFIGURATION,
+                            InstanceIdentifierUtils.createFlowPath(this.tablePath, new FlowKey(flow.getId())),
+                            flow, true);
+                    transaction.submit();
+                    System.out.println("Flow sent to switch");
+                }
+                else
+                    LOG.debug("Ignoring install");
+            }
         }
 
         else {
-            System.out.println("Different type <<<<<< " + type);
+            LOG.debug("Different type <<<<<< " + type);
         }
     }
 
+    public void setDataBroker(DataBroker data) {
+        this.dataBroker = data;
+    }
 
 }

@@ -19,9 +19,11 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.port.rev130925.PortConfig;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.port.rev130925.PortState;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.port.rev130925.PortFeatures;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeConnectorId;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -39,8 +41,8 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
 
     private final ListenerRegistration<DataChangeListener> dataChangeListenerRegistration;
     private BackendChannel channel;
-    private HashMap<Integer, ArrayList<Integer>> port2switchMapping;
-
+    private HashMap<Integer, ArrayList<Integer>> port2switchMapping; 
+    private boolean flag=false;
     public NodeConnectorListener(DataBroker dataBroker) {
         dataChangeListenerRegistration = dataBroker.registerDataChangeListener(
                 LogicalDatastoreType.OPERATIONAL,
@@ -60,46 +62,21 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
 
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> change) {
-        sleep(2000);
         LOG.trace("Node connectors in inventory changed: {} created, {} updated, {} removed",
                 change.getCreatedData().size(), change.getUpdatedData().size(), change.getRemovedPaths().size());
-
         // Iterate over created node connectors
-        for (Map.Entry<InstanceIdentifier<?>, DataObject> entry : change.getCreatedData().entrySet()) {
-            System.out.println("Node created");
-
-
-            HashMap<String, String> valueMap = this.getValueMap(entry.getValue().toString());
-
-            String elementName = valueMap.get("getName");
-            System.out.println("Name: " + elementName);
-            this.createTopology(elementName);
-
-            FlowCapableNodeConnector flowConnector = (FlowCapableNodeConnector) entry.getValue();
-            if (!isPortDown(flowConnector)) {
-                //notifyNodeConnectorAppeared(nodeConnectorInstanceId, flowConnector);
-            }
+	Map<InstanceIdentifier<?>, DataObject> change_elements = change.getCreatedData();
+	for (Map.Entry<InstanceIdentifier<?>, DataObject> entry : change.getCreatedData().entrySet()) {
+		InstanceIdentifier<NodeConnector> nodeConnectorInstanceId = entry.getKey().firstIdentifierOf(NodeConnector.class);
+		NodeConnectorId nodeConnectorId = InstanceIdentifier.keyOf(nodeConnectorInstanceId).getId();
+		String nodeID = nodeConnectorId.getValue();
+		FlowCapableNodeConnector flowCon = (FlowCapableNodeConnector) entry.getValue();
+        	this.createTopology(nodeID, flowCon);	
+        	FlowCapableNodeConnector flowConnector = (FlowCapableNodeConnector) entry.getValue();
+        	if (!isPortDown(flowConnector)) {
+        		//notifyNodeConnectorAppeared(nodeConnectorInstanceId, flowConnector);
+        	} 
         }
-
-       /* // Iterate over updated node connectors (port down state may change)
-        for (Map.Entry<InstanceIdentifier<?>, DataObject> entry : change.getUpdatedData().entrySet()) {
-            System.out.println("Node updated");
-            InstanceIdentifier<NodeConnector> nodeConnectorInstanceId =
-                    entry.getKey().firstIdentifierOf(NodeConnector.class);
-            FlowCapableNodeConnector flowConnector = (FlowCapableNodeConnector) entry.getValue();
-            if (isPortDown(flowConnector)) {
-                //notifyNodeConnectorDisappeared(nodeConnectorInstanceId);
-            } else {
-                //notifyNodeConnectorAppeared(nodeConnectorInstanceId, flowConnector);
-            }
-        }
-
-        // Iterate over removed node connectors
-        for (InstanceIdentifier<?> removed : change.getRemovedPaths()) {
-            System.out.println("Node removed");
-            InstanceIdentifier<NodeConnector> nodeConnectorInstanceId = removed.firstIdentifierOf(NodeConnector.class);
-            //notifyNodeConnectorDisappeared(nodeConnectorInstanceId);
-        }*/
     }
 
     private static boolean isPortDown(FlowCapableNodeConnector flowCapableNodeConnector) {
@@ -109,72 +86,66 @@ public class NodeConnectorListener implements DataChangeListener, AutoCloseable 
                 portConfig != null && portConfig.isPORTDOWN();
     }
 
-    private HashMap<String, String> getValueMap(String entryValue)
-    {
-        HashMap<String, String> map = new HashMap<String,String>();
-        String delims = "[ {}\\[\\],]";
-        String [] temp = entryValue.split(delims);
-        for (int i = 0; i < temp.length && temp[i] != ""; i++)
-        {
-            String delimEqual = "=";
-            if (temp[i].contains(delimEqual))
-            {
-                String [] tempEq = temp[i].split("["+delimEqual+"]");
-
-                if (tempEq.length == 2 && tempEq[0] != "" && tempEq[1] != ""){
-                    map.put(tempEq[0], tempEq[1]);
-                }
-
-            }
-        }
-        return map;
-    }
 
     /**
-     * Makes switch and port joins from the information received from onDataChanged
-     * @param value
+     *
+     * @param nodeID
+     * @param flowCon
      */
-    private void createTopology (String value)
-    {
-        String del1 = "-";
-        // Interface appeared
-        if (value.contains(del1))
-        {
-            ArrayList<Integer> ports = new ArrayList<>();
-
-            int switchNum = Integer.parseInt(Character.toString(value.charAt(1)));
-            int newPort = Integer.parseInt(Character.toString(value.charAt(6)));
-
-            if (this.port2switchMapping.size() > 0 && this.port2switchMapping.containsKey(switchNum)) {
-                ports = this.port2switchMapping.get(switchNum);
+   private void createTopology (String nodeID, FlowCapableNodeConnector flowCon)
+    {   
+	    String[] nodeInfo = nodeID.split(":");
+    	ArrayList<Integer> ports = new ArrayList<>();
+    	int newPort=-10;
+        int switchNum = Integer.parseInt(nodeInfo[1]);
+        if (!nodeInfo[2].equals("LOCAL"))
+        	newPort = Integer.parseInt(nodeInfo[2]);
+        if (!port2switchMapping.containsKey(switchNum)) {
+		    send_switch_join(switchNum);
+		    if (newPort != -10) {
                 ports.add(newPort);
+                port2switchMapping.put(switchNum,ports);
+                send_port_join(switchNum, flowCon);
             }
-            else {
-                ports.add(newPort);
-            }
-            this.port2switchMapping.put(switchNum, ports);
-
-            // Switch join begins
-            System.out.println("New interface with name " + value);
-            String stringToChannel = "[\"switch\", \"join\", " + switchNum + ", \"BEGIN\"]";
-            System.out.println(stringToChannel);
-            this.channel.push(stringToChannel);
-            sleep(2000);
-
-            // All existing ports join
-            for (int i = 0; i < ports.size(); i++) {
-                stringToChannel = "[\"port\", \"join\", " + switchNum + ", " + ports.get(i) + ", true, false, [\"OFPPF_COPPER\", \"OFPPF_10GB_FD\"]]";
-                System.out.println(stringToChannel);
-                this.channel.push(stringToChannel);
-                sleep(2000);
-            }
-
-            // Switch join ends
-            stringToChannel = "[\"switch\", \"join\", " + switchNum + ", \"END\"]";
-            System.out.println(stringToChannel);
-            this.channel.push(stringToChannel);
-            sleep(2000);
         }
+        else {
+        	if (newPort!=-10) {
+        		ports = port2switchMapping.get(switchNum);
+        		ports.add(newPort);
+        		port2switchMapping.put(switchNum, ports);
+			send_port_join(switchNum, flowCon);
+        	}
+        }
+    }
+
+    private void send_port_join(int switchNum, FlowCapableNodeConnector flowCon)
+    {  
+        PortFeatures pf = flowCon.getCurrentFeature();
+        ArrayList<String> features = new ArrayList<String>();
+        if (pf.isCopper() == true)
+           features.add("\"OFPPF_COPPER\"");
+        if (pf.isTenGbFd() == true)
+           features.add("\"OFPPF_10GB_FD\"");
+        boolean CONF_UP = (flowCon.getConfiguration().isPORTDOWN());
+        if (CONF_UP == false) CONF_UP = true;
+        else CONF_UP = false;
+            boolean STAT_UP = flowCon.getState().isLinkDown();
+        if (STAT_UP == false) STAT_UP = true;
+        else STAT_UP = false;
+        String stringToChannel = "[\"port\", \"join\", " + switchNum + ", " + flowCon.getPortNumber().getUint32() + ", "+CONF_UP+", "+STAT_UP+", " + features.toString()+"]\n";
+        sleep(1000);
+        System.out.println(stringToChannel);
+        this.channel.push(stringToChannel);        
+    }
+
+    private void send_switch_join(int switchNum) {
+    	System.out.println("New switch with name " + "s"+switchNum);
+        String stringToChannel = "[\"switch\", \"join\", " + switchNum + ", \"BEGIN\"]\n";
+	    System.out.println(stringToChannel);
+        this.channel.push(stringToChannel);
+	    stringToChannel = "[\"switch\", \"join\", " + switchNum + ", \"END\"]\n";
+	    System.out.println(stringToChannel);
+        this.channel.push(stringToChannel);
     }
 
     public void setBackendChannel(BackendChannel channel) {

@@ -112,7 +112,8 @@ public class ODLManagerSimpleImpl implements DataChangeListenerRegistrationHolde
         odlHandler.setRegistrationPublisher(this);
         odlHandler.setDataStoreAccessor(dataStoreAccessor);
         odlHandler.setPacketProcessingService(packetProcessingService);
-        odlHandler.setBackendChannel(channel); //////// new
+        odlHandler.setBackendChannel(channel);
+        odlHandler.setDataBroker(this.data); /////// new
         packetInRegistration = notificationService.registerNotificationListener(odlHandler);
 
         channel.setHandler(odlHandler); // new
@@ -123,10 +124,12 @@ public class ODLManagerSimpleImpl implements DataChangeListenerRegistrationHolde
                 InstanceIdentifier.builder(Nodes.class)
                     .child(Node.class)
                     .augmentation(FlowCapableNode.class)
-                    .child(Table.class).toInstance(),
+                    .child(Table.class).build(),
                 wakeupListener,
                 DataBroker.DataChangeScope.SUBTREE);
         LOG.debug("start() <--");
+
+        System.out.println("Start manager simple implem");
     }
     
     /**

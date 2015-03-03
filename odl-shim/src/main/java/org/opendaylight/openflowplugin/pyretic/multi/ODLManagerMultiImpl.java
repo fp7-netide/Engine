@@ -103,7 +103,6 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
 
         System.out.println("ODL multi manager starting");
 
-
         FlowCommitWrapper dataStoreAccessor = new FlowCommitWrapperImpl(data);
 
         PacketInDispatcherImpl packetInDispatcher = new PacketInDispatcherImpl();
@@ -115,6 +114,7 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
         odlHandler.setPacketProcessingService(packetProcessingService);
         odlHandler.setPacketInDispatcher(packetInDispatcher);
         odlHandler.setBackendChannel(channel);
+        odlHandler.setDataBroker(this.data); // new
         packetInRegistration = notificationService.registerNotificationListener(packetInDispatcher);
 
         channel.setHandler(odlHandler);

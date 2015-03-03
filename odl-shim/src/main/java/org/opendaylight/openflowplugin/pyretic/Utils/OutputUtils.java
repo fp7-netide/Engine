@@ -110,7 +110,7 @@ public class OutputUtils {
             NodeKey key = new NodeKey(new NodeId(nodeId));
             InstanceIdentifier<Node> path = InstanceIdentifier.<Nodes>builder(Nodes.class)
                     .<Node, NodeKey>child(Node.class, key)
-                    .build();
+                    .toInstance();
             return new NodeRef(path);
         }
         public static NodeConnectorRef createNodeConnRef(final String nodeId, final String port) {
@@ -129,7 +129,7 @@ public class OutputUtils {
             builder.setKey(new NodeKey(builder.getId()));
             return builder;
         }
-        private static FlowBuilder createFlowBuilder(final long flowId, final String tableId, final String flowName) {
+        public static FlowBuilder createFlowBuilder(final long flowId, final String tableId, final String flowName) {
             FlowBuilder fBuild = new FlowBuilder();
             fBuild.setMatch(new MatchBuilder().build());
             fBuild.setInstructions(createPingInstructionsBuilder().build());
@@ -196,16 +196,9 @@ public class OutputUtils {
                                                           final String inPort) {
             ArrayList<Byte> list = new ArrayList<Byte>(40);
 
-            // FIXME payload should be added to packet
             for (byte b : payload) {
                 list.add(b);
             }
-            /*
-            System.out.print("My super duper payload: ");
-            for (int i = 0; i < list.size(); i++) System.out.printf("%02x ",0xff & list.get(i));
-            System.out.println("");
-*/
-
 
             NodeRef ref = createNodeRef(nodeId);
             NodeConnectorRef nEgressConfRef = new NodeConnectorRef(createNodeConnRef(nodeId, outPort));

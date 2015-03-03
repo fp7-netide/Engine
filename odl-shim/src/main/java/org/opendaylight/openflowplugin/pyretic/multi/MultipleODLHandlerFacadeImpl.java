@@ -22,7 +22,9 @@
 package org.opendaylight.openflowplugin.pyretic.multi;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.openflowplugin.pyretic.*;
 import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
@@ -53,7 +55,7 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
         private FlowCommitWrapper dataStoreAccessor;
         private PacketProcessingService packetProcessingService;
         private PacketInDispatcherImpl packetInDispatcher;
-
+        private DataBroker dataBroker;
 
         // FIXME
         private ODLHandlerSimpleImpl simpleLearningSwitch; // I shouldn't have a global one
@@ -86,6 +88,7 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
 
             simpleLearningSwitch.setBackendChannel(channel);// new!!!!
             simpleLearningSwitch.onSwitchAppeared(appearedTablePath);
+            simpleLearningSwitch.setDataBroker(this.dataBroker);
 
             this.simpleLearningSwitch = simpleLearningSwitch;
             /**
@@ -125,11 +128,21 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
     }
 
     @Override
-    public void sendToSwitch(JSONObject json, String type) {
+    public void sendToSwitch(JSONArray json) {
        // ODLHandlerSimpleImpl simple = new ODLHandlerSimpleImpl();
         //simple.setBackendChannel(channel);
         //simple.setPacketProcessingService(this.packetProcessingService);
         //simple.sendToSwitch(json, type);
-        this.simpleLearningSwitch.sendToSwitch(json, type);
+        if (!(this.simpleLearningSwitch == null)) {
+            this.simpleLearningSwitch.sendToSwitch(json);
+        }
+        else
+            System.out.println("Simple learning switch is null");
     }
+
+    public void setDataBroker(DataBroker data) {
+        this.dataBroker = data;
+    }
+
+
 }

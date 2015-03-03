@@ -49,16 +49,17 @@ public class BackendChannel extends Connection implements Runnable{
         String type = array.get(0).toString();
 
         if(type.equals("packet")){
-            multiHandler.sendToSwitch((JSONObject)array.get(1), type);
+            multiHandler.sendToSwitch(array);
         }
         else if (type.equals("inject_discovery_packet")) {
-            JSONObject newObj = new JSONObject();
-            newObj.put("switch", array.get(1));
-            newObj.put("inport", array.get(2));
-            multiHandler.sendToSwitch(newObj, type);
+           // JSONObject newObj = new JSONObject();
+           // newObj.put("switch", array.get(1));
+           // newObj.put("inport", array.get(2));
         }
         else if (type.equals("install")){
-            System.out.println("install");
+            System.out.println("install starts");
+            multiHandler.sendToSwitch(array);
+            System.out.println("install ends");
         }
         else if(type.equals("delete")){
             System.out.println("delete");
@@ -87,7 +88,7 @@ public class BackendChannel extends Connection implements Runnable{
     public synchronized void push(String msg){
         if (msg != "") {
             super.send(msg);
-            //sleep(150);
+            sleep(300);
         }
     }
 
@@ -96,5 +97,12 @@ public class BackendChannel extends Connection implements Runnable{
         Dispatcher.loop();
     }
 
+    private void sleep(int time) {
+        try {
+            Thread.sleep(time);                 //1000 milliseconds is one second.
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
 }
 
