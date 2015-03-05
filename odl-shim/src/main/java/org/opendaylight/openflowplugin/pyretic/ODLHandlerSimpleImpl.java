@@ -199,11 +199,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 raw.add(aux);
             }
 
-            /*LOG.debug("Ethertype: " ); // + etherType.toString());
-            for(int i = 0; i < etherType.length; i++) {
-                LOG.debug("%02x ",0xff & etherType[i]);
-            }*/
-
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
                 //LOG.debug("IPV4 packet arrived");
 
@@ -256,7 +251,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 //Handle lldp packet
                 System.out.println("LLDP packet arrived");
 
-                JSONObject json = new JSONObject();
+                /*JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
                 json.put("inport", Integer.parseInt(inport));
@@ -267,7 +262,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 p.add(json.toString());
                 this.channel.push(p.toString() + "\n");
 
-                mac2portMapping.put(srcMac, notification.getIngress());
+                mac2portMapping.put(srcMac, notification.getIngress());*/
             }
             else {
                 LOG.debug("Unknown packet arrived.\nThis shouldn't be happening");
