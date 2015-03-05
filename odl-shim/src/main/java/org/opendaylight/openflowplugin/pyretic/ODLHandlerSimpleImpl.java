@@ -126,6 +126,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         tablePath = appearedTablePath;
         nodePath = tablePath.firstIdentifierOf(Node.class);
         nodeId = nodePath.firstKeyOf(Node.class, NodeKey.class).getId();
+        System.out.println("Node id: " + nodeId.getValue());
         mac2portMapping = new HashMap<>();
         coveredMacPaths = new HashSet<>();
 
@@ -135,12 +136,9 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         InstanceIdentifier<Flow> flowPath = InstanceIdentifierUtils.createFlowPath(tablePath, flowKey);
 
         int priority = 0;
-        // create flow in table with id = 0, priority = 4 (other params are
-        // defaulted in OFDataStoreUtil)
         FlowBuilder allToCtrlFlow = FlowUtils.createFwdAllToControllerFlow(
                 InstanceIdentifierUtils.getTableId(tablePath), priority, flowId);
 
-        //System.out.println("--->writing packetForwardToController flow");
         LOG.debug("writing packetForwardToController flow");
         dataStoreAccessor.writeFlowToConfig(flowPath, allToCtrlFlow.build());
     }
@@ -178,15 +176,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         byte[] dstMacRaw = PacketUtils.extractDstMac(notification.getPayload());
         byte[] srcMacRaw = PacketUtils.extractSrcMac(notification.getPayload());
 
-        MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
+        //MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
         MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
-
-
-       /* LOG.debug("srcmac init");
-        LOG.debug(srcMac.getValue());
-        LOG.debug("dstmac init");
-        LOG.debug(dstMac.getValue());*/
-
 
         NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
         String path  = ingressKey.getId().getValue();
@@ -211,8 +202,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             /*LOG.debug("Ethertype: " ); // + etherType.toString());
             for(int i = 0; i < etherType.length; i++) {
                 LOG.debug("%02x ",0xff & etherType[i]);
-            }
-            LOG.debug("");*/
+            }*/
 
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
                 //LOG.debug("IPV4 packet arrived");
@@ -264,7 +254,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             }
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
                 //Handle lldp packet
-                //LOG.debug("LLDP packet arrived");
+                System.out.println("LLDP packet arrived");
 
                 JSONObject json = new JSONObject();
 
@@ -372,6 +362,14 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
 
     public void setDataBroker(DataBroker data) {
         this.dataBroker = data;
+    }
+
+    /**
+     * Used for comparing the name of the node with the one in MultipleODLHandlerFacadeImpl->SendToSwitch
+     * @return
+     */
+    public NodeId getNodeId() {
+        return nodeId;
     }
 
 }

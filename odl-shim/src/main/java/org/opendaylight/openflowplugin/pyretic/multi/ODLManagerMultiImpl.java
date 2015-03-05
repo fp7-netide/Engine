@@ -114,7 +114,7 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
         odlHandler.setPacketProcessingService(packetProcessingService);
         odlHandler.setPacketInDispatcher(packetInDispatcher);
         odlHandler.setBackendChannel(channel);
-        odlHandler.setDataBroker(this.data); // new
+        odlHandler.setDataBroker(this.data);
         packetInRegistration = notificationService.registerNotificationListener(packetInDispatcher);
 
         channel.setHandler(odlHandler);
