@@ -147,7 +147,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					}
 					break;
 				case PORT :
-					//COULD BE PORT JOIN/PART	
+					//COULD BE PORT JOIN/PART/MOD	
 					MessagePort portMessage = new MessagePort(msg);
 					if (portMessage.getAction().equals("join")) {
 						//ADD THE PORT INFO TO ITS SWITCH
@@ -161,14 +161,18 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 							portStatMsg.setReason((byte)OFPortStatus.OFPortReason.OFPPR_MODIFY.ordinal());
 							sendMessageToController(portMessage.getSwitchId(), portStatMsg);
 						}
-					} else {
-						//PART MSG
+					} else if (portMessage.getAction().equals("mod")) {
+						//MOD MSG
 						OFPortMod portMod = (OFPortMod) factory.getMessage(OFType.PORT_MOD);
 						portMod.setPortNumber(portMessage.getPortNo());
 						portMod.setXid(portMessage.getPortNo());
 						portMod.setConfig(1); //1: DOWN
 						portMod.setHardwareAddress(portMessage.getHWAddress());
 						sendMessageToController(portMessage.getSwitchId(), portMod);
+					} else {
+						//PART MSG
+						//Need to properly fix port part 
+						System.out.println("FIX ME");
 					}
 					break;
 				case PACKET :
