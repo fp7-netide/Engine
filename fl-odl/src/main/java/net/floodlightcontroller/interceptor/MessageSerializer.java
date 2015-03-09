@@ -160,42 +160,63 @@ public class MessageSerializer {
 		JSONObject json = new JSONObject();
 		// Configure match fields in the flowmod message
 		OFMatch match = flowMod.getMatch();
+		System.out.println("match is " + match.toString());
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_TYPE) == 0)
 			json.put("ethtype",flowMod.getMatch().getDataLayerType());
 		else 
 			json.put("ethtype", 0);
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_DST) == 0)
 			//Use this line with POX
 			//json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
 			//Use this line with Ryu
 			json.put("dstmac", convert_mac(match.getDataLayerDestination()));
+		else
+			json.put("dstmac",0);
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0)
 			//Use this line with POX
 			//json.put("srcmac", ByteArrayConvert(match.getDataLayerSource()));
 			//Use this line with Ryu
 			json.put("srcmac", convert_mac(match.getDataLayerSource()));
+		else
+			json.put("srcmac",0);
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_DST_BITS) == 0 )
 			//Use this line with POX
 			//json.put("dstip", match.getNetworkDestination());
 			//Use this line with Ryu
-			json.put("dstip", convert_ip(match.getNetworkDestination()));
+			json.put("dstip", convert_ip(match.getNetworkDestination()));		
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_SRC_BITS) == 0 )
 			//Use this line with POX
 			//json.put("srcip", match.getNetworkSource());
 			//Use this line with Ryu
-			json.put("srcip", convert_ip(match.getNetworkSource())); 
+			json.put("srcip", convert_ip(match.getNetworkSource()));
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_DST) == 0) 
 			json.put("dstport", 0x0FFFF & match.getTransportDestination());
+		else
+			json.put("dstport",0);
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_SRC) == 0)
 			json.put("srcport", match.getTransportSource());
+		else
+			json.put("srcport",0);
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_TOS) == 0)
 			json.put("tos", (match.getNetworkTypeOfService() & 0xff));
+		else
+			json.put("tos",0);
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_IN_PORT) == 0)
 			json.put("inport", flowMod.getMatch().getInputPort());
+		else
+			json.put("inport",0);
+
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_PROTO) == 0)
 			json.put("protocol", flowMod.getMatch().getNetworkProtocol());
 		else
 			json.put("protocol", 0);
+
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_VLAN) == 0)
 			if (match.getDataLayerVirtualLan() != -1 )
 				json.put("vlan_id", match.getDataLayerVirtualLan());
@@ -258,14 +279,12 @@ public class MessageSerializer {
 	    			.append(((OFActionNetworkLayerDestination)action).getNetworkAddress());
 				if (i != action_list_length-1)
 				sb.append(", ");
-				//json.put("dstip", IPv4.toIPv4AddressBytes(ipDst));
 				break;
 			case SET_NW_SRC:
 				sb.append("\"srcip\": ")
     				.append(((OFActionNetworkLayerSource)action).getNetworkAddress());
 			if (i != action_list_length-1)
 			sb.append(", ");
-				//json.put("dstmac", IPv4.toIPv4AddressBytes(ipSrc));
 				break;
 			case SET_NW_TOS:
 				sb.append("\"tos\": ")
@@ -273,20 +292,17 @@ public class MessageSerializer {
 				if (i != action_list_length-1)
 					sb.append(", ");				
 				break;			
-				//json.put("tos", ((OFActionNetworkTypeOfService)action).getNetworkTypeOfService());
 			case SET_TP_DST:
 				sb.append("\"dstport\": ")
 					.append(((OFActionTransportLayerDestination)action).getTransportPort());
 				if (i != action_list_length-1)
 					sb.append(", ");				
 				break;			
-				//json.put("dstport", (0x0FFFF&((OFActionTransportLayer)action).getTransportPort()));
 			case SET_TP_SRC:
 				sb.append("\"srcport\": ")
 					.append(((OFActionTransportLayerSource)action).getTransportPort());
 				if (i != action_list_length-1)
 					sb.append(", ");		
-				//json.put("srcport", (0x0FFFF&((OFActionTransportLayer)action).getTransportPort()));
 				break;
 			case SET_VLAN_ID:
 			case SET_VLAN_PCP:
