@@ -113,7 +113,7 @@ public class ODLManagerSimpleImpl implements DataChangeListenerRegistrationHolde
         odlHandler.setDataStoreAccessor(dataStoreAccessor);
         odlHandler.setPacketProcessingService(packetProcessingService);
         odlHandler.setBackendChannel(channel);
-        odlHandler.setDataBroker(this.data); /////// new
+        odlHandler.setDataBroker(this.data);
         packetInRegistration = notificationService.registerNotificationListener(odlHandler);
 
         channel.setHandler(odlHandler); // new

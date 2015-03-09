@@ -70,6 +70,8 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import java.util.List;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
+import org.opendaylight.controller.liblldp.LLDPTLV;
+import org.opendaylight.controller.liblldp.LLDP;
 
 /**
  * Created by Jennifer Hernández Bécares on 11/12/14.

@@ -14,7 +14,6 @@
 package com.telefonica.pyretic.backendchannel;
 
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import java.io.IOException;
@@ -35,11 +34,9 @@ public class BackendChannel extends Connection implements Runnable{
         new Thread(this).start();
 
     }
-
-
     //Put here all the code needed to manage the different messages of Pyretic
 
-    //Here put the logic to manage the differents messages
+    //Here put the logic to manage the different messages
     @Override
     void foundTerminator() {
         /*The end of a command or message has been seen.

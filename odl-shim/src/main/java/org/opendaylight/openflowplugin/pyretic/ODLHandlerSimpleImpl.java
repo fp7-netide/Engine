@@ -21,19 +21,13 @@
 
 package org.opendaylight.openflowplugin.pyretic;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.json.simple.JSONArray;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.ReadWriteTransaction;
-import org.opendaylight.openflowplugin.pyretic.Utils.FlowModUtils;
-import org.opendaylight.openflowplugin.pyretic.Utils.FlowUtils;
-import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
+import org.opendaylight.openflowplugin.pyretic.Utils.*;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowId;
@@ -57,9 +51,6 @@ import org.json.simple.JSONObject;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
 import com.telefonica.pyretic.backendchannel.BackendChannel;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.opendaylight.openflowplugin.pyretic.Utils.OutputUtils;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.TableKey;
 
@@ -215,7 +206,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
-		System.out.println("IPV6 arrived - not handling ipv6");
+		        System.out.println("IPV6 arrived - not handling ipv6");
                 // Handle IPV6 packet
                 /*JSONObject json = new JSONObject();
 
@@ -348,6 +339,31 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
                 else
                     LOG.debug("Ignoring install");
             }
+        }
+
+        else if (type.equals("inject_discovery_packet")) {
+            Integer inNodeKey = Integer.parseInt(json.get(1).toString());
+            Integer outport = Integer.parseInt(json.get(2).toString());
+            String dpid = "openflow:" + inNodeKey.toString();
+            String port = outport.toString();
+            MacAddress srcMac = new MacAddress("00:00:00:00:00:00");
+
+            for (Map.Entry<MacAddress, NodeConnectorRef> entry : mac2portMapping.entrySet()) {
+                NodeConnectorRef ncr = OutputUtils.createNodeConnRef(dpid, port); // FIXME
+                // Probably not equal anyway...
+                // Find a better way to check if the node connectors are the same if it
+                // doesn't work
+                if (entry.getValue().equals(ncr)) {
+                    srcMac = entry.getKey();
+                }
+            }
+
+
+            TransmitPacketInput input = null;
+
+            input = LLDPDiscoveryUtils.createLLDPOut(dpid, port, srcMac);
+            packetProcessingService.transmitPacket(input);
+            LOG.debug("LLDP (inject discovery packet) transmitted");
         }
 
         else {
