@@ -49,9 +49,9 @@ public class BackendChannel extends Connection implements Runnable{
             multiHandler.sendToSwitch(array);
         }
         else if (type.equals("inject_discovery_packet")) {
-           // JSONObject newObj = new JSONObject();
-           // newObj.put("switch", array.get(1));
-           // newObj.put("inport", array.get(2));
+            System.out.println("sending inject discovery packet starts");
+            multiHandler.sendToSwitch(array);
+            System.out.println("inject discovery packet sent");
         }
         else if (type.equals("install")){
             System.out.println("install starts");

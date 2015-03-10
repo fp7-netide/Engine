@@ -19,6 +19,7 @@
 * and is available at http://www.eclipse.org/legal/epl-v10.html
 */
 package org.opendaylight.openflowplugin.pyretic.Utils;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,6 +118,7 @@ public class LLDPDiscoveryUtils {
         LLDP lldp = new LLDP();
         Ethernet eth = new Ethernet();
 
+        
         LLDPTLV chassisId = new LLDPTLV();
         chassisId.setType(LLDPTLV.TLVType.ChassisID.getValue());
         chassisId.setValue(LLDPTLV.createChassisIDTLVValue(nodeId));
@@ -158,7 +160,7 @@ public class LLDPDiscoveryUtils {
         tPackBuilder.setAction(actionList);
         tPackBuilder.setPayload(eth.getRawPayload());
         tPackBuilder.setNode(ref);
-        tPackBuilder.setEgress(nEgressConfRef); // FIXME Ingress not set
+        tPackBuilder.setEgress(nEgressConfRef); // FIXME? Ingress not set
         tPackBuilder.setBufferId(Long.valueOf(0xffffffffL));
 
         return tPackBuilder.build();

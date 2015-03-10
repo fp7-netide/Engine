@@ -21,6 +21,7 @@
 
 package org.opendaylight.openflowplugin.pyretic;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -241,7 +242,7 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
                 //Handle lldp packet
                 System.out.println("LLDP packet arrived");
-
+                mac2portMapping.put(srcMac, notification.getIngress());
                 /*JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
@@ -342,28 +343,36 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         }
 
         else if (type.equals("inject_discovery_packet")) {
-            Integer inNodeKey = Integer.parseInt(json.get(1).toString());
-            Integer outport = Integer.parseInt(json.get(2).toString());
-            String dpid = "openflow:" + inNodeKey.toString();
+
+            Integer inNodeKey = ((Long)json.get(1)).intValue();
+            Integer outport = ((Long)json.get(2)).intValue();
+            String dpid = inNodeKey.toString();
             String port = outport.toString();
             MacAddress srcMac = new MacAddress("00:00:00:00:00:00");
 
             for (Map.Entry<MacAddress, NodeConnectorRef> entry : mac2portMapping.entrySet()) {
-                NodeConnectorRef ncr = OutputUtils.createNodeConnRef(dpid, port); // FIXME
-                // Probably not equal anyway...
-                // Find a better way to check if the node connectors are the same if it
-                // doesn't work
-                if (entry.getValue().equals(ncr)) {
+
+                NodeConnectorKey nodeConnectorKey = getNodeConnectorKey(entry.getValue());
+                System.out.println("Node con key value: " + nodeConnectorKey.getId().getValue());
+
+                System.out.println("Current: " + this.nodeId.getValue() +":"+ port);
+                if (nodeConnectorKey.getId().getValue().equalsIgnoreCase(this.nodeId.getValue() + ":" + port)) {
                     srcMac = entry.getKey();
+                    System.out.println("Host equal");
                 }
+                else
+                    System.out.println("Host not equal");
             }
 
+            if (!srcMac.getValue().equalsIgnoreCase("00:00:00:00:00:00")) {
+                TransmitPacketInput input = null;
 
-            TransmitPacketInput input = null;
-
-            input = LLDPDiscoveryUtils.createLLDPOut(dpid, port, srcMac);
-            packetProcessingService.transmitPacket(input);
-            LOG.debug("LLDP (inject discovery packet) transmitted");
+                input = LLDPDiscoveryUtils.createLLDPOut(dpid, port, srcMac);
+                packetProcessingService.transmitPacket(input);
+                LOG.debug("LLDP (inject discovery packet) transmitted");
+            }
+            else
+                System.out.println("Not transmitting");
         }
 
         else {
@@ -381,6 +390,29 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
      */
     public NodeId getNodeId() {
         return nodeId;
+    }
+
+    // Auxiliary methods
+    /**
+     *
+     * @param ref
+     * @return
+     */
+    public static NodeKey getNodeKey(final NodeConnectorRef ref) {
+        return ref.getValue().firstKeyOf(Node.class, NodeKey.class);
+    }
+
+    public static NodeId toTopologyNodeId(
+            final org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId nodeId) {
+        return new NodeId(nodeId);
+    }
+
+    private static NodeId toTopologyNodeId(final NodeConnectorRef source) {
+        return toTopologyNodeId(getNodeKey(source).getId());
+    }
+
+    public static NodeConnectorKey getNodeConnectorKey(final NodeConnectorRef ref) {
+        return ref.getValue().firstKeyOf(NodeConnector.class, NodeConnectorKey.class);
     }
 
 }

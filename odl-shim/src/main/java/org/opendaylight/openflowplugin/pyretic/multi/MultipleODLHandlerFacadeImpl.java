@@ -132,15 +132,22 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
         boolean sent = false;
 
         Iterator iter = ppl.keySet().iterator();
-        while (iter.hasNext()) {
+        while (iter.hasNext() && !sent) {
             ODLHandlerSimpleImpl simpleLearning = (ODLHandlerSimpleImpl)ppl.get(iter.next());
             String nodeid = simpleLearning.getNodeId().getValue();
-            JSONObject packet = (JSONObject)json.get(1);
-            Integer swtch = ((Long) packet.get("switch")).intValue();
-            if (("openflow:"+swtch).equalsIgnoreCase(nodeid)) {
-                simpleLearning.sendToSwitch(json);
-                sent = true;
-                break;
+            Integer swtch = -1;
+            try {
+                JSONObject packet = (JSONObject)json.get(1);
+                swtch = ((Long) packet.get("switch")).intValue();
+            } catch(Exception e) {
+                swtch = ((Long)json.get(1)).intValue();
+            }
+            finally {
+                if (("openflow:"+swtch).equalsIgnoreCase(nodeid)) {
+                    simpleLearning.sendToSwitch(json);
+                    sent = true;
+                    break;
+                }
             }
         }
         if (!sent)

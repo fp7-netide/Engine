@@ -86,7 +86,11 @@
             <artifactId>sal</artifactId>
             <version>0.8.1-SNAPSHOT</version>
         </dependency>
-
+	<dependency>
+          <groupId>org.opendaylight.controller</groupId>
+          <artifactId>liblldp</artifactId>
+          <version>0.8.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>
 
