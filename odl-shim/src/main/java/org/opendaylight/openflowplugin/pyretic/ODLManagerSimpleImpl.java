@@ -128,8 +128,6 @@ public class ODLManagerSimpleImpl implements DataChangeListenerRegistrationHolde
                 wakeupListener,
                 DataBroker.DataChangeScope.SUBTREE);
         LOG.debug("start() <--");
-
-        System.out.println("Start manager simple implem");
     }
     
     /**

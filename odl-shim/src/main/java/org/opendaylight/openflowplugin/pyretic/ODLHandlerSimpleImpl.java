@@ -118,7 +118,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         tablePath = appearedTablePath;
         nodePath = tablePath.firstIdentifierOf(Node.class);
         nodeId = nodePath.firstKeyOf(Node.class, NodeKey.class).getId();
-        System.out.println("Node id: " + nodeId.getValue());
         mac2portMapping = new HashMap<>();
         coveredMacPaths = new HashSet<>();
 
@@ -192,8 +191,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             }
 
             if (Arrays.equals(ETH_TYPE_IPV4, etherType)) {
-                //LOG.debug("IPV4 packet arrived");
-
                 JSONObject json = new JSONObject();
                 json.put("switch", Integer.parseInt(switch_s));
                 json.put("inport", Integer.parseInt(inport));
@@ -208,19 +205,6 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
 		        System.out.println("IPV6 arrived - not handling ipv6");
-                // Handle IPV6 packet
-                /*JSONObject json = new JSONObject();
-
-                json.put("switch", Integer.parseInt(switch_s));
-                json.put("inport", Integer.parseInt(inport));
-                json.put("raw",raw);
-
-                List<String> p = new ArrayList<String>();
-                p.add("\"packet\"");
-                p.add(json.toString());
-               // LOG.debug("" + p);
-                this.channel.push(p.toString() + "\n");
-                //mac2portMapping.put(srcMac, notification.getIngress());*/
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
                 // Handle ARP packet
@@ -241,20 +225,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             }
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
                 //Handle lldp packet
-                System.out.println("LLDP packet arrived");
+                System.out.println("LLDP arrived - not handling LLDP");
                 mac2portMapping.put(srcMac, notification.getIngress());
-                /*JSONObject json = new JSONObject();
-
-                json.put("switch", Integer.parseInt(switch_s));
-                json.put("inport", Integer.parseInt(inport));
-                json.put("raw",raw);
-
-                List<String> p = new ArrayList<String>();
-                p.add("\"packet\"");
-                p.add(json.toString());
-                this.channel.push(p.toString() + "\n");
-
-                mac2portMapping.put(srcMac, notification.getIngress());*/
             }
             else {
                 LOG.debug("Unknown packet arrived.\nThis shouldn't be happening");
@@ -320,12 +292,11 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         }
 
         else if (type.equals("install")) {
-            System.out.println("install packet -----------------");
+            System.out.println("install packet----------");
             System.out.println(json.toString());
             JSONObject match = (JSONObject) json.get(1);
             int priority = Integer.parseInt(json.get(2).toString());
             JSONArray actions = (JSONArray)json.get(3);
-            LOG.debug("Actions size: " + actions.size());
             for (int i = 0; i < actions.size(); i++) {
                 FlowBuilder fb = FlowModUtils.createFlowBuilder(match, priority, (JSONObject)actions.get(i));
                 if (!(fb == null)) {
@@ -348,35 +319,29 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             Integer outport = ((Long)json.get(2)).intValue();
             String dpid = inNodeKey.toString();
             String port = outport.toString();
-            MacAddress srcMac = new MacAddress("00:00:00:00:00:00");
+            MacAddress srcMac = new MacAddress("ff:ff:ff:ff:ff:ff");
 
             for (Map.Entry<MacAddress, NodeConnectorRef> entry : mac2portMapping.entrySet()) {
 
                 NodeConnectorKey nodeConnectorKey = getNodeConnectorKey(entry.getValue());
-                System.out.println("Node con key value: " + nodeConnectorKey.getId().getValue());
-
-                System.out.println("Current: " + this.nodeId.getValue() +":"+ port);
                 if (nodeConnectorKey.getId().getValue().equalsIgnoreCase(this.nodeId.getValue() + ":" + port)) {
                     srcMac = entry.getKey();
-                    System.out.println("Host equal");
                 }
-                else
-                    System.out.println("Host not equal");
             }
 
-            if (!srcMac.getValue().equalsIgnoreCase("00:00:00:00:00:00")) {
+            if (!srcMac.getValue().equalsIgnoreCase("ff:ff:ff:ff:ff:ff")) {
                 TransmitPacketInput input = null;
 
                 input = LLDPDiscoveryUtils.createLLDPOut(dpid, port, srcMac);
                 packetProcessingService.transmitPacket(input);
-                LOG.debug("LLDP (inject discovery packet) transmitted");
+                System.out.println("LLDP (inject discovery packet) transmitted");
             }
             else
                 System.out.println("Not transmitting");
         }
 
         else {
-            LOG.debug("Different type <<<<<< " + type);
+            LOG.debug("Different type <<<< " + type);
         }
     }
 

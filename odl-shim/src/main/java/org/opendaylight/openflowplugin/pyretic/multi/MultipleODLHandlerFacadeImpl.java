@@ -150,8 +150,6 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
                 }
             }
         }
-        if (!sent)
-            System.out.println("Simple learning switch is null or does not exist");
     }
 
     public void setDataBroker(DataBroker data) {

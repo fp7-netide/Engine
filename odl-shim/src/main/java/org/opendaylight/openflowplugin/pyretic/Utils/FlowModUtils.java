@@ -291,6 +291,9 @@ public class FlowModUtils {
         String dstmacb = getDstMac(jsonmatch);
         System.out.println("Dst mac: " + dstmacb);
 
+        if (dstmacb.equalsIgnoreCase("ff:ff:ff:ff:ff:ff"))
+            return null;
+
         MatchBuilder match = new MatchBuilder();
         EthernetMatchBuilder ethmatch = new EthernetMatchBuilder(); // ethernettype
         EthernetTypeBuilder ethtype = new EthernetTypeBuilder();
@@ -307,13 +310,13 @@ public class FlowModUtils {
             ethmatch.setEthernetDestination(ethdest.build());
         }
 
-        EthernetSourceBuilder ethsrc = new EthernetSourceBuilder();
+        /*EthernetSourceBuilder ethsrc = new EthernetSourceBuilder();
         MacAddress macsrc = new MacAddress(srcmacb);
         if (!srcmacb.equalsIgnoreCase("00:00:00:00:00:00")) {
             ethsrc.setAddress(macsrc);
             ethsrc.setMask(new MacAddress("ff:ff:ff:ff:ff:ff"));
             ethmatch.setEthernetSource(ethsrc.build());
-        }
+        }*/
         match.setEthernetMatch(ethmatch.build());
 
         return match;
@@ -457,7 +460,11 @@ public class FlowModUtils {
 
             if (protocol == 0 || protocol == 1 || protocol == 2) { // value 0 intends to ignore protocol
                 // Ethernet type
-                if (Integer.parseInt(match.get("ethtype").toString()) == 0) {
+                MatchBuilder newMatch = createEthernetMatch(match);
+                if (newMatch == null)
+                    return null;
+                flow.setMatch(createEthernetMatch(match).build());
+               /* if (Integer.parseInt(match.get("ethtype").toString()) == 0) {
                     System.out.println("type = 0");
                     flow.setMatch(createEthernetMatch(match).build());
                 }
@@ -480,7 +487,7 @@ public class FlowModUtils {
                 else if (Integer.parseInt(match.get("ethtype").toString()) == 35020) {
                     System.out.println("type = 35020 (LLDP)");
                     flow.setMatch(createLLDPMatch().build());
-                }
+                }*/
             }
             else if (protocol == 6) {
                 // TCP + IPv4

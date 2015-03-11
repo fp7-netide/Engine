@@ -24,13 +24,11 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.opendaylight.controller.liblldp.*;
 import org.opendaylight.controller.liblldp.Ethernet;
 import org.opendaylight.controller.liblldp.LLDP;
 import org.opendaylight.controller.liblldp.LLDPTLV;
-import org.opendaylight.controller.sal.packet.*;
-import org.opendaylight.controller.sal.packet.address.*;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev100924.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev100924.MacAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.action.OutputActionCaseBuilder;
@@ -38,7 +36,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.acti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.action.types.rev131112.action.list.ActionKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnector;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.node.NodeConnectorKey;
@@ -61,14 +58,14 @@ public class LLDPDiscoveryUtils {
     public static final Long LLDP_INTERVAL = (long) (1000*5); // Send LLDP every five seconds
     public static final Long LLDP_EXPIRATION_TIME = LLDP_INTERVAL*3; // Let up to three intervals pass before we decide we are expired.
 
+    private static final String OF_URI_PREFIX = "openflow:";
 
-    public static String macToString(byte[] mac) {
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < mac.length; i++) {
-            b.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? ":" : ""));
-        }
-        return b.toString();
-    }
+
+    /**
+     *
+     * @param payload
+     * @return
+     */
     public static NodeConnectorRef lldpToNodeConnectorRef(byte[] payload) {
         Ethernet ethPkt = new Ethernet();
         try {
@@ -106,11 +103,16 @@ public class LLDPDiscoveryUtils {
 
 
     /**
-     * @param nodeId
+     * We use this function to create an LLDP packet in response to an inject_discovery_packet
+     * (from Pyretic)
+     * Check out https://github.com/opendaylight/openflowplugin/blob/master/applications/lldp-speaker/src/main/java/org/opendaylight/openflowplugin/applications/lldpspeaker/LLDPUtil.java
+     * for more info on how to handle the creation of LLDP packets
+     * @param nodeIdWithPrefix
      * @param outPort
+     * @param srcAddress
      * @return
-     * */
-    public synchronized static TransmitPacketInput createLLDPOut(final String nodeId,
+     */
+    public synchronized static TransmitPacketInput createLLDPOut(final String nodeIdWithPrefix,
                                                                    final String outPort,
                                                                    final MacAddress srcAddress) {
 
@@ -118,38 +120,48 @@ public class LLDPDiscoveryUtils {
         LLDP lldp = new LLDP();
         Ethernet eth = new Ethernet();
 
-        
-        LLDPTLV chassisId = new LLDPTLV();
-        chassisId.setType(LLDPTLV.TLVType.ChassisID.getValue());
-        chassisId.setValue(LLDPTLV.createChassisIDTLVValue(nodeId));
-        chassisId.setLength((short)LLDPTLV.createChassisIDTLVValue(nodeId).length);
+        // We remove the prefix from the nodeID
+        String nodeId = nodeIdWithPrefix.replace(OF_URI_PREFIX, "");
 
+        // Creates the chassisId associated to the nodeId as LLDPTLV
+        BigInteger dataPathId = dataPathIdFromNodeId(nodeId);
+        byte[] cidValue = LLDPTLV
+                .createChassisIDTLVValue(colonize(bigIntegerToPaddedHex(dataPathId)));
+        LLDPTLV chassisIdTlv = new LLDPTLV();
+        chassisIdTlv.setType(LLDPTLV.TLVType.ChassisID.getValue());
+        chassisIdTlv.setType(LLDPTLV.TLVType.ChassisID.getValue())
+                .setLength((short) cidValue.length).setValue(cidValue);
 
+        // Creates and sets the portIdTLV as LLDPTLV
         String hexString = Integer.toHexString(Integer.parseInt(outPort));
         byte[] portID = LLDPTLV.createPortIDTLVValue(hexString);
         LLDPTLV portIdTlv = new LLDPTLV();
         portIdTlv.setType(LLDPTLV.TLVType.PortID.getValue())
                 .setLength((short) portID.length).setValue(portID);
 
-
-        lldp.setChassisId(chassisId);
+        // Sets the chassisId and portId to the LLDP packet
+        lldp.setChassisId(chassisIdTlv);
         lldp.setPortId(portIdTlv);
 
-
+        // Set ethernet type as LLDP, source mac from the in port and LLDP Multicast as dst
+        // Then, we set the payload to be the payload from the LLDP packet we created before
         eth.setEtherType((short)0x88cc);
-        eth.setSourceMACAddress(srcAddress.getValue().getBytes()); // FIXME?
+        eth.setSourceMACAddress(srcAddress.getValue().getBytes());
         eth.setDestinationMACAddress(LLDP.LLDPMulticastMac);
         eth.setPayload(lldp.getPayload());
 
-
+        // We create a Node connector associated to the nodeId
         NodeRef ref = OutputUtils.createNodeRef(nodeId);
         NodeConnectorRef nEgressConfRef = new NodeConnectorRef(OutputUtils.createNodeConnRef(nodeId, outPort));
 
+        // We create the action list of the packet (output packet to outPort)
+        // Similar to how we create action lists in OutputUtils (packetOut)
+        // The difference is where we send the packets (Uri changes)
         List<Action> actionList = new ArrayList<Action>();
         ActionBuilder ab = new ActionBuilder();
         OutputActionBuilder output = new OutputActionBuilder();
         output.setMaxLength(Integer.valueOf(0xffff));
-        Uri value = new Uri(outPort); // FIXME? Before it was OutputPortValues.NORMAL.toString()
+        Uri value = new Uri(outPort);
         output.setOutputNodeConnector(value);
         ab.setAction(new OutputActionCaseBuilder().setOutputAction(output.build()).build());
         ab.setOrder(0);
@@ -160,9 +172,32 @@ public class LLDPDiscoveryUtils {
         tPackBuilder.setAction(actionList);
         tPackBuilder.setPayload(eth.getRawPayload());
         tPackBuilder.setNode(ref);
-        tPackBuilder.setEgress(nEgressConfRef); // FIXME? Ingress not set
+        tPackBuilder.setEgress(nEgressConfRef);
         tPackBuilder.setBufferId(Long.valueOf(0xffffffffL));
 
         return tPackBuilder.build();
     }
+
+    // Auxiliary functions
+    private static BigInteger dataPathIdFromNodeId(String nodeId) {
+        String dpids = nodeId.replace(OF_URI_PREFIX, "");
+        return new BigInteger(dpids);
+    }
+
+    private static String colonize(String orig) {
+        return orig.replaceAll("(?<=..)(..)", ":$1");
+    }
+
+    private static String bigIntegerToPaddedHex(BigInteger dataPathId) {
+        return StringUtils.leftPad(dataPathId.toString(16), 16, "0");
+    }
+
+    public static String macToString(byte[] mac) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < mac.length; i++) {
+            b.append(String.format("%02X%s", mac[i], (i < mac.length - 1) ? ":" : ""));
+        }
+        return b.toString();
+    }
+    // End of auxiliary functions
 }

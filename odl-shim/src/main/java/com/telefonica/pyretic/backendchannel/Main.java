@@ -23,10 +23,6 @@ public class Main {
     public static void main(String[] args){
         try {
             BackendChannel client = new BackendChannel("localhost", 41414);
-            client.push("Hello\n");
-            client.push("World\n");
-            client.push("Yeeeeeeaaaah!!!!!!\n");
-            System.out.println("-<-<-<-<- Starting backend channel");
             for (int i = 0; i < 10; i++){
                 client.push(String.valueOf(i));
             }
