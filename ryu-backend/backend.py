@@ -133,17 +133,27 @@ class BackendChannel(asynchat.async_chat):
         out_pkt['idle_timeout'] = msg.idle_timeout
         out_pkt['hard_timeout'] = msg.hard_timeout
         # ethernet
-        out_pkt['srcmac'] = haddr_to_str(match.dl_src)
-        out_pkt['dstmac'] = haddr_to_str(match.dl_dst)
-        out_pkt['ethtype'] = match.dl_type
+        print DONTCARE_STR
+        if haddr_to_str(match.dl_src) != DONTCARE_STR:
+            out_pkt['srcmac'] = haddr_to_str(match.dl_src)
+        if haddr_to_str(match.dl_dst) != DONTCARE_STR:
+            out_pkt['dstmac'] = haddr_to_str(match.dl_dst)
+        if match.dl_type != 0:
+            out_pkt['ethtype'] = match.dl_type
         #ipv4
-        out_pkt['srcip'] = self.ipv4_to_string(match.nw_src)
-        out_pkt['dstip'] = self.ipv4_to_string(match.nw_dst)
-        out_pkt['protocol'] = match.nw_proto
-        out_pkt['tos'] = match.nw_tos
+        if match.nw_src != 0:
+            out_pkt['srcip'] = self.ipv4_to_string(match.nw_src)
+        if match.nw_dst != 0:
+            out_pkt['dstip'] = self.ipv4_to_string(match.nw_dst)
+        if match.nw_proto != 0:
+            out_pkt['protocol'] = match.nw_proto
+        if match.nw_tos != 0:
+            out_pkt['tos'] = match.nw_tos
         # transport
-        out_pkt['srcport'] = match.tp_src
-        out_pkt['dstport'] = match.tp_dst
+        if match.tp_src != 0:
+            out_pkt['srcport'] = match.tp_src
+        if match.tp_dst != 0:
+            out_pkt['dstport'] = match.tp_dst
         return out_pkt
     
     def ipv4_to_string(self,ip):
