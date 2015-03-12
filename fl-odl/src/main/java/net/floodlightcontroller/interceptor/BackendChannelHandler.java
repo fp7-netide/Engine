@@ -163,6 +163,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 						}
 					} else if (portMessage.getAction().equals("mod")) {
 						//MOD MSG
+						//FIXME add support for more fields in PortMessage
 						OFPortMod portMod = (OFPortMod) factory.getMessage(OFType.PORT_MOD);
 						portMod.setPortNumber(portMessage.getPortNo());
 						portMod.setXid(portMessage.getPortNo());
@@ -170,9 +171,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 						portMod.setHardwareAddress(portMessage.getHWAddress());
 						sendMessageToController(portMessage.getSwitchId(), portMod);
 					} else {
-						//PART MSG
-						//Need to properly fix port part 
-						System.out.println("FIX ME");
+						System.out.println("port part");
 					}
 					break;
 				case PACKET :

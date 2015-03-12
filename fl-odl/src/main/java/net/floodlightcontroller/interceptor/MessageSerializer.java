@@ -90,7 +90,7 @@ public class MessageSerializer {
 		    }
 		    int len = sb.toString().toCharArray().length;
 		    int[] convert = new int[len];
-		    for (int i =0; i<len; i++)
+		    for (int i =0; i<len; i++) 
 		    	convert[i] = (int) sb.toString().toCharArray()[i];
 		    return convert;
 	}
@@ -163,24 +163,18 @@ public class MessageSerializer {
 		System.out.println("match is " + match.toString());
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_TYPE) == 0)
 			json.put("ethtype",flowMod.getMatch().getDataLayerType());
-		else 
-			json.put("ethtype", 0);
 		
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_DST) == 0)
 			//Use this line with POX
 			//json.put("dstmac", ByteArrayConvert(match.getDataLayerDestination()));
 			//Use this line with Ryu
 			json.put("dstmac", convert_mac(match.getDataLayerDestination()));
-		else
-			json.put("dstmac",0);
 		
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_SRC) == 0)
 			//Use this line with POX
 			//json.put("srcmac", ByteArrayConvert(match.getDataLayerSource()));
 			//Use this line with Ryu
 			json.put("srcmac", convert_mac(match.getDataLayerSource()));
-		else
-			json.put("srcmac",0);
 		
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_DST_BITS) == 0 )
 			//Use this line with POX
@@ -194,29 +188,19 @@ public class MessageSerializer {
 			json.put("srcip", convert_ip(match.getNetworkSource()));
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_DST) == 0) 
 			json.put("dstport", 0x0FFFF & match.getTransportDestination());
-		else
-			json.put("dstport",0);
 		
 		if ((match.getWildcards() & OFMatch.OFPFW_TP_SRC) == 0)
 			json.put("srcport", match.getTransportSource());
-		else
-			json.put("srcport",0);
 		
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_TOS) == 0)
 			json.put("tos", (match.getNetworkTypeOfService() & 0xff));
-		else
-			json.put("tos",0);
 		
 		if ((match.getWildcards() & OFMatch.OFPFW_IN_PORT) == 0)
 			json.put("inport", flowMod.getMatch().getInputPort());
-		else
-			json.put("inport",0);
-
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_NW_PROTO) == 0)
 			json.put("protocol", flowMod.getMatch().getNetworkProtocol());
-		else
-			json.put("protocol", 0);
-
+		
 		if ((match.getWildcards() & OFMatch.OFPFW_DL_VLAN) == 0)
 			if (match.getDataLayerVirtualLan() != -1 )
 				json.put("vlan_id", match.getDataLayerVirtualLan());
