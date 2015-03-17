@@ -61,7 +61,7 @@ public class BackendChannel extends Connection implements Runnable{
             System.out.println("clear");
         }
         else if(type.equals("barrier")){
-            System.out.println("clear");
+            System.out.println("barrier");
         }
         else if(type.equals("flow_stats_request")){
             System.out.println("clear");

@@ -161,13 +161,11 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
     }
 
     public synchronized void onPacketReceived(PacketReceived notification) {
-        //LOG.debug("-----New packet arrived");
-
         byte[] etherType = PacketUtils.extractEtherType(notification.getPayload());
         byte[] dstMacRaw = PacketUtils.extractDstMac(notification.getPayload());
         byte[] srcMacRaw = PacketUtils.extractSrcMac(notification.getPayload());
 
-        //MacAddress dstMac = PacketUtils.rawMacToMac(dstMacRaw);
+
         MacAddress srcMac = PacketUtils.rawMacToMac(srcMacRaw);
 
         NodeConnectorKey ingressKey = InstanceIdentifierUtils.getNodeConnectorKey(notification.getIngress().getValue());
@@ -176,6 +174,8 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
         String [] msg = null;
         String switch_s = null;
         String inport = null;
+
+
         if(path.contains(":")) {
             msg = path.split(":");
             switch_s = msg[1];
@@ -205,10 +205,10 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
             }
             else if (Arrays.equals(ETH_TYPE_IPV6, etherType)) {
 		        System.out.println("IPV6 arrived - not handling ipv6");
+                mac2portMapping.put(srcMac, notification.getIngress());
             }
             else if (Arrays.equals(ETH_TYPE_ARP, etherType)) {
                 // Handle ARP packet
-               // LOG.debug("ARP packet arrived");
                 JSONObject json = new JSONObject();
 
                 json.put("switch", Integer.parseInt(switch_s));
@@ -224,8 +224,12 @@ public class ODLHandlerSimpleImpl implements ODLHandler, PacketProcessingListene
 
             }
             else if(Arrays.equals(ETH_TYPE_LLDP,etherType)){
-                //Handle lldp packet
-                System.out.println("LLDP arrived - not handling LLDP");
+                //Handle LLDP packet
+                System.out.println("LLDP arrived");
+                //List<String> p = new ArrayList<String>();
+                //p.add("\"link\"");
+                //p.add()
+
                 mac2portMapping.put(srcMac, notification.getIngress());
             }
             else {

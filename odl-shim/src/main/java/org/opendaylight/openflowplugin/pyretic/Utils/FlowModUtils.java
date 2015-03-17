@@ -555,6 +555,7 @@ public class FlowModUtils {
         // The following creates an outport to switch port
         // For different actions create a *ActionBuilder instead
 
+
         OutputActionBuilder output = new OutputActionBuilder();
         Uri value = new Uri(outport); // FIXME: outport or switch? page 58 of openflow-spec-v1.3.2.pdf
         output.setOutputNodeConnector(value);

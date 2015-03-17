@@ -109,20 +109,4 @@ public class Activator extends AbstractBindingAwareConsumer implements AutoClose
         close();
         super.stopImpl(context);
     }
-
-
-
-   /* /////// NEW
-    @Override
-    public void onSessionAdded(SwitchSessionKeyOF switchSessionKeyOF, SessionContext sessionContext) {
-        GetFeaturesOutput features = sessionContext.getFeatures();
-        System.out.println("On session added");
-        System.out.println("Capabilities: \n" + features.getCapabilities().toString());
-    }
-
-    @Override
-    public void onSessionRemoved(SessionContext sessionContext) {
-        sessionContext.getFeatures();
-    }*/
-
 }
