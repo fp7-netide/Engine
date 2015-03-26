@@ -38,6 +38,11 @@ Now, install the following bundle:
 After that, you can install the odl shim bundle just fine:
 ```bundle:install -s mvn:org.opendaylight.openflowplugin/pyretic-odl/0.1.0-SNAPSHOT```
 
+> Alternative: When using Helium Release SR3, parent version in pom.xml is <version>0.0.6-Helium-SR3</version>, and the bundle is installed like this:
+```bundle:install -s mvn:org.opendaylight.openflowplugin/pyretic-odl/0.0.6-Helium-SR3```
+
+That is the default pom.xml right now. If you are using Helium Release SR1.1, then you need to rename pom_sr1.xml to pom.xml and perform mvn clean install again. 
+
 You can avoid installing the json bundle if you copy .the jar (which is this one: .m2/repository/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar) and paste it into openflowplugin/distribution/karaf/target/assembly/deploy. You just have to do this once. (The .m2 refers to linux platforms. If you don't know where that is, find out where maven creates it in your specific platform).
 
 > **Note:** You have to perform the bundle:install of the odl shim each time you launch karaf. You can only put it into the deploy folder and avoid installing if it has no changes at all from the previous version. 
