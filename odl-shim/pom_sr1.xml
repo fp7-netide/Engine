@@ -4,8 +4,7 @@
     <parent>
         <groupId>org.opendaylight.openflowplugin</groupId>
         <artifactId>openflowplugin-parent</artifactId>
-	<version>0.0.6-Helium-SR3</version>
-        <!--<version>1.1.6-Helium-SR3</version>-->
+        <version>0.0.4-Helium-SR1.1</version>
         <!--  has to be 
         <version>0.1.0-SNAPSHOT</version>
         for bleeding edge-->
@@ -56,7 +55,7 @@
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-binding</artifactId>
-	    <version>0.6.3-Helium-SR1.1</version> 
+            <version>0.6.3-Helium-SR1.1</version>
             <!-- has to be
             <version>0.7.0-SNAPSHOT</version>
             for bleeding edge -->
@@ -75,7 +74,7 @@
         <dependency>
             <groupId>com.googlecode.json-simple</groupId>
             <artifactId>json-simple</artifactId>
-            <version>1.1.1</version>
+            <version>1.1.1</version> <!-- cambiado por 1.1.1, era 1.1-->
         </dependency>
 	<dependency>
 		<groupId>org.apache.commons</groupId>

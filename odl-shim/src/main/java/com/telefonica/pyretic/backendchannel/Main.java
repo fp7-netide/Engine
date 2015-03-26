@@ -27,8 +27,6 @@ public class Main {
                 client.push(String.valueOf(i));
             }
             client.push("\n");
-
-            //backendchannel.push("['["switch", "join"", 1, "BEGIN"]']\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
