@@ -96,5 +96,9 @@ class Package(object):
         return True
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Expected a directory", file=sys.stderr)
+        sys.exit(-1)
+
     p = Package(sys.argv[1])
     print(p)
