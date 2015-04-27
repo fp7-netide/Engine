@@ -55,9 +55,7 @@ class Application(object):
         p = os.path.join(self.path, "_meta.json")
         if os.path.exists(p):
             with open(p) as f:
-                metadata = json.load(f)
-                self.controller = metadata.get("controller")
-                self.entrypoint = metadata.get("entrypoint")
+                self.metadata = json.load(f)
 
     def __repr__(self):
         return 'Application("{}")'.format(self.path)
@@ -98,7 +96,7 @@ class Package(object):
         ctrls = set(map(lambda x: x.get("name"),
                     self.requirements.get("Software", {}).get("Controllers", {})))
         for a in self.applications:
-            if a.controller not in ctrls:
+            if a.metadata.get("controller") not in ctrls:
                 return False
 
         return True
