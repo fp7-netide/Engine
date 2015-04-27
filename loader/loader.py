@@ -92,20 +92,9 @@ class Package(object):
         return 'Package("{}", Requirements: {}, Parameters: {}, Applications: {})'.format(self.path,
                 self.requirements, self.parameters, self.applications)
 
-    def valid_hardware(self):
-        # TODO
-        return True
-
-    def valid_software(self):
-        # TODO
-        return True
-
-    def valid_network(self):
-        # TODO
-        return True
-
     def valid(self):
-        return self.valid_hardware() and self.valid_software() and self.valid_network()
+        # TODO
+        return True
 
 if __name__ == "__main__":
     p = Package(sys.argv[1])
