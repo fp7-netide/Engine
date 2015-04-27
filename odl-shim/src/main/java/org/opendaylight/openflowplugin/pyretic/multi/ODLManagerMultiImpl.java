@@ -21,12 +21,12 @@
 package org.opendaylight.openflowplugin.pyretic.multi;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
-import org.json.simple.JSONObject;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataChangeListener;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.NotificationService;
 import org.opendaylight.openflowplugin.pyretic.*;
+import org.opendaylight.openflowplugin.pyretic.observers.NodeConnectorListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.FlowCapableNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.Nodes;
@@ -60,6 +60,7 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
     private Registration packetInRegistration;
 
     private ListenerRegistration<DataChangeListener> dataChangeListenerRegistration;
+
 
     BackendChannel channel;
 
@@ -102,32 +103,37 @@ public class ODLManagerMultiImpl implements DataChangeListenerRegistrationHolder
 
         System.out.println("ODL multi manager starting");
 
-
         FlowCommitWrapper dataStoreAccessor = new FlowCommitWrapperImpl(data);
 
         PacketInDispatcherImpl packetInDispatcher = new PacketInDispatcherImpl();
-        packetInDispatcher.setMultiManager(this); // new
+        packetInDispatcher.setMultiManager(this);
 
         MultipleODLHandlerFacadeImpl odlHandler = new MultipleODLHandlerFacadeImpl();
         odlHandler.setRegistrationPublisher(this);
         odlHandler.setDataStoreAccessor(dataStoreAccessor);
         odlHandler.setPacketProcessingService(packetProcessingService);
         odlHandler.setPacketInDispatcher(packetInDispatcher);
-        odlHandler.setBackendChannel(channel); //////// new
+        odlHandler.setBackendChannel(channel);
+        odlHandler.setDataBroker(this.data);
         packetInRegistration = notificationService.registerNotificationListener(packetInDispatcher);
 
-        channel.setHandler(odlHandler); // new
+        channel.setHandler(odlHandler);
 
         WakeupOnNode wakeupListener = new WakeupOnNode();
         wakeupListener.setODLHandler(odlHandler);
-        wakeupListener.setPacketInDispatcher(packetInDispatcher); ///// new
+        wakeupListener.setPacketInDispatcher(packetInDispatcher);
         dataChangeListenerRegistration = data.registerDataChangeListener(LogicalDatastoreType.OPERATIONAL,
                 InstanceIdentifier.builder(Nodes.class)
                         .child(Node.class)
                         .augmentation(FlowCapableNode.class)
-                        .child(Table.class).toInstance(),
+                        .child(Table.class).build(),
                 wakeupListener,
                 DataBroker.DataChangeScope.SUBTREE);
+
+        // Needed to know where data changes in the network
+        NodeConnectorListener nodeListener = new NodeConnectorListener(this.data);
+        nodeListener.setBackendChannel(channel);
+
         LOG.debug("start() <--");
     }
 

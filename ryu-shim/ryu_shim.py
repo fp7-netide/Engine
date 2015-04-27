@@ -479,14 +479,14 @@ class RYUClient(app_manager.RyuApp):
         self.switches[datapath.id]['connection'] = datapath
         self.switches[datapath.id]['ports'] = {}
         
-        ofproto = datapath.ofproto
+        '''ofproto = datapath.ofproto
         match = datapath.ofproto_parser.OFPMatch()
         actions = [datapath.ofproto_parser.OFPActionOutput(ofproto_v1_0.OFPP_CONTROLLER)]
         mod = datapath.ofproto_parser.OFPFlowMod(
             datapath=datapath, match=match, cookie=0,
             command=ofproto.OFPFC_ADD, actions=actions)
         datapath.send_msg(mod)
-        
+        '''
         self.send_to_pyretic(['switch','join',datapath.id,'BEGIN'])
 
         # port type is ofp_phy_port

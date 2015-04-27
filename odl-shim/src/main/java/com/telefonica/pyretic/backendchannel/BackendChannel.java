@@ -14,7 +14,6 @@
 package com.telefonica.pyretic.backendchannel;
 
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import java.io.IOException;
@@ -35,11 +34,9 @@ public class BackendChannel extends Connection implements Runnable{
         new Thread(this).start();
 
     }
-
-
     //Put here all the code needed to manage the different messages of Pyretic
 
-    //Here put the logic to manage the differents messages
+    //Here put the logic to manage the different messages
     @Override
     void foundTerminator() {
         /*The end of a command or message has been seen.
@@ -49,16 +46,13 @@ public class BackendChannel extends Connection implements Runnable{
         String type = array.get(0).toString();
 
         if(type.equals("packet")){
-            multiHandler.sendToSwitch((JSONObject)array.get(1), type);
+            multiHandler.sendToSwitch(array);
         }
         else if (type.equals("inject_discovery_packet")) {
-            JSONObject newObj = new JSONObject();
-            newObj.put("switch", array.get(1));
-            newObj.put("inport", array.get(2));
-            multiHandler.sendToSwitch(newObj, type);
+            multiHandler.sendToSwitch(array);
         }
         else if (type.equals("install")){
-            System.out.println("install");
+            multiHandler.sendToSwitch(array);
         }
         else if(type.equals("delete")){
             System.out.println("delete");
@@ -67,7 +61,7 @@ public class BackendChannel extends Connection implements Runnable{
             System.out.println("clear");
         }
         else if(type.equals("barrier")){
-            System.out.println("clear");
+            System.out.println("barrier");
         }
         else if(type.equals("flow_stats_request")){
             System.out.println("clear");
@@ -87,7 +81,7 @@ public class BackendChannel extends Connection implements Runnable{
     public synchronized void push(String msg){
         if (msg != "") {
             super.send(msg);
-            //sleep(150);
+            sleep(300);
         }
     }
 
@@ -104,4 +98,3 @@ public class BackendChannel extends Connection implements Runnable{
         }
     }
 }
-

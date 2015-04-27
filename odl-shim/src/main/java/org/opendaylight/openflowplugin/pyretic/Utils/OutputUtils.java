@@ -70,6 +70,8 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 import java.util.List;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.types.rev131026.OutputPortValues;
+import org.opendaylight.controller.liblldp.LLDPTLV;
+import org.opendaylight.controller.liblldp.LLDP;
 
 /**
  * Created by Jennifer Hernández Bécares on 11/12/14.
@@ -120,7 +122,7 @@ public class OutputUtils {
             InstanceIdentifier<NodeConnector> path = InstanceIdentifier.<Nodes>builder(Nodes.class)
                     .<Node, NodeKey>child(Node.class, new NodeKey(new NodeId(nodeId)))
                     .<NodeConnector, NodeConnectorKey>child(NodeConnector.class, nConKey)
-                    .toInstance();
+                    .build();
             return new NodeConnectorRef(path);
         }
         private static NodeBuilder createNodeBuilder(final String nodeId) {
@@ -129,7 +131,7 @@ public class OutputUtils {
             builder.setKey(new NodeKey(builder.getId()));
             return builder;
         }
-        private static FlowBuilder createFlowBuilder(final long flowId, final String tableId, final String flowName) {
+        public static FlowBuilder createFlowBuilder(final long flowId, final String tableId, final String flowName) {
             FlowBuilder fBuild = new FlowBuilder();
             fBuild.setMatch(new MatchBuilder().build());
             fBuild.setInstructions(createPingInstructionsBuilder().build());
@@ -196,16 +198,9 @@ public class OutputUtils {
                                                           final String inPort) {
             ArrayList<Byte> list = new ArrayList<Byte>(40);
 
-            // FIXME payload should be added to packet
             for (byte b : payload) {
                 list.add(b);
             }
-            /*
-            System.out.print("My super duper payload: ");
-            for (int i = 0; i < list.size(); i++) System.out.printf("%02x ",0xff & list.get(i));
-            System.out.println("");
-*/
-
 
             NodeRef ref = createNodeRef(nodeId);
             NodeConnectorRef nEgressConfRef = new NodeConnectorRef(createNodeConnRef(nodeId, outPort));

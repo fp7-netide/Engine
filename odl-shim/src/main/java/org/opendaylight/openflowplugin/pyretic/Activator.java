@@ -25,6 +25,8 @@ import org.opendaylight.controller.sal.binding.api.AbstractBindingAwareConsumer;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ConsumerContext;
 import org.opendaylight.controller.sal.binding.api.NotificationService;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+// import org.opendaylight.openflowplugin.api.openflow.md.core.session.SessionContext;
+//import org.opendaylight.openflowplugin.api.openflow.md.core.session.SwitchSessionKeyOF;
 import org.opendaylight.openflowplugin.pyretic.multi.ODLManagerMultiImpl;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.osgi.framework.BundleContext;
@@ -32,6 +34,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+
+
+////
+//import org.opendaylight.openflowplugin.api.openflow.md.core.session.SessionListener;
+//import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.protocol.rev130731.GetFeaturesOutput;
 
 
 /**
@@ -70,6 +77,7 @@ public class Activator extends AbstractBindingAwareConsumer implements AutoClose
          *   NotificationService - for receiving notifications such as packet in.
          * 
          */
+
         this.multiManager = new ODLManagerMultiImpl();
 
         BackendChannel channel = null;
@@ -85,6 +93,7 @@ public class Activator extends AbstractBindingAwareConsumer implements AutoClose
         this.multiManager.setPacketProcessingService(session.getRpcService(PacketProcessingService.class));
         this.multiManager.setNotificationService(session.getSALService(NotificationService.class));
         this.multiManager.start();
+
     }
 
     @Override

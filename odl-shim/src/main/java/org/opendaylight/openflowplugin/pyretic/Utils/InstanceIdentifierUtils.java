@@ -75,9 +75,10 @@ public class InstanceIdentifierUtils {
      * @return path to flow
      */
     public static InstanceIdentifier<Flow> createFlowPath(InstanceIdentifier<Table> table,FlowKey flowKey) {
-        return InstanceIdentifier.builder(table)
+        /*return InstanceIdentifier.builder(table)   // DEPRECATED
                 .child(Flow.class, flowKey)
-                .build();
+                .build();*/
+        return table.child(Flow.class, flowKey);
     }
 
     /**

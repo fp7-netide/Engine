@@ -33,7 +33,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.opendaylight.openflowplugin.pyretic.multi.PacketInDispatcherImpl;
 
-import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
 
 /**
  * 
@@ -49,8 +48,8 @@ public class WakeupOnNode implements DataChangeListener {
     @Override
     public void onDataChanged(AsyncDataChangeEvent<InstanceIdentifier<?>, DataObject> change) {
         Short requiredTableId = 0;
-        //System.out.println("On data changed");
         // TODO add flow
+
         Map<InstanceIdentifier<?>, DataObject> updated = change.getUpdatedData();
         for (Entry<InstanceIdentifier<?>, DataObject> updateItem : updated.entrySet()) {
             DataObject table = updateItem.getValue();
@@ -66,6 +65,7 @@ public class WakeupOnNode implements DataChangeListener {
             }
         }
     }
+
 
     public void setPacketInDispatcher(PacketInDispatcherImpl packetInDispatcher) {
         this.packetInDispatcher = packetInDispatcher;

@@ -9,7 +9,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="model-flow-base-1.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-flow-base:1.2.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.opendaylight.controller.model:model-inventory:1.2.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.opendaylight.yangtools:yang-binding:0.7.0-SNAPSHOT" level="project" />
@@ -37,6 +36,10 @@
     <orderEntry type="library" name="Maven: org.apache.felix:org.apache.felix.dependencymanager:3.1.0" level="project" />
     <orderEntry type="library" name="Maven: org.osgi:org.osgi.compendium:5.0.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.codehaus.sonar-plugins.java:sonar-jacoco-listeners:2.4" level="project" />
+    <orderEntry type="library" name="openflowplugin-api-0.1.0-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="openflowplugin-api-0.1.0-SNAPSHOT1" level="project" />
+    <orderEntry type="library" name="openflowplugin-api-0.1.0-20141114.182932-33" level="project" />
+    <orderEntry type="library" name="openflow-protocol-api-0.6.0-20141110.163911-52" level="project" />
+    <orderEntry type="library" name="openflow-protocol-impl-0.6.0-20141110.163911-52" level="project" />
   </component>
 </module>
-

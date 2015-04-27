@@ -22,15 +22,21 @@
 package org.opendaylight.openflowplugin.pyretic.multi;
 
 import com.telefonica.pyretic.backendchannel.BackendChannel;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.openflowplugin.pyretic.*;
 import org.opendaylight.openflowplugin.pyretic.Utils.InstanceIdentifierUtils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.flow.inventory.rev130819.tables.Table;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.packet.service.rev130709.PacketProcessingService;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Iterator;
+import java.util.Map;
 
 
 /**
@@ -52,10 +58,7 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
         private FlowCommitWrapper dataStoreAccessor;
         private PacketProcessingService packetProcessingService;
         private PacketInDispatcherImpl packetInDispatcher;
-
-
-        // FIXME
-        private ODLHandlerSimpleImpl simpleLearningSwitch; // I shouldn't have a global one
+        private DataBroker dataBroker;
 
         @Override
         public synchronized void onSwitchAppeared(InstanceIdentifier<Table> appearedTablePath) {
@@ -83,12 +86,12 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
             * We propagate table event to newly instantiated instance of learning switch
             */
 
-            simpleLearningSwitch.setBackendChannel(channel);// new!!!!
+            simpleLearningSwitch.setBackendChannel(channel);
             simpleLearningSwitch.onSwitchAppeared(appearedTablePath);
+            simpleLearningSwitch.setDataBroker(this.dataBroker);
 
-            this.simpleLearningSwitch = simpleLearningSwitch;
             /**
-            * We update mapping of already instantiated LearningSwitchHanlders
+            * We update mapping of already instantiated LearningSwitchHandlers
             */
             packetInDispatcher.getHandlerMapping().put(nodePath, simpleLearningSwitch);
         }
@@ -124,11 +127,34 @@ public class MultipleODLHandlerFacadeImpl implements ODLHandler {
     }
 
     @Override
-    public void sendToSwitch(JSONObject json, String type) {
-       // ODLHandlerSimpleImpl simple = new ODLHandlerSimpleImpl();
-        //simple.setBackendChannel(channel);
-        //simple.setPacketProcessingService(this.packetProcessingService);
-        //simple.sendToSwitch(json, type);
-        this.simpleLearningSwitch.sendToSwitch(json, type);
+    public void sendToSwitch(JSONArray json) {
+        Map<InstanceIdentifier<Node>, PacketProcessingListener> ppl = this.packetInDispatcher.getHandlerMapping();
+        boolean sent = false;
+
+        Iterator iter = ppl.keySet().iterator();
+        while (iter.hasNext() && !sent) {
+            ODLHandlerSimpleImpl simpleLearning = (ODLHandlerSimpleImpl)ppl.get(iter.next());
+            String nodeid = simpleLearning.getNodeId().getValue();
+            Integer swtch = -1;
+            try {
+                JSONObject packet = (JSONObject)json.get(1);
+                swtch = ((Long) packet.get("switch")).intValue();
+            } catch(Exception e) {
+                swtch = ((Long)json.get(1)).intValue();
+            }
+            finally {
+                if (("openflow:"+swtch).equalsIgnoreCase(nodeid)) {
+                    simpleLearning.sendToSwitch(json);
+                    sent = true;
+                    break;
+                }
+            }
+        }
     }
+
+    public void setDataBroker(DataBroker data) {
+        this.dataBroker = data;
+    }
+
+
 }
