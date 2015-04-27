@@ -69,11 +69,9 @@ class Package(object):
             with open(p) as f:
                 self.parameters = json.load(f)
 
-        for path, dirs, files in os.walk(os.path.join(prefix, "_apps")):
-            if path == os.path.join(prefix, "_apps"):
-                continue
-
-            self.applications.append(Application(path))
+        p = os.path.join(prefix, "_apps")
+        for d in os.listdir(p):
+            self.applications.append(Application(os.path.join(p, d)))
 
         assert self.valid()
 
