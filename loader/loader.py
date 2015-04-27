@@ -49,8 +49,21 @@ class Application(object):
         self.path = prefix
         print("Reading application {}".format(prefix))
 
+        self.files = []
+        for dirname, dirs, files in os.walk(self.path):
+            for f in files:
+                self.files.append(os.path.join(os.path.abspath(dirname), f))
+
+        p = os.path.join(self.path, "_meta.json")
+        if os.path.exists(p):
+            with open(p) as f:
+                self.metadata = json.load(f)
+
+        # TODO: make sure the controller required is installed, and that requirements cross-match
+        #       with what's in _system_requirements.json
+
     def __repr__(self):
-        return 'Application("{}")'.format(self.path)
+        return 'Application("{}", Metadata: {})'.format(self.path, self.metadata)
 
 class Package(object):
     requirements = {}

@@ -1,0 +1,4 @@
+{
+	"controller": "ryu",
+	"entrypoint": "simple_switch.py"
+}
