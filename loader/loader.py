@@ -55,10 +55,9 @@ class Application(object):
         p = os.path.join(self.path, "_meta.json")
         if os.path.exists(p):
             with open(p) as f:
-                self.metadata = json.load(f)
-
-        # TODO: make sure the controller required is installed, and that requirements cross-match
-        #       with what's in _system_requirements.json
+                metadata = json.load(f)
+                self.controller = metadata.get("controller")
+                self.entrypoint = metadata.get("entrypoint")
 
     def __repr__(self):
         return 'Application("{}")'.format(self.path)
@@ -87,8 +86,15 @@ class Package(object):
     def __str__(self):
         return 'Package("{}", Applications: "{}")'.format(self.path, self.applications)
 
-    def valid(self):
-        # TODO
+    def applies(self):
+        # FIXME: there's a lot of validation missing here: checking topology and what not
+
+        # Make sure all controllers listed in applications actually appear in our requirements file
+        ctrls = map(lambda x: x["name"], self.requirements.get("Software", {}).get("Controllers", {}))
+        for a in self.applications:
+            if a.controller not in ctrls:
+                return False
+
         return True
 
 if __name__ == "__main__":
@@ -96,4 +102,5 @@ if __name__ == "__main__":
         print("Expected a directory", file=sys.stderr)
         sys.exit(-1)
 
-    print(Package(sys.argv[1]))
+    p = Package(sys.argv[1])
+    print(p.applies())
