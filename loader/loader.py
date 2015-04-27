@@ -15,8 +15,87 @@
 
 # TODO:
 # - Read metadata
+# - Collect Apps
+#   - Check parameter constraints (should always apply, but better be safe)
 # - Determine App->Controller mappings
-# - Start a client controller for each app
+# - For each app:
+#   - Check system requirements
+#     - Hardware: CPU/RAM
+#     - Installed Software: Java version? Controller software? ...?
+#     - If controller is not yet running:
+#       - Start controller
+#     - Apply parameters
+#     - Start application
+
+# Package structure:
+# _apps         # Network applications
+#  \ _app1
+#  | _app2
+# _templates    # Templates for parameter and structure mapping
+#  \ _template1
+#  | _template2
+# _system_requirements.json
+# _topology_requirements.treq
+# _parameters.json
+
+import json
+import sys
+import os
+
+class Application(object):
+    path = ""
+
+    def __init__(self, prefix):
+        self.path = prefix
+        print("Reading application {}".format(prefix))
+
+    def __repr__(self):
+        return 'Application("{}")'.format(self.path)
+
+class Package(object):
+    requirements = {}
+    parameters   = {}
+    applications = []
+    path = ""
+
+    def __init__(self, prefix):
+        self.path = os.path.abspath(prefix)
+        p = os.path.join(prefix, "_system_requirements.json")
+        if os.path.exists(p):
+            with open(p) as f:
+                self.requirements = json.load(f)
+        p = os.path.join(prefix, "_parameters.json")
+        if os.path.exists(p):
+            with open(p) as f:
+                self.parameters = json.load(f)
+
+        for path, dirs, files in os.walk(os.path.join(prefix, "_apps")):
+            if path == os.path.join(prefix, "_apps"):
+                continue
+
+            self.applications.append(Application(path))
+
+        assert self.valid()
+
+    def __str__(self):
+        return 'Package("{}", Requirements: {}, Parameters: {}, Applications: {})'.format(self.path,
+                self.requirements, self.parameters, self.applications)
+
+    def valid_hardware(self):
+        # TODO
+        return True
+
+    def valid_software(self):
+        # TODO
+        return True
+
+    def valid_network(self):
+        # TODO
+        return True
+
+    def valid(self):
+        return self.valid_hardware() and self.valid_software() and self.valid_network()
 
 if __name__ == "__main__":
-    print("Here be dragons")
+    p = Package(sys.argv[1])
+    print(p)
