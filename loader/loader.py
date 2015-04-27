@@ -46,7 +46,6 @@ class Application(object):
     # TODO: parse application level metadata: controller type, entry point, ...
     def __init__(self, prefix):
         self.path = prefix
-        print("Reading application {}".format(prefix))
 
         self.files = []
         for dirname, dirs, files in os.walk(self.path):
@@ -62,7 +61,7 @@ class Application(object):
         #       with what's in _system_requirements.json
 
     def __repr__(self):
-        return 'Application("{}", Metadata: {})'.format(self.path, self.metadata)
+        return 'Application("{}")'.format(self.path)
 
 class Package(object):
     requirements = {}
@@ -85,11 +84,8 @@ class Package(object):
         for d in os.listdir(p):
             self.applications.append(Application(os.path.join(p, d)))
 
-        assert self.valid()
-
     def __str__(self):
-        return 'Package("{}", Requirements: {}, Parameters: {}, Applications: {})'.format(self.path,
-                self.requirements, self.parameters, self.applications)
+        return 'Package("{}", Applications: "{}")'.format(self.path, self.applications)
 
     def valid(self):
         # TODO
@@ -100,5 +96,4 @@ if __name__ == "__main__":
         print("Expected a directory", file=sys.stderr)
         sys.exit(-1)
 
-    p = Package(sys.argv[1])
-    print(p)
+    print(Package(sys.argv[1]))
