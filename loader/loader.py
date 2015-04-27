@@ -62,6 +62,11 @@ class Application(object):
     def __repr__(self):
         return 'Application("{}")'.format(self.path)
 
+    def start(self):
+        # TODO: implement me!
+        # - dispatch to launch procedure for controller, start_ryu, start_pox, start_...
+        pass
+
 class Package(object):
     requirements = {}
     parameters   = {}
@@ -98,10 +103,20 @@ class Package(object):
 
         return True
 
+    def start(self):
+        # TODO: dependencies between applications?
+        for a in self.applications:
+            print("Starting {}".format(a))
+            a.start()
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Expected a directory", file=sys.stderr)
-        sys.exit(-1)
+        sys.exit(1)
 
     p = Package(sys.argv[1])
-    print(p.applies())
+    if not p.applies():
+        print("There's something wrong with the package", file=sys.stderr)
+        sys.exit(2)
+
+    p.start()
