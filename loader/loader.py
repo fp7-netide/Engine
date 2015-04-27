@@ -43,8 +43,7 @@ import sys
 import os
 
 class Application(object):
-    path = ""
-
+    # TODO: parse application level metadata: controller type, entry point, ...
     def __init__(self, prefix):
         self.path = prefix
         print("Reading application {}".format(prefix))
@@ -69,7 +68,6 @@ class Package(object):
     requirements = {}
     parameters   = {}
     applications = []
-    path = ""
 
     def __init__(self, prefix):
         self.path = os.path.abspath(prefix)
@@ -77,6 +75,7 @@ class Package(object):
         if os.path.exists(p):
             with open(p) as f:
                 self.requirements = json.load(f)
+
         p = os.path.join(prefix, "_parameters.json")
         if os.path.exists(p):
             with open(p) as f:
