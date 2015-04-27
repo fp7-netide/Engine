@@ -90,7 +90,8 @@ class Package(object):
         # FIXME: there's a lot of validation missing here: checking topology and what not
 
         # Make sure all controllers listed in applications actually appear in our requirements file
-        ctrls = map(lambda x: x["name"], self.requirements.get("Software", {}).get("Controllers", {}))
+        ctrls = set(map(lambda x: x.get("name"),
+                    self.requirements.get("Software", {}).get("Controllers", {})))
         for a in self.applications:
             if a.controller not in ctrls:
                 return False
