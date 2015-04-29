@@ -7,7 +7,7 @@
 	},
 	"Software": {
 		"Controllers": [
-			{"name": "ryu", "version": "3.15"},
+			{"name": "ryu", "version": "3.20.2"},
 			{"name": "pox", "version": "carp"}
 		],
 		"Libraries": [ {"name": "python-jinja2", "version": "2.7.3"} ],
