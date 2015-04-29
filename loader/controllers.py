@@ -17,12 +17,11 @@
 import subprocess
 
 class Controller(object):
-    cmd  = None
     name = None
     params   = None
 
-    def valid(self):
-        raise NotImplementedError()
+    def version(self):
+        return None
 
     def install(self):
         raise NotImplementedError()
@@ -32,25 +31,29 @@ class Controller(object):
 
 class RyuController(Controller):
     name = "ryu"
-    cmd  = "ryu-manager"
     params = "--ofp-tcp-listen-port={}"
 
     def __init__(self, port, entrypoint):
         self.port = port
         self.entrypoint = entrypoint
 
+    def __str__(self):
+        return 'RyuController(port={}, entrypoint={})'.format(self.port, self.entrypoint)
+
     def install(self):
         # TODO?
         pass
 
-    def valid(self):
-        # TODO: check if self.cmd exists
-        return True
+    def version(self):
+        """ Returns either the version of the controller as a string or None if the controller is not installed"""
+        try:
+            v = subprocess.check_output(["ryu", "--version"], stderr=subprocess.STDOUT).decode("utf-8")
+            return v.strip().split(" ", 1)[1]
+        except subprocess.CalledProcessError:
+            return None
 
     def start(self):
-        cmdline = ["sudo", self.cmd, self.params.format(self.port)]
+        cmdline = ["sudo", "ryu-manager", self.params.format(self.port)]
         cmdline.append(self.entrypoint)
         print('Launching "{}" now'.format(cmdline))
         return subprocess.Popen(cmdline).pid
-        # return -1
-
