@@ -42,8 +42,11 @@ import json
 import sys
 import os
 
+from controllers import RyuController
+
 class Application(object):
-    # TODO: parse application level metadata: controller type, entry point, ...
+    controller = None
+
     def __init__(self, prefix):
         self.path = prefix
 
@@ -57,13 +60,19 @@ class Application(object):
             with open(p) as f:
                 self.metadata = json.load(f)
 
+        if self.metadata.get("controller") == "ryu":
+            self.controller = RyuController(self.metadata.get("port", 0),
+                    os.path.join(os.path.abspath(self.path), self.metadata.get("entrypoint", "")))
+        else:
+            raise Exception('Unknown controller "{}"'.format(self.metadata.get("controller")))
+
     def __repr__(self):
         return 'Application("{}")'.format(self.path)
 
     def start(self):
-        # TODO: implement me!
-        # - dispatch to launch procedure for controller, start_ryu, start_pox, start_...
-        pass
+        pid = self.controller.start()
+        print("Controller started with pid {}".format(pid))
+        return pid
 
 class Package(object):
     requirements = {}
