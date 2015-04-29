@@ -45,6 +45,7 @@ import os
 from controllers import RyuController
 
 class Application(object):
+    metadata   = {}
     controller = None
 
     def __init__(self, prefix):
