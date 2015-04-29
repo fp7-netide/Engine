@@ -101,16 +101,39 @@ class Package(object):
     def __str__(self):
         return 'Package("{}", Applications: "{}")'.format(self.path, self.applications)
 
+    def valid_requirements(self):
+        # Return True if all requirements are met
+        # Check Software
+        # TODO: Check controllers other than ryu
+        # TODO: Allow wildcards in versions?
+        for c in self.requirements.get("Software").get("Controllers"):
+            if c["name"] == "ryu":
+                v = RyuController(0, "").version()
+                if v != c["version"]:
+                    print("Expected Ryu version {}, got version {}".format(c["version"], v))
+                    return False
+            else:
+                print("Not checking for unknown controller {}".format(c))
+        # TODO: Check libraries
+        # TODO: Check languages
+        # TODO: Check hardware
+        # TODO: Check network
+        return True
+
     def applies(self):
         # FIXME: there's a lot of validation missing here: checking topology and what not
+        if not self.valid_requirements():
+            print("At least one requirement was not met")
+            return False
 
-        # Make sure all controllers listed in applications actually appear in our requirements file
+        # Make sure all controllers listed in applications actually appear in our requirements file, with the correct version
         ctrls = set(map(lambda x: x.get("name"),
                     self.requirements.get("Software", {}).get("Controllers", {})))
         for a in self.applications:
-            if a.metadata.get("controller") not in ctrls:
+            if a.controller.name not in ctrls:
                 return False
 
+        # TODO: warn about unused controllers?
         return True
 
     def start(self):
