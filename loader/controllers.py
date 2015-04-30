@@ -41,6 +41,8 @@ class Ryu(Base):
             return v.strip().split(" ", 1)[1]
         except subprocess.CalledProcessError:
             return None
+        except FileNotFoundError:
+            return None
 
     def start(self):
         cmdline = ["sudo", "ryu-manager", self.params.format(self.port)]
