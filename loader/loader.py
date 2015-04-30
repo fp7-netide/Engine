@@ -44,7 +44,7 @@ import json
 import sys
 import os
 
-from controllers import RyuController
+import controllers
 
 class Application(object):
     metadata   = {}
@@ -63,8 +63,8 @@ class Application(object):
             with open(p) as f:
                 self.metadata = json.load(f)
 
-        if self.metadata.get("controller") == "ryu":
-            self.controller = RyuController(self.metadata.get("port", 0),
+        if self.metadata.get("controller", "").lower() == "ryu":
+            self.controller = controllers.Ryu(self.metadata.get("port", 0),
                     os.path.join(os.path.abspath(self.path), self.metadata.get("entrypoint", "")))
         else:
             raise Exception('Unknown controller "{}"'.format(self.metadata.get("controller")))
@@ -108,9 +108,9 @@ class Package(object):
         # TODO: Allow wildcards in versions?
         for c in self.requirements.get("Software").get("Controllers"):
             if c["name"] == "ryu":
-                v = RyuController(0, "").version()
+                v = controllers.Ryu().version()
                 if v != c["version"]:
-                    print("Expected Ryu version {}, got version {}".format(c["version"], v))
+                    print("Expected Ryu version {}, got version {}".format(c["version"], v), file=sys.stderr)
                     return False
             else:
                 print("Not checking for unknown controller {}".format(c))

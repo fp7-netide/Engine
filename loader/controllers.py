@@ -16,33 +16,23 @@
 
 import subprocess
 
-class Controller(object):
-    name = None
-    params   = None
-
+class Base(object):
     def version(self):
         return None
-
-    def install(self):
-        raise NotImplementedError()
 
     def start(self):
         raise NotImplementedError()
 
-class RyuController(Controller):
+class Ryu(Base):
     name = "ryu"
     params = "--ofp-tcp-listen-port={}"
 
-    def __init__(self, port, entrypoint):
+    def __init__(self, port=0, entrypoint=""):
         self.port = port
         self.entrypoint = entrypoint
 
     def __str__(self):
         return 'RyuController(port={}, entrypoint={})'.format(self.port, self.entrypoint)
-
-    def install(self):
-        # TODO?
-        pass
 
     def version(self):
         """ Returns either the version of the controller as a string or None if the controller is not installed"""
