@@ -51,8 +51,8 @@ class Ryu(Base):
     def start(self):
         cmdline = ["sudo", "ryu-manager", self.params.format(self.port)]
         cmdline.append(self.entrypoint)
-        print('Launching "{}" now'.format(cmdline))
-        return subprocess.Popen(cmdline).pid
+        print('Launching "{}" now'.format(cmdline), file=sys.stderr)
+        return subprocess.Popen(cmdline, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
 
 class FloodLight(Base):
     name = "floodlight"
