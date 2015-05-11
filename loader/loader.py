@@ -26,7 +26,6 @@
 #     - Installed Software: Java version? Controller software? ...?
 #     - If controller is not yet running:
 #       - Start controller
-#     - Apply parameters
 #     - Start application
 
 # Package structure:
@@ -83,7 +82,6 @@ class Application(object):
 
 class Package(object):
     requirements = {}
-    parameters   = {}
     applications = []
 
     def __init__(self, prefix):
@@ -92,11 +90,6 @@ class Package(object):
         if os.path.exists(p):
             with open(p) as f:
                 self.requirements = json.load(f)
-
-        p = os.path.join(prefix, "_parameters.json")
-        if os.path.exists(p):
-            with open(p) as f:
-                self.parameters = json.load(f)
 
         p = os.path.join(prefix, "_apps")
         for d in os.listdir(p):
