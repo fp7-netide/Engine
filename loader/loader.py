@@ -66,6 +66,8 @@ class Application(object):
         if self.metadata.get("controller", "").lower() == "ryu":
             self.controller = controllers.Ryu(self.metadata.get("port", 0),
                     os.path.join(os.path.abspath(self.path), self.metadata.get("entrypoint", "")))
+        elif self.metadata.get("controller", "").lower() == "floodlight":
+            self.controller = controllers.FloodLight(os.path.join(os.path.abspath(self.path), self.metadata.get("entrypoint", "")))
         else:
             raise Exception('Unknown controller "{}"'.format(self.metadata.get("controller")))
 
@@ -111,6 +113,11 @@ class Package(object):
                 v = controllers.Ryu().version()
                 if v != c["version"]:
                     print("Expected Ryu version {}, got version {}".format(c["version"], v), file=sys.stderr)
+                    return False
+            elif c["name"] == "floodlight":
+                v = controllers.FloodLight().version()
+                if v != c["version"]:
+                    print("Expected floodlight version {}, got {}".format(c["version"], v), file=sys.stderr)
                     return False
             else:
                 print("Not checking for unknown controller {}".format(c))
