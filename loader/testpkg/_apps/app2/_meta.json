@@ -1,0 +1,4 @@
+{
+	"controller": "floodlight",
+	"entrypoint": "packetStreamerClientExample.py"
+}
