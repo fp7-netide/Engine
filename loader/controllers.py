@@ -20,6 +20,11 @@ import time
 
 import requests
 
+# TODO:
+# - log output of controllers somewhere
+# - store PIDs of all started processes
+# - map logs to PIDs (via UUID to prevent PID wraparound clashes?)
+
 class Base(object):
     def version(self):
         return None
