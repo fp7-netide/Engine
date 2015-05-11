@@ -39,7 +39,7 @@ class Ryu(Base):
         return 'RyuController(port={}, entrypoint={})'.format(self.port, self.entrypoint)
 
     def version(self):
-        """ Returns either the version of the controller as a string or None if the controller is not installed"""
+        "Returns either the version of the controller as a string or None if the controller is not installed"
         try:
             v = subprocess.check_output(["ryu", "--version"], stderr=subprocess.STDOUT).decode("utf-8")
             return v.strip().split(" ", 1)[1]
