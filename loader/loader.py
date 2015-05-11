@@ -148,9 +148,11 @@ class Package(object):
 
     def start(self):
         # TODO: dependencies between applications?
+        apps = []
         for a in self.applications:
             print("Starting {}".format(a))
-            a.start()
+            apps.append({ "pid": a.start(), "app": a.path })
+        return apps
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -162,4 +164,4 @@ if __name__ == "__main__":
         print("There's something wrong with the package", file=sys.stderr)
         sys.exit(2)
 
-    p.start()
+    print(p.start())
