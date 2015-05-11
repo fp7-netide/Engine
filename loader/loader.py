@@ -71,12 +71,14 @@ class Application(object):
         else:
             raise Exception('Unknown controller "{}"'.format(self.metadata.get("controller")))
 
+        print('Got controller {}, version "{}"'.format(self.controller, self.controller.version()))
+
     def __repr__(self):
         return 'Application("{}")'.format(self.path)
 
     def start(self):
         pid = self.controller.start()
-        print("Controller started with pid {}".format(pid))
+        print("Controller {!s} started with pid {}".format(self.controller, pid))
         return pid
 
 class Package(object):
@@ -112,7 +114,7 @@ class Package(object):
             if c["name"] == "ryu":
                 v = controllers.Ryu().version()
                 if v != c["version"]:
-                    print("Expected Ryu version {}, got version {}".format(c["version"], v), file=sys.stderr)
+                    print("Expected Ryu version {}, got {}".format(c["version"], v), file=sys.stderr)
                     return False
             elif c["name"] == "floodlight":
                 v = controllers.FloodLight().version()
@@ -138,6 +140,7 @@ class Package(object):
                     self.requirements.get("Software", {}).get("Controllers", {})))
         for a in self.applications:
             if a.controller.name not in ctrls:
+                print("Could not find controller {} in the list of required controllers".format(a.controller.name), file=sys.stderr)
                 return False
 
         # TODO: warn about unused controllers?
