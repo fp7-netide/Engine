@@ -59,6 +59,7 @@ public class MessageSerializer {
 				break;
 			case AGGREGATE:
 			case PORT:
+				retString = "[\"port_stats_request\", " + switchID + "]" + "\n"; //maybe portId is also required
 			case TABLE:
 			case VENDOR:
 			case QUEUE:

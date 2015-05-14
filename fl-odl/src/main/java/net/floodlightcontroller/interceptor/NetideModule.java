@@ -40,6 +40,7 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.linkdiscovery.ILinkDiscoveryListener;
 
 /**
  * Creates a new backend channel for floodlight that connects to an ODL instance
@@ -87,6 +88,7 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 		floodlightProvider.addOFMessageListener(OFType.PACKET_OUT, this);
 		floodlightProvider.addOFMessageListener(OFType.FLOW_MOD, this);
         floodlightProvider.addOFMessageListener(OFType.ERROR, this);
+        
 
         //START UP THE SERVER FOR THE ODL-SHIM
         ChannelFactory serverFactory = new NioServerSocketChannelFactory(
@@ -148,5 +150,7 @@ public class NetideModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 		}
 		return Command.CONTINUE;
 	}
+
+	
 		
 }
