@@ -39,6 +39,7 @@
 # _topology_requirements.treq
 # _parameters.json
 
+import argparse
 import json
 import sys
 import os
@@ -143,19 +144,46 @@ class Package(object):
         return True
 
     def start(self):
-        pids = []
-        for (_, c) in self.controllers.items():
-            pids.append(c.start())
+        pids = {}
+        for (cls, c) in self.controllers.items():
+            pids.update({cls.__name__: c.start()})
         return pids
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Expected a directory", file=sys.stderr)
-        sys.exit(1)
-
-    p = Package(sys.argv[1])
+def load_package(args):
+    p = Package(args.package)
     if not p.applies():
         print("There's something wrong with the package", file=sys.stderr)
-        sys.exit(2)
+        return 2
 
-    print(p.start())
+    # TODO: store {pids,logs} somewhere in /var/{run,log}
+    with open("/tmp/netide-controllers.json", "w") as f:
+        pids = p.start()
+        json.dump({"controllers": pids}, f, indent=2)
+        print(pids)
+    return 0
+
+def list_controllers(args):
+    try:
+        with open("/tmp/netide-controllers.json") as f:
+            print(f.read())
+            return 0
+    except Exception as err:
+        print(err, file=sys.stderr)
+        return 1
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    parser_load = subparsers.add_parser("load")
+    parser_load.add_argument("package", type=str)
+    parser_load.set_defaults(func=load_package)
+
+    parser_list = subparsers.add_parser("list")
+    parser_list.set_defaults(func=list_controllers)
+
+    args = parser.parse_args()
+    if len(vars(args)) == 0:
+        parser.print_help()
+        sys.exit(1)
+    sys.exit(args.func(args))
