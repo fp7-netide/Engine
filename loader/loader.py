@@ -153,11 +153,18 @@ def load_package(args):
         return 2
 
     # TODO: store {pids,logs} somewhere in /var/{run,log}
-    with open("/tmp/netide-controllers.json", "w") as f:
+    with open("/tmp/netide-controllers.json", "w+") as f:
         try:
             fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                data  = json.load(f)
+            except ValueError:
+                data = {}
+            f.seek(0)
+            f.truncate()
             pids = p.start()
-            json.dump({"controllers": pids}, f, indent=2)
+            data["controllers"] = pids
+            json.dump(data, f, indent=2)
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
         print(pids)
