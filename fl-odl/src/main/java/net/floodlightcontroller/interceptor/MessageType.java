@@ -26,6 +26,7 @@ public enum MessageType {
      PACKET("packet"),
      LINK("link"),
      FLOW_STATS_REPLY("flow_stats_reply"),
+     PORT_STATS_REPLY("port_stats_reply"),
      UNSUPPORTED("unsupported");
      
  private final String value;

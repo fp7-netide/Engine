@@ -99,7 +99,7 @@ public class MessagePort {
 				this.portFeatures.add(portProp);
 			}
 		}
-		if (this.action.equals("join"))
+		if (this.action.equals("join") || this.action.equals("mod"))
 			createPhysicalPort(rawMessage);
 	}
 

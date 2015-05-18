@@ -15,9 +15,11 @@ package net.floodlightcontroller.interceptor;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
@@ -53,6 +55,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	//private OFMessageFactory messageFactory;
 	private BasicFactory factory; 
 	private DummySwitch dummySwitch;
+	private ChannelFuture future;
 	protected static Logger logger;
 	private Channel shimChannel;
 	
@@ -64,6 +67,10 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	/**@param dummySwitch the dummySwitch to set */
 	public void setDummySwitch(DummySwitch dummySwitch) {
 		this.dummySwitch = dummySwitch;
+	}
+	
+	public void setControllerChannel(ChannelFuture channel) {
+		future = channel;
 	}
 	
 	/**Set the channel used for comms to Shim
@@ -124,12 +131,21 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     	logger.debug("Open: " + e.getChannel().isOpen());
     }
     
+    private void sendMessageToController(OFMessage message) {
+		//USE THE CORRECT CHANNEL TO SEND MESSAGE
+		ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
+		message.writeTo(sendData);
+		future.getChannel().write(sendData);
+	}
+    
     private void handleMessage(List<OFMessage> listMessages, Channel channel) {
 		for (OFMessage m : listMessages) {
 			logger.debug(m.toString());
 			ChannelBuffer sendData;
             switch (m.getType()) {
 	            case ECHO_REQUEST:
+	            	//logger.debug("Sending Echo Request to controller");
+	                //sendMessageToController(m);
 	            	logger.debug("Sending Echo reply...");
 	                OFEchoReply echo = (OFEchoReply) factory.getMessage(OFType.ECHO_REPLY);
 	                echo.setXid(m.getXid());
@@ -138,6 +154,8 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 	            	channel.write(sendData);
 	                break;
             	case HELLO:
+            		//logger.debug("Sending Hello to controller");
+            		//sendMessageToController(m);
             		logger.debug("Sending Hello reply...");
             		OFHello hello = (OFHello) factory.getMessage(OFType.HELLO);
             		sendData = ChannelBuffers.buffer(hello.getLength());
@@ -145,6 +163,9 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
             		channel.write(sendData);
             		break;
             	case FEATURES_REQUEST:
+            		//logger.debug("Sending Features Request to controller");
+            		//System.out.println(m.toString());
+            		//sendMessageToController(m);
             		logger.debug("Sending Features reply...");
             		OFFeaturesReply featuresReply = (OFFeaturesReply) factory.getMessage(OFType.FEATURES_REPLY);
             		featuresReply.setXid(m.getXid());
@@ -201,7 +222,10 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                 case ERROR:
                     //logError(sw, (OFError)m);
                     // fall through intentionally so error can be listened for
+                	break;
                 default:
+                	System.out.println("Other type of message received");
+                	System.out.println("message is "+ m.toString()) ;
             }
         }
 	}
