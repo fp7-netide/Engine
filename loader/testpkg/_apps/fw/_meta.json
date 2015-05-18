@@ -1,0 +1,4 @@
+{
+	"controller": "ryu",
+	"param": "ryu.app.rest_firewall"
+}
