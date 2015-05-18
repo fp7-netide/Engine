@@ -40,10 +40,11 @@
 # _parameters.json
 
 import argparse
-import json
-import sys
-import os
+import fcntl
 import inspect
+import json
+import os
+import sys
 
 import controllers
 
@@ -157,15 +158,21 @@ def load_package(args):
 
     # TODO: store {pids,logs} somewhere in /var/{run,log}
     with open("/tmp/netide-controllers.json", "w") as f:
-        pids = p.start()
-        json.dump({"controllers": pids}, f, indent=2)
+        try:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            pids = p.start()
+            json.dump({"controllers": pids}, f, indent=2)
+        finally:
+            fcntl.flock(f, fcntl.LOCK_UN)
         print(pids)
     return 0
 
 def list_controllers(args):
     try:
         with open("/tmp/netide-controllers.json") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)
             print(f.read())
+            fcntl.flock(f, fcntl.LOCK_UN)
             return 0
     except Exception as err:
         print(err, file=sys.stderr)
