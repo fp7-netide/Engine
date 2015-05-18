@@ -163,6 +163,8 @@ def load_package(args):
             pids = p.start()
             data["controllers"] = pids
             json.dump(data, f, indent=2)
+        except:
+            return 1
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
         print(pids)
