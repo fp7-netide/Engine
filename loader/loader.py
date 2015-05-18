@@ -182,18 +182,18 @@ def list_controllers(args):
         return 1
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
 
-    parser_load = subparsers.add_parser("load")
-    parser_load.add_argument("package", type=str)
+    parser_load = subparsers.add_parser("load", description="Load a NetIDE package and start its applications")
+    parser_load.add_argument("package", type=str, help="Package to load")
     parser_load.set_defaults(func=load_package)
 
-    parser_list = subparsers.add_parser("list")
+    parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
     parser_list.set_defaults(func=list_controllers)
 
     args = parser.parse_args()
-    if len(vars(args)) == 0:
+    if 'func' not in vars(args):
         parser.print_help()
         sys.exit(1)
     sys.exit(args.func(args))
