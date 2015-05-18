@@ -81,6 +81,7 @@ class Application(object):
 
 class Package(object):
     requirements = {}
+    controllers = {}
 
     def __init__(self, prefix):
         self.path = os.path.abspath(prefix)
@@ -88,8 +89,6 @@ class Package(object):
         if os.path.exists(p):
             with open(p) as f:
                 self.requirements = json.load(f)
-
-        self.controllers = {}
 
         p = os.path.join(prefix, "_apps")
         for d in os.listdir(p):
@@ -105,8 +104,7 @@ class Package(object):
     def valid_requirements(self):
         # Return True if all requirements are met
         # Check Software
-        # TODO: Check controllers other than ryu
-        # TODO: Allow wildcards in versions?
+        # TODO: Allow wildcards in versions? re matching?
         for c in self.requirements.get("Software", {}).get("Controllers", {}):
             cls = dict(map(lambda i: (i[0].lower(), i[1]), inspect.getmembers(controllers))).get(c["name"].lower())
             if cls is None:
