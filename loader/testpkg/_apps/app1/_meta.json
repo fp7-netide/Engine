@@ -1,5 +1,4 @@
 {
 	"controller": "ryu",
-	"port": 6633,
-	"entrypoint": "simple_switch.py"
+	"param": "simple_switch.py"
 }

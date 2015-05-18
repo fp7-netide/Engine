@@ -14,6 +14,7 @@
      Gregor Best, gbe@mail.upb.de
 """
 
+import os
 import subprocess
 import sys
 import time
@@ -24,27 +25,22 @@ import requests
 # - log output of controllers somewhere
 # - store PIDs of all started processes
 # - map logs to PIDs (via UUID to prevent PID wraparound clashes?)
+# - Stopping controllers
 
 class Base(object):
-    def version(self):
+    applications = []
+
+    @classmethod
+    def version(cls):
+        "Returns either the version of the controller as a string or None if the controller is not installed"
         return None
 
     def start(self):
         raise NotImplementedError()
 
 class Ryu(Base):
-    name = "ryu"
-    params = "--ofp-tcp-listen-port={}"
-
-    def __init__(self, port=0, entrypoint=""):
-        self.port = port
-        self.entrypoint = entrypoint
-
-    def __str__(self):
-        return 'RyuController(port={}, entrypoint={})'.format(self.port, self.entrypoint)
-
-    def version(self):
-        "Returns either the version of the controller as a string or None if the controller is not installed"
+    @classmethod
+    def version(cls):
         try:
             v = subprocess.check_output(["ryu", "--version"], stderr=subprocess.STDOUT).decode("utf-8")
             return v.strip().split(" ", 1)[1]
@@ -54,21 +50,40 @@ class Ryu(Base):
             return None
 
     def start(self):
-        cmdline = ["sudo", "ryu-manager", self.params.format(self.port)]
-        cmdline.append(self.entrypoint)
+        cmdline = ["sudo", "ryu-manager", "--ofp-tcp-listen-port=6633"]
+        args = []
+        ppath = []
+        for a in self.applications:
+            if not a.enabled:
+                print("Skipping disabled application {}".format(a), file=sys.stderr)
+            ppath.append(os.path.abspath(os.path.relpath(a.path)))
+            p = a.metadata.get("param", "")
+            def f(x):
+                pt = os.path.join(a.path, x)
+                if os.path.exists(pt):
+                    return pt
+                return x
+            if isinstance(p, list):
+                args.extend(map(f, p))
+            else:
+                args.append(f(p))
+        cmdline.extend(sorted(args))
         print('Launching "{}" now'.format(cmdline), file=sys.stderr)
-        return subprocess.Popen(cmdline, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
+        # return subprocess.Popen(cmdline, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
+        env = os.environ.copy()
+        ppath.extend(env.get("PYTHONPATH", "").split(":"))
+        env["PYTHONPATH"] = ":".join(ppath)
+        return subprocess.Popen(cmdline, env=env).pid
 
 class FloodLight(Base):
-    name = "floodlight"
-
     def __init__(self, entrypoint=""):
         self.entrypoint = entrypoint
 
     def __str__(self):
         return "FloodLight({})".format(self.entrypoint)
 
-    def version(self):
+    @classmethod
+    def version(cls):
         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
         return v.decode("utf-8").split("-")[0]
 
@@ -84,12 +99,30 @@ class FloodLight(Base):
             return False
 
     def start(self):
-        print("Starting {!s}".format(self), file=sys.stderr)
-        if not self.running():
-            cpid = subprocess.Popen(["cd ~/floodlight; ./floodlight.sh"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=True).pid
-            print("Waiting for floodlight to come up...", file=sys.stderr)
-            while not self.running():
-                time.sleep(2)
-                print("waiting...", file=sys.stderr)
-            print("done waiting", file=sys.stderr)
-        return subprocess.Popen([self.entrypoint], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
+        return -1
+        # print("Starting {!s}".format(self), file=sys.stderr)
+#        if not self.running():
+#            cpid = subprocess.Popen(["cd ~/floodlight; ./floodlight.sh"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=True).pid
+#            print("Waiting for floodlight to come up...", file=sys.stderr)
+#            while not self.running():
+#                time.sleep(2)
+#                print("waiting...", file=sys.stderr)
+#            print("done waiting", file=sys.stderr)
+#        return subprocess.Popen([self.entrypoint], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
+
+class ODL(Base):
+    # TODO:
+    # - determine canonical path to karaf
+    #   - require path specification
+    # - check version/state of karaf/bundles/features
+    # - install missing bundles/features?
+    #   - should be done automatically when installing/starting application bundle
+    # - start controller if not already done
+    # - install/start app bundle
+    pass
+
+class POX(Base):
+    pass
+
+class Pyretic(Base):
+    pass

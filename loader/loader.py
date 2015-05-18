@@ -42,12 +42,12 @@
 import json
 import sys
 import os
+import inspect
 
 import controllers
 
 class Application(object):
-    metadata   = {}
-    controller = None
+    metadata = {}
 
     def __init__(self, prefix):
         self.path = prefix
@@ -62,27 +62,23 @@ class Application(object):
             with open(p) as f:
                 self.metadata = json.load(f)
 
-        if self.metadata.get("controller", "").lower() == "ryu":
-            self.controller = controllers.Ryu(self.metadata.get("port", 0),
-                    os.path.join(os.path.abspath(self.path), self.metadata.get("entrypoint", "")))
-        elif self.metadata.get("controller", "").lower() == "floodlight":
-            self.controller = controllers.FloodLight(os.path.join(os.path.abspath(self.path), self.metadata.get("entrypoint", "")))
-        else:
-            raise Exception('Unknown controller "{}"'.format(self.metadata.get("controller")))
-
-        print('Got controller {}, version "{}"'.format(self.controller, self.controller.version()))
+        self.enabled = self.metadata.get("enabled", True)
 
     def __repr__(self):
         return 'Application("{}")'.format(self.path)
 
-    def start(self):
-        pid = self.controller.start()
-        print("Controller {!s} started with pid {}".format(self.controller, pid))
-        return pid
+    @classmethod
+    def get_controller(cls, path):
+        with open(os.path.join(path, "_meta.json")) as f:
+            m = json.load(f)
+            c = m.get("controller")
+            if c is None:
+                return None
+            return dict(map(lambda i: (i[0].lower(), i[1]), inspect.getmembers(controllers))).get(c.lower())
+
 
 class Package(object):
     requirements = {}
-    applications = []
 
     def __init__(self, prefix):
         self.path = os.path.abspath(prefix)
@@ -91,12 +87,18 @@ class Package(object):
             with open(p) as f:
                 self.requirements = json.load(f)
 
+        self.controllers = {}
+
         p = os.path.join(prefix, "_apps")
         for d in os.listdir(p):
-            self.applications.append(Application(os.path.join(p, d)))
+            app = os.path.join(p, d)
+            ctrl = Application.get_controller(app)
+            if ctrl not in self.controllers:
+                self.controllers[ctrl] = ctrl()
+            self.controllers[ctrl].applications.append(Application(app))
 
     def __str__(self):
-        return 'Package("{}", Applications: "{}")'.format(self.path, self.applications)
+        return 'Package("{}")'.format(self.path)
 
     def valid_requirements(self):
         # Return True if all requirements are met
@@ -105,12 +107,12 @@ class Package(object):
         # TODO: Allow wildcards in versions?
         for c in self.requirements.get("Software").get("Controllers"):
             if c["name"] == "ryu":
-                v = controllers.Ryu().version()
+                v = controllers.Ryu.version()
                 if v != c["version"]:
                     print("Expected Ryu version {}, got {}".format(c["version"], v), file=sys.stderr)
                     return False
             elif c["name"] == "floodlight":
-                v = controllers.FloodLight().version()
+                v = controllers.FloodLight.version()
                 if v != c["version"]:
                     print("Expected floodlight version {}, got {}".format(c["version"], v), file=sys.stderr)
                     return False
@@ -128,24 +130,23 @@ class Package(object):
             print("At least one requirement was not met")
             return False
 
-        # Make sure all controllers listed in applications actually appear in our requirements file, with the correct version
+        # Make sure all controllers listed in applications actually appear in our requirements file
         ctrls = set(map(lambda x: x.get("name"),
                     self.requirements.get("Software", {}).get("Controllers", {})))
-        for a in self.applications:
-            if a.controller.name not in ctrls:
-                print("Could not find controller {} in the list of required controllers".format(a.controller.name), file=sys.stderr)
+        for c in self.controllers.keys():
+            cname = c.__name__.lower()
+            if cname not in ctrls:
+                print("Could not find controller {} in the list of required controllers".format(cname), file=sys.stderr)
                 return False
 
         # TODO: warn about unused controllers?
         return True
 
     def start(self):
-        # TODO: dependencies between applications?
-        apps = []
-        for a in self.applications:
-            print("Starting {}".format(a))
-            apps.append({ "pid": a.start(), "app": a.path })
-        return apps
+        pids = []
+        for (_, c) in self.controllers.items():
+            pids.append(c.start())
+        return pids
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
