@@ -8,7 +8,6 @@
 	"Software": {
 		"Controllers": [
 			{"name": "ryu", "version": "3.20.2"},
-			{"name": "pox", "version": "carp"},
 			{"name": "floodlight", "version": "v0.90"}
 		],
 		"Libraries": [ {"name": "python-jinja2", "version": "2.7.3"} ],

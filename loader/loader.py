@@ -107,19 +107,15 @@ class Package(object):
         # Check Software
         # TODO: Check controllers other than ryu
         # TODO: Allow wildcards in versions?
-        for c in self.requirements.get("Software").get("Controllers"):
-            if c["name"] == "ryu":
-                v = controllers.Ryu.version()
-                if v != c["version"]:
-                    print("Expected Ryu version {}, got {}".format(c["version"], v), file=sys.stderr)
-                    return False
-            elif c["name"] == "floodlight":
-                v = controllers.FloodLight.version()
-                if v != c["version"]:
-                    print("Expected floodlight version {}, got {}".format(c["version"], v), file=sys.stderr)
-                    return False
-            else:
+        for c in self.requirements.get("Software", {}).get("Controllers", {}):
+            cls = dict(map(lambda i: (i[0].lower(), i[1]), inspect.getmembers(controllers))).get(c["name"].lower())
+            if cls is None:
                 print("Not checking for unknown controller {}".format(c))
+                continue
+            v = cls.version()
+            if v != c["version"]:
+                print("Expected {} version {}, got {}".format(cls.__name__, c["version"], v), file=sys.stderr)
+                return False
         # TODO: Check libraries
         # TODO: Check languages
         # TODO: Check hardware
