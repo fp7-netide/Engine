@@ -167,7 +167,7 @@ def load_package(args):
         return 2
 
     # TODO: store {pids,logs} somewhere in /var/{run,log}
-    with open(datapath, "w+") as f, FLock(f):
+    with FLock(open(datapath, "w+")) as f:
         try:
             data  = json.load(f)
         except ValueError:
@@ -185,7 +185,7 @@ def load_package(args):
 
 def list_controllers(args):
     try:
-        with open(datapath) as f, FLock(f, fcntl.LOCK_SH):
+        with FLock(open(datapath), fcntl.LOCK_SH) as f:
             print(f.read())
         return 0
     except Exception as err:
