@@ -80,7 +80,7 @@ class Application(object):
             c = m.get("controller")
             if c is None:
                 return None
-            return dict(map(lambda i: (i[0].lower(), i[1]), inspect.getmembers(controllers))).get(c.lower())
+            return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
 
 
 class Package(object):
@@ -110,7 +110,7 @@ class Package(object):
         # Check Software
         # TODO: Allow wildcards in versions? re matching?
         for c in self.requirements.get("Software", {}).get("Controllers", {}):
-            cls = dict(map(lambda i: (i[0].lower(), i[1]), inspect.getmembers(controllers))).get(c["name"].lower())
+            cls = {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c["name"].lower())
             if cls is None:
                 print("Not checking for unknown controller {}".format(c))
                 continue
@@ -131,8 +131,7 @@ class Package(object):
             return False
 
         # Make sure all controllers listed in applications actually appear in our requirements file
-        ctrls = set(map(lambda x: x.get("name"),
-                    self.requirements.get("Software", {}).get("Controllers", {})))
+        ctrls = { x.get("name") for x in self.requirements.get("Software", {}).get("Controllers", {}) }
         for c in self.controllers.keys():
             cname = c.__name__.lower()
             if cname not in ctrls:
