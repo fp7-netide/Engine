@@ -48,6 +48,8 @@ import sys
 
 import controllers
 
+datapath = "/tmp/netide-controllers.json"
+
 class Application(object):
     metadata = {}
 
@@ -144,6 +146,18 @@ class Package(object):
             pids.update({cls.__name__: c.start()})
         return pids
 
+class FLock(object):
+    "Context manager for locking file objects with flock"
+    def __init__(self, f, t=fcntl.LOCK_EX):
+        self.f = f
+        self.t = t
+
+    def __enter__(self):
+        fcntl.flock(self.f, self.t)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        fcntl.flock(self.f, fcntl.LOCK_UN)
+
 def load_package(args):
     p = Package(args.package)
     if not p.applies():
@@ -151,32 +165,27 @@ def load_package(args):
         return 2
 
     # TODO: store {pids,logs} somewhere in /var/{run,log}
-    with open("/tmp/netide-controllers.json", "w+") as f:
+    with open(datapath, "w+") as f, FLock(f):
         try:
-            fcntl.flock(f, fcntl.LOCK_EX)
-            try:
-                data  = json.load(f)
-            except ValueError:
-                data = {}
-            f.seek(0)
-            f.truncate()
+            data  = json.load(f)
+        except ValueError:
+            data = {}
+        f.seek(0)
+        f.truncate()
+        try:
             pids = p.start()
+            print(pids)
             data["controllers"] = pids
             json.dump(data, f, indent=2)
         except:
             return 1
-        finally:
-            fcntl.flock(f, fcntl.LOCK_UN)
-        print(pids)
     return 0
 
 def list_controllers(args):
     try:
-        with open("/tmp/netide-controllers.json") as f:
-            fcntl.flock(f, fcntl.LOCK_SH)
+        with open(datapath) as f, FLock(f, fcntl.LOCK_SH):
             print(f.read())
-            fcntl.flock(f, fcntl.LOCK_UN)
-            return 0
+        return 0
     except Exception as err:
         print(err, file=sys.stderr)
         return 1
