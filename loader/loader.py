@@ -70,8 +70,8 @@ class Application(object):
 
         self.enabled = self.metadata.get("enabled", True)
 
-    def __repr__(self):
-        return 'Application("{}")'.format(self.path)
+    def __str__(self):
+        return 'App({})'.format(self.path)
 
     @classmethod
     def get_controller(cls, path):
