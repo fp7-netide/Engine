@@ -36,6 +36,7 @@ class Base(object):
         return None
 
     def start(self):
+        "Starts the controller and returns a list of process IDs associated with that controller"
         raise NotImplementedError()
 
 class Ryu(Base):
@@ -73,7 +74,7 @@ class Ryu(Base):
         env = os.environ.copy()
         ppath.extend(env.get("PYTHONPATH", "").split(":"))
         env["PYTHONPATH"] = ":".join(ppath)
-        return subprocess.Popen(cmdline, env=env).pid
+        return [ subprocess.Popen(cmdline, env=env).pid ]
 
 class FloodLight(Base):
     def __init__(self, entrypoint=""):
@@ -99,7 +100,7 @@ class FloodLight(Base):
             return False
 
     def start(self):
-        return -1
+        return [ -1 ]
         # print("Starting {!s}".format(self), file=sys.stderr)
 #        if not self.running():
 #            cpid = subprocess.Popen(["cd ~/floodlight; ./floodlight.sh"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=True).pid

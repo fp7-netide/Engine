@@ -44,7 +44,9 @@ import fcntl
 import inspect
 import json
 import os
+import signal
 import sys
+import time
 
 import controllers
 
@@ -141,10 +143,10 @@ class Package(object):
         return True
 
     def start(self):
-        pids = {}
+        rv = {}
         for (cls, c) in self.controllers.items():
-            pids.update({cls.__name__: c.start()})
-        return pids
+            rv[cls.__name__] = { "pids": c.start(), "apps": [str(a) for a in c.applications] }
+        return rv
 
 class FLock(object):
     "Context manager for locking file objects with flock"
@@ -154,6 +156,7 @@ class FLock(object):
 
     def __enter__(self):
         fcntl.flock(self.f, self.t)
+        return self.f
 
     def __exit__(self, exc_type, exc_value, traceback):
         fcntl.flock(self.f, fcntl.LOCK_UN)
@@ -190,6 +193,30 @@ def list_controllers(args):
         print(err, file=sys.stderr)
         return 1
 
+def stop_controllers(args):
+    with FLock(open(datapath, "r+")) as f:
+        try:
+            d = json.load(f)
+            for c in d["controllers"]:
+                for pid in d["controllers"][c]["pids"]:
+                    try:
+                        # TODO: gentler (controller specific) way of shutting down?
+                        os.kill(pid, signal.SIGTERM)
+                        print("Sent a SIGTERM to process {} for controller {}".format(pid, c), file=sys.stderr)
+                        time.sleep(5)
+                        os.kill(pid, signal.SIGKILL)
+                        print("Sent a SIGKILL to process {} for controller {}".format(pid, c), file.sys.stderr)
+                    except ProcessLookupError:
+                        pass
+            f.seek(0)
+            f.truncate()
+            del d["controllers"]
+            json.dump(d, f)
+        except Exception as err:
+            print(err, file=sys.stderr)
+            return 1
+    return 0
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
@@ -200,6 +227,9 @@ if __name__ == "__main__":
 
     parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
     parser_list.set_defaults(func=list_controllers)
+
+    parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
+    parser_stop.set_defaults(func=stop_controllers)
 
     args = parser.parse_args()
     if 'func' not in vars(args):
