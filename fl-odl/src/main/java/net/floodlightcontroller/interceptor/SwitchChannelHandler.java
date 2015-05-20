@@ -89,8 +89,6 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
     	logger.debug("MessageReceived: " );
         ChannelBuffer buf = (ChannelBuffer) e.getMessage();
-        //String msg = new String(buf.array());
-        //logger.debug(msg);
 		try {
 			List<OFMessage> listMessages = factory.parseMessage(buf);
 			handleMessage(listMessages, e.getChannel());
@@ -130,14 +128,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) {
     	logger.debug("Open: " + e.getChannel().isOpen());
     }
-    
-    private void sendMessageToController(OFMessage message) {
-		//USE THE CORRECT CHANNEL TO SEND MESSAGE
-		ChannelBuffer sendData = ChannelBuffers.buffer(message.getLength());
-		message.writeTo(sendData);
-		future.getChannel().write(sendData);
-	}
-    
+        
     private void handleMessage(List<OFMessage> listMessages, Channel channel) {
 		for (OFMessage m : listMessages) {
 			logger.debug(m.toString());
