@@ -50,7 +50,8 @@ import time
 
 import controllers
 
-datapath = "/tmp/netide-controllers.json"
+# TODO: store {pids,logs} somewhere in /var/{run,log}
+dataroot = "/tmp/netide"
 
 class Application(object):
     metadata = {}
@@ -71,7 +72,7 @@ class Application(object):
         self.enabled = self.metadata.get("enabled", True)
 
     def __str__(self):
-        return 'App({})'.format(self.path)
+        return self.path
 
     @classmethod
     def get_controller(cls, path):
@@ -99,7 +100,7 @@ class Package(object):
             app = os.path.join(p, d)
             ctrl = Application.get_controller(app)
             if ctrl not in self.controllers:
-                self.controllers[ctrl] = ctrl()
+                self.controllers[ctrl] = ctrl(dataroot)
             self.controllers[ctrl].applications.append(Application(app))
 
     def __str__(self):
@@ -144,7 +145,7 @@ class Package(object):
     def start(self):
         rv = {}
         for (cls, c) in self.controllers.items():
-            rv[cls.__name__] = { "pids": c.start(), "apps": [str(a) for a in c.applications] }
+            rv[cls.__name__] = { "procs": c.start(), "apps": [str(a) for a in c.applications] }
         return rv
 
 class FLock(object):
@@ -166,8 +167,9 @@ def load_package(args):
         print("There's something wrong with the package", file=sys.stderr)
         return 2
 
-    # TODO: store {pids,logs} somewhere in /var/{run,log}
-    with FLock(open(datapath, "w+")) as f:
+    os.makedirs(dataroot, exist_ok=True)
+
+    with FLock(open(os.path.join(dataroot, "controllers.json"), "w+")) as f:
         try:
             data  = json.load(f)
         except ValueError:
@@ -179,13 +181,14 @@ def load_package(args):
             print(pids)
             data["controllers"] = pids
             json.dump(data, f, indent=2)
-        except:
+        except Exception as err:
+            print(err)
             return 1
     return 0
 
 def list_controllers(args):
     try:
-        with FLock(open(datapath), fcntl.LOCK_SH) as f:
+        with FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
             print(f.read())
         return 0
     except Exception as err:
@@ -193,17 +196,17 @@ def list_controllers(args):
         return 1
 
 def stop_controllers(args):
-    with FLock(open(datapath, "r+")) as f:
+    with FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
         try:
             d = json.load(f)
             for c in d["controllers"]:
-                for pid in d["controllers"][c]["pids"]:
+                for p in d["controllers"][c]["procs"]:
                     try:
                         # TODO: gentler (controller specific) way of shutting down?
-                        os.kill(pid, signal.SIGTERM)
+                        os.kill(p["pid"], signal.SIGTERM)
                         print("Sent a SIGTERM to process {} for controller {}".format(pid, c), file=sys.stderr)
                         time.sleep(5)
-                        os.kill(pid, signal.SIGKILL)
+                        os.kill(p["pid"], signal.SIGKILL)
                         print("Sent a SIGKILL to process {} for controller {}".format(pid, c), file.sys.stderr)
                     except ProcessLookupError:
                         pass

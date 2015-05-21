@@ -18,17 +18,16 @@ import os
 import subprocess
 import sys
 import time
+import uuid
 
 import requests
 
-# TODO:
-# - log output of controllers somewhere
-# - store PIDs of all started processes
-# - map logs to PIDs (via UUID to prevent PID wraparound clashes?)
-# - Stopping controllers
-
 class Base(object):
     applications = []
+
+    def __init__(self, dataroot):
+        self.dataroot = dataroot
+        os.makedirs(self.dataroot, exist_ok=True)
 
     @classmethod
     def version(cls):
@@ -36,7 +35,8 @@ class Base(object):
         return None
 
     def start(self):
-        "Starts the controller and returns a list of process IDs associated with that controller"
+        "Starts the controller and all its applications. Returns a list of dictionaries of the following form:"
+        "{ \"id\": process-uuid, \"pid\": process-id }"
         raise NotImplementedError()
 
 class Ryu(Base):
@@ -70,11 +70,15 @@ class Ryu(Base):
                 args.append(f(p))
         cmdline.extend(sorted(args))
         print('Launching "{}" now'.format(cmdline), file=sys.stderr)
-        # return subprocess.Popen(cmdline, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
         env = os.environ.copy()
         ppath.extend(env.get("PYTHONPATH", "").split(":"))
         env["PYTHONPATH"] = ":".join(ppath)
-        return [ subprocess.Popen(cmdline, env=env).pid ]
+        myid = str(uuid.uuid4())
+        logdir = os.path.join(self.dataroot, "logs", myid)
+        os.makedirs(logdir, exist_ok=True)
+        serr = open(os.path.join(logdir, "stderr"), "w")
+        sout = open(os.path.join(logdir, "stdout"), "w")
+        return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid }]
 
 class FloodLight(Base):
     def __init__(self, entrypoint=""):
@@ -100,7 +104,7 @@ class FloodLight(Base):
             return False
 
     def start(self):
-        return [ -1 ]
+        return [{ "id": str(uuid.uuid4()), "pid": -1 }]
         # print("Starting {!s}".format(self), file=sys.stderr)
 #        if not self.running():
 #            cpid = subprocess.Popen(["cd ~/floodlight; ./floodlight.sh"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=True).pid
