@@ -59,6 +59,7 @@ class Ryu(Base):
         for a in self.applications:
             if not a.enabled:
                 print("Skipping disabled application {}".format(a), file=sys.stderr)
+                continue
             ppath.append(os.path.abspath(os.path.relpath(a.path)))
             p = a.metadata.get("param", "")
             def f(x):
