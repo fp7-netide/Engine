@@ -99,7 +99,7 @@ public class MessagePort {
 				this.portFeatures.add(portProp);
 			}
 		}
-		if (this.action.equals("join") || this.action.equals("mod"))
+		if (this.action.equals("join") || this.action.equals("mod") || this.action.equals("part"))
 			createPhysicalPort(rawMessage);
 	}
 
@@ -109,6 +109,7 @@ public class MessagePort {
 		ofPort.setName(String.valueOf(this.portNo));
 		int totalFeatures = 0;
 		for (String feature: this.portFeatures) {
+			if (!feature.equals(""))
 			totalFeatures += OFPhysicalPort.OFPortFeatures.valueOf(feature).getValue();		
 		}
 		ofPort.setCurrentFeatures(totalFeatures);

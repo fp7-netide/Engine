@@ -18,8 +18,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
-import net.floodlightcontroller.packet.LLDP;
-
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
@@ -39,11 +37,9 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.openflow.protocol.OFMessage;
 import org.openflow.protocol.OFPacketIn;
 import org.openflow.protocol.OFPhysicalPort;
-import org.openflow.protocol.OFPortMod;
 import org.openflow.protocol.OFPortStatus;
 import org.openflow.protocol.OFStatisticsReply;
 import org.openflow.protocol.OFType;
-import org.openflow.protocol.OFPhysicalPort.OFPortConfig;
 import org.openflow.protocol.factory.BasicFactory;
 import org.openflow.protocol.statistics.OFStatisticsType;
 import org.slf4j.Logger;
@@ -159,8 +155,6 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 						//used to see whether a port is enabled or not is set to 1 in floodlight
 						portInfo.setConfig(~portInfo.getConfig());
 						portInfo.setState(~portInfo.getState());
-						//System.out.println("portinfo is "+ portInfo.getState() +" " + 
-						//portInfo.getConfig() + " "+ OFPortConfig.OFPPC_PORT_DOWN.getValue());
 						if (pendingSwitches.containsKey(portMessage.getSwitchId())) {
 							pendingSwitches.get(portMessage.getSwitchId()).setPort(portInfo);
 						} else {
@@ -179,11 +173,8 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 						portStatMsg.setDesc(portInfo);
 						portStatMsg.setReason((byte)OFPortStatus.OFPortReason.OFPPR_MODIFY.ordinal());
 						sendMessageToController(portMessage.getSwitchId(), portStatMsg);
-					} else {
-						System.out.println("port part");
+					} else if (portMessage.getAction().equals("part")){
 						OFPhysicalPort portInfo = portMessage.getOfPort();
-						portInfo.setConfig(~portInfo.getConfig());
-						portInfo.setState(~portInfo.getState());
 						OFPortStatus portStatMsg = (OFPortStatus)factory.getMessage(OFType.PORT_STATUS);
 						portStatMsg.setDesc(portInfo);
 						portStatMsg.setReason((byte)OFPortStatus.OFPortReason.OFPPR_DELETE.ordinal());
@@ -207,6 +198,7 @@ public class BackendChannelHandler extends SimpleChannelHandler {
 					sendMessageToController(mpp.getSwitchId(), OFPortStatisticsReply);
 					break;
 				case LINK:
+					System.out.println("Link message received " + msg.toString());
 					break;
 				default:
 					//NOT SUPPORTED YET
