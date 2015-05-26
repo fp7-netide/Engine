@@ -80,40 +80,47 @@ class Ryu(Base):
         sout = open(os.path.join(self.logdir, "stdout"), "w")
         return [{ "id": self.id, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid }]
 
+
 class FloodLight(Base):
-    def __init__(self, entrypoint=""):
-        self.entrypoint = entrypoint
-
-    def __str__(self):
-        return "FloodLight({})".format(self.entrypoint)
-
     @classmethod
     def version(cls):
         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
         return v.decode("utf-8").split("-")[0]
 
-    def running(self):
-        "Returns True if there's an instance of floodlight running on the local host"
-        try:
-            # TODO: fancier detection, this is quite broad
-            r = requests.get("http://127.0.0.1:8080/")
-            # if r.status_code != 200:
-            #    return False
-            return True
-        except requests.exceptions.ConnectionError:
-            return False
-
     def start(self):
-        return [{ "id": str(uuid.uuid4()), "pid": -1 }]
-        # print("Starting {!s}".format(self), file=sys.stderr)
-#        if not self.running():
-#            cpid = subprocess.Popen(["cd ~/floodlight; ./floodlight.sh"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL, shell=True).pid
-#            print("Waiting for floodlight to come up...", file=sys.stderr)
-#            while not self.running():
-#                time.sleep(2)
-#                print("waiting...", file=sys.stderr)
-#            print("done waiting", file=sys.stderr)
-#        return subprocess.Popen([self.entrypoint], shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).pid
+        # XXX: application modules are not copied into floodlight right now, they need to be copied manually
+        for a in self.applications:
+            if not a.enabled:
+                print("Skipping disabled application {}".format(a), file=sys.stderr)
+                continue
+
+            prefix = os.path.expanduser("~/floodlight/src/main/resources")
+
+            with open(os.path.join(prefix, "META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule"), "r+") as fh:
+                fh.write("{}\n".format(a.metadata.get("param", "")))
+
+            with open(os.path.join(prefix, "floodlightdefault.properties"), "r+") as fh:
+                lines = fh.readlines()
+                idx = 0
+                for l in lines:
+                    if not l.strip().endswith('\\'):
+                        break
+                    idx += 1
+                lines.insert(idx, "{}\n".format(a.metadata.get("param", "")))
+                fh.seek(0)
+                fh.truncate()
+                fh.writelines(lines)
+
+        serr = open(os.path.join(self.logdir, "stderr"), "w")
+        sout = open(os.path.join(self.logdir, "stdout"), "w")
+
+        # Rebuild floodlight with ant
+        cmdline = ["cd ~/floodlight; ant"]
+        subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).wait() # TODO: check exit value?
+
+        # Start floodlight
+        cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
+        return [{ "id": self.id, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
 
 class ODL(Base):
     # TODO:
