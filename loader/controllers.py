@@ -27,7 +27,9 @@ class Base(object):
 
     def __init__(self, dataroot):
         self.dataroot = dataroot
-        os.makedirs(self.dataroot, exist_ok=True)
+        self.id = str(uuid.uuid4())
+        self.logdir = os.path.join(self.dataroot, "logs", self.id)
+        os.makedirs(self.logdir, exist_ok=True)
 
     @classmethod
     def version(cls):
@@ -73,12 +75,9 @@ class Ryu(Base):
         env = os.environ.copy()
         ppath.extend(env.get("PYTHONPATH", "").split(":"))
         env["PYTHONPATH"] = ":".join(ppath)
-        myid = str(uuid.uuid4())
-        logdir = os.path.join(self.dataroot, "logs", myid)
-        os.makedirs(logdir, exist_ok=True)
-        serr = open(os.path.join(logdir, "stderr"), "w")
-        sout = open(os.path.join(logdir, "stdout"), "w")
-        return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid }]
+        serr = open(os.path.join(self.logdir, "stderr"), "w")
+        sout = open(os.path.join(self.logdir, "stdout"), "w")
+        return [{ "id": self.id, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid }]
 
 class FloodLight(Base):
     def __init__(self, entrypoint=""):
