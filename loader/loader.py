@@ -202,11 +202,12 @@ def stop_controllers(args):
             for c in d["controllers"]:
                 for p in d["controllers"][c]["procs"]:
                     try:
+                        pid = p["pid"]
                         # TODO: gentler (controller specific) way of shutting down?
-                        os.kill(p["pid"], signal.SIGTERM)
+                        os.kill(pid, signal.SIGTERM)
                         print("Sent a SIGTERM to process {} for controller {}".format(pid, c), file=sys.stderr)
                         time.sleep(5)
-                        os.kill(p["pid"], signal.SIGKILL)
+                        os.kill(pid, signal.SIGKILL)
                         print("Sent a SIGKILL to process {} for controller {}".format(pid, c), file.sys.stderr)
                     except ProcessLookupError:
                         pass
