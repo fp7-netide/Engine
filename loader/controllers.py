@@ -85,7 +85,7 @@ class FloodLight(Base):
     @classmethod
     def version(cls):
         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
-        return v.decode("utf-8").split("-")[0]
+        return v.decode("utf-8").split("-")[0].strip()
 
     def start(self):
         # XXX: application modules are not copied into floodlight right now, they need to be copied manually
