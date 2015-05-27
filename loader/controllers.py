@@ -53,7 +53,7 @@ class Ryu(Base):
             return None
 
     def start(self):
-        cmdline = ["sudo", "ryu-manager", "--ofp-tcp-listen-port=6633"]
+        cmdline = ["sudo", "ryu-manager", "--ofp-tcp-listen-port=6633", os.path.expanduser("~/Engine/ryu-shim/ryu_shim.py")]
         args = []
         ppath = []
         for a in self.applications:
