@@ -143,10 +143,8 @@ class Package(object):
         return True
 
     def start(self):
-        rv = {}
-        for (cls, c) in self.controllers.items():
-            rv[cls.__name__] = { "procs": c.start(), "apps": [str(a) for a in c.applications] }
-        return rv
+        return {cls.__name__: { "procs": c.start(), "apps": [str(a) for a in c.applications] }
+                for cls, c in self.controllers.items()}
 
 class FLock(object):
     "Context manager for locking file objects with flock"
@@ -200,9 +198,8 @@ def stop_controllers(args):
         try:
             d = json.load(f)
             for c in d["controllers"]:
-                for p in d["controllers"][c]["procs"]:
+                for pid in [p["pid"] for p in d["controllers"][c]["procs"]]:
                     try:
-                        pid = p["pid"]
                         # TODO: gentler (controller specific) way of shutting down?
                         os.kill(pid, signal.SIGTERM)
                         print("Sent a SIGTERM to process {} for controller {}".format(pid, c), file=sys.stderr)
