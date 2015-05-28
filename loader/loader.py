@@ -49,6 +49,7 @@ import sys
 import time
 
 import controllers
+import environment
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
@@ -121,7 +122,11 @@ class Package(object):
                 return False
         # TODO: Check libraries
         # TODO: Check languages
-        # TODO: Check hardware
+        try:
+            environment.check_hardware(self.requirements.get("Hardware", {}))
+        except environment.HardwareCheckException as e:
+            print("Hardware configuration mismatch: {}".format(str(e)), file=sys.stderr)
+            return False
         # TODO: Check network
         return True
 
