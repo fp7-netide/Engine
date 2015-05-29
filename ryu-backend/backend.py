@@ -44,8 +44,8 @@ class Backend(ryu.base.app_manager.RyuApp):
         def run(self):
             asyncore.loop()
 
-    def __init__(self):
-        super(Backend, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(Backend, self).__init__(*args, **kwargs)
         self.name = 'ryu_backend'
         self.runtime = None
         print "Ryu Backend init"
