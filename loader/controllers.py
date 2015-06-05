@@ -27,9 +27,11 @@ class Base(object):
 
     def __init__(self, dataroot):
         self.dataroot = dataroot
-        self.id = str(uuid.uuid4())
-        self.logdir = os.path.join(self.dataroot, "logs", self.id)
-        os.makedirs(self.logdir, exist_ok=True)
+
+    def makelogdir(self, myid):
+        d = os.path.join(self.dataroot, "logs", myid)
+        os.makedirs(d, exist_ok=True)
+        return d
 
     @classmethod
     def version(cls):
@@ -53,15 +55,23 @@ class Ryu(Base):
             return None
 
     def start(self):
-        cmdline = ["sudo", "ryu-manager", "--ofp-tcp-listen-port=6633", os.path.expanduser("~/Engine/ryu-shim/ryu_shim.py")]
-        args = []
-        ppath = []
+        base = [ "ryu-manager" ]
+        rv = []
+        appidx = 0
+
         for a in self.applications:
             if not a.enabled:
                 print("Skipping disabled application {}".format(a), file=sys.stderr)
                 continue
-            ppath.append(os.path.abspath(os.path.relpath(a.path)))
+
+            appidx += 1
+
+            cmdline = base.copy()
+            cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
+            cmdline.append(os.path.expanduser("~/Engine/ryu-backend/backend.py"))
+
             p = a.metadata.get("param", "")
+            args = []
             def f(x):
                 pt = os.path.join(a.path, x)
                 if os.path.exists(pt):
@@ -71,14 +81,26 @@ class Ryu(Base):
                 args.extend(map(f, p))
             else:
                 args.append(f(p))
-        cmdline.extend(sorted(args))
-        print('Launching "{}" now'.format(cmdline), file=sys.stderr)
-        env = os.environ.copy()
-        ppath.extend(env.get("PYTHONPATH", "").split(":"))
-        env["PYTHONPATH"] = ":".join(ppath)
-        serr = open(os.path.join(self.logdir, "stderr"), "w")
-        sout = open(os.path.join(self.logdir, "stdout"), "w")
-        return [{ "id": self.id, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid }]
+
+            cmdline.extend(args)
+
+            print('Launching "{}" now'.format(cmdline), file=sys.stderr)
+            env = os.environ.copy()
+            env["PYTHONPATH"] = (env["PYTHONPATH"] + ":" if "PYTHONPATH" in env else "") + \
+                    os.path.abspath(os.path.relpath(a.path))
+
+            myid = str(uuid.uuid4())
+            logdir = self.makelogdir(myid)
+
+            serr = open(os.path.join(logdir, "stderr"), "w")
+            sout = open(os.path.join(logdir, "stdout"), "w")
+
+            rv.append({
+                "id": myid,
+                "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid,
+                "app": str(a)})
+
+        return rv
 
 
 class FloodLight(Base):
@@ -111,8 +133,11 @@ class FloodLight(Base):
                 fh.truncate()
                 fh.writelines(lines)
 
-        serr = open(os.path.join(self.logdir, "stderr"), "w")
-        sout = open(os.path.join(self.logdir, "stdout"), "w")
+        myid = str(uuid.uuid4())
+        logdir = self.makelogdir(myid)
+
+        serr = open(os.path.join(logdir, "stderr"), "w")
+        sout = open(os.path.join(logdir, "stdout"), "w")
 
         # Rebuild floodlight with ant
         cmdline = ["cd ~/floodlight; ant"]
@@ -120,7 +145,7 @@ class FloodLight(Base):
 
         # Start floodlight
         cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
-        return [{ "id": self.id, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
+        return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
 
 class ODL(Base):
     # TODO:
