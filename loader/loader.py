@@ -16,17 +16,14 @@
 """
 
 # TODO:
-# - Read metadata
-# - Collect Apps
+# - [X] Read metadata
+# - [X] Collect Apps
 #   - Check parameter constraints (should always apply, but better be safe)
-# - Determine App->Controller mappings
-# - For each app:
-#   - Check system requirements
-#     - Hardware: CPU/RAM
-#     - Installed Software: Java version? Controller software? ...?
-#     - If controller is not yet running:
-#       - Start controller
-#     - Start application
+# - [X] Determine App->Controller mappings
+# - [ ] For each app:
+#   - [ ] Check system requirements
+#     - [X] Hardware: CPU/RAM
+#     - [ ] Installed Software: Java version? Controller software? ...?
 
 # Package structure:
 # _apps         # Network applications
