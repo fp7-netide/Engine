@@ -118,6 +118,9 @@ def stop_controllers(args):
             f.truncate()
             del d["controllers"]
             json.dump(d, f)
+        except KeyError:
+            print("Nothing to stop", file=sys.stderr)
+            return 0
         except Exception as err:
             print(err, file=sys.stderr)
             return 1
