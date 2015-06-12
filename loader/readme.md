@@ -15,7 +15,7 @@ Ubuntu as the OS.
 Loading, Listing, Stopping packages
 -----------------------------------
 
-To load a package and start all applications inside it, simply `cd` to the loader directory and run `./loader.py load
+To load a package and start all applications inside it, simply `cd` to the loader directory and run `./netideloader.py load
 <path-to-pkg>`. The loader will place runtime data such as process IDs and logs in `/tmp/netide`. The logs are in
-`/tmp/netide/<UUID>/{stderr,stdout}`. The UUIDs for all running controllers can be displayed with `./loader.py list`. To stop all
-running controllers, use `./loader.py stop`.
+`/tmp/netide/<UUID>/{stderr,stdout}`. The UUIDs for all running controllers can be displayed with `./netideloader.py list`. To stop
+all running controllers, use `./netideloader.py stop`.
