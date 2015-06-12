@@ -5,9 +5,9 @@ import shutil
 import tempfile
 import zipfile
 
-import controllers
-import environment
-from application import Application
+from loader import controllers
+from loader import environment
+from loader.application import Application
 
 class Package(object):
     requirements = {}

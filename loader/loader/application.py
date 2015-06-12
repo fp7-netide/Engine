@@ -2,7 +2,7 @@ import os
 import json
 import inspect
 
-import controllers
+from loader import controllers
 
 class Application(object):
     metadata = {}

@@ -1,4 +1,4 @@
-import environment as env
+import loader.environment as env
 
 def test_check_hardware_arch():
     env.check_hardware({ "cpuarch": "x86_64" })

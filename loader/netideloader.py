@@ -45,9 +45,9 @@ import signal
 import sys
 import time
 
-import controllers
-import environment
-from package import Package
+from loader import controllers
+from loader import environment
+from loader.package import Package
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
