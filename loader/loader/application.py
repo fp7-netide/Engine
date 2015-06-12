@@ -33,6 +33,3 @@ class Application(object):
             if c is None:
                 return None
             return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
-
-
-

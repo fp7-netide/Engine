@@ -41,7 +41,6 @@ class Package(object):
         if self.cleanup:
             shutil.rmtree(self.path, ignore_errors=True)
 
-
     def __str__(self):
         return 'Package("{}")'.format(self.path)
 
@@ -88,4 +87,3 @@ class Package(object):
     def start(self):
         return {cls.__name__: { "procs": c.start(), "apps": [str(a) for a in c.applications] }
                 for cls, c in self.controllers.items()}
-
