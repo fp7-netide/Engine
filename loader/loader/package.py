@@ -6,7 +6,6 @@ import tempfile
 import zipfile
 
 from loader import controllers
-from loader import environment
 from loader.application import Application
 
 class Package(object):
@@ -44,44 +43,14 @@ class Package(object):
     def __str__(self):
         return 'Package("{}")'.format(self.path)
 
-    def valid_requirements(self):
-        # Return True if all requirements are met
-        # Check Software
-        # TODO: Allow wildcards in versions? re matching?
-        for c in self.requirements.get("Software", {}).get("Controllers", {}):
-            cls = {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c["name"].lower())
-            if cls is None:
-                print("Not checking for unknown controller {}".format(c))
-                continue
-            v = cls.version()
-            if v != c["version"]:
-                print("Expected {} version {}, got {}".format(cls.__name__, c["version"], v), file=sys.stderr)
-                return False
-        # TODO: Check libraries
-        # TODO: Check languages
-        try:
-            environment.check_hardware(self.requirements.get("Hardware", {}))
-        except environment.HardwareCheckException as e:
-            print("Hardware configuration mismatch: {}".format(str(e)), file=sys.stderr)
-            return False
-        # TODO: Check network
-        return True
-
     def applies(self):
         # FIXME: there's a lot of validation missing here: checking topology and what not
-        if not self.valid_requirements():
-            print("At least one requirement was not met")
-            return False
+        for c in self.controllers:
+            for a in c.applications:
+                if not a.valid_requirements():
+                    print("Requirements for application {} not met".format(a), file=sys.stderr)
+                    return False
 
-        # Make sure all controllers listed in applications actually appear in our requirements file
-        ctrls = { x.get("name") for x in self.requirements.get("Software", {}).get("Controllers", {}) }
-        for c in self.controllers.keys():
-            cname = c.__name__.lower()
-            if cname not in ctrls:
-                print("Could not find controller {} in the list of required controllers".format(cname), file=sys.stderr)
-                return False
-
-        # TODO: warn about unused controllers?
         return True
 
     def start(self):

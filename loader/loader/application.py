@@ -3,6 +3,7 @@ import json
 import inspect
 
 from loader import controllers
+from loader import environment
 
 class Application(object):
     metadata = {}
@@ -24,6 +25,33 @@ class Application(object):
 
     def __str__(self):
         return self.path
+
+
+    def valid_requirements(self):
+        reqs = self.metadata.get("requirements", {})
+
+        # Return True if all requirements are met
+        # Check Software
+        # TODO: Allow wildcards in versions? re matching?
+        for c in reqs.get("Software", {}).get("Controllers", {}):
+            cls = {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c["name"].lower())
+            if cls is None:
+                print("Not checking for unknown controller {}".format(c))
+                continue
+            v = cls.version()
+            if v != c["version"]:
+                print("Expected {} version {}, got {}".format(cls.__name__, c["version"], v), file=sys.stderr)
+                return False
+        # TODO: Check libraries
+        # TODO: Check languages
+        try:
+            environment.check_hardware(reqs.get("Hardware", {}))
+        except environment.HardwareCheckException as e:
+            print("Hardware configuration mismatch: {}".format(str(e)), file=sys.stderr)
+            return False
+        # TODO: Check network
+        return True
+
 
     @classmethod
     def get_controller(cls, path):

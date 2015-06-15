@@ -1,4 +1,18 @@
 {
 	"controller": "ryu",
-	"param": "simple_switch.py"
+	"param": "simple_switch.py",
+   "requirements": {
+      "Hardware": {
+         "cpufreq":  800,
+         "memory":   2048
+      },
+      "Software": {
+         "Controllers": [
+            {"name": "ryu", "version": "3.20.2"}
+         ]
+      },
+      "Network": {
+         "ofversion": "1.3"
+      }
+   }
 }
