@@ -57,18 +57,21 @@ class LanguageCheckException(Exception): pass
 def check_languages(langs):
     for l in langs:
         if l.get("name") not in ["python", "java"]:
-            raise HardwareCheckException("I don't know how to check for '{}'".format(l.get("name")))
+            raise LanguageCheckException("I don't know how to check for '{}'".format(l.get("name")))
+        want = str(l.get("version", ""))
         if l["name"] == "python":
-            if l.get("version", "").startswith("3"):
+            if want.startswith("3"):
                 pbin = "python3"
-                pass
-            elif l.get("version", "").startswith("2"):
+            elif want.startswith("2"):
                 pbin = "python2"
             else:
-                raise HardwareCheckException("Don't know how to check for python version '{}'".format(l.get("version")))
+                raise LanguageCheckException("Don't know how to check for python version '{}'".format(want))
             v = subprocess.check_output([pbin, "--version"]).decode('utf-8').split(" ", 1)[1].strip()
-            if not v.startswith(l.get("version", "")):
-                raise HardwareCheckException("Can't find a matching {} version. Wanted {}, got {}.".format(pbin, l["version"], v))
-            print(v)
-        print(l)
-    raise HardwareCheckException("Why am I here?")
+        elif l["name"] == "java":
+            v = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT).decode("utf-8").splitlines()[0]
+            v = v.split(" ")[-1].strip('"')
+        else:
+            assert False, "How did I get here?"
+
+        if not v.startswith(want):
+            raise LanguageCheckException("Can't find a matching {} version. Wanted {}, got {}.".format(l["name"], want, v))

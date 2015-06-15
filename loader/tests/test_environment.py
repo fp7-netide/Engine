@@ -52,4 +52,32 @@ def test_check_hardware_unknown_key():
 def test_check_languages():
     env.check_languages([{"name": "python", "version": "3.4"}])
     env.check_languages([{"name": "java", "version": "1.7"}])
-    env.check_languages([{"name": "sbcl", "version": "7.2"}])
+    try:
+        env.check_languages([{"name": "sbcl", "version": "7.2"}])
+    except env.LanguageCheckException:
+        pass
+    else:
+        assert False, "Test should have failed but didn't"
+
+def test_check_languages_wrong_python():
+    try:
+        env.check_languages([{"name": "python", "version": 3000}])
+    except env.LanguageCheckException:
+        pass
+    else:
+        assert False, "Test should have failed but didn't"
+
+    try:
+        env.check_languages([{"name": "python", "version": 1}])
+    except env.LanguageCheckException:
+        pass
+    else:
+        assert False, "Test should have failed but didn't"
+
+def test_check_languages_wrong_java():
+    try:
+        env.check_languages([{"name": "java", "version": float("inf")}])
+    except env.LanguageCheckException:
+        pass
+    else:
+        assert False, "Test should have failed but didn't"
