@@ -45,6 +45,12 @@ class Application(object):
         # TODO: Check libraries
         # TODO: Check languages
         try:
+            environment.check_languages(reqs.get("Software", {}).get("Languages", {}))
+        except environment.LanguageCheckException as e:
+            print("Missing depency: {}".format(str(e)), file=sys.stderr)
+            return False
+
+        try:
             environment.check_hardware(reqs.get("Hardware", {}))
         except environment.HardwareCheckException as e:
             print("Hardware configuration mismatch: {}".format(str(e)), file=sys.stderr)
