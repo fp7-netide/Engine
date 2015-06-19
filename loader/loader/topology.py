@@ -45,10 +45,8 @@ def get(addr="83.212.118.90:8080"):
     for edge in odlEdges:
         print(edge, file=sys.stderr)
         n1 = getSWID(edge['edge']['tailNodeConnector']['node']['id'])
-        #print edge['edge']['tailNodeConnector']['node']['id']
         n2 = getSWID(edge['edge']['headNodeConnector']['node']['id'])
         n1_inf = edge['edge']['tailNodeConnector']['id']
-        #print n1_inf
         n2_inf = edge['edge']['headNodeConnector']['id']
         if not n1 in switches:
             switches[n1] = {}
