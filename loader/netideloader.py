@@ -129,7 +129,7 @@ def stop_controllers(args):
 
 
 def get_topology(args):
-    print(topology.get())
+    print(topology.get("127.0.0.1:8080"))
     return 0
 
 if __name__ == "__main__":
