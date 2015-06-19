@@ -30,11 +30,7 @@ containerName = 'default'
 # /controller/nb/v2/switchmanager/default/nodes
 
 def getSWID(id):
-    ids = id.split(":")
-    swid = ""
-    for id in ids:
-        swid += id
-    return swid
+    return id.replace(":", "")
 
 def get(addr="83.212.118.90:8080"):
     r = requests.get(ODL_URL_EDGES.format(addr=addr, container=containerName),
