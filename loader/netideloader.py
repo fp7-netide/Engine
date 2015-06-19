@@ -47,6 +47,7 @@ import time
 
 from loader import controllers
 from loader import environment
+from loader import topology
 from loader.package import Package
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
@@ -126,6 +127,11 @@ def stop_controllers(args):
             return 1
     return 0
 
+
+def get_topology(args):
+    print(topology.get())
+    return 0
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
@@ -139,6 +145,9 @@ if __name__ == "__main__":
 
     parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
     parser_stop.set_defaults(func=stop_controllers)
+
+    parser_topology = subparsers.add_parser("gettopology", description="Show network topology")
+    parser_topology.set_defaults(func=get_topology)
 
     args = parser.parse_args()
     if 'func' not in vars(args):
