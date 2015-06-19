@@ -20,7 +20,9 @@ import sys
 import requests
 from requests.auth import HTTPBasicAuth
 
-ODL_URL = 'http://{addr}/controller/nb/v2/topology/{container}'
+ODL_URL_EDGES = 'http://{addr}/controller/nb/v2/topology/{container}'
+ODL_URL_NODES = 'http://{addr}/controller/nb/v2/switchmanager/{container}/nodes'
+
 containerName = 'default'
 
 # Alternative URL schema:
@@ -35,7 +37,7 @@ def getSWID(id):
     return swid
 
 def get(addr="83.212.118.90:8080"):
-    r = requests.get(ODL_URL.format(addr=addr, container=containerName),
+    r = requests.get(ODL_URL_EDGES.format(addr=addr, container=containerName),
             auth=HTTPBasicAuth('admin', 'admin'))
     topo_info = r.json()
     print(json.dumps(topo_info, indent=2), file=sys.stderr)
