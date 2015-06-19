@@ -51,7 +51,6 @@ def get(addr="127.0.0.1:8080"):
     cores = {}
     hosts = {}
     for edge in odlEdges:
-        print(edge, file=sys.stderr)
         n1 = getSWID(edge['edge']['tailNodeConnector']['node']['id'])
         n2 = getSWID(edge['edge']['headNodeConnector']['node']['id'])
         n1_inf = edge['edge']['tailNodeConnector']['id']
@@ -62,9 +61,8 @@ def get(addr="127.0.0.1:8080"):
             if not n2 in switches:
                 switches[n2] = {}
             switches[n2][n1] = n2_inf
-        edges.append((n1,n2,1))
+        edges.append({"from": n1, "to": n2})
 
+    # `switches` is a dictionary with switches as keys and a dict that maps neighbors to ports as values
+    # `edges` is a list of dicts with `to` and `from` keys that indicate edge endings
     return json.dumps({ "switches": switches, "edges": edges }, indent=2)
-
-if __name__ == "__main__":
-    print(get())
