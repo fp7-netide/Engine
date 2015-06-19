@@ -14,6 +14,14 @@
      Gregor Best,       <gbe@mail.upb.de>
 """
 
+# TODO:
+# [ ] Add support for other controllers:
+#     [ ] Ryu
+#     [ ] POX
+#     [ ] Floodlight
+# [ ] Determine correct controller to use
+#     - Try them one after another until one works? Could be unreliable.
+
 import json
 import sys
 
