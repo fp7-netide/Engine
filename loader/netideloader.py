@@ -47,6 +47,7 @@ import time
 
 from loader import controllers
 from loader import environment
+from loader import installer
 from loader import topology
 from loader.package import Package
 
@@ -135,6 +136,27 @@ def get_topology(args):
         print(topology.get(args.host))
     return 0
 
+def install(args):
+    # TODO:
+    # [ ] Prepare server controller
+    #     [ ] Run self with arguments ['install-servercontroller', args.package]
+    # [ ] Prepare application controllers
+    try:
+        installer.do_server_install(args.package)
+    except installer.InstallException as e:
+        print("Failed to install server: {}".format(str(e)))
+        return 1
+
+    try:
+        installer.do_client_installs(args.package)
+    except installer.InstallException as e:
+        print("Failed to install clients: {}".format(str(e)))
+        return 1
+
+    # TODO:
+    # [ ] Once done, return success/failure and pack up logs as a compressed tarball
+    return 0
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
@@ -152,6 +174,10 @@ if __name__ == "__main__":
     parser_topology = subparsers.add_parser("gettopology", description="Show network topology")
     parser_topology.add_argument("host", type=str, help="Server controller host:port to query, defaults to 127.0.0.1:8080", nargs="?")
     parser_topology.set_defaults(func=get_topology)
+
+    parser_install = subparsers.add_parser("install", description="Prepare machines listed in `package' by installing required software")
+    parser_install.add_argument("package", type=str, help="Package to prepare for")
+    parser_install.set_defaults(func=install)
 
     args = parser.parse_args()
     if 'func' not in vars(args):
