@@ -38,7 +38,6 @@ def check_hardware(h):
 
     # Check Memory
     if "memory" in h:
-        print("checking for memory")
         with open("/proc/meminfo") as f:
             for l in f.readlines():
                 if not l.startswith("MemTotal:"):
