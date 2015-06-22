@@ -44,6 +44,6 @@ def do_client_installs(pkg):
 
         # [ ] Run self with arguments ['install-appcontroller', args.package]
 
-        # [ ] Remove package from app controller
+        # [X] Remove package from app controller
         p = sp.check_output(["ssh", c, "rm -r {}".format(dir)], stderr=sp.STDOUT).strip().decode('utf-8')
         print(p)
