@@ -44,7 +44,7 @@ def getSWID(id):
 def get(addr="127.0.0.1:8080"):
     r = requests.get(ODL_URL_EDGES.format(addr=addr, container=containerName), auth=HTTPBasicAuth('admin', 'admin'))
     topo_info = r.json()
-    print(json.dumps(topo_info, indent=2), file=sys.stderr)
+    # print(json.dumps(topo_info, indent=2), file=sys.stderr)
     odlEdges = topo_info['edgeProperties']
     switches = {}
     edges = []
