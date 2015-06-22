@@ -129,7 +129,10 @@ def stop_controllers(args):
 
 
 def get_topology(args):
-    print(topology.get("127.0.0.1:8080"))
+    if args.host is None:
+        print(topology.get("127.0.0.1:8080"))
+    else:
+        print(topology.get(args.host))
     return 0
 
 if __name__ == "__main__":
@@ -147,6 +150,7 @@ if __name__ == "__main__":
     parser_stop.set_defaults(func=stop_controllers)
 
     parser_topology = subparsers.add_parser("gettopology", description="Show network topology")
+    parser_topology.add_argument("host", type=str, help="Server controller host:port to query, defaults to 127.0.0.1:8080", nargs="?")
     parser_topology.set_defaults(func=get_topology)
 
     args = parser.parse_args()
