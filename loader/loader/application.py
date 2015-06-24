@@ -1,6 +1,7 @@
-import os
-import json
 import inspect
+import json
+import os
+import logging
 
 from loader import controllers
 from loader import environment
@@ -36,24 +37,24 @@ class Application(object):
         for c in reqs.get("Software", {}).get("Controllers", {}):
             cls = {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c["name"].lower())
             if cls is None:
-                print("Not checking for unknown controller {}".format(c))
+                logging.warning("Not checking for unknown controller {}".format(c))
                 continue
             v = cls.version()
             if v != c["version"]:
-                print("Expected {} version {}, got {}".format(cls.__name__, c["version"], v), file=sys.stderr)
+                logging.error("Expected {} version {}, got {}".format(cls.__name__, c["version"], v))
                 return False
         # TODO: Check libraries
         # TODO: Check languages
         try:
             environment.check_languages(reqs.get("Software", {}).get("Languages", {}))
         except environment.LanguageCheckException as e:
-            print("Missing depency: {}".format(str(e)), file=sys.stderr)
+            logging.error("Missing depency: {}".format(str(e)))
             return False
 
         try:
             environment.check_hardware(reqs.get("Hardware", {}))
         except environment.HardwareCheckException as e:
-            print("Hardware configuration mismatch: {}".format(str(e)), file=sys.stderr)
+            logging.error("Hardware configuration mismatch: {}".format(str(e)))
             return False
         # TODO: Check network
         return True

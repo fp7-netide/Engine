@@ -40,6 +40,7 @@ import argparse
 import fcntl
 import inspect
 import json
+import logging
 import os
 import signal
 import sys
@@ -53,6 +54,8 @@ from loader.package import Package
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
+
+logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=logging.DEBUG)
 
 class FLock(object):
     "Context manager for locking file objects with flock"
@@ -70,7 +73,7 @@ class FLock(object):
 def load_package(args):
     p = Package(args.package, dataroot)
     if not p.applies():
-        print("There's something wrong with the package", file=sys.stderr)
+        logging.error("There's something wrong with the package")
         return 2
 
     os.makedirs(dataroot, exist_ok=True)
@@ -84,11 +87,11 @@ def load_package(args):
         f.truncate()
         try:
             pids = p.start()
-            print(pids)
+            logging.info(pids)
             data["controllers"] = pids
             json.dump(data, f, indent=2)
         except Exception as err:
-            print(err)
+            logging.error(err)
             return 1
     return 0
 
@@ -98,7 +101,7 @@ def list_controllers(args):
             print(f.read())
         return 0
     except Exception as err:
-        print(err, file=sys.stderr)
+        logging.error(err)
         return 1
 
 def stop_controllers(args):
@@ -110,10 +113,10 @@ def stop_controllers(args):
                     try:
                         # TODO: gentler (controller specific) way of shutting down?
                         os.kill(pid, signal.SIGTERM)
-                        print("Sent a SIGTERM to process {} for controller {}".format(pid, c), file=sys.stderr)
+                        logging.info("Sent a SIGTERM to process {} for controller {}".format(pid, c))
                         time.sleep(5)
                         os.kill(pid, signal.SIGKILL)
-                        print("Sent a SIGKILL to process {} for controller {}".format(pid, c), file.sys.stderr)
+                        logging.info("Sent a SIGKILL to process {} for controller {}".format(pid, c))
                     except ProcessLookupError:
                         pass
             f.seek(0)
@@ -121,10 +124,10 @@ def stop_controllers(args):
             del d["controllers"]
             json.dump(d, f)
         except KeyError:
-            print("Nothing to stop", file=sys.stderr)
+            logging.info("Nothing to stop")
             return 0
         except Exception as err:
-            print(err, file=sys.stderr)
+            logging.error(err)
             return 1
     return 0
 

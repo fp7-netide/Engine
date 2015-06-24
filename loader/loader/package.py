@@ -1,5 +1,6 @@
 import inspect
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -18,7 +19,6 @@ class Package(object):
         if prefix.endswith(".zip") and os.path.isfile(self.path):
             p = tempfile.mkdtemp(prefix="netide-tmp")
             with zipfile.ZipFile(self.path) as zf:
-                zf.printdir()
                 zf.extractall(path=p)
             self.path = p
             self.cleanup = True
@@ -48,7 +48,7 @@ class Package(object):
         for c in self.controllers:
             for a in c.applications:
                 if not a.valid_requirements():
-                    print("Requirements for application {} not met".format(a), file=sys.stderr)
+                    logging.error("Requirements for application {} not met".format(a))
                     return False
 
         return True
