@@ -140,24 +140,36 @@ def get_topology(args):
     return 0
 
 def install(args):
-    # TODO:
-    # [ ] Prepare server controller
-    #     [ ] Run self with arguments ['install-servercontroller', args.package]
-    # [ ] Prepare application controllers
-    try:
-        installer.do_server_install(args.package)
-    except installer.InstallException as e:
-        print("Failed to install server: {}".format(str(e)))
+    logging.debug(args)
+    if args.mode not in ["all", "appcontroller"]:
+        logging.error("Unknown installation mode '{}'. Expected one of ['all', 'appcontroller']".format(args.mode))
         return 1
+    if args.mode == "all":
+        # TODO:
+        # [ ] Prepare server controller
+        #     [ ] Run self with arguments ['install-servercontroller', args.package]
+        # [ ] Prepare application controllers
+        try:
+            installer.do_server_install(args.package)
+        except installer.InstallException as e:
+            logging.error("Failed to install server: {}".format(str(e)))
+            return 1
 
-    try:
-        installer.do_client_installs(args.package)
-    except installer.InstallException as e:
-        print("Failed to install clients: {}".format(str(e)))
-        return 1
+        try:
+            installer.do_client_installs(args.package)
+        except installer.InstallException as e:
+            logging.error("Failed to install clients: {}".format(str(e)))
+            return 1
 
-    # TODO:
-    # [ ] Once done, return success/failure and pack up logs as a compressed tarball
+        # TODO:
+        # [ ] Once done, return success/failure and pack up logs as a compressed tarball
+    else:
+        try:
+            installer.do_appcontroller_install(args.package)
+        except installer.InstallException as e:
+            logging.error("Failed to install requirements for package {}".format(args.package))
+            return 1
+
     return 0
 
 if __name__ == "__main__":
@@ -179,8 +191,9 @@ if __name__ == "__main__":
     parser_topology.set_defaults(func=get_topology)
 
     parser_install = subparsers.add_parser("install", description="Prepare machines listed in `package' by installing required software")
+    parser_install.add_argument("--mode", type=str, help="Installation mode, one of {appcontroller,all}, defaults to all")
     parser_install.add_argument("package", type=str, help="Package to prepare for")
-    parser_install.set_defaults(func=install)
+    parser_install.set_defaults(func=install, mode="all")
 
     args = parser.parse_args()
     if 'func' not in vars(args):
