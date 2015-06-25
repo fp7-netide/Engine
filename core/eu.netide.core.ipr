@@ -23,10 +23,12 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="core.api" />
+        <module name="core.caos" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="core.api" target="1.5" />
+      <module name="core.caos" target="1.5" />
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
@@ -35,13 +37,18 @@
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.api" />
+    <file type="Osmorc" url="file://$PROJECT_DIR$/core.caos" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/core.api/pom.xml" />
+        <option value="$PROJECT_DIR$/core.caos/pom.xml" />
       </list>
     </option>
+  </component>
+  <component name="ProjectDictionaryState">
+    <dictionary name="timvi" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -56,6 +63,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/core.api/core.api.iml" filepath="$PROJECT_DIR$/core.api/core.api.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core.caos/core.caos.iml" filepath="$PROJECT_DIR$/core.caos/core.caos.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" default="true" assert-keyword="true" jdk-15="true">
@@ -63,6 +71,7 @@
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="" />
+    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
   </component>
   <component name="libraryTable">
     <library name="Maven: org.osgi:org.osgi.core:5.0.0">
