@@ -7,7 +7,7 @@
          "memory":   2048
       },
       "Software": {
-         "Controllers": [ {"name": "ryu", "version": "3.20.2"} ],
+         "Controllers": [ {"name": "ryu", "version": "3.2[0-9]"} ],
          "Languages": [ {"name": "python", "version": "3.4"} ]
       },
       "Network": {
