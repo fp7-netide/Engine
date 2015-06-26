@@ -32,17 +32,13 @@ class Application(object):
         reqs = self.metadata.get("requirements", {})
 
         # Return True if all requirements are met
-        # Check Software
-        # TODO: Allow wildcards in versions? re matching?
-        for c in reqs.get("Software", {}).get("Controllers", {}):
-            cls = {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c["name"].lower())
-            if cls is None:
-                logging.warning("Not checking for unknown controller {}".format(c))
-                continue
-            v = cls.version()
-            if v != c["version"]:
-                logging.error("Expected {} version {}, got {}".format(cls.__name__, c["version"], v))
-                return False
+        # Check Controllers
+        try:
+            environment.check_controllers(reqs.get("Software", {}).get("Controllers", {}))
+        except environment.ControllerCheckException as e:
+            logging.error("Controller check failed: {}".format(str(e)))
+            return False
+
         # TODO: Check libraries
         # TODO: Check languages
         try:

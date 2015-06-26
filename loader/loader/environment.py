@@ -1,6 +1,12 @@
 # Stuff that checks the environemnt: hardware, languages (?), network (?)
 
-import os, subprocess
+import inspect
+import logging
+import os
+import re
+import subprocess
+
+from loader import controllers
 
 class HardwareCheckException(Exception): pass
 
@@ -74,3 +80,24 @@ def check_languages(langs):
 
         if not v.startswith(want):
             raise LanguageCheckException("Can't find a matching {} version. Wanted {}, got {}.".format(l["name"], want, v))
+
+class ControllerCheckException(Exception): pass
+
+def check_controllers(ctrls):
+    for c in ctrls:
+        cls = {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c["name"].lower())
+        if cls is None:
+            logging.warning("Not checking for unknown controller {}".format(c))
+            continue
+        v = cls.version()
+        logging.debug("{} {}".format(v, type(v)))
+        if any([x in c["version"] for x in "[]*+"]) and v is not None:
+            logging.debug("Using regex matching for version string '{}'".format(c["version"]))
+            found = re.search(c["version"], v)
+        else:
+            logging.debug("Using simple eq check for version string '{}'".format(c["version"]))
+            found = v == c["version"]
+
+        if not found:
+            raise ControllerCheckException("Expected {} version {}, got {}".format(cls.__name__,
+                c["version"], v))
