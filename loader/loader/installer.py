@@ -114,9 +114,17 @@ def do_appcontroller_install(pkg):
             logging.info("Nothing to be done for '{}'".format(pkg))
             return
 
-        logging.info("Cloning NetIDE IDE repository")
-        s = sp.check_output(["cd; git clone -b development https://github.com/fp7-netide/IDE.git"],
-                shell=True, stderr=sp.STDOUT).decode('utf-8').strip()
+        if os.path.exists(os.path.expanduser("~/IDE")):
+            # Already checked out, update
+            os.chdir(os.path.expanduser("~/IDE"))
+            logging.info("Updating NetIDE repository")
+            # s = sp.check_output(["git", "pull", "origin", "development"], stderr=sp.STDOUT).decode("utf-8").strip()
+            s = "skipped"
+        else:
+            logging.info("Cloning NetIDE IDE repository")
+            os.chdir(os.path.expanduser("~"))
+            s = sp.check_output(["git", "clone", "-b", "development", "https://github.com/fp7-netide/IDE.git"],
+                    stderr=sp.STDOUT).decode('utf-8').strip()
         logging.debug(s)
 
         # The goodies are now in ~/IDE/plugins/eu.netide.configuration.launcher/scripts/
