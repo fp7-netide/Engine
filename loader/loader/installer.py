@@ -66,14 +66,16 @@ def do_client_installs(pkg):
 
     # TODO: replace with list of client controllers from topology file
     # clients = ['10.0.2.15']
-    clients = [ ('vagrant@127.0.0.1', '2200') ]
+    clients = [ ('vagrant@127.0.0.1', '2200', os.path.expanduser("~/testvm-bare/.vagrant/machines/default/virtualbox/private_key")) ]
     for c in clients:
-        if len(c) == 2:
-            ssh = ["ssh", "-p", str(c[1])]
-            scp = ["scp", "-P", str(c[1])]
-        else:
-            ssh = ["ssh"]
-            scp = ["scp"]
+        ssh = ["ssh"]
+        scp = ["scp"]
+        if len(c) >= 2:
+            ssh.extend(["-p", str(c[1])])
+            scp.extend(["-P", str(c[1])])
+        if len(c) == 3:
+            ssh.extend(["-i", str(c[2])])
+            scp.extend(["-i", str(c[2])])
         ssh.append(c[0])
         scp.append("-r")
 
