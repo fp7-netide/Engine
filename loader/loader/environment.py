@@ -45,7 +45,8 @@ def check_hardware(h):
                     continue
                 have = float(l.split(":", 2)[1])
                 if have < h["cpufreq"]:
-                    raise HardwareCheckException("Invalid CPU frequency: want {} MHz, have {} MHz".format(h["cpufreq"], have))
+                    msg = "Invalid CPU frequency: want {} MHz, have {} MHz".format(h["cpufreq"], have)
+                    raise HardwareCheckException(msg)
 
     if "cpucores" in h:
         numcpu = 0
@@ -55,7 +56,8 @@ def check_hardware(h):
                     continue
                 numcpu += 1
         if numcpu < h["cpucores"]:
-            raise HardwareCheckException("Invalid number of CPUs: want {}, have {}".format(h["cpucores"], numcpu))
+            msg = "Invalid number of CPUs: want {}, have {}".format(h["cpucores"], numcpu)
+            raise HardwareCheckException(msg)
 
     # Check Memory
     if "memory" in h:
@@ -66,7 +68,8 @@ def check_hardware(h):
                 l = l.split(":", 1)[1].strip()
                 have = int(l.split(" ", 1)[0]) // 1024
                 if have < h["memory"]:
-                    raise HardwareCheckException("Invalid amount of memory: want {} MB, have {} MB".format(h["memory"], have))
+                    msg = "Invalid amount of memory: want {} MB, have {} MB".format(h["memory"], have)
+                    raise HardwareCheckException(msg)
 
     for k, v in h.items():
         if k not in ["cpuarch", "cpufreq", "cpucores", "memory"]:
@@ -88,13 +91,14 @@ def check_languages(langs):
                 raise LanguageCheckException("Don't know how to check for python version '{}'".format(want))
             v = subprocess.check_output([pbin, "--version"]).decode('utf-8').split(" ", 1)[1].strip()
         elif l["name"] == "java":
-            v = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT).decode("utf-8").splitlines()[0]
-            v = v.split(" ")[-1].strip('"')
+            v = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT).decode("utf-8")
+            v = v.splitlines()[0].split(" ")[-1].strip('"')
         else:
             assert False, "How did I get here?"
 
         if not v.startswith(want):
-            raise LanguageCheckException("Can't find a matching {} version. Wanted {}, got {}.".format(l["name"], want, v))
+            msg = "Can't find a matching {} version. Wanted {}, got {}.".format(l["name"], want, v)
+            raise LanguageCheckException(msg)
 
 class ControllerCheckException(Exception): pass
 

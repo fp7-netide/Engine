@@ -187,11 +187,14 @@ if __name__ == "__main__":
     parser_stop.set_defaults(func=stop_controllers)
 
     parser_topology = subparsers.add_parser("gettopology", description="Show network topology")
-    parser_topology.add_argument("host", type=str, help="Server controller host:port to query, defaults to 127.0.0.1:8080", nargs="?")
+    parser_topology.add_argument("host",
+            type=str, help="Server controller host:port to query, defaults to 127.0.0.1:8080", nargs="?")
     parser_topology.set_defaults(func=get_topology)
 
-    parser_install = subparsers.add_parser("install", description="Prepare machines listed in `package' by installing required software")
-    parser_install.add_argument("--mode", type=str, help="Installation mode, one of {appcontroller,all}, defaults to all")
+    parser_install = subparsers.add_parser("install",
+            description="Prepare machines listed in `package' by installing required software")
+    parser_install.add_argument("--mode",
+            type=str, help="Installation mode, one of {appcontroller,all}, defaults to all")
     parser_install.add_argument("package", type=str, help="Package to prepare for")
     parser_install.set_defaults(func=install, mode="all")
 
