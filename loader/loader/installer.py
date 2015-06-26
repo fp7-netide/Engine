@@ -109,8 +109,8 @@ def do_appcontroller_install(pkg):
     #       [ ] Controllers: Use IDE install scripts
     logging.debug("Running app controller install for package {}".format(pkg))
     with TempDir("netide-appcontroller-install") as t:
-        p = Package(pkg, t)
-        if p.applies():
+        pkg = Package(pkg, t)
+        if pkg.applies():
             logging.info("Nothing to be done for '{}'".format(pkg))
             return
 
@@ -118,5 +118,26 @@ def do_appcontroller_install(pkg):
         s = sp.check_output(["cd; git clone -b development https://github.com/fp7-netide/IDE.git"],
                 shell=True, stderr=sp.STDOUT).decode('utf-8').strip()
         logging.debug(s)
-        # The goodies are now in ~/IDE/eu.netide.configuration.launcher/scripts/
-        #
+
+        # The goodies are now in ~/IDE/plugins/eu.netide.configuration.launcher/scripts/
+        for c in pkg.controllers:
+            cname = c.__name__.lower()
+            logging.debug("Handling controller {}".format(cname))
+            if cname not in ["ryu", "floodlight", "odl", "pox", "pyretic"]:
+                raise InstallException("Don't know how to install controller {}".format(cname))
+
+            script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
+            script.append("install_{}.sh".format(cname))
+            script = os.path.expanduser(os.path.join(*script))
+
+            logging.debug("Using script {} ({})".format(script, os.path.exists(script)))
+            p = sp.Popen(["bash", script], stdout=sp.PIPE, stderr=sp.STDOUT)
+            for l in p.stdout:
+                l = l.decode('utf-8').rstrip()
+                logging.debug(l)
+            r = p.wait()
+            logging.debug("Finished installing controller {} with exit code {}".format(cname, r))
+
+        # TODO:
+        # [ ] Install languages
+        # [ ] Install libraries
