@@ -40,7 +40,6 @@ class Application(object):
             return False
 
         # TODO: Check libraries
-        # TODO: Check languages
         try:
             environment.check_languages(reqs.get("Software", {}).get("Languages", {}))
         except environment.LanguageCheckException as e:

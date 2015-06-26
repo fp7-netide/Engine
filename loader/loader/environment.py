@@ -11,8 +11,8 @@ from loader import controllers
 class HardwareCheckException(Exception): pass
 
 def check_hardware(h):
-    "Raises an exception if any of the requirements in req are not met by the current hardware. Raises a KeyError if an unknown \
-            check is requested"
+    "Raises an exception if any of the requirements in req are not met by the current hardware. \
+     Raises a KeyError if an unknown check is requested"
 
     # Check CPU
     if "cpuarch" in h:
