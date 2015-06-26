@@ -48,6 +48,13 @@ def do_server_install(pkg):
         if p.applies():
             logging.info("Nothing to be done for '{}'".format(pkg))
 
+def spawn_logged(cmd):
+    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.STDOUT)
+    for l in p.stdout:
+        l = l.decode('utf-8').rstrip()
+        logging.debug(l)
+    return p.wait()
+
 def do_client_installs(pkg):
     "Dispatches installation requests to client machines after gaining a foothold on them. Requires passwordless SSH access to \
     client machines and passwordless root via sudo on client machines"
@@ -78,24 +85,23 @@ def do_client_installs(pkg):
 
         p = sp.check_output(ssh + ["mkdir -p {}".format(where)], stderr=sp.STDOUT)
         logging.info("Copying NetIDE loader to target '{}'".format(c))
-        p = sp.check_output(scp + [".", "{}:{}".format(c[0], where)], stderr=sp.STDOUT)
+        spawn_logged(scp + [".", "{}:{}".format(c[0], where)])
 
         # [X] Run setup.sh on app controller to bootstrap ourselves
         logging.info("Bootstrapping NetIDE loader on '{}'".format(c))
-        p = sp.check_output(ssh + ["cd {}; ./setup.sh".format(where)], stderr=sp.STDOUT)
+        spawn_logged(ssh + ["cd {}; ./setup.sh".format(where)])
 
         # [X] Copy package to app controller
         dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.STDOUT).strip().decode('utf-8')
         logging.info("Copying NetIDE package '{}' to target '{}'".format(pkg, c))
-        p = sp.check_output(scp + [pkg, "{host}:{dir}".format(host=c[0], dir=dir)], stderr=sp.STDOUT)
+        spawn_logged(scp + [pkg, "{host}:{dir}".format(host=c[0], dir=dir)])
 
         # [X] Run self with arguments ['install-appcontroller', args.package]
         # [ ] Log output somewhere
         # [ ] Catch failure
         logging.info("Running NetIDE client controller installation on {}".format(c))
-        p = sp.check_output(ssh + ["cd {where}; ./netideloader.py install --mode appcontroller {pkg}".format(where=where, pkg=os.path.join(dir, pkg))],
-                stderr=sp.STDOUT)
-        logging.debug(p.decode('utf-8'))
+        spawn_logged(ssh + ["cd {where}; ./netideloader.py install --mode appcontroller {pkg}".format(where=where,
+            pkg=os.path.join(dir, pkg))])
 
         # [X] Remove package from app controller
         p = sp.check_output(ssh + ["rm -r {}".format(dir)], stderr=sp.STDOUT).strip().decode('utf-8')
@@ -139,11 +145,7 @@ def do_appcontroller_install(pkg):
             script = os.path.expanduser(os.path.join(*script))
 
             logging.debug("Using script {} ({})".format(script, os.path.exists(script)))
-            p = sp.Popen(["bash", script], stdout=sp.PIPE, stderr=sp.STDOUT)
-            for l in p.stdout:
-                l = l.decode('utf-8').rstrip()
-                logging.debug(l)
-            r = p.wait()
+            r = spawn_logged(["bash", script])
             logging.debug("Finished installing controller {} with exit code {}".format(cname, r))
 
         # TODO:
