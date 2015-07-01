@@ -32,7 +32,7 @@ from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
-from ryu.netide.comm import *
+from netide.comm import *
 
 
 def inport_value_hack(outport):
