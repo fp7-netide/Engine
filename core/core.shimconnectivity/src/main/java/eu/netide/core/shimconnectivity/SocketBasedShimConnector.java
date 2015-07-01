@@ -35,13 +35,15 @@ public class SocketBasedShimConnector implements IShimConnector {
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            ChannelFuture f = b.bind(port).sync();
+            _channel = b.bind(port).sync();
+            System.out.println("Waiting for shim connection on port " + port);
         } catch (InterruptedException ex) {
             System.out.println("Exception in 'Open': " + ex.getMessage());
         }
     }
 
     public void Close() {
+        System.out.println("Closing shim connection server...");
         _channel.channel().closeFuture().syncUninterruptibly();
         _workerGroup.shutdownGracefully();
         _bossGroup.shutdownGracefully();
