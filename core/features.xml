@@ -7,11 +7,6 @@
         <bundle>mvn:eu.netide.core/core.caos/1.0.0-alpha001</bundle>
     </feature>
     <feature name="netide-core-shimconnectivity">
-        <bundle>mvn:io.netty/netty-common/4.0.29.Final</bundle>
-        <bundle>mvn:io.netty/netty-handler/4.0.29.Final</bundle>
-        <bundle>mvn:io.netty/netty-buffer/4.0.29.Final</bundle>
-        <bundle>mvn:io.netty/netty-codec/4.0.29.Final</bundle>
-        <bundle>mvn:io.netty/netty-transport/4.0.29.Final</bundle>
         <bundle>mvn:eu.netide.core/core.shimconnectivity/1.0.0-alpha001</bundle>
     </feature>
     <feature name="netide-core">
