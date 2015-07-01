@@ -24,11 +24,14 @@
         <processorPath useClasspath="true" />
         <module name="core.api" />
         <module name="core.caos" />
+        <module name="core.shimconnectivity" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="core" target="1.5" />
       <module name="core.api" target="1.5" />
       <module name="core.caos" target="1.5" />
+      <module name="core.shimconnectivity" target="1.5" />
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
@@ -38,12 +41,15 @@
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.api" />
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.caos" />
+    <file type="Osmorc" url="file://$PROJECT_DIR$/core.shimconnectivity" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/core.api/pom.xml" />
         <option value="$PROJECT_DIR$/core.caos/pom.xml" />
+        <option value="$PROJECT_DIR$/core.shimconnectivity/pom.xml" />
+        <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
   </component>
@@ -62,11 +68,13 @@
   </component>
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/core.iml" filepath="$PROJECT_DIR$/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.api/core.api.iml" filepath="$PROJECT_DIR$/core.api/core.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.caos/core.caos.iml" filepath="$PROJECT_DIR$/core.caos/core.caos.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core.shimconnectivity/core.shimconnectivity.iml" filepath="$PROJECT_DIR$/core.shimconnectivity/core.shimconnectivity.iml" />
     </modules>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" default="true" assert-keyword="true" jdk-15="true">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_1_6" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="VcsDirectoryMappings">
@@ -74,6 +82,61 @@
     <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
   </component>
   <component name="libraryTable">
+    <library name="Maven: io.netty:netty-buffer:4.0.29.Final">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-buffer/4.0.29.Final/netty-buffer-4.0.29.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-buffer/4.0.29.Final/netty-buffer-4.0.29.Final-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-buffer/4.0.29.Final/netty-buffer-4.0.29.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.netty:netty-codec:4.0.29.Final">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-codec/4.0.29.Final/netty-codec-4.0.29.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-codec/4.0.29.Final/netty-codec-4.0.29.Final-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-codec/4.0.29.Final/netty-codec-4.0.29.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.netty:netty-common:4.0.29.Final">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-common/4.0.29.Final/netty-common-4.0.29.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-common/4.0.29.Final/netty-common-4.0.29.Final-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-common/4.0.29.Final/netty-common-4.0.29.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.netty:netty-handler:4.0.29.Final">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-handler/4.0.29.Final/netty-handler-4.0.29.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-handler/4.0.29.Final/netty-handler-4.0.29.Final-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-handler/4.0.29.Final/netty-handler-4.0.29.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: io.netty:netty-transport:4.0.29.Final">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-transport/4.0.29.Final/netty-transport-4.0.29.Final.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-transport/4.0.29.Final/netty-transport-4.0.29.Final-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/io/netty/netty-transport/4.0.29.Final/netty-transport-4.0.29.Final-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: org.osgi:org.osgi.core:5.0.0">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/org/osgi/org.osgi.core/5.0.0/org.osgi.core-5.0.0.jar!/" />
