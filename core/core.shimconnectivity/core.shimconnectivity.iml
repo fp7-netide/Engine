@@ -23,11 +23,11 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
+    <orderEntry type="module" module-name="core.api" />
     <orderEntry type="library" name="Maven: io.netty:netty-transport:4.0.29.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-buffer:4.0.29.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-handler:4.0.29.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-codec:4.0.29.Final" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty-common:4.0.29.Final" level="project" />
-    <orderEntry type="module" module-name="core.api" />
   </component>
 </module>
