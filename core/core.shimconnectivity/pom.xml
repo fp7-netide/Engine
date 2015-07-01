@@ -70,7 +70,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Bundle-Activator>eu.netide.core.Activator</Bundle-Activator>
+                        <Bundle-Activator>eu.netide.core.shimconnectivity.Activator</Bundle-Activator>
                         <Export-Package>
                             eu.netide.core*;version=${project.version}
                         </Export-Package>
