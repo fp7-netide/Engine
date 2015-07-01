@@ -23,6 +23,7 @@ public class SocketBasedShimConnector implements IShimConnector {
         _bossGroup = new NioEventLoopGroup();
         _workerGroup = new NioEventLoopGroup();
         try {
+            System.out.println("Starting shim socket server...");
             ServerBootstrap b = new ServerBootstrap();
             b.group(_bossGroup, _workerGroup)
                     .channel(NioServerSocketChannel.class)
@@ -36,16 +37,21 @@ public class SocketBasedShimConnector implements IShimConnector {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             _channel = b.bind(port).sync();
-            System.out.println("Waiting for shim connection on port " + port);
+            System.out.println("SUCCESS! Waiting for shim connection on port " + port);
         } catch (InterruptedException ex) {
             System.out.println("Exception in 'Open': " + ex.getMessage());
         }
     }
 
     public void Close() {
-        System.out.println("Closing shim connection server...");
-        _channel.channel().closeFuture().syncUninterruptibly();
-        _workerGroup.shutdownGracefully();
-        _bossGroup.shutdownGracefully();
+        try {
+            System.out.println("Closing shim connection server...");
+            _channel.channel().closeFuture().sync();
+            _workerGroup.shutdownGracefully();
+            _bossGroup.shutdownGracefully();
+        } catch (InterruptedException ex) {
+            System.out.println("Error on close: " + ex.getMessage());
+            ex.printStackTrace();
+        }
     }
 }

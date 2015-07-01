@@ -24,6 +24,7 @@ public class Activator implements BundleActivator {
     private IShimConnector _shimConnector;
 
     public void start(BundleContext context) {
+        System.out.println("Core Shimconnector starting...");
         _shimConnector = new SocketBasedShimConnector();
         _shimConnector.Open(41414);
 
