@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0" name="NetIDE Core Features">
+    <feature name="netide-core-api">
+        <bundle>mvn:eu.netide.core/core.api/1.0.0-alpha001</bundle>
+    </feature>
+    <feature name="netide-core-caos">
+        <bundle>mvn:eu.netide.core/core.caos/1.0.0-alpha001</bundle>
+    </feature>
+    <feature name="netide-core-shimconnectivity">
+        <bundle>mvn:io.netty/netty-common/4.0.29.Final</bundle>
+        <bundle>mvn:io.netty/netty-handler/4.0.29.Final</bundle>
+        <bundle>mvn:io.netty/netty-buffer/4.0.29.Final</bundle>
+        <bundle>mvn:io.netty/netty-codec/4.0.29.Final</bundle>
+        <bundle>mvn:io.netty/netty-transport/4.0.29.Final</bundle>
+        <bundle>mvn:eu.netide.core/core.shimconnectivity/1.0.0-alpha001</bundle>
+    </feature>
+    <feature name="netide-core">
+        <feature>netide-core-api</feature>
+        <feature>netide-core-caos</feature>
+        <feature>netide-core-shimconnectivity</feature>
+    </feature>
+</features>
