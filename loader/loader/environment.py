@@ -75,7 +75,7 @@ def check_hardware(h):
         if k not in ["cpuarch", "cpufreq", "cpucores", "memory"]:
             raise KeyError(k)
 
-class LanguageCheckException(Exception):
+class DependencyException(Exception):
     msg = "Can't find a matching {what} version. Wanted {want}, got {have}."
     msgdunno = "Don't know how to check for {what} version {want}."
 
@@ -90,6 +90,7 @@ class LanguageCheckException(Exception):
             return self.msgdunno.format(what=self.what, want=self.want)
         return self.msg.format(what=self.what, want=self.want, have=self.have)
 
+class LanguageCheckException(DependencyException): pass
 
 def check_languages(langs):
     for l in langs:
@@ -119,7 +120,7 @@ def check_languages(langs):
         if not v.startswith(want):
             raise LanguageCheckException(l["name"], want, v)
 
-class ControllerCheckException(Exception): pass
+class ControllerCheckException(DependencyException): pass
 
 def check_controllers(ctrls):
     for c in ctrls:
@@ -137,5 +138,4 @@ def check_controllers(ctrls):
             found = v == c["version"]
 
         if not found:
-            raise ControllerCheckException("Expected {} version {}, got {}".format(cls.__name__,
-                c["version"], v))
+            raise ControllerCheckException(c["name"].lower(), c["version"], v)
