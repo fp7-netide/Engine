@@ -31,6 +31,8 @@ public class Activator implements BundleActivator {
         _shimManagerTracker = new ServiceTracker(context, IShimManager.class, null);
         _shimManagerTracker.open();
         System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
+
+        ((IShimManager) context.getService(context.getServiceReference(IShimManager.class))).GetConnector().SendMessage("Test from CaOs");
     }
 
     public void stop(BundleContext context) {

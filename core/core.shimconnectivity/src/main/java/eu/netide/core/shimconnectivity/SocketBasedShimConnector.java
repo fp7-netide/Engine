@@ -46,12 +46,13 @@ public class SocketBasedShimConnector implements IShimConnector, Runnable {
     }
 
     public void SendMessage(String message) {
-        try {
-            _client.getOutputStream().write(message.getBytes());
-            _client.getOutputStream().flush();
-        } catch (IOException e) {
-            e.printStackTrace(); // TODO handle exception
-        }
+        //try {
+        System.out.println("Message for sending to shim: " + message);
+        //_client.getOutputStream().write(message.getBytes());
+        //_client.getOutputStream().flush();
+        //} catch (IOException e) {
+        //    e.printStackTrace(); // TODO handle exception
+        //}
     }
 
     public void run() {

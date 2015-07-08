@@ -18,11 +18,13 @@ package eu.netide.core.shimconnectivity;
 import eu.netide.core.api.IShimManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import java.util.Hashtable;
 
 public class Activator implements BundleActivator {
 
+    private ServiceRegistration<IShimManager> _shimManagerServiceRegistration;
     private ShimManager _shimManager;
 
     public void start(BundleContext context) {
@@ -31,12 +33,14 @@ public class Activator implements BundleActivator {
         _shimManager.SetConnector(new SocketBasedShimConnector(_shimManager));
         _shimManager.GetConnector().Open(41414);
 
-        context.registerService(IShimManager.class, _shimManager, new Hashtable<String, Object>());
+        _shimManagerServiceRegistration = context.registerService(IShimManager.class, _shimManager, new Hashtable<String, Object>());
+        ((IShimManager) context.getService(_shimManagerServiceRegistration.getReference())).GetConnector().SendMessage("Test");
 
         System.out.println("Core Shim Management started!");
     }
 
     public void stop(BundleContext context) {
+        _shimManagerServiceRegistration.unregister();
         _shimManager.GetConnector().Close();
         _shimManager = null;
         System.out.println("Core Shim Management stopped!");
