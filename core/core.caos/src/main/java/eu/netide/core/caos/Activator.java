@@ -28,7 +28,7 @@ public class Activator implements BundleActivator {
         System.out.println("NetIDE CaOs module started!");
 
         // Test
-        _shimManagerTracker = new ServiceTracker(context, IShimManager.class.getName(), null);
+        _shimManagerTracker = new ServiceTracker(context, IShimManager.class, null);
         _shimManagerTracker.open();
         System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
     }
