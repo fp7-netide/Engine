@@ -28,11 +28,11 @@ public class Activator implements BundleActivator {
         System.out.println("NetIDE CaOs module started!");
 
         // Test
-        _shimManagerTracker = new ServiceTracker(context, IShimManager.class, null);
+        _shimManagerTracker = new ServiceTracker(context, IShimManager.class.getName(), null);
         _shimManagerTracker.open();
         System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
 
-        ((IShimManager) context.getService(context.getServiceReference(IShimManager.class))).GetConnector().SendMessage("Test from CaOs");
+        ((IShimManager) context.getService(context.getServiceReference(IShimManager.class.getName()))).GetConnector().SendMessage("Test from CaOs");
     }
 
     public void stop(BundleContext context) {

@@ -20,11 +20,9 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import java.util.Hashtable;
-
 public class Activator implements BundleActivator {
 
-    private ServiceRegistration<IShimManager> _shimManagerServiceRegistration;
+    private ServiceRegistration<?> _shimManagerServiceRegistration;
     private ShimManager _shimManager;
 
     public void start(BundleContext context) {
@@ -33,10 +31,7 @@ public class Activator implements BundleActivator {
         _shimManager.SetConnector(new SocketBasedShimConnector(_shimManager));
         _shimManager.GetConnector().Open(41414);
 
-        Hashtable<String, Object> props = new Hashtable<String, Object>();
-        props.put("service.exported.interfaces", "*");
-
-        _shimManagerServiceRegistration = context.registerService(IShimManager.class, _shimManager, props);
+        _shimManagerServiceRegistration = context.registerService(IShimManager.class.getName(), _shimManager, null);
         ((IShimManager) context.getService(_shimManagerServiceRegistration.getReference())).GetConnector().SendMessage("Test");
 
         System.out.println("Core Shim Management started!");
