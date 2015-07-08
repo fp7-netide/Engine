@@ -18,34 +18,55 @@ package eu.netide.core.caos;
 import eu.netide.core.api.IShimManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
 
     private ServiceTracker _shimManagerTracker;
 
-    public void start(BundleContext context) {
+    public void start(final BundleContext context) {
         System.out.println("NetIDE CaOs module started!");
 
+        new Thread(new Runnable() {
+            public void run() {
+                while (true) {
+                    final ServiceReference<IShimManager> ref = context.getServiceReference(IShimManager.class);
+                    if (ref == null) {
+                        System.err.println("ServiceReference ti IShimManager is null...");
+                        try {
+                            Thread.sleep(3000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        IShimManager manager = (IShimManager) context.getService(ref);
+                        manager.GetConnector().SendMessage("Test from CaOs!");
+                        break;
+                    }
+
+                }
+            }
+
+        }).start();
+
         // Test
-        try {
-            _shimManagerTracker = new ServiceTracker(context, context.createFilter("(" + Constants.OBJECTCLASS + "=" + IShimManager.class.getName() + ")"), null);
-        } catch (InvalidSyntaxException e) {
-            e.printStackTrace();
-        }
-        _shimManagerTracker.open();
-        System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
+//        try {
+//            _shimManagerTracker = new ServiceTracker(context, context.createFilter("(" + Constants.OBJECTCLASS + "=" + IShimManager.class.getName() + ")"), null);
+//        } catch (InvalidSyntaxException e) {
+//            e.printStackTrace();
+//        }
+//        _shimManagerTracker.open();
+//        System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
     }
 
     public void stop(BundleContext context) {
-        System.out.println("Watching " + _shimManagerTracker.size() + " services at stop.");
-        if (_shimManagerTracker.size() > 0) {
-            System.out.println("Sending message to ShimConnector from CaOs bundle...");
-            ((IShimManager) _shimManagerTracker.getService()).GetConnector().SendMessage("Test from CaOs");
-        }
-        _shimManagerTracker.close();
+//        System.out.println("Watching " + _shimManagerTracker.size() + " services at stop.");
+//        if (_shimManagerTracker.size() > 0) {
+//            System.out.println("Sending message to ShimConnector from CaOs bundle...");
+//            ((IShimManager) _shimManagerTracker.getService()).GetConnector().SendMessage("Test from CaOs");
+//        }
+//        _shimManagerTracker.close();
         System.out.println("NetIDE CaOs module stopped!");
     }
 
