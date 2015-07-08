@@ -31,15 +31,14 @@ public class Activator implements BundleActivator {
         _shimManagerTracker = new ServiceTracker(context, IShimManager.class.getName(), null);
         _shimManagerTracker.open();
         System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
-
-        ((IShimManager) context.getService(context.getServiceReference(IShimManager.class.getName()))).GetConnector().SendMessage("Test from CaOs");
     }
 
     public void stop(BundleContext context) {
         System.out.println("Watching " + _shimManagerTracker.size() + " services at stop.");
-        System.out.println("Sending close to ShimConnector from CaOs bundle...");
-        if (_shimManagerTracker.size() > 0)
-            ((IShimManager) _shimManagerTracker.getService()).GetConnector().Close();
+        if (_shimManagerTracker.size() > 0) {
+            System.out.println("Sending message to ShimConnector from CaOs bundle...");
+            ((IShimManager) _shimManagerTracker.getService()).GetConnector().SendMessage("Test from CaOs");
+        }
         _shimManagerTracker.close();
         System.out.println("NetIDE CaOs module stopped!");
     }
