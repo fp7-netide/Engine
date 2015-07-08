@@ -21,8 +21,6 @@ import sys
 import time
 import uuid
 
-import requests
-
 class Base(object):
     applications = []
 
@@ -102,7 +100,6 @@ class Ryu(Base):
                 "app": str(a)})
 
         return rv
-
 
 class FloodLight(Base):
     @classmethod
