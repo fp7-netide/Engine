@@ -30,8 +30,8 @@ public class Activator implements BundleActivator {
 
         new Thread(new Runnable() {
             public void run() {
+                int count = 0;
                 while (true) {
-                    int count = 0;
                     final ServiceReference<?> ref = context.getServiceReference("eu.netide.core.api.IShimManager");
                     if (ref == null && count < 4) {
                         System.err.println("ServiceReference to IShimManager is null...");
@@ -46,7 +46,6 @@ public class Activator implements BundleActivator {
                         manager.GetConnector().SendMessage("Test from CaOs!");
                         break;
                     }
-
                 }
             }
 
