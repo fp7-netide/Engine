@@ -175,3 +175,7 @@ def do_appcontroller_install(pkg):
                     version = e.want.split(".", 2)[1]
                     logging.debug("Installing java {} now".format(version))
                     r = spawn_logged(["sudo", "apt-get", "install", "--yes", "openjdk-{}-jdk".format(version)])
+
+        # Sanity check
+        if not pkg.applies():
+            logging.error("Failed to resolve dependencies for {}".format(pkg))
