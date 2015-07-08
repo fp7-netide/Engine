@@ -24,7 +24,7 @@
 
     <groupId>eu.netide.core</groupId>
     <artifactId>core.shimconnectivity</artifactId>
-    <version>1.0.0-alpha001</version>
+    <version>1.0.0.0</version>
     <packaging>bundle</packaging>
 
     <name>core.shimconnectivity Bundle</name>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>1.0.0-alpha001</version>
+            <version>1.0.0.0</version>
         </dependency>
     </dependencies>
 

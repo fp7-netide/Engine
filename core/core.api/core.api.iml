@@ -2,10 +2,10 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.api-1.0.0-alpha001.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.api.Activator" bundleSymbolicName="core.api" bundleVersion="1.0.0-alpha001" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.api-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.api.Activator" bundleSymbolicName="core.api" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.api OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core.api*;version=1.0.0-alpha001" />
+          <property key="Export-Package" value="eu.netide.core.api*;version=1.0.0.0" />
           <property key="Import-Package" value="*" />
           <property key="Bundle-Name" value="core.api Bundle" />
         </additionalProperties>
