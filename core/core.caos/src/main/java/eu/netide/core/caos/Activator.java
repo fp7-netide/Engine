@@ -15,16 +15,27 @@
  */
 package eu.netide.core.caos;
 
+import eu.netide.core.api.IShimManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
 
+    private ServiceTracker _shimManagerTracker;
+
     public void start(BundleContext context) {
         System.out.println("NetIDE CaOs module started!");
+
+        // Test
+        _shimManagerTracker = new ServiceTracker(context, IShimManager.class, null);
+        _shimManagerTracker.open();
+        System.out.println("Sending close to ShimConnector from CaOs bundle...");
+        ((IShimManager) _shimManagerTracker.getService()).GetConnector().Close();
     }
 
     public void stop(BundleContext context) {
+        _shimManagerTracker.close();
         System.out.println("NetIDE CaOs module stopped!");
     }
 

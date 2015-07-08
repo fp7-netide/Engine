@@ -1,10 +1,9 @@
 package eu.netide.core.shimconnectivity;
 
 import eu.netide.core.api.IShimConnector;
+import eu.netide.core.api.IShimMessageListener;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -18,6 +17,12 @@ public class SocketBasedShimConnector implements IShimConnector, Runnable {
     private ServerSocket _socket;
     private Socket _client;
     private Thread _thread;
+
+    private IShimMessageListener _listener;
+
+    public SocketBasedShimConnector(IShimMessageListener listener) {
+        _listener = listener;
+    }
 
     public void Open(int port) {
         System.out.println("Starting shim socket server...");
@@ -40,13 +45,21 @@ public class SocketBasedShimConnector implements IShimConnector, Runnable {
         }
     }
 
+    public void SendMessage(String message) {
+        try {
+            _client.getOutputStream().write(message.getBytes());
+            _client.getOutputStream().flush();
+        } catch (IOException e) {
+            e.printStackTrace(); // TODO handle exception
+        }
+    }
+
     public void run() {
         try {
             _socket = new ServerSocket(_port);
             System.out.println("Waiting for shim connection on port " + _socket.getLocalPort());
             _client = _socket.accept();
             System.out.println("Shim connected (" + _client.getInetAddress().getHostAddress() + ").");
-            BufferedReader in = new BufferedReader(new InputStreamReader(_client.getInputStream()));
 
             int byteCount;
             byte[] buffer = new byte[5 * 1024]; // a read buffer of 5KiB
@@ -56,8 +69,7 @@ public class SocketBasedShimConnector implements IShimConnector, Runnable {
                 data = new byte[byteCount];
                 System.arraycopy(buffer, 0, data, 0, byteCount);
                 dataText = new String(data, "UTF-8"); // assumption that client sends data UTF-8 encoded
-                System.out.println("Message from shim: " + dataText);
-                // TODO handle data
+                _listener.OnMessage(dataText);
             }
             _socket.close();
             System.out.println("Shim server thread ended, spawning new...");
