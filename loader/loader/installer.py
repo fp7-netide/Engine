@@ -70,7 +70,7 @@ def do_client_installs(pkg):
     clients = [ ('vagrant@127.0.0.1', '2200', os.path.expanduser("~/testvm-bare/.vagrant/machines/default/virtualbox/private_key")) ]
     for c in clients:
         ssh = ["ssh"]
-        scp = ["scp"]
+        scp = ["scp", "-B", "-C", "-r"]
         if len(c) >= 2:
             ssh.extend(["-p", str(c[1])])
             scp.extend(["-P", str(c[1])])
@@ -78,7 +78,6 @@ def do_client_installs(pkg):
             ssh.extend(["-i", str(c[2])])
             scp.extend(["-i", str(c[2])])
         ssh.append(c[0])
-        scp.append("-r")
 
         logging.info("Doing client install for '{}' on host {} now".format(pkg, c))
         # TODO:
