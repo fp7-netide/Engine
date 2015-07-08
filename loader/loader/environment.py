@@ -130,7 +130,7 @@ def check_controllers(ctrls):
             continue
         v = cls.version()
         logging.debug("{} {}".format(v, type(v)))
-        if any([x in c["version"] for x in "[]*+"]) and v is not None:
+        if any([x in c["version"] for x in "[]*+()?"]) and v is not None:
             logging.debug("Using regex matching for version string '{}'".format(c["version"]))
             found = re.search(c["version"], v)
         else:
