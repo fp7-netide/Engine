@@ -17,6 +17,7 @@ import inspect
 import json
 import logging
 import os
+import platform
 import shutil
 import tempfile
 import zipfile
@@ -25,7 +26,7 @@ from loader import controllers
 from loader.application import Application
 
 class Package(object):
-    requirements = {}
+    config = {}
     controllers = {}
     cleanup = False
 
@@ -38,13 +39,18 @@ class Package(object):
             self.path = p
             self.cleanup = True
 
-        p = os.path.join(self.path, "_system_requirements.json")
+        p = os.path.join(self.path, "controllers.json")
         if os.path.exists(p):
             with open(p) as f:
-                self.requirements = json.load(f)
+                self.config = json.load(f)
 
+        logging.debug("Loading applications for host {}".format(platform.node()))
         p = os.path.join(self.path, "_apps")
         for d in os.listdir(p):
+            if d not in self.config.get("clients", {}).get(platform.node(), {}):
+                logging.debug("Skipping application {} (not for this host)".format(d))
+                continue
+            logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
             app = os.path.join(p, d)
             ctrl = Application.get_controller(app)
             if ctrl not in self.controllers:
@@ -71,3 +77,23 @@ class Package(object):
     def start(self):
         return {cls.__name__: { "procs": c.start(), "apps": [str(a) for a in c.applications] }
                 for cls, c in self.controllers.items()}
+
+    def get_clients(self):
+        clients = [ ]
+        for name in self.config.get("clients", {}).keys():
+            if name not in self.config.get("ssh", {}):
+                logging.info("SSH configuration for client controllers host {} not found".format(name))
+                continue
+            d = self.config.get("ssh", {})[name]
+
+            host = d.get("host", name)
+            if "user" in d:
+                host = "{}@{}".format(d["user"], host)
+
+            entry = [ host ]
+            if "port" in d:
+                entry.append(d["port"])
+            if "identity" in d:
+                entry.append(os.path.expanduser(d["identity"]))
+            clients.append(entry)
+        return clients

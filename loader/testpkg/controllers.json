@@ -1,0 +1,16 @@
+{
+   "server": {
+      "type": "odl"
+   },
+   "clients": {
+      "vagrant-ubuntu-trusty-64": [ "app1", "fw" ]
+   },
+   "ssh": {
+      "vagrant-ubuntu-trusty-64": {
+         "user": "vagrant",
+         "host": "127.0.0.1",
+         "port": 2200,
+         "identity": "~/testvm-bare/.vagrant/machines/default/virtualbox/private_key"
+      }
+   }
+}
