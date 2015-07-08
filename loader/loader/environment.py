@@ -75,12 +75,26 @@ def check_hardware(h):
         if k not in ["cpuarch", "cpufreq", "cpucores", "memory"]:
             raise KeyError(k)
 
-class LanguageCheckException(Exception): pass
+class LanguageCheckException(Exception):
+    msg = "Can't find a matching {what} version. Wanted {want}, got {have}."
+    msgdunno = "Don't know how to check for {what} version {want}."
+
+    def __init__(self, what, want, have=None, dunno=False):
+        self.what = what
+        self.want = want
+        self.have = have
+        self.dunno = dunno
+
+    def __str__(self):
+        if self.dunno:
+            return self.msgdunno.format(what=self.what, want=self.want)
+        return self.msg.format(what=self.what, want=self.want, have=self.have)
+
 
 def check_languages(langs):
     for l in langs:
         if l.get("name") not in ["python", "java"]:
-            raise LanguageCheckException("I don't know how to check for '{}'".format(l.get("name")))
+            raise LanguageCheckException(l.get("name"), l.get("version"), dunno=True)
         want = str(l.get("version", ""))
         if l["name"] == "python":
             if want.startswith("3"):
@@ -88,17 +102,22 @@ def check_languages(langs):
             elif want.startswith("2"):
                 pbin = "python2"
             else:
-                raise LanguageCheckException("Don't know how to check for python version '{}'".format(want))
-            v = subprocess.check_output([pbin, "--version"]).decode('utf-8').split(" ", 1)[1].strip()
+                raise LanguageCheckException("python", want, dunno=True)
+            try:
+                v = subprocess.check_output([pbin, "--version"]).decode('utf-8').split(" ", 1)[1].strip()
+            except FileNotFoundError:
+                raise LanguageCheckException("python", want)
         elif l["name"] == "java":
-            v = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT).decode("utf-8")
+            try:
+                v = subprocess.check_output(["java", "-version"], stderr=subprocess.STDOUT).decode("utf-8")
+            except FileNotFoundError:
+                raise LanguageCheckException("java", want)
             v = v.splitlines()[0].split(" ")[-1].strip('"')
         else:
             assert False, "How did I get here?"
 
         if not v.startswith(want):
-            msg = "Can't find a matching {} version. Wanted {}, got {}.".format(l["name"], want, v)
-            raise LanguageCheckException(msg)
+            raise LanguageCheckException(l["name"], want, v)
 
 class ControllerCheckException(Exception): pass
 

@@ -20,6 +20,7 @@ import subprocess as sp
 import sys
 import tempfile
 
+from loader import environment
 from loader.package import Package
 
 class TempDir(object):
@@ -153,3 +154,26 @@ def do_appcontroller_install(pkg):
         # TODO:
         # [ ] Install languages
         # [ ] Install libraries
+        apps = []
+        for c in pkg.controllers:
+            apps.extend(c.applications)
+        for a in apps:
+            logging.debug("Handling deps for application {}".format(a))
+            reqs = a.metadata.get("requirements", {}).get("Software", {})
+
+            # Languages
+            try:
+                environment.check_languages(reqs.get("Languages", {}))
+            except environment.LanguageCheckException as e:
+                if e.dunno:
+                    raise e
+                logging.debug("Would attempt to install {what} version {want} now".format(what=e.what, want=e.want))
+                if e.what not in ["java", "python"]:
+                    raise Exception("Don't know how to install {what} version {want}".format(what=e.what, want=e.want))
+                if e.what == "python":
+                    # TODO: use an external script?
+                    r = spawn_logged(["sudo", "apt-get", "install", "--yes", "{}{}".format(e.what, e.want)])
+                else:
+                    version = e.want.split(".", 2)[1]
+                    logging.debug("Installing java {} now".format(version))
+                    r = spawn_logged(["sudo", "apt-get", "install", "--yes", "openjdk-{}-jdk".format(version)])
