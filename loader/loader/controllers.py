@@ -14,6 +14,7 @@
      Gregor Best, gbe@mail.upb.de
 """
 
+import logging
 import os
 import subprocess
 import sys
@@ -61,7 +62,7 @@ class Ryu(Base):
 
         for a in self.applications:
             if not a.enabled:
-                print("Skipping disabled application {}".format(a), file=sys.stderr)
+                logging.info("Skipping disabled application {}".format(a))
                 continue
 
             appidx += 1
@@ -84,7 +85,7 @@ class Ryu(Base):
 
             cmdline.extend(args)
 
-            print('Launching "{}" now'.format(cmdline), file=sys.stderr)
+            logging.debug('Launching "{}" now'.format(cmdline))
             env = os.environ.copy()
             env["PYTHONPATH"] = (env["PYTHONPATH"] + ":" if "PYTHONPATH" in env else "") + \
                     os.path.abspath(os.path.relpath(a.path))
@@ -113,7 +114,7 @@ class FloodLight(Base):
         # XXX: application modules are not copied into floodlight right now, they need to be copied manually
         for a in self.applications:
             if not a.enabled:
-                print("Skipping disabled application {}".format(a), file=sys.stderr)
+                logging.info("Skipping disabled application {}".format(a))
                 continue
 
             prefix = os.path.expanduser("~/floodlight/src/main/resources")
