@@ -31,9 +31,11 @@ public class Activator implements BundleActivator {
         new Thread(new Runnable() {
             public void run() {
                 while (true) {
-                    final ServiceReference<IShimManager> ref = context.getServiceReference(IShimManager.class);
-                    if (ref == null) {
-                        System.err.println("ServiceReference ti IShimManager is null...");
+                    int count = 0;
+                    final ServiceReference<?> ref = context.getServiceReference("eu.netide.core.api.IShimManager");
+                    if (ref == null && count < 4) {
+                        System.err.println("ServiceReference to IShimManager is null...");
+                        count++;
                         try {
                             Thread.sleep(3000);
                         } catch (InterruptedException e) {
