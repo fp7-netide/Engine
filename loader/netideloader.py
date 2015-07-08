@@ -46,10 +46,13 @@ import signal
 import sys
 import time
 
+import subprocess as sp
+
 from loader import controllers
 from loader import environment
 from loader import installer
 from loader import topology
+from loader import util
 from loader.package import Package
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
@@ -71,28 +74,54 @@ class FLock(object):
         fcntl.flock(self.f, fcntl.LOCK_UN)
 
 def load_package(args):
-    p = Package(args.package, dataroot)
-    if not p.applies():
-        logging.error("There's something wrong with the package")
-        return 2
+    if args.mode == "appcontroller":
+        p = Package(args.package, dataroot)
+        if not p.applies():
+            logging.error("There's something wrong with the package")
+            return 2
 
-    os.makedirs(dataroot, exist_ok=True)
+        os.makedirs(dataroot, exist_ok=True)
 
-    with FLock(open(os.path.join(dataroot, "controllers.json"), "w+")) as f:
-        try:
-            data  = json.load(f)
-        except ValueError:
-            data = {}
-        f.seek(0)
-        f.truncate()
-        try:
-            pids = p.start()
-            logging.info(pids)
-            data["controllers"] = pids
-            json.dump(data, f, indent=2)
-        except Exception as err:
-            logging.error(err)
-            return 1
+        with FLock(open(os.path.join(dataroot, "controllers.json"), "w+")) as f:
+            try:
+                data  = json.load(f)
+            except ValueError:
+                data = {}
+            f.seek(0)
+            f.truncate()
+            try:
+                pids = p.start()
+                logging.info(pids)
+                data["controllers"] = pids
+                json.dump(data, f, indent=2)
+            except Exception as err:
+                logging.error(err)
+                return 1
+    else:
+        # TODO:
+        # [ ] Start server controller (if not already running)
+        # [X] Connect to application controllers:
+        #   [X] Copy package to remote machine
+        #   [X] Run `load' with --mode=appcontroller
+        with util.TempDir("netide-client-dispatch") as t:
+            pkg = Package(args.package, t)
+            for c in pkg.get_clients():
+                ssh, scp = util.build_ssh_commands(c)
+                logging.debug("SSH {}".format(ssh))
+                logging.debug("SCP {}".format(scp))
+                logging.debug(c)
+
+                dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.STDOUT).strip().decode('utf-8')
+                logging.debug("Temp: {}".format(dir))
+                util.spawn_logged(scp + [args.package, "{host}:{dir}".format(host=c[0], dir=dir)])
+
+                cmd = "cd ~/netide-loader; ./netideloader.py load --mode=appcontroller {}"
+                if os.path.isfile(args.package): # package in a zip file
+                    cmd = cmd.format(os.path.join(dir, args.package))
+                else:
+                    cmd = cmd.format(dir)
+                logging.debug("cmd: {}".format(cmd))
+                util.spawn_logged(ssh + [cmd])
     return 0
 
 def list_controllers(args):
@@ -178,7 +207,8 @@ if __name__ == "__main__":
 
     parser_load = subparsers.add_parser("load", description="Load a NetIDE package and start its applications")
     parser_load.add_argument("package", type=str, help="Package to load")
-    parser_load.set_defaults(func=load_package)
+    parser_load.add_argument("--mode", type=str, help="Loading mode, one of {appcontroller,all}")
+    parser_load.set_defaults(func=load_package, mode="all")
 
     parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
     parser_list.set_defaults(func=list_controllers)
