@@ -18,6 +18,8 @@ package eu.netide.core.caos;
 import eu.netide.core.api.IShimManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.util.tracker.ServiceTracker;
 
 public class Activator implements BundleActivator {
@@ -28,7 +30,11 @@ public class Activator implements BundleActivator {
         System.out.println("NetIDE CaOs module started!");
 
         // Test
-        _shimManagerTracker = new ServiceTracker(context, IShimManager.class, null);
+        try {
+            _shimManagerTracker = new ServiceTracker(context, context.createFilter("(" + Constants.OBJECTCLASS + "=" + IShimManager.class.getName() + ")"), null);
+        } catch (InvalidSyntaxException e) {
+            e.printStackTrace();
+        }
         _shimManagerTracker.open();
         System.out.println("Watching " + _shimManagerTracker.size() + " services at start.");
     }
