@@ -126,8 +126,7 @@ def do_appcontroller_install(pkg):
             # Already checked out, update
             os.chdir(os.path.expanduser("~/IDE"))
             logging.info("Updating NetIDE repository")
-            # s = sp.check_output(["git", "pull", "origin", "development"], stderr=sp.STDOUT).decode("utf-8").strip()
-            s = "skipped"
+            s = sp.check_output(["git", "pull", "origin", "development"], stderr=sp.STDOUT).decode("utf-8").strip()
         else:
             logging.info("Cloning NetIDE IDE repository")
             os.chdir(os.path.expanduser("~"))
