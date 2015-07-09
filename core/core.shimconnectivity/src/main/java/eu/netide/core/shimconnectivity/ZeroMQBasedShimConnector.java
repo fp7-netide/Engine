@@ -49,7 +49,7 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
         _context = ZMQ.context(1);
         _socket = _context.socket(ZMQ.ROUTER);
         System.out.println("Listening for shim on port " + _port);
-        _socket.bind("tcp://*:5555");
+        _socket.bind("tcp://*:" + _port);
 
         while (!Thread.currentThread().isInterrupted()) {
             ZMsg message = ZMsg.recvMsg(_socket);

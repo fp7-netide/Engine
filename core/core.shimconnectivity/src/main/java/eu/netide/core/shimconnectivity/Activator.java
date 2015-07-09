@@ -15,7 +15,6 @@
  */
 package eu.netide.core.shimconnectivity;
 
-import eu.netide.core.api.IShimManager;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -29,10 +28,10 @@ public class Activator implements BundleActivator {
         System.out.println("Core Shim Management starting...");
         _shimManager = new ShimManager();
         _shimManager.SetConnector(new ZeroMQBasedShimConnector(_shimManager));
-        _shimManager.GetConnector().Open(41414);
+        _shimManager.GetConnector().Open(5555);
 
-        _shimManagerServiceRegistration = context.registerService(IShimManager.class, _shimManager, null);
-        ((IShimManager) context.getService(context.getServiceReference(IShimManager.class))).GetConnector().SendMessage("Test from shimconnectivity");
+        //_shimManagerServiceRegistration = context.registerService(IShimManager.class, _shimManager, null);
+        //((IShimManager) context.getService(context.getServiceReference(IShimManager.class))).GetConnector().SendMessage("Test from shimconnectivity");
 
         System.out.println("Core Shim Management started!");
     }
