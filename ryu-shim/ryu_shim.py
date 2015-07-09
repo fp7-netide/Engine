@@ -1,27 +1,29 @@
-#!/usr/bin/python
-
-################################################################################
-# Ryu client for Pyretic                                                       #
-# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide     		           #
-# authors: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)          #
-#          Antonio Marsico (antonio.marsico@create-net.org)                    #
-################################################################################
-# Eclipse Public License - v 1.0					                           #
-#									                                           #
+##########################################################################
+# Ryu backend for the shim client                                              #
+# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
+# author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
+##########################################################################
+# Eclipse Public License - v 1.0                                               #
+#                                                                              #
 # THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC  #
 # LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM  #
-# CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.			               #
-################################################################################
+# CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.                        #
+##########################################################################
 
 import logging
 import struct
 import threading
+import sys
+import random
+import binascii
+import zmq
+import time
 from ryu.base import app_manager
 from ryu.exception import RyuException
 from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller import dpset
-from ryu.controller.handler import MAIN_DISPATCHER
+from ryu.controller.handler import MAIN_DISPATCHER, set_ev_handler
 from ryu.controller.handler import HANDSHAKE_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
@@ -34,668 +36,274 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from netide.comm import *
 
-
-def inport_value_hack(outport):
-    if outport > 1:
-        return 1
-    else:
-        return 2
-    
-class OF10Match(object):
-    def __init__(self):
-        self.wildcards=None
-        self.in_port = None
-        self.dl_src = None
-        self.dl_dst = None
-        self.dl_type = None
-        self.dl_vlan = None
-        self.dl_vlan_pcp = None
-        self.nw_tos = None
-        self.nw_proto = None
-        self.nw_src = None
-        self.nw_dst = None
-        self.tp_dst = None
-        self.tp_src = None
-    
-    def match_tuple(self):
-        """return a tuple which can be used as *args for
-        ofproto_v1_0_parser.OFPMatch.__init__().
-        see Datapath.send_flow_mod.
-        """
-        return (self.wildcards, self.in_port, self.dl_src,
-                self.dl_dst, self.dl_vlan, self.dl_vlan_pcp,
-                self.dl_type, self.nw_tos,
-                self.nw_proto, self.nw_src, self.nw_dst,
-                self.tp_src, self.tp_dst)
+# Hadles the connection with the client. One backend channel is created
+# per client.
 
 
-class BackendChannel(asynchat.async_chat):
-    """Sends messages to the server and receives responses.
-    """
-    def __init__(self, host, port, of_client):
-        self.of_client = of_client
-        self.received_data = []
-        asynchat.async_chat.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((host, port))
-        self.ac_in_buffer_size = 4096 * 3
-        self.ac_out_buffer_size = 4096 * 3
-        self.set_terminator(TERM_CHAR)
-        return
+class BackendChannel(asyncore.dispatcher):
 
-    def handle_connect(self):
-        print "Connected to pyretic frontend."
-        
-    def collect_incoming_data(self, data):
-        """Read an incoming message from the client and put it into our outgoing queue."""
-        #print "ofclient collect incoming data"
-        with self.of_client.channel_lock:
-            self.received_data.append(data)
+    def __init__(self, sock, server):
+        self.server = server
+        self.channel_lock = threading.Lock()
+        self.client_info = {'negotiated_protocols': {}}
+        asyncore.dispatcher.__init__(self, sock)
 
-    def dict2OF(self,d):
-        def convert(h,val):
-            if h in ['srcmac','dstmac']:
-                return val #packetaddr.EthAddr(val)
-            elif h in ['srcip','dstip']:
-                try:
-                    return val #packetaddr.IPAddr(val)
-                except:
-                    return val
-            elif h in ['vlan_id','vlan_pcp'] and val == 'None':
-                return None
-            else:
-                return val
-        return { h : convert(h,val) for (h, val) in d.items()}
-    def found_terminator(self):
-        """The end of a command or message has been seen."""
-        with self.of_client.channel_lock:
-            msg = deserialize(self.received_data)
+    def handle_read(self):
 
-        # USE DESERIALIZED MSG
-        if msg[0] == 'inject_discovery_packet':
-            switch = msg[1]
-            port = msg[2]
-            self.of_client.inject_discovery_packet(switch,port)
-        elif msg[0] == 'packet':
-            packet = self.dict2OF(msg[1])
-            self.of_client.send_to_switch(packet)
-        elif msg[0] == 'install':
-            pred = self.dict2OF(msg[1])
-            priority = int(msg[2])
-            actions = map(self.dict2OF,msg[3])
-            self.of_client.install_flow(pred,priority,actions)
-        elif msg[0] == 'delete':
-            pred = self.dict2OF(msg[1])
-            priority = int(msg[2])
-            self.of_client.delete_flow(pred,priority)
-        elif msg[0] == 'clear':
-            switch = int(msg[1])
-            self.of_client.clear(switch)
-        elif msg[0] == 'barrier':
-            switch = msg[1]
-            self.of_client.barrier(switch)
-        elif msg[0] == 'flow_stats_request':
-            switch = msg[1]
-            self.of_client.flow_stats_request(switch)
+        # If new client is connecting
+        if 'connected' not in self.client_info:
+            with self.channel_lock:
+                header = self.recv(16)
+                decoded_header = NetIDEOps.netIDE_decode_header(header)
+                message_length = decoded_header[2]
+                if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_HELLO']:
+                    print "Attempt to connect from unsupported client"
+                    self.recv(4096)
+
+                    self.handle_close()
+                else:
+                    if message_length is 0:
+                        print "Client does not support any protocol"
+                        self.handle_close()
+                        return
+
+                    print "Client handshake received"
+                    message_data = self.recv(message_length)
+                    message_data = NetIDEOps.netIDE_decode_handshake(
+                        message_data, message_length)
+
+                    # Find the common protocols that client and server support
+                    count = 0
+                    while count < message_length:
+                        protocol = message_data[count]
+                        version = message_data[count + 1]
+
+                        if protocol in NetIDEOps.NetIDE_supported_protocols:
+                            if version in NetIDEOps.NetIDE_supported_protocols[protocol]:
+                                if protocol not in self.client_info['negotiated_protocols']:
+                                    self.client_info['negotiated_protocols'][
+                                        protocol] = {version}
+                                else:
+                                    self.client_info['negotiated_protocols'][
+                                        protocol].add(version)
+
+                        count += 2
+                    self.client_info['connected'] = True
+                    # After protocols have been negotiated, send back message
+                    # to client to notify for common protocols
+                    proto_data = NetIDEOps.netIDE_encode_handshake(
+                        self.client_info['negotiated_protocols'])
+                    msg = NetIDEOps.netIDE_encode(
+                        'NETIDE_HELLO', None, 0, proto_data)
+                    self.send(msg)
+                    print "Server handshake sent"
+
+        # If client has already performed handshake with the server
         else:
-            print "ERROR: Unknown msg from frontend %s" % msg
+            header = self.recv(16)
+            decoded_header = NetIDEOps.netIDE_decode_header(header)
+            message_length = decoded_header[2]
+            message_data = self.recv(message_length)
+            if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
+                print "Attempt to connect from unsupported client"
+                self.recv(4096)
+                self.handle_close()
+            else:
+                if message_length is 0:
+                    print "Client does not support any protocol"
+                    self.handle_close()
+                    return
+                # If datapath id is not 0, broadcast?
+                if decoded_header[4] is not 0:
+                    self.datapath = self.server.controller.switches[
+                        int(decoded_header[4])]
+                    self.datapath.send(message_data)
+                else:
+                    self.datapath = None
 
-class asyncore_loop(threading.Thread):
-        def run(self):
-            asyncore.loop()
+    def handle_error(self):
+        pass
+
+    def handle_close(self):
+        if self in self.server.clients:
+            self.server.clients.remove(self)
+            print "Client disconnected"
+            self.close()
+
+# Connects to the Core
+class CoreConnection(threading.Thread):
+    def __init__(self, id, host, port):
+    	threading.Thread.__init__(self)
+        self.id = id
+        self.host = host
+        self.port = port
+
+    def run(self):
+        print('Connecting to Core on %s:%s...' % (self.host,self.port))
+        context = zmq.Context()
+        self.socket = context.socket(zmq.DEALER)
+        self.socket.setsockopt(zmq.IDENTITY, self.id)
+        self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
+        print('Connected to Core.')
+        #self.socket.send(b"First Hello from " + self.id)
+        while True:
+            message = self.socket.recv_multipart()
+            # TODO: handle message
+            print("Received message from Core: %s" % message[0])
+
 
 class RYUClient(app_manager.RyuApp):
-    OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION]
-    
-    class LLDPUnknownFormat(RyuException):
-        message = '%(msg)s'
-
-    
     def __init__(self, *args, **kwargs):
         super(RYUClient, self).__init__(*args, **kwargs)
-        print "RYUClient init"
-        self.packetno = 0
+
+        # Various Variables that can be edited
+        __LISTEN_IP__ = 'localhost'
+        __LISTEN_PORT__ = 5555#RYU_BACKEND_PORT #Default Port 41414
+
+        # Internal variables
         self.switches = {}
-        self.ofp_port_config_rev_map = {
-          'OFPPC_PORT_DOWN'    : ofproto_v1_0.OFPPC_PORT_DOWN,
-          'OFPPC_NO_STP'       : ofproto_v1_0.OFPPC_NO_STP,
-          'OFPPC_NO_RECV'      : ofproto_v1_0.OFPPC_NO_RECV,
-          'OFPPC_NO_RECV_STP'  : ofproto_v1_0.OFPPC_NO_RECV_STP,
-          'OFPPC_NO_FLOOD'     : ofproto_v1_0.OFPPC_NO_FLOOD,
-          'OFPPC_NO_FWD'       : ofproto_v1_0.OFPPC_NO_FWD,
-          'OFPPC_NO_PACKET_IN' : ofproto_v1_0.OFPPC_NO_PACKET_IN,
-        }
-        self.ofp_port_state_rev_map = {
-          'OFPPS_STP_LISTEN'  : ofproto_v1_0.OFPPS_STP_LISTEN,
-          'OFPPS_LINK_DOWN'   : ofproto_v1_0.OFPPS_LINK_DOWN,
-          'OFPPS_STP_LEARN'   : ofproto_v1_0.OFPPS_STP_LEARN,
-          'OFPPS_STP_FORWARD' : ofproto_v1_0.OFPPS_STP_FORWARD,
-          'OFPPS_STP_BLOCK'   : ofproto_v1_0.OFPPS_STP_BLOCK,
-        }
-        self.ofp_port_features_rev_map = {
-          'OFPPF_10MB_HD'    : 1,
-          'OFPPF_10MB_FD'    : 2,
-          'OFPPF_100MB_HD'   : 4,
-          'OFPPF_100MB_FD'   : 8,
-          'OFPPF_1GB_HD'     : 16,
-          'OFPPF_1GB_FD'     : 32,
-          'OFPPF_10GB_FD'    : 64,
-          'OFPPF_COPPER'     : 128,
-          'OFPPF_FIBER'      : 256,
-          'OFPPF_AUTONEG'    : 512,
-          'OFPPF_PAUSE'      : 1024,
-          'OFPPF_PAUSE_ASYM' : 2048,
-        }
-        
-        self.channel_lock = threading.Lock()
-        self.backend_channel = BackendChannel('127.0.0.1', RYU_BACKEND_PORT, self) 
-        self.al = asyncore_loop()
-        self.al.start()   
-        
-    def ipv4_to_int(self, string):
-        ip = string.split('.')
-        assert len(ip) == 4
-        i = 0
-        for b in ip:
-            b = int(b)
-            i = (i << 8) | b
-        return i
+        self.ofp_version = None
 
-    def packet_from_network(self, **kwargs):
-        return kwargs
-    def packet_to_network(self, packet):
-        return packet['raw']
-    
-    def active_ofp_port_config(self,configs):
-        active = []
-        for (config,bit) in self.ofp_port_config_rev_map.items():
-            if configs & bit:
-                active.append(config)
-        return active
-    
-    def active_ofp_port_state(self,states):
-        active = []
-        for (state,bit) in self.ofp_port_state_rev_map.items():
-            if states & bit:
-                active.append(state)
-        return active
-    
-    def active_ofp_port_features(self,features):
-        active = []
-        for (feature,bit) in self.ofp_port_features_rev_map.items():
-            if features & bit:
-                active.append(feature)
-        return active
-    
-    def create_discovery_packet (self, dpid, port_no, dl_addr):
-        """
-        Build discovery packet
-        """
-        CHASSIS_ID_PREFIX = 'dpid:'
-        #CHASSIS_ID_PREFIX_LEN = len(CHASSIS_ID_PREFIX)
-        CHASSIS_ID_FMT = CHASSIS_ID_PREFIX + '%s'
-        
-        PORT_ID_STR = '!I'      # uint32_t
-        
-        
-        pkt = packet.Packet()
+        # Default listen IP and port
+        address = (__LISTEN_IP__, __LISTEN_PORT__)
 
-        dst = lldp.LLDP_MAC_NEAREST_BRIDGE
-        src = dl_addr
-        ethertype = ether.ETH_TYPE_LLDP
-        eth_pkt = ethernet.ethernet(dst, src, ethertype)
-        pkt.add_protocol(eth_pkt)
+        # Start the connection to the core
+        print('RYU Shim initiated')
 
-        tlv_chassis_id = lldp.ChassisID(
-            subtype=lldp.ChassisID.SUB_LOCALLY_ASSIGNED,
-            chassis_id=CHASSIS_ID_FMT %
-            dpid_to_str(dpid))
-        
-        tlv_port_id = lldp.PortID(subtype=lldp.PortID.SUB_PORT_COMPONENT,
-                                  port_id=struct.pack(
-                                      PORT_ID_STR,
-                                      port_no))
+        # self.backend_server = BackendServer(self,address)
+        self.CoreConnection = CoreConnection("Ryu Shim", __LISTEN_IP__,__LISTEN_PORT__)
+        self.CoreConnection.start()
+        self.register_all_events()
 
-        
-        
-        tlv_ttl = lldp.TTL(ttl=120)
-        tlv_end = lldp.End()
+    # Explicitly sends a feature request to all the switches
+    # OF Only? To check for other protocols!
+    def send_features_request(self):
+        for datapath_id, datapath in self.switches.iteritems():
+            ofp_parser = datapath.ofproto_parser
+            req = ofp_parser.OFPFeaturesRequest(datapath)
+            datapath.send_msg(req)
 
-        tlvs = (tlv_chassis_id, tlv_port_id, tlv_ttl, tlv_end)
-        
-        lldp_pkt = lldp.lldp(tlvs)
-        pkt.add_protocol(lldp_pkt)
+    # Forwards all messags recieved from the switches to the clients
+    def _event_loop(self):
+        # First hello message from switch to get the version for negotiation
+        ev, state = self.events.get()
+        print ev.msg.version
+        self.ofp_version = ev.msg.version
+        NetIDEOps.NetIDE_supported_protocols[0x11] = {self.ofp_version}
+        # print ev.msg
+        while self.is_active:
+            ev, state = self.events.get()
+            if ev == self._event_stop:
+                continue
+            self.send_to_clients(ev)
 
-        pkt.serialize()
-        return pkt.data
-    
-    def inject_discovery_packet(self,switch, port):
-        try:
-            hw_addr = self.switches[switch]['ports'][port]
-            datapath = self.switches[switch]['connection']
-            packet = self.create_discovery_packet(switch, port, hw_addr)
-            actions = [datapath.ofproto_parser.OFPActionOutput(port)]
-            datapath.send_packet_out(actions=actions, data=packet)
-        except KeyError:
-            pass
-    
-    def send_to_pyretic(self,msg):
-        serialized_msg = serialize(msg)
-        try:
-            with self.channel_lock:
-                self.backend_channel.push(serialized_msg)
-        except IndexError as e:
-            print "ERROR PUSHING MESSAGE %s" % msg
-            pass
-     
-    def send_to_switch(self,packet):
-        switch = packet["switch"]
-        outPort = packet["outport"]
-        buffer_id = ofproto_v1_0.OFP_NO_BUFFER
-        
-        if 'buffer_id' in packet:
-            buffer_id = packet["buffer_id"]
-        
-        try:
-            inport = packet["inport"]
-            if inport == -1 or inport == outPort:
-                inport = inport_value_hack(outPort)
-        except KeyError:
-            inport = inport_value_hack(outPort)
-        
-        
-        
-         ## HANDLE PACKETS SEND ON LINKS THAT HAVE TIMED OUT
-        try:
-            datapath = self.switches[switch]['connection']
-            po_actions = [datapath.ofproto_parser.OFPActionOutput(outPort)]
-            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, in_port=inport, buffer_id=buffer_id, actions=po_actions, data = self.packet_to_network(packet))      
-            datapath.send_msg(pkt_out)
-        except RuntimeError, e:
-            print "ERROR:send_to_switch: %s to switch %d" % (str(e),switch)
-            # TODO - ATTEMPT TO RECONNECT SOCKET
-        except KeyError, e:
-            print "ERROR:send_to_switch: No connection to switch %d available" % switch
-            # TODO - IF SOCKET RECONNECTION, THEN WAIT AND RETRY 
-    
-    def build_of_match(self,datapath,inport,pred):
-        ### BUILD OF MATCH
-        rule = OF10Match()      
-        
-        if inport != None:
-            rule.in_port = inport
-        if 'srcmac' in pred:
-            if pred['srcmac'] != DONTCARE_STR:
-                rule.dl_src = haddr_to_bin(pred['srcmac'])
-        if 'dstmac' in pred:
-            if pred['dstmac'] != DONTCARE_STR:
-                rule.dl_dst = haddr_to_bin(pred['dstmac'])        
-        if 'ethtype' in pred:
-            if pred['ethtype'] != 0:
-                rule.dl_type = pred['ethtype']
-        if 'vlan_id' in pred:
-            if pred['vlan_id'] != 0:
-                rule.dl_vlan = pred['vlan_id']
-        if 'vlan_pcp' in pred:
-            if pred['vlan_pcp'] != 0:
-                rule.dl_vlan_pcp = pred['vlan_pcp']
-        if 'protocol' in pred:
-            if pred['protocol'] != 0:
-                rule.nw_proto = pred['protocol']
-        if 'srcip' in pred:
-            if self.ipv4_to_int(pred['srcip']) != 0:
-                rule.nw_src = self.ipv4_to_int(pred['srcip'])
-        if 'dstip' in pred:
-            if self.ipv4_to_int(pred['dstip']) != 0:
-                rule.nw_dst = self.ipv4_to_int(pred['dstip'])
-        if 'tos' in pred:
-            if pred['tos'] != 0:
-                rule.nw_tos = pred['tos']
-        if 'srcport' in pred:
-            if pred['srcport'] != 0:
-                rule.tp_src = pred['srcport']
-        if 'dstport' in pred:
-            if pred['dstport'] != 0:
-                rule.tp_dst = pred['dstport']
-        
-        match_tuple = rule.match_tuple()
-        match = datapath.ofproto_parser.OFPMatch(*match_tuple)
-        return match
-    
-    def build_of_actions(self,inport,action_list):
-        ### BUILD OF ACTIONS
-        of_actions = []
-        for actions in action_list:
-            outport = actions['outport']
-            del actions['outport']
-            if 'srcmac' in actions:
-                of_actions.append(ofproto_v1_0_parser.OFPActionSetDlSrc(haddr_to_bin(actions['srcmac'])))
-            if 'dstmac' in actions:
-                of_actions.append(ofproto_v1_0_parser.OFPActionSetDlDst(haddr_to_bin(actions['dstmac'])))
-            if 'srcip' in actions:
-                of_actions.append(ofproto_v1_0_parser.OFPActionSetNwSrc(self.ipv4_to_int(actions['srcip'])))
-            if 'dstip' in actions:
-                of_actions.append(ofproto_v1_0_parser.OFPActionSetNwDst(self.ipv4_to_int(actions['dstip'])))
-            if 'srcport' in actions:
-                of_actions.append(ofproto_v1_0_parser.OFPActionSetTpSrc(actions['srcport']))
-            if 'dstport' in actions:
-                of_actions.append(ofproto_v1_0_parser.OFPActionSetTpDst(actions['dstport']))
-            if 'vlan_id' in actions:
-                if actions['vlan_id'] is None:
-                    of_actions.append(ofproto_v1_0_parser.OFPActionStripVlan())
-                else:
-                    of_actions.append(ofproto_v1_0_parser.OFPActionVlanVid(vlan_vid=actions['vlan_id']))
-            if 'vlan_pcp' in actions:
-                if actions['vlan_pcp'] is None:
-                    if not actions['vlan_id'] is None:
-                        raise RuntimeError("vlan_id and vlan_pcp must be set together!")
-                    pass
-                else:
-                    of_actions.append(ofproto_v1_0_parser.OFPActionVlanPcp(vlan_pcp=actions['vlan_pcp']))
-            if (not inport is None) and (outport == inport):
-                of_actions.append(ofproto_v1_0_parser.OFPActionOutput(ofproto_v1_0.OFPP_IN_PORT))
-            else:
-                of_actions.append(ofproto_v1_0_parser.OFPActionOutput(outport))
-        return of_actions
-    
-    def install_flow(self,pred,priority,action_list):
-        
-        switch = pred['switch']
-        if 'inport' in pred:        
-            inport = pred['inport']
-        else:
-            inport = None
-        if 'idle_timeout' in pred:        
-            idle_timeout = pred['idle_timeout']
-        else:
-            idle_timeout = 0
-
-        if 'hard_timeout' in pred:        
-            hard_timeout = pred['hard_timeout']
-        else:
-            hard_timeout = 0
+    # Function registers all events to be observed
+    def register_all_events(self):
+        for event in ofp_event._OFP_MSG_EVENTS:
+            self.observe_event(ofp_event._OFP_MSG_EVENTS[event])
 
 
-            
-        datapath = self.switches[switch]['connection']
-        ofproto = datapath.ofproto
-        match = self.build_of_match(datapath,inport,pred)
-        of_actions = self.build_of_actions(inport,action_list)
-        msg = datapath.ofproto_parser.OFPFlowMod(idle_timeout=idle_timeout, hard_timeout=hard_timeout,
-            datapath=datapath, match=match, cookie=0,
-            command=ofproto.OFPFC_ADD,
-            priority=priority,
-            flags=ofproto.OFPFF_SEND_FLOW_REM, actions=of_actions)
-        try:
-            datapath.send_msg(msg)
-        except RuntimeError, e:
-            print "WARNING:install_flow: %s to switch %d" % (str(e),switch)
-        except KeyError, e:
-            print "WARNING:install_flow: No connection to switch %d available" % switch
-     
-    def delete_flow(self,pred,priority):
-        switch = pred['switch']
-        if 'inport' in pred:        
-            inport = pred['inport']
-        else:
-            inport = None
-           
-        datapath = self.switches[switch]['connection']
-        ofproto = datapath.ofproto 
-        match = self.build_of_match(datapath,inport,pred)
-        msg = datapath.ofproto_parser.OFPFlowMod(
-            datapath=datapath, match=match, cookie=0,
-            command=ofproto.OFPFC_DELETE_STRICT,
-            priority=priority)
-        try:
-            datapath.send_msg(msg)
-        except RuntimeError, e:
-            print "WARNING:delete_flow: %s to switch %d" % (str(e),switch)
-        except KeyError, e:
-            print "WARNING:delete_flow: No connection to switch %d available" % switch
-              
-    def barrier(self,switch):
-        datapath = self.switches[switch]['connection']
-        barrier_request = datapath.ofproto_parser.OFPBarrierRequest(datapath=datapath)
-        datapath.send_msg(barrier_request) 
-        
-    def clear(self,switch=None):
-        if switch is None:
-            for switch in self.switches.keys():
-                self.clear(switch)
-        else:
-            datapath = self.switches[switch]['connection']
-            match = datapath.ofproto_parser.OFPMatch()
-            mod = datapath.ofproto_parser.OFPFlowMod(datapath=datapath, match=match, cookie=0, command=ofproto_v1_0.OFPFC_DELETE) 
-            datapath.send_msg(mod)
-        
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
-    def _handle_ConnectionUp(self, ev):  
+    # Register a single event to keep the app running
+    @set_ev_cls(ofp_event.EventOFPHello)
+    def _handle_Hello(self, ev):
+        pass
+
+    # Sends the message to the connected NetIDE clients
+    def send_to_clients(self, ev):
         msg = ev.msg
-        datapath = msg.datapath  
-        assert datapath.id not in self.switches
+        self.datapath = ev.msg.datapath
+        # Add all the switches connected datapath.id and the connection information to the local variable
+        if self.datapath.id not in self.switches:
+            self.switches[self.datapath.id] = self.datapath
 
-        self.switches[datapath.id] = {}
-        self.switches[datapath.id]['connection'] = datapath
-        self.switches[datapath.id]['ports'] = {}
-        
-        '''ofproto = datapath.ofproto
-        match = datapath.ofproto_parser.OFPMatch()
-        actions = [datapath.ofproto_parser.OFPActionOutput(ofproto_v1_0.OFPP_CONTROLLER)]
-        mod = datapath.ofproto_parser.OFPFlowMod(
-            datapath=datapath, match=match, cookie=0,
-            command=ofproto.OFPFC_ADD, actions=actions)
-        datapath.send_msg(mod)
-        '''
-        self.send_to_pyretic(['switch','join',datapath.id,'BEGIN'])
+        # Encapsulate the feature request and send to connected client
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, self.datapath.id, str(msg.buf))
+        # Forward the message to all the connected NetIDE clients
+        # for client in self.backend_server.clients:
+        #    client.send(msg_to_send)
+        self.CoreConnection.socket.send(msg_to_send)
 
-        # port type is ofp_phy_port
-        for port_nr in msg.ports:
-            port = msg.ports[port_nr]
-            if port.port_no <= ofproto_v1_0.OFPP_MAX:
-                self.switches[datapath.id]['ports'][port.port_no] = port.hw_addr
-                CONF_UP = not 'OFPPC_PORT_DOWN' in self.active_ofp_port_config(port.config)
-                STAT_UP = not 'OFPPS_LINK_DOWN' in self.active_ofp_port_state(port.state)
-                PORT_TYPE = self.active_ofp_port_features(port.curr) 
-                self.send_to_pyretic(['port','join',datapath.id, port.port_no, CONF_UP, STAT_UP, PORT_TYPE])                        
-   
-        self.send_to_pyretic(['switch','join',datapath.id,'END'])
-    
-    @set_ev_cls(dpset.EventDP, CONFIG_DISPATCHER)    
-    def _handle_ConnectionDown(self, ev):
-        if ev.enter == False:
-            assert ev.dp.id in self.switches
-        
-            del self.switches[ev.dp.id]
-            self.send_to_pyretic(['switch','part',ev.dp.id])
 
-    def of_match_to_dict(self, m):
-        h = {}
-        if not m.in_port is None:
-            h["inport"] = m.in_port
-        if not m.dl_src is None:
-            h["srcmac"] = m.dl_src
-        if not m.dl_dst is None:
-            h["dstmac"] = m.dl_dst
-        if not m.dl_type is None:
-            h["ethtype"] = m.dl_type
-        if not m.dl_vlan is None:
-            h["vlan_id"] = m.dl_vlan
-        if not m.dl_vlan_pcp is None:
-            h["vlan_pcp"] = m.dl_vlan_pcp
-        if not m.nw_src is None:
-            h["srcip"] = m.nw_src
-        if not m.nw_dst is None:
-            h["dstip"] = m.nw_dst
-        if not m.nw_proto is None:
-            h["protocol"] = m.nw_proto
-        if not m.nw_tos is None:
-            h["tos"] = m.nw_tos
-        if not m.tp_src is None:
-            h["srcport"] = m.tp_src
-        if not m.tp_dst is None:
-            h["dstport"] = m.tp_dst
-        return h
+class NetIDEOps:
 
-    def of_actions_to_dicts(self, actions):
-        action_dicts = []
-        for a in actions:
-            d = {}
-            if a.type == ofproto_v1_0.OFPAT_OUTPUT:
-                d['output'] = a.port
-            elif a.type == ofproto_v1_0.OFPAT_ENQUEUE:
-                d['enqueue'] = a.port
-            elif a.type == ofproto_v1_0.OFPAT_STRIP_VLAN:
-                d['strip_vlan_id'] = 0
-            elif a.type == ofproto_v1_0.OFPAT_SET_VLAN_VID:
-                d['vlan_id'] = a.vlan_vid
-            elif a.type == ofproto_v1_0.OFPAT_SET_VLAN_PCP:
-                d['vlan_pcp'] = a.vlan_pcp
-            elif a.type == ofproto_v1_0.OFPAT_SET_DL_SRC:
-                d['srcmac'] = a.dl_addr.toRaw()
-            elif a.type == ofproto_v1_0.OFPAT_SET_DL_DST:
-                d['dstmac'] = a.dl_addr.toRaw()
-            elif a.type == ofproto_v1_0.OFPAT_SET_NW_SRC:
-                d['srcip'] = a.nw_addr.toRaw()
-            elif a.type == ofproto_v1_0.OFPAT_SET_NW_DST:
-                d['dstip'] = a.nw_addr.toRaw()
-            elif a.type == ofproto_v1_0.OFPAT_SET_NW_TOS:
-                d['tos'] = a.nw_tos
-            elif a.type == ofproto_v1_0.OFPAT_SET_TP_SRC:
-                d['srcport'] = a.tp_port
-            elif a.type == ofproto_v1_0.OFPAT_SET_TP_DST:
-                d['dstport'] = a.tp_port
-            action_dicts.append(d)
-        return action_dicts
+    # Define the NetIDE Version
+    NetIDE_version = 0x01
+    # Define the NetIDE message types and codes
+    NetIDE_type = {
+        'NETIDE_HELLO'      : 0x01,
+        'NETIDE_ERROR'      : 0x40,
+        'NETIDE_OPENFLOW'   : 0x11,
+        'NETIDE_NETCONF'    : 0x12,
+        'NETIDE_OPFLEX'     : 0x13
+    }
 
-#TODO: test _handle_FlowStatsReceived
-    @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
-    def _handle_FlowStatsReceived (self, ev):
-        msg = ev.msg
-        body = msg.body
-        datapath = msg.datapath 
-        dpid = datapath.id
-        def handle_ofp_flow_stat(flow_stat):
-            flow_stat_dict = {}
-            flow_stat_dict['table_id'] = flow_stat.table_id 
-            #flow_stat.match
-            flow_stat_dict['duration_sec'] = flow_stat.duration_sec
-            flow_stat_dict['duration_nsec'] = flow_stat.duration_nsec
-            flow_stat_dict['priority'] = flow_stat.priority
-            flow_stat_dict['idle_timeout'] = flow_stat.idle_timeout
-            flow_stat_dict['hard_timeout'] = flow_stat.hard_timeout
-            flow_stat_dict['cookie'] = flow_stat.cookie    
-            flow_stat_dict['packet_count'] = flow_stat.packet_count
-            flow_stat_dict['byte_count'] = flow_stat.byte_count
-            match = self.of_match_to_dict(flow_stat.match)
-            flow_stat_dict['match'] = match
-            actions = self.of_actions_to_dicts(flow_stat.actions)
-            flow_stat_dict['actions'] = actions
-            return flow_stat_dict
-        flow_stats = [handle_ofp_flow_stat(s) for s in body]
-        self.send_to_pyretic(['flow_stats_reply',dpid,flow_stats])
-        
-    @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
-    def _handle_PortStatus(self, ev):       
-        msg = ev.msg
-        reason = msg.reason
-        datapath = msg.datapath
-        port = msg.desc
-        
-        if port.port_no <= ofproto_v1_0.OFPP_MAX:
-            if reason == ofproto_v1_0.OFPPR_ADD:
-                self.switches[datapath.id]['ports'][port.port_no] = port.hw_addr
-                CONF_UP = not 'OFPPC_PORT_DOWN' in self.active_ofp_port_config(port.config)
-                STAT_UP = not 'OFPPS_LINK_DOWN' in self.active_ofp_port_state(port.state)
-                PORT_TYPE = self.active_ofp_port_features(port.curr) 
-                self.send_to_pyretic(['port','join',datapath.id, port.port_no, CONF_UP, STAT_UP, PORT_TYPE])
-            elif reason == ofproto_v1_0.OFPPR_DELETE:
-                try:
-                    del self.switches[datapath.id]['ports'][port.port_no] 
-                except KeyError:
-                    pass  # SWITCH ALREADY DELETED
-                self.send_to_pyretic(['port','part',datapath.id,port.port_no])
-            elif reason == ofproto_v1_0.OFPPR_MODIFY:
-                CONF_UP = not 'OFPPC_PORT_DOWN' in self.active_ofp_port_config(port.config)
-                STAT_UP = not 'OFPPS_LINK_DOWN' in self.active_ofp_port_state(port.state)
-                PORT_TYPE = self.active_ofp_port_features(port.curr) 
-                self.send_to_pyretic(['port','mod',datapath.id, port.port_no, CONF_UP, STAT_UP, PORT_TYPE])
-            else:
-                raise RuntimeException("Unknown port status event")
-        
-        
-    def handle_lldp(self,ev):
-        
-        #print "handle_lldp"
-        
-        CHASSIS_ID_PREFIX = 'dpid:'
-        CHASSIS_ID_PREFIX_LEN = len(CHASSIS_ID_PREFIX)
-        PORT_ID_STR = '!I'      # uint32_t
-        PORT_ID_SIZE = 4
-        
-        msg = ev.msg
-  
-        def lldp_parse(data):
-            pkt = packet.Packet(data)
-            i = iter(pkt)
-            eth_pkt = i.next()
-            assert type(eth_pkt) == ethernet.ethernet
-    
-            lldp_pkt = i.next()
-            if type(lldp_pkt) != lldp.lldp:
-                raise RYUClient.LLDPUnknownFormat()
-    
-            tlv_chassis_id = lldp_pkt.tlvs[0]
-            if tlv_chassis_id.subtype != lldp.ChassisID.SUB_LOCALLY_ASSIGNED:
-                raise RYUClient.LLDPUnknownFormat(
-                    msg='unknown chassis id subtype %d' % tlv_chassis_id.subtype)
-            chassis_id = tlv_chassis_id.chassis_id
-            if not chassis_id.startswith(CHASSIS_ID_PREFIX):
-                raise RYUClient.LLDPUnknownFormat(
-                    msg='unknown chassis id format %s' % chassis_id)
-            src_dpid = str_to_dpid(chassis_id[CHASSIS_ID_PREFIX_LEN:])
-    
-            tlv_port_id = lldp_pkt.tlvs[1]
-            if tlv_port_id.subtype != lldp.PortID.SUB_PORT_COMPONENT:
-                raise RYUClient.LLDPUnknownFormat(
-                    msg='unknown port id subtype %d' % tlv_port_id.subtype)
-            port_id = tlv_port_id.port_id
-            if len(port_id) != PORT_ID_SIZE:
-                raise RYUClient.LLDPUnknownFormat(
-                    msg='unknown port id %d' % port_id)
-            (src_port_no, ) = struct.unpack(PORT_ID_STR, port_id)
-    
-            return src_dpid, src_port_no
-        
-        
-        try:
-            src_dpid, src_port_no = lldp_parse(msg.data)
-        except RYUClient.LLDPUnknownFormat as e:
-            # This handler can receive all the packets which can be
-            # not-LLDP packet. Ignore it silently
-            return
-        
-        dst_dpid = msg.datapath.id
-        dst_port_no = msg.in_port
-        
-        self.send_to_pyretic(['link',src_dpid, src_port_no, dst_dpid, dst_port_no])
-        
-        return    
-          
-    # PacketIn handler for reactive actions
-    @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        msg = ev.msg
-        datapath = msg.datapath
-        pkt = packet.Packet(msg.data)
-        eth = pkt.get_protocol(ethernet.ethernet)
-        
-        if eth.ethertype == ether.ETH_TYPE_LLDP: 
-            self.handle_lldp(ev)
-            return
-        elif eth.ethertype == ether.ETH_TYPE_IPV6:  # IGNORE IPV6
-            return 
-        
-        received = self.packet_from_network(switch=datapath.id, inport=msg.in_port, raw=msg.data)
-        self.send_to_pyretic(['packet',received])
-    
+    # Define the supported switch control protocols we support and versios
+    # Should be determined by underlying network/switches??
+    # Protocol:
+    # 0x10 = OpenFlow: versions - 0x01 = 1.0; 0x02 = 1.1; 0x03 = 1.2; 0x04 = 1.3; 0x05 = 1.4
+    # 0x11 = NetConf: versions - 0x01 = RFC6241 of NetConf
+    # 0x12 = OpFlex: versions - 0x00 = Version in development
+    NetIDE_supported_protocols = {
+        0x11    : {0x01, 0x02, 0x03, 0x04, 0x5},
+        0x12    : {0x01},
+        0x13    : {0x00}
+    }
+
+ # Encode a message in the NetIDE protocol format
+    @staticmethod
+    def netIDE_encode(type, xid, datapath_id, msg):
+        length = len(msg)
+        type_code = NetIDEOps.NetIDE_type[type]
+        # if no transaction id is given, generate a random one.
+        if xid is None:
+            xid = random.getrandbits(32)
+        if datapath_id is None:
+            datapath_id = 0
+        values = (NetIDEOps.NetIDE_version, type_code, length, xid, datapath_id, msg)
+        packer = struct.Struct('!BBHIQ'+str(length)+'s')
+        packed_msg = packer.pack(*values)
+        return packed_msg
+
+    # Decode NetIDE header of a message (first 16 Bytes of the read message
+    @staticmethod
+    def netIDE_decode_header(raw_data):
+        unpacker = struct.Struct('!BBHIQ')
+        return unpacker.unpack(raw_data)
+
+    # Decode NetIDE messages received in binary format. Iput: Raw data and length of the encapsulated message
+    # Length can be retrieve by decoding the header first
+    # NEEDS TO BE CHANGED MAYBE?
+    @staticmethod
+    def netIDE_decode(raw_data, length):
+        unpacker = struct.Struct('!BBHIQ'+str(length)+'s')
+        return unpacker.unpack(raw_data)
+
+    # Encode the hello handshake message
+    @staticmethod
+    def netIDE_encode_handshake(protocols):
+
+        # Get count for number of supported protocols and versions
+        count = 0
+        values = []
+        for protocol in protocols.items():
+            for version in protocol[1]:
+                count += 1
+                values.append(protocol[0])
+                values.append(version)
+
+        packer = struct.Struct('!'+str(count*2)+'B')
+        return packer.pack(*values)
+
+    # Decode the hello handshake message and return tuple
+    @staticmethod
+    def netIDE_decode_handshake(raw_data, length):
+        packer = struct.Struct('!'+str(length)+'B')
+        unpacked = packer.unpack(raw_data)
+        return unpacked
+
+    # Return the key name from a value in a dictionary
+    @staticmethod
+    def key_by_value(dictionary, value):
+        for key, val in dictionary:
+            if value == val:
+                return key
