@@ -28,7 +28,7 @@ public class Activator implements BundleActivator {
     public void start(BundleContext context) {
         System.out.println("Core Shim Management starting...");
         _shimManager = new ShimManager();
-        _shimManager.SetConnector(new SocketBasedShimConnector(_shimManager));
+        _shimManager.SetConnector(new ZeroMQBasedShimConnector(_shimManager));
         _shimManager.GetConnector().Open(41414);
 
         _shimManagerServiceRegistration = context.registerService(IShimManager.class, _shimManager, null);
