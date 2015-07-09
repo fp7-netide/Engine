@@ -134,32 +134,50 @@ def list_controllers(args):
         return 1
 
 def stop_controllers(args):
-    with FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
-        try:
-            d = json.load(f)
-            for c in d["controllers"]:
-                for pid in [p["pid"] for p in d["controllers"][c]["procs"]]:
-                    try:
-                        # TODO: gentler (controller specific) way of shutting down?
-                        os.kill(pid, signal.SIGTERM)
-                        logging.info("Sent a SIGTERM to process {} for controller {}".format(pid, c))
-                        time.sleep(5)
-                        os.kill(pid, signal.SIGKILL)
-                        logging.info("Sent a SIGKILL to process {} for controller {}".format(pid, c))
-                    except ProcessLookupError:
-                        pass
-            f.seek(0)
-            f.truncate()
-            del d["controllers"]
-            json.dump(d, f)
-        except KeyError:
-            logging.info("Nothing to stop")
-            return 0
-        except Exception as err:
-            logging.error(err)
-            return 1
-    return 0
+    if args.mode not in ["all", "appcontroller"]:
+        logging.error("Unknown stop mode {}, expected one of ['all', 'appcontroller']".format(args.mode))
+        return 1
 
+    if args.mode == "appcontroller":
+        if args.package is not None:
+            logging.error("Package argument is only meaningful on server controllers")
+            return 1
+        with FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
+            try:
+                d = json.load(f)
+                for c in d["controllers"]:
+                    for pid in [p["pid"] for p in d["controllers"][c]["procs"]]:
+                        try:
+                            # TODO: gentler (controller specific) way of shutting down?
+                            os.kill(pid, signal.SIGTERM)
+                            logging.info("Sent a SIGTERM to process {} for controller {}".format(pid, c))
+                            time.sleep(5)
+                            os.kill(pid, signal.SIGKILL)
+                            logging.info("Sent a SIGKILL to process {} for controller {}".format(pid, c))
+                        except ProcessLookupError:
+                            pass
+                f.seek(0)
+                f.truncate()
+                del d["controllers"]
+                json.dump(d, f)
+            except KeyError:
+                logging.info("Nothing to stop")
+            except Exception as err:
+                logging.error(err)
+                return 1
+    else:
+        if args.package is None:
+            logging.error("Need a package to stop (for client host names, ports, ...)")
+            return 1
+        with util.TempDir("netide-stop") as t:
+            pkg = Package(args.package, t)
+            for c in pkg.get_clients():
+                ssh, _ = util.build_ssh_commands(c)
+                logging.debug("SSH {}".format(ssh))
+
+                cmd = "cd ~/netide-loader; ./netideloader.py stop --mode=appcontroller"
+                util.spawn_logged(ssh + [cmd])
+    return 0
 
 def get_topology(args):
     if args.host is None:
@@ -214,6 +232,8 @@ if __name__ == "__main__":
     parser_list.set_defaults(func=list_controllers)
 
     parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
+    parser_stop.add_argument("package", type=str, nargs="?", help="Package to stop (only on server controllers)")
+    parser_stop.add_argument("--mode", type=str, default="all", help="Stop mode, one of {appcontroller,all}, defaults to all")
     parser_stop.set_defaults(func=stop_controllers)
 
     parser_topology = subparsers.add_parser("gettopology", description="Show network topology")
