@@ -37,8 +37,10 @@ public class Activator implements BundleActivator {
     }
 
     public void stop(BundleContext context) {
-        _shimManagerServiceRegistration.unregister();
-        _shimManager.GetConnector().Close();
+        if (_shimManagerServiceRegistration != null)
+            _shimManagerServiceRegistration.unregister();
+        if (_shimManager != null && _shimManager.GetConnector() != null)
+            _shimManager.GetConnector().Close();
         _shimManager = null;
         System.out.println("Core Shim Management stopped!");
     }
