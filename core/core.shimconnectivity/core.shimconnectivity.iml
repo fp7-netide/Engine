@@ -7,7 +7,12 @@
           <property key="Bundle-Description" value="core.shimconnectivity OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core*;version=1.0.0.0" />
           <property key="Import-Package" value="*" />
+          <property key="Embed-Dependency" value="*;scope=compile|runtime" />
+          <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.shimconnectivity Bundle" />
+          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
+          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
+          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
@@ -43,6 +48,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="module" module-name="core.api" />
+    <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
+    <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
   </component>
 </module>
