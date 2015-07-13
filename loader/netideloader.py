@@ -276,4 +276,8 @@ if __name__ == "__main__":
     if 'func' not in vars(args):
         parser.print_help()
         sys.exit(1)
+    if "mode" in vars(args) and args.mode == "appcontroller":
+        f = logging.Formatter("Client: %(levelname)-7s %(message)s")
+        l = logging.getLogger()
+        l.handlers[0].setFormatter(f)
     sys.exit(args.func(args))
