@@ -125,13 +125,34 @@ def load_package(args):
     return 0
 
 def list_controllers(args):
-    try:
-        with FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
-            print(f.read())
-        return 0
-    except Exception as err:
-        logging.error(err)
-        return 1
+    if args.mode not in ["all", "appcontroller"]:
+        logging.error("Unknown mode {}".format(args.mode))
+
+    if args.mode == "appcontroller":
+        if args.package is not None:
+            logging.warning("Package argument only makes sense on the server controller")
+        try:
+            with FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
+                print(f.read())
+        except Exception as err:
+            logging.error(err)
+            return 1
+    else:
+        if args.package is None:
+            logging.error("Package argument required")
+            return 1
+        with util.TempDir("netide-show") as t:
+            for c in Package(args.package, t).get_clients():
+                ssh, _ = util.build_ssh_commands(c)
+                cmd = "cd ~/netide-loader; ./netideloader.py list --mode=appcontroller"
+                try:
+                    data = sp.check_output(ssh + [cmd], stderr=sp.STDOUT).strip().decode('utf-8')
+                except sp.CalledProcessError:
+                    logging.warning("Could not get list output from {}".format(c[0]))
+                else:
+                    print(data)
+    return 0
+
 
 def stop_controllers(args):
     if args.mode not in ["all", "appcontroller"]:
@@ -229,6 +250,9 @@ if __name__ == "__main__":
     parser_load.set_defaults(func=load_package, mode="all")
 
     parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
+    parser_list.add_argument("--mode", type=str, help="List mode, one of {appcontroller,all}", default="all")
+    parser_list.add_argument("package",
+        type=str, nargs="?", help="Package to list controllers of (only on server controller")
     parser_list.set_defaults(func=list_controllers)
 
     parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
