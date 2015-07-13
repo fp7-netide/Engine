@@ -47,7 +47,7 @@ class Package(object):
         logging.debug("Loading applications for host {}".format(platform.node()))
         p = os.path.join(self.path, "_apps")
         for d in os.listdir(p):
-            if d not in self.config.get("clients", {}).get(platform.node(), {}):
+            if d not in self.config.get("clients", {}).get(platform.node(), {}).get("apps", []):
                 logging.debug("Skipping application {} (not for this host)".format(d))
                 continue
             logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
@@ -80,12 +80,7 @@ class Package(object):
 
     def get_clients(self):
         clients = [ ]
-        for name in self.config.get("clients", {}).keys():
-            if name not in self.config.get("ssh", {}):
-                logging.info("SSH configuration for client controllers host {} not found".format(name))
-                continue
-            d = self.config.get("ssh", {})[name]
-
+        for (name, d) in self.config.get("clients", {}).items():
             host = d.get("host", name)
             if "user" in d:
                 host = "{}@{}".format(d["user"], host)

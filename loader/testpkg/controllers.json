@@ -1,12 +1,11 @@
 {
    "server": {
-      "type": "odl"
+      "type": "odl",
+      "host": "fgcn-of-26"
    },
    "clients": {
-      "vagrant-ubuntu-trusty-64": [ "app1", "fw" ]
-   },
-   "ssh": {
       "vagrant-ubuntu-trusty-64": {
+         "apps": ["app1", "fw"],
          "user": "vagrant",
          "host": "127.0.0.1",
          "port": 2200,
