@@ -53,10 +53,10 @@ def do_client_installs(pkgpath):
             logging.info("Doing client install for '{}' on host {} now".format(pkgpath, c))
             # TODO:
             # [X] Copy self to application controller (SCP)
-            where = sp.check_output(ssh + ["pwd"], stderr=sp.STDOUT).strip().decode('utf-8')
+            where = sp.check_output(ssh + ["pwd"], stderr=sp.DEVNULL).strip().decode('utf-8')
             where = "{}/netide-loader".format(where)
 
-            p = sp.check_output(ssh + ["mkdir -p {}".format(where)], stderr=sp.STDOUT)
+            p = sp.check_output(ssh + ["mkdir -p {}".format(where)], stderr=sp.DEVNULL)
             logging.info("Copying NetIDE loader to target '{}'".format(c))
             util.spawn_logged(scp + [".", "{}:{}".format(c[0], where)])
 
@@ -65,7 +65,7 @@ def do_client_installs(pkgpath):
             util.spawn_logged(ssh + ["cd {}; ./setup.sh".format(where)])
 
             # [X] Copy package to app controller
-            dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.STDOUT).strip().decode('utf-8')
+            dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.DEVNULL).strip().decode('utf-8')
             logging.info("Copying NetIDE package '{}' to target '{}'".format(pkgpath, c))
             util.spawn_logged(scp + [pkgpath, "{host}:{dir}".format(host=c[0], dir=dir)])
 

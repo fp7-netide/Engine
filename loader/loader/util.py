@@ -29,7 +29,7 @@ def build_ssh_commands(c):
     # Let's see if we can use rsync instead of scp
     use_rsync = True
     try:
-        sp.check_output(["rsync"], stderr=sp.STDOUT)
+        sp.check_output(["rsync"], stderr=sp.DEVNULL)
     except sp.CalledProcessError:
         # We can use rsync
         pass
@@ -51,6 +51,7 @@ def build_ssh_commands(c):
         ssh.extend(["-i", str(c[2])])
         if not use_rsync:
             scp.extend(["-i", str(c[2])])
+    ssh.extend(["-o", "StrictHostKeyChecking=no"]) # -o UserKnownHostsFile=/dev/null
     ssh.append(c[0])
 
     if use_rsync:
