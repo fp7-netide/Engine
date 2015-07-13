@@ -111,7 +111,7 @@ def load_package(args):
                 logging.debug("SCP {}".format(scp))
                 logging.debug(c)
 
-                dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.STDOUT).strip().decode('utf-8')
+                dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.DEVNULL).strip().decode('utf-8')
                 logging.debug("Temp: {}".format(dir))
                 util.spawn_logged(scp + [args.package, "{host}:{dir}".format(host=c[0], dir=dir)])
 
@@ -146,7 +146,7 @@ def list_controllers(args):
                 ssh, _ = util.build_ssh_commands(c)
                 cmd = "cd ~/netide-loader; ./netideloader.py list --mode=appcontroller"
                 try:
-                    data = sp.check_output(ssh + [cmd], stderr=sp.STDOUT).strip().decode('utf-8')
+                    data = sp.check_output(ssh + [cmd], stderr=sp.DEVNULL).strip().decode('utf-8')
                 except sp.CalledProcessError:
                     logging.warning("Could not get list output from {}".format(c[0]))
                 else:
