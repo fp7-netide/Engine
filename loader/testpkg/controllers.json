@@ -5,7 +5,7 @@
    },
    "clients": {
       "vagrant-ubuntu-trusty-64": {
-         "apps": ["app1", "fw"],
+         "apps": ["l2switch", "fw"],
          "user": "vagrant",
          "host": "127.0.0.1",
          "port": 2200,
