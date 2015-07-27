@@ -129,6 +129,7 @@ def do_appcontroller_install(pkg):
             logging.info("Nothing to be done for '{}'".format(pkg))
             return
 
+        oldpwd = os.getcwd()
         if os.path.exists(os.path.expanduser("~/IDE")):
             # Already checked out, update
             os.chdir(os.path.expanduser("~/IDE"))
@@ -140,6 +141,7 @@ def do_appcontroller_install(pkg):
             s = sp.check_output(["git", "clone", "-b", "development", "https://github.com/fp7-netide/IDE.git"],
                     stderr=sp.STDOUT).decode('utf-8').strip()
         logging.debug(s)
+        os.chdir(oldpwd)
 
         # Install Engine
         script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts", "install_engine.sh"]
