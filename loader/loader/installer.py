@@ -105,6 +105,12 @@ def do_appcontroller_install(pkg):
                     stderr=sp.STDOUT).decode('utf-8').strip()
         logging.debug(s)
 
+        # Install Engine
+        script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts", "install_engine.sh"]
+        script = os.path.expanduser(os.path.join(*script))
+        logging.debug("Installing Engine with script '{}'".format(script))
+        r = util.spawn_logged(["bash", script])
+
         # The goodies are now in ~/IDE/plugins/eu.netide.configuration.launcher/scripts/
         for c in pkg.controllers:
             cname = c.__name__.lower()
