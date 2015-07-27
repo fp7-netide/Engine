@@ -23,6 +23,7 @@
 #     - Try them one after another until one works? Could be unreliable.
 
 import json
+import logging
 import sys
 
 import requests
@@ -42,9 +43,10 @@ def getSWID(id):
 
 # "83.212.118.90:8080"
 def get(addr="127.0.0.1:8080"):
-    r = requests.get(ODL_URL_EDGES.format(addr=addr, container=containerName), auth=HTTPBasicAuth('admin', 'admin'))
+    r = requests.get(ODL_URL_EDGES.format(addr=addr, container=containerName),
+            auth=HTTPBasicAuth('admin', 'admin'))
     topo_info = r.json()
-    # print(json.dumps(topo_info, indent=2), file=sys.stderr)
+    # logging.debug(json.dumps(topo_info, indent=2))
     odlEdges = topo_info['edgeProperties']
     switches = {}
     edges = []
