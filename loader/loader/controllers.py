@@ -85,8 +85,11 @@ class Ryu(Base):
 
             logging.debug('Launching "{}" now'.format(cmdline))
             env = os.environ.copy()
-            env["PYTHONPATH"] = (env["PYTHONPATH"] + ":" if "PYTHONPATH" in env else "") + \
-                    os.path.abspath(os.path.relpath(a.path))
+            ppath = [os.path.abspath(os.path.relpath(a.path))]
+            if "PYTHONPATH" in env:
+                ppath.append(env["PYTHONPATH"])
+            env["PYTHONPATH"] = ":".join(ppath)
+            logging.debug(env["PYTHONPATH"])
 
             myid = str(uuid.uuid4())
             logdir = self.makelogdir(myid)
