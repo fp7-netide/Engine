@@ -51,7 +51,7 @@ def build_ssh_commands(c):
         ssh.extend(["-i", str(c[2])])
         if not use_rsync:
             scp.extend(["-i", str(c[2])])
-    ssh.extend(["-o", "StrictHostKeyChecking=no"]) # -o UserKnownHostsFile=/dev/null
+    ssh.extend(["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile={}".format(tempfile.mktemp())]) # XXX
     ssh.append(c[0])
 
     if use_rsync:
