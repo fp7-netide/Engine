@@ -15,6 +15,7 @@
 
 import logging
 import os
+import platform
 import subprocess as sp
 import sys
 
@@ -28,8 +29,43 @@ def do_server_install(pkg):
     logging.debug("Doing server install for '{}' now".format(pkg))
     with util.TempDir("netide-server-install") as t:
         p = Package(pkg, t)
-        if p.applies():
-            logging.info("Nothing to be done for '{}'".format(pkg))
+        if "server" not in p.config:
+            raise InstallException('"server" section missing from configuration!')
+
+        conf = p.config["server"]
+        if "host" in conf and platform.node() != conf["host"]:
+            raise InstallException("Attempted server installation on host {} (!= {})".format(platform.node(), conf["host"]))
+
+        if "type" not in conf:
+            raise InstallException('"type" section missing from configuration!')
+
+        logging.debug("Attempting install of server controller {}".format(conf["type"]))
+
+        if conf["type"] not in ["odl"]:
+            raise InstallException("Don't know how to do a server controller installation for controller {}!".format(conf["type"]))
+
+        oldpwd = os.getcwd()
+
+        scripts = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
+        prefix = os.path.expanduser("~")
+        if not os.path.exists(os.path.join(prefix, "IDE")):
+            # Repo not yet checked out
+            os.makedirs(prefix, exist_ok=True)
+            os.chdir(prefix)
+            util.spawn_logged(["git", "clone", "-b", "development", "https://github.com/fp7-netide/IDE.git"])
+        else:
+            os.chdir(os.path.join(prefix, "IDE"))
+            util.spawn_logged(["git", "pull", "origin", "development"])
+
+        script = os.path.expanduser(os.path.join(*scripts + ["install_engine.sh"]))
+        util.spawn_logged(["bash", script])
+
+        script = os.path.expanduser(os.path.join(*scripts + ["install_{}.sh".format(conf["type"])]))
+        logging.debug("Using script {} to install {} ({})".format(script, conf["type"], os.path.exists(script)))
+
+        util.spawn_logged(["bash", script])
+        os.chdir(oldpwd)
+
 
 def do_client_installs(pkgpath):
     "Dispatches installation requests to client machines after gaining a foothold on them. Requires passwordless SSH access to \
