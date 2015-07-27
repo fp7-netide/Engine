@@ -21,11 +21,11 @@ import org.osgi.framework.BundleContext;
 public class Activator implements BundleActivator {
 
     public void start(BundleContext context) {
-        System.out.println("NetIDE Core API started!");
+        //System.out.println("NetIDE Core API started!");
     }
 
     public void stop(BundleContext context) {
-        System.out.println("NetIDE Core API stopped!");
+        //System.out.println("NetIDE Core API stopped!");
     }
 
 }

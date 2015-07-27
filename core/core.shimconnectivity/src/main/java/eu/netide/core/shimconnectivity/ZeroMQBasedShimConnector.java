@@ -14,26 +14,29 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
     private ZMQ.Context _context;
     private ZMQ.Socket _socket;
     private Thread _thread;
+    private boolean _isOpen = false;
 
     private IShimMessageListener _listener;
 
-    public ZeroMQBasedShimConnector(IShimMessageListener listener) {
-        _listener = listener;
+    public ZeroMQBasedShimConnector() {
+
     }
 
-    public void Open(int port) {
-        System.out.println("Starting shim ZeroMQ server...");
-        _port = port;
+    public void Start() {
         _thread = new Thread(this);
         _thread.start();
     }
 
-    public void Close() {
-        System.out.println("Closing shim connection server...");
+    public void Stop() {
         if (_thread != null) {
             _thread.interrupt();
+            try {
+                Thread.sleep(600);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-        _context.term();
+        System.out.println("ZeroMQBasedShimConnector stopped.");
     }
 
     public void SendMessage(String message) {
@@ -42,25 +45,51 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
         msg.add("PS1"); // TODO replace with shim id
         msg.add("");
         msg.add(message);
-        msg.send(_socket);
+        if (_isOpen)
+            msg.send(_socket);
     }
 
     public void run() {
+        System.out.println("ZeroMQBasedShimConnector started.");
         _context = ZMQ.context(1);
         _socket = _context.socket(ZMQ.ROUTER);
         System.out.println("Listening for shim on port " + _port);
         _socket.bind("tcp://*:" + _port);
+        _socket.setReceiveTimeOut(10);
+        _isOpen = true;
+
+        ZMQ.Poller poller = new ZMQ.Poller(1);
+        poller.register(_socket, ZMQ.Poller.POLLIN);
 
         while (!Thread.currentThread().isInterrupted()) {
-            ZMsg message = ZMsg.recvMsg(_socket);
-            String senderId = message.getFirst().toString();
-            String messageText = message.getLast().toString();
-            System.out.println("Received from '" + senderId + "':" + messageText);
-            ZMsg response = new ZMsg();
-            response.add(senderId);
-            response.add("Pingback. You sent '" + messageText + "'.");
-            response.send(_socket);
+            int signalled = poller.poll(10);
+            if (signalled == 1) {
+                ZMsg message = ZMsg.recvMsg(_socket);
+                String senderId = message.getFirst().toString();
+                String messageText = message.getLast().toString();
+                System.out.println("Received from '" + senderId + "':" + messageText);
+                ZMsg response = new ZMsg();
+                response.add(senderId);
+                response.add("Pingback. You sent '" + messageText + "'.");
+                response.send(_socket);
+            }
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                break;
+            }
         }
+        _isOpen = false;
         _socket.close();
+        _context.term();
+    }
+
+    public void setPort(int port) {
+        _port = port;
+        System.out.println("ZeroMQ server port set to" + port);
+    }
+
+    public int getPort() {
+        return _port;
     }
 }

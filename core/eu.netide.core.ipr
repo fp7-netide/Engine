@@ -99,6 +99,15 @@
     </doccer>
   </component>
   <component name="libraryTable">
+    <library name="eu.netide.core:core.api:1.0.0.0" type="repository">
+      <properties maven-id="eu.netide.core:core.api:1.0.0.0" />
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.api/1.0.0.0/core.api-1.0.0.0.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/osgi/org.osgi.core/5.0.0/org.osgi.core-5.0.0.jar!/" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
     <library name="Maven: org.osgi:org.osgi.core:5.0.0">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/org/osgi/org.osgi.core/5.0.0/org.osgi.core-5.0.0.jar!/" />
