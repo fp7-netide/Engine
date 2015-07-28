@@ -5,8 +5,8 @@
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.caos-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.caos" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.caos OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core*;version=1.0.0.0" />
-          <property key="Import-Package" value="*" />
+          <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0" />
+          <property key="Import-Package" value="eu.netide.core.api,*" />
           <property key="Bundle-Name" value="core.caos Bundle" />
           <property key="Include-Resource" value="OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml,META-INF/MANIFEST.MF=$MODULE_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
         </additionalProperties>

@@ -86,7 +86,7 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
 
     public void setPort(int port) {
         _port = port;
-        System.out.println("ZeroMQ server port set to" + port);
+        System.out.println("ZeroMQ server port set to " + port);
     }
 
     public int getPort() {

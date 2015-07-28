@@ -5,7 +5,7 @@
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.api-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.api.Activator" bundleSymbolicName="core.api" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.api OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core.api*;version=1.0.0.0" />
+          <property key="Export-Package" value="eu.netide.core.api;version=1.0.0.0" />
           <property key="Import-Package" value="*" />
           <property key="Bundle-Name" value="core.api Bundle" />
           <property key="Include-Resource" value="OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml,META-INF/MANIFEST.MF=$MODULE_DIR$/src/main/resources/META-INF/MANIFEST.MF" />

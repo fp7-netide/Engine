@@ -10,7 +10,7 @@
         <bundle>mvn:eu.netide.core/core.shimconnectivity/1.0.0.0</bundle>
     </feature>
     <feature name="netide-core">
-        <feature>netide-core-api</feature>
+        <feature prerequisite="true">netide-core-api</feature>
         <feature>netide-core-shimconnectivity</feature>
         <feature>netide-core-caos</feature>
     </feature>

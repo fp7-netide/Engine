@@ -12,11 +12,11 @@ public class ShimManager implements IShimManager, IShimMessageListener {
     private IShimConnector _connector;
 
     public void Start() {
-        System.out.println("ShimManager started by Aries.");
+        System.out.println("ShimManager started.");
     }
 
     public void Stop() {
-        System.out.println("ShimManager stopped by Aries.");
+        System.out.println("ShimManager stopped.");
     }
 
     public void OnMessage(String message) {
@@ -25,7 +25,6 @@ public class ShimManager implements IShimManager, IShimMessageListener {
 
     public void setConnector(IShimConnector connector) {
         _connector = connector;
-        System.out.println("ShimConnector for ShimManager set by Aries");
     }
 
     public IShimConnector getConnector() {

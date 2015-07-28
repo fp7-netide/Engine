@@ -57,10 +57,10 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>eu.netide.core.caos.Activator</Bundle-Activator>
                         <Export-Package>
-                            eu.netide.core*;version=${project.version}
+                            eu.netide.core.caos;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            *
+                            eu.netide.core.api,*
                         </Import-Package>
                     </instructions>
                 </configuration>

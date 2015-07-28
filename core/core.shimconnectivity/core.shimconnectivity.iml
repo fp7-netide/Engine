@@ -5,7 +5,7 @@
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.shimconnectivity-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.shimconnectivity.Activator" bundleSymbolicName="core.shimconnectivity" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.shimconnectivity OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core*;version=1.0.0.0" />
+          <property key="Export-Package" value="eu.netide.core.shimconnectivity;version=1.0.0.0" />
           <property key="Import-Package" value="*" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />

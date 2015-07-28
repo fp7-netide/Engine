@@ -13,11 +13,11 @@ public class CompositionManager implements ICompositionManager {
 
     public void Start() {
         // TODO read specification, startup subapplications
-        System.out.println("CompositionManager started by Aries");
+        System.out.println("CompositionManager started.");
     }
 
     public void Stop() {
-        System.out.println("CompositionManager stopped by Aries");
+        System.out.println("CompositionManager stopped.");
     }
 
     public void OnPacketIn(PacketInEventArgs args) {
@@ -30,7 +30,6 @@ public class CompositionManager implements ICompositionManager {
 
     public void setShimManager(IShimManager manager) {
         shimManager = manager;
-        System.out.println("ShimManager in CompositionManager set by Aries");
     }
 
     public IShimManager getShimManager() {

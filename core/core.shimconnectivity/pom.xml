@@ -63,7 +63,7 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>eu.netide.core.shimconnectivity.Activator</Bundle-Activator>
                         <Export-Package>
-                            eu.netide.core*;version=${project.version}
+                            eu.netide.core.shimconnectivity;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             *
