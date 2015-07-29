@@ -36,99 +36,110 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from netide.comm import *
 
-# Hadles the connection with the client. One backend channel is created
-# per client.
+def inport_value_hack(outport):
+    if outport > 1:
+        return 1
+    else:
+        return 2
+    
+class OF10Match(object):
+    def __init__(self):
+        self.wildcards=None
+        self.in_port = None
+        self.dl_src = None
+        self.dl_dst = None
+        self.dl_type = None
+        self.dl_vlan = None
+        self.dl_vlan_pcp = None
+        self.nw_tos = None
+        self.nw_proto = None
+        self.nw_src = None
+        self.nw_dst = None
+        self.tp_dst = None
+        self.tp_src = None
+    
+    def match_tuple(self):
+        """return a tuple which can be used as *args for
+        ofproto_v1_0_parser.OFPMatch.__init__().
+        see Datapath.send_flow_mod.
+        """
+        return (self.wildcards, self.in_port, self.dl_src,
+                self.dl_dst, self.dl_vlan, self.dl_vlan_pcp,
+                self.dl_type, self.nw_tos,
+                self.nw_proto, self.nw_src, self.nw_dst,
+                self.tp_src, self.tp_dst)
 
 
-class BackendChannel(asyncore.dispatcher):
+class BackendChannel(asynchat.async_chat):
+    """Sends messages to the server and receives responses.
+    """
+    def __init__(self, host, port, of_client):
+        self.of_client = of_client
+        self.received_data = []
+        asynchat.async_chat.__init__(self)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect((host, port))
+        self.ac_in_buffer_size = 4096 * 3
+        self.ac_out_buffer_size = 4096 * 3
+        self.set_terminator(TERM_CHAR)
+        return
 
-    def __init__(self, sock, server):
-        self.server = server
-        self.channel_lock = threading.Lock()
-        self.client_info = {'negotiated_protocols': {}}
-        asyncore.dispatcher.__init__(self, sock)
+    def handle_connect(self):
+        print "Connected to pyretic frontend."
+        
+    def collect_incoming_data(self, data):
+        """Read an incoming message from the client and put it into our outgoing queue."""
+        #print "ofclient collect incoming data"
+        with self.of_client.channel_lock:
+            self.received_data.append(data)
 
-    def handle_read(self):
-
-        # If new client is connecting
-        if 'connected' not in self.client_info:
-            with self.channel_lock:
-                header = self.recv(16)
-                decoded_header = NetIDEOps.netIDE_decode_header(header)
-                message_length = decoded_header[2]
-                if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_HELLO']:
-                    print "Attempt to connect from unsupported client"
-                    self.recv(4096)
-
-                    self.handle_close()
-                else:
-                    if message_length is 0:
-                        print "Client does not support any protocol"
-                        self.handle_close()
-                        return
-
-                    print "Client handshake received"
-                    message_data = self.recv(message_length)
-                    message_data = NetIDEOps.netIDE_decode_handshake(
-                        message_data, message_length)
-
-                    # Find the common protocols that client and server support
-                    count = 0
-                    while count < message_length:
-                        protocol = message_data[count]
-                        version = message_data[count + 1]
-
-                        if protocol in NetIDEOps.NetIDE_supported_protocols:
-                            if version in NetIDEOps.NetIDE_supported_protocols[protocol]:
-                                if protocol not in self.client_info['negotiated_protocols']:
-                                    self.client_info['negotiated_protocols'][
-                                        protocol] = {version}
-                                else:
-                                    self.client_info['negotiated_protocols'][
-                                        protocol].add(version)
-
-                        count += 2
-                    self.client_info['connected'] = True
-                    # After protocols have been negotiated, send back message
-                    # to client to notify for common protocols
-                    proto_data = NetIDEOps.netIDE_encode_handshake(
-                        self.client_info['negotiated_protocols'])
-                    msg = NetIDEOps.netIDE_encode(
-                        'NETIDE_HELLO', None, 0, proto_data)
-                    self.send(msg)
-                    print "Server handshake sent"
-
-        # If client has already performed handshake with the server
-        else:
-            header = self.recv(16)
-            decoded_header = NetIDEOps.netIDE_decode_header(header)
-            message_length = decoded_header[2]
-            message_data = self.recv(message_length)
-            if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
-                print "Attempt to connect from unsupported client"
-                self.recv(4096)
-                self.handle_close()
+    def dict2OF(self,d):
+        def convert(h,val):
+            if h in ['srcmac','dstmac']:
+                return val #packetaddr.EthAddr(val)
+            elif h in ['srcip','dstip']:
+                try:
+                    return val #packetaddr.IPAddr(val)
+                except:
+                    return val
+            elif h in ['vlan_id','vlan_pcp'] and val == 'None':
+                return None
             else:
-                if message_length is 0:
-                    print "Client does not support any protocol"
-                    self.handle_close()
-                    return
-                # If datapath id is not 0, broadcast?
-                if decoded_header[4] is not 0:
-                    self.datapath = self.server.controller.switches[
-                        int(decoded_header[4])]
-                    self.datapath.send(message_data)
-                else:
-                    self.datapath = None
+                return val
+        return { h : convert(h,val) for (h, val) in d.items()}
+    def found_terminator(self):
+        """The end of a command or message has been seen."""
+        with self.of_client.channel_lock:
+            msg = deserialize(self.received_data)
 
-    def handle_error(self):
-        pass
-
-    def handle_close(self):
-        if self in self.server.clients:
-            self.server.clients.remove(self)
-            print "Client disconnected"
-            self.close()
+        # USE DESERIALIZED MSG
+        if msg[0] == 'inject_discovery_packet':
+            switch = msg[1]
+            port = msg[2]
+            self.of_client.inject_discovery_packet(switch,port)
+        elif msg[0] == 'packet':
+            packet = self.dict2OF(msg[1])
+            self.of_client.send_to_switch(packet)
+        elif msg[0] == 'install':
+            pred = self.dict2OF(msg[1])
+            priority = int(msg[2])
+            actions = map(self.dict2OF,msg[3])
+            self.of_client.install_flow(pred,priority,actions)
+        elif msg[0] == 'delete':
+            pred = self.dict2OF(msg[1])
+            priority = int(msg[2])
+            self.of_client.delete_flow(pred,priority)
+        elif msg[0] == 'clear':
+            switch = int(msg[1])
+            self.of_client.clear(switch)
+        elif msg[0] == 'barrier':
+            switch = msg[1]
+            self.of_client.barrier(switch)
+        elif msg[0] == 'flow_stats_request':
+            switch = msg[1]
+            self.of_client.flow_stats_request(switch)
+        else:
+            print "ERROR: Unknown msg from frontend %s" % msg
 
 # Connects to the Core
 class CoreConnection(threading.Thread):
