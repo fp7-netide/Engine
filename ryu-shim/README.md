@@ -25,7 +25,7 @@ This command will start the shim layer along with the rest of the Ryu platform. 
 
 **Note:** The Ryu controller platform listens for connections from the switches on the port 6633. Therefore, when using Mininet for testing purposes, start mininet by specifying the controller information as follows:
 ```
-sudo mn --custom netenv.py --topo netenv  --controller remote,ip=IP_ADDRESS,port=6633
+sudo mn --topo linear,4 --controller=remote,ip=IP_ADDRESS,port=6633
 ```
 
 Where ```ryu-backend.py``` is the module that provides the communication with the ```ryu-shim``` through the Intermediate protocol and IP_ADDRESS is the IP address of the machine where the Ryu and the shim layer are running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
@@ -34,13 +34,12 @@ Where ```ryu-backend.py``` is the module that provides the communication with th
 
 To test the Ryu shim layer it is necessary to run one of the backends provided in this github repository that supports the NetIDE Intermediate protocol v1.0.
 For instance, it can be tested with the Ryu backend by using the following command:
-```
-sudo mn --topo linear,4 --controller=remote,ip=IP_ADDRESS,port=6633
-```
+
+``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
 
 Where ```simple_switch``` is a simple application provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
 
-Within the Mininet CLI, the command ```pingall``` should demonstrate that the hosts are able to comminicate with each others.
+Within the Mininet CLI, a successful ```pingall``` demonstrates that the hosts are able to comminicate with each others.
 
 ## License
 

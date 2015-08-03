@@ -45,7 +45,7 @@ Once the Ryu shim is running and listening on TCP port 41414, the backend can be
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
 
-Within the Mininet CLI, the command ```pingall``` should demonstrate that the hosts are able to comminicate with each others.
+Within the Mininet CLI, a successful ```pingall``` demonstrates that the hosts are able to comminicate with each others.
 
 
 #ChangeLog
