@@ -1,4 +1,3 @@
-
 ################################################################################
 # Ryu backend for the shim client                                              #
 # NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
@@ -11,449 +10,349 @@
 # CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.                        #
 ################################################################################
 
-import os
-import sys
-import time
-import random
+import logging
+import struct
 import threading
-import contextlib
-from ryu.ofproto import ofproto_common
-from ryu.ofproto import ofproto_parser
+import sys
+import random
+import binascii
+import time
+import ryu
+from ryu.base import app_manager
+from ryu.exception import RyuException
+from ryu.controller import mac_to_port
+from ryu.controller import ofp_event
+from ryu.controller import dpset
+from ryu.controller import controller
+from ryu.controller.handler import MAIN_DISPATCHER
+from ryu.controller.handler import HANDSHAKE_DISPATCHER
+from ryu.controller.handler import CONFIG_DISPATCHER
+from ryu.controller.handler import set_ev_cls
+from ryu.lib import hub
+from ryu.ofproto import ofproto_v1_0, ether, ofproto_v1_0_parser, nx_match
+from ryu.lib.mac import haddr_to_bin, DONTCARE_STR
+from ryu.lib.dpid import dpid_to_str, str_to_dpid
+from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
+from ryu.lib.packet import packet, ethernet, lldp
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import ipv4
 from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_parser
-from ryu.ofproto import ofproto_v1_0
-from ryu.ofproto import ofproto_v1_0_parser
-from ryu.ofproto.ofproto_v1_0_parser import *
-from ryu.lib.packet import *
-from ryu.lib.packet import packet
-from ryu.lib.dpid import dpid_to_str
-from ryu.lib import hub
-from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
-from ryu.lib.mac import *
-from ryu.ofproto import nx_match
-from ryu.controller import ofp_event
-from ryu.controller import handler
-from ryu.netide.comm import * 
-import ryu.base.app_manager
-from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER,\
-    MAIN_DISPATCHER
+from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
+from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
+from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
+from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
+from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
+from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.netide.comm import *
 
-class Backend(ryu.base.app_manager.RyuApp):
 
-    class asyncore_loop(threading.Thread):
-        def run(self):
-            asyncore.loop()
 
-    def __init__(self, *args, **kwargs):
-        super(Backend, self).__init__(*args, **kwargs)
-        self.name = 'ryu_backend'
-        self.runtime = None
-        print "Ryu Backend init"
-        address = ('localhost', RYU_BACKEND_PORT) # USE KNOWN PORT
-        self.backend_server = BackendServer(self,address)
-        
-        self.al = self.asyncore_loop()
-        self.al.daemon = True
-        self.al.start()
-        
 
-class BackendServer(asyncore.dispatcher):
-    """Receives connections and establishes handlers for each backend.
+#
+class BackendChannel(asyncore.dispatcher):
+    """Handles the data channel to the server
     """
-    def __init__(self, backend, address):
+    def __init__(self, host, port, controller):
+        self.channel_lock = threading.Lock()
+        self.client_info = {'negotiated_protocols':{}, 'datapaths':{}}
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.set_reuse_addr()
-        self.bind(address)
-        self.address = self.socket.getsockname()
-        self.listen(1)
-        self.backend = backend
+        self.connect((host, port))
+        self.of_datapath = None
+        self.ofproto = None
+        self.ofproto_parser = None
+        self.controller = controller
+        self.controller_channel = ControllerChannel('127.0.0.1', 7733)
         return
 
-    def handle_accept(self):
-        # Called when a backend connects to our socket
-        backend_info = self.accept()
-        print "OpenFlow client connected: ", backend_info
-        self.backend.backend_channel = BackendChannel(self.backend,sock=backend_info[0])
-        # We only want to deal with one backend at a time,
-        # so close as soon as we set up the handler.
-        # Normally you would not do this and the server
-        # would run forever or until it received instructions
-        # to stop.
-        self.handle_close()
-        return
-    
-    def handle_close(self):
-        self.close()
-        
-class BackendChannel(asynchat.async_chat):
-    """Handles echoing messages from a single backend.
-    """
-    def __init__(self, backend, sock):
-        self.backend = backend
-        self.received_data = []
-        self.datapaths = {}
-        self.channel_lock = threading.Lock()
-        asynchat.async_chat.__init__(self, sock)
-        self.ac_in_buffer_size = 4096 * 3
-        self.ac_out_buffer_size = 4096 * 3
-        self.set_terminator(TERM_CHAR)
-        return
-    
-    def send_to_OF_client(self,msg):
-        print "Send to OF client"
-        serialized_msg = serialize(msg)
-        
-        with self.channel_lock:
-            self.push(serialized_msg)
-    
-    def pkt2dict(self,pkt):
-        out_pkt = {}
-        #ethernet
-        eth = pkt.get_protocol(ethernet.ethernet)
-        if eth != None:
-            out_pkt['srcmac'] = eth.src
-            out_pkt['dstmac'] = eth.dst
-            out_pkt['ethtype'] = eth.ethertype
-        #ipv4
-        _ipv4 = pkt.get_protocol(ipv4.ipv4)
-        if _ipv4 != None:
-            out_pkt['srcip'] = _ipv4.src
-            out_pkt['dstip'] = _ipv4.dst
-            out_pkt['protocol'] = _ipv4.proto
-            out_pkt['tos'] = _ipv4.tos
-        return out_pkt
-    
-    #TODO: add more fields
-    def flowmod2dict(self,msg):
-        match = msg.match
-        out_pkt = {}
-        out_pkt['switch'] = msg.datapath.id
-        out_pkt['inport'] = match.in_port
-        out_pkt['idle_timeout'] = msg.idle_timeout
-        out_pkt['hard_timeout'] = msg.hard_timeout
-        # ethernet
-        print DONTCARE_STR
-        if haddr_to_str(match.dl_src) != DONTCARE_STR:
-            out_pkt['srcmac'] = haddr_to_str(match.dl_src)
-        if haddr_to_str(match.dl_dst) != DONTCARE_STR:
-            out_pkt['dstmac'] = haddr_to_str(match.dl_dst)
-        if match.dl_type != 0:
-            out_pkt['ethtype'] = match.dl_type
-        #ipv4
-        if match.nw_src != 0:
-            out_pkt['srcip'] = self.ipv4_to_string(match.nw_src)
-        if match.nw_dst != 0:
-            out_pkt['dstip'] = self.ipv4_to_string(match.nw_dst)
-        if match.nw_proto != 0:
-            out_pkt['protocol'] = match.nw_proto
-        if match.nw_tos != 0:
-            out_pkt['tos'] = match.nw_tos
-        # transport
-        if match.tp_src != 0:
-            out_pkt['srcport'] = match.tp_src
-        if match.tp_dst != 0:
-            out_pkt['dstport'] = match.tp_dst
-        return out_pkt
-    
-    def ipv4_to_string(self,ip):
-        "Convert 32-bit integer to dotted IPv4 address."
-        return ".".join(map(lambda n: str(ip>>n & 0xFF), [24,16,8,0]))
+    def handle_connect(self):
+        #Initiate handshake with the server
+        proto_data = NetIDEOps.netIDE_encode_handshake(NetIDEOps.NetIDE_supported_protocols)
+        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, 0, proto_data)
+        print msg.encode("hex")
+        self.send(msg)
 
-    #TODO: add other actions
-    def buildActions(self,actions):
-        action_list = []  
-        print "Actions" , actions
-        for action in actions:
-            if type(action) is OFPActionOutput:
-                action_list.append({'outport' : action.port})
-        print "Action List: ", action_list
-        return action_list 
-        
-    # packet_out messages
-    def send_packet(self,msg):
-        pkt = packet.Packet(msg.data)
-        match = self.pkt2dict(pkt)        
-        datapath = msg.datapath
-        actions = msg.actions
-        
-        for action in actions:
-            if type(action) is OFPActionOutput:
-                outport = action.port
-                break
-        
-        if outport == None:
-            return
-        
-        packet_out = {
-            'switch'    : datapath.id,
-            'inport'    : msg.in_port,
-            'raw'       : msg.data,
-            'buffer_id' : msg.buffer_id,
-            'outport'   : outport
-        }
-        
-        packet_out.update(match)
-        
-        print "packetOut: ", packet_out
-        self.send_to_OF_client(['packet',packet_out])
 
-    #flow_mod messages
-    def send_install(self,msg):
-        print "Ryu flowMod: ",msg
-        pred = self.flowmod2dict(msg)
-        print "send_install pred: ", pred
-        action_list = self.buildActions(msg.actions)
-        self.send_to_OF_client(['install',pred,msg.priority,action_list])
 
-    def send_delete(self,pred,priority):
-        self.send_to_OF_client(['delete',pred,priority])
-        
-    def send_clear(self,switch):
-        self.send_to_OF_client(['clear',switch])
+    def handle_read(self):
+        header = self.recv(16)
+        decoded_header = NetIDEOps.netIDE_decode_header(header)
+        message_length = decoded_header[2]
+        message_data = self.recv(message_length)
 
-    def send_flow_stats_request(self,switch):
-        self.send_to_OF_client(['flow_stats_request',switch])
+        message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
+        #If new client is connecting, add the protocols that were negotiated with the server
+        if 'connected' not in self.client_info:
+            with self.channel_lock:
+                count = 0
+                while count < message_length:
+                    protocol = message_data[count]
+                    version = message_data[count + 1]
 
-    def send_barrier(self,switch):
-        self.send_to_OF_client(['barrier',switch])
+                    if protocol not in self.client_info['negotiated_protocols']:
+                        self.client_info['negotiated_protocols'][protocol] = {version}
+                    else:
+                        self.client_info['negotiated_protocols'][protocol].add(version)
 
-    def inject_discovery_packet(self,dpid, port):
-        self.send_to_OF_client(['inject_discovery_packet',dpid,port])
-                
-    def collect_incoming_data(self, data):
-        """Read an incoming message from the backend and put it into our outgoing queue."""
-        with self.channel_lock:
-            self.received_data.append(data)
+                    count += 2
 
-    def found_terminator(self):
-        """The end of a command or message has been seen."""
-        with self.channel_lock:
-            msg = deserialize(self.received_data)
+                self.client_info['connected'] = True
 
-        print "New message from the client: ", msg[0]
-        # USE DESERIALIZED MSG
-        if msg is None or len(msg) == 0:
-            print "ERROR: empty message"
-        elif msg[0] == 'switch':
-            if msg[1] == 'join':
-                if msg[3] == 'BEGIN':
-                    print "Backend: Switch connected: ", msg
-                    #TODO: i) manage the reconnection of a switch and ii) manage different versions of the protocol
-                    datapath = BackendDatapath(msg[2], self, ofproto_v1_0, ofproto_v1_0_parser)
-                    self.datapaths[long(datapath.id)] = datapath
-                    print "Datapath ID: ", self.datapaths[datapath.id]
-                    datapath.hello_handler()
-                    for id in self.datapaths:
-            			print "Datapath id: ", self.datapaths[id].id , " state: ", self.datapaths[id].state
-            elif msg[1] == 'part':
-                datapath = self.datapaths[long(msg[2])]
-                if datapath:
-                    del datapath
-                    del self.datapaths[long(msg[2])]
-            else:
-                print "ERROR: Bad switch event"
-        elif msg[0] == 'port':
-            print "Backend: Port status: ", msg
-            if msg[1] == 'join':
-                datapath = self.datapaths[long(msg[2])]
-                datapath.ports[msg[3]] = {'port_no':msg[3], 'config':msg[4],'state':msg[5],'curr':msg[6]}
-            #elif msg[1] == 'mod':
-            #    self.backend.runtime.handle_port_mod(msg[2],msg[3],msg[4],msg[5],msg[6])
-            #elif msg[1] == 'part':
-            #    self.backend.runtime.handle_port_part(msg[2],msg[3])
-            #else:
-            #    print "ERROR: Bad port event"
-        elif msg[0] == 'link':
-            print "Backend: Link update: ", msg
-            #self.backend.runtime.handle_link_update(msg[1],msg[2],msg[3],msg[4])
-        elif msg[0] == 'packet':
-            data = msg[1]
-                
-            try:
-                datapath = self.datapaths[long(data['switch'])]
-                datapath.packet_in_handler(data)
-            except RuntimeError, e:
-                print "ERROR:found_terminator: %s to switch %d" % (str(e),long(data['switch']))
-            # TODO - ATTEMPT TO RECONNECT SOCKET
-            except KeyError, e:
-                print "ERROR:found_terminator: Switch %d not available" % long(data['switch'])
-            
-            #self.backend_manager.Handle_PacketIn(packet)
-        elif msg[0] == 'flow_stats_reply':
-            print "Backend: Flow stat reply: ", msg
-           # self.backend.runtime.handle_flow_stats_reply(msg[1],msg[2])
+                #TO DO: For Multiple versions that the switch might support!
+                #Create OpenFlow backend that communicates with the controller (simulates the switch)
+                #If the switch supported OpenFlow
+                if 0x11 in self.client_info['negotiated_protocols']:
+                    ofp_version = list(self.client_info['negotiated_protocols'][0x11])[0]
+                    if ofp_version == 0x01:
+                        self.ofproto = ofproto_v1_0
+                        self.ofproto_parser = ofproto_v1_0_parser
+                    elif ofp_version == 0x03:
+                        self.ofproto = ofproto_v1_3
+                        self.ofproto_parser = ofproto_v1_3_parser
+                    elif ofp_version == 0x04:
+                        self.ofproto = ofproto_v1_4
+                        self.ofproto_parser = ofproto_v1_4_parser
+                    else:
+                        print "OF Protocol not supported"
+                        self.close()
+
+                self.of_datapath = BackendDatapath(decoded_header[4], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[4]] = self.of_datapath
+                self.of_datapath.of_hello_handler()
+
+        #If client has been previously connected and handshake has been made
+        #Make sure to select the correct datapath to send the message to!
         else:
-            print 'ERROR: Unknown msg from backend %s' % msg
-        return
-        
-class BackendDatapath(ofproto_protocol.ProtocolDesc):
+            if decoded_header[4] not in self.client_info['datapaths']:
+                self.of_datapath = BackendDatapath(decoded_header[4], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[4]] = self.of_datapath
+                self.of_datapath.of_hello_handler()
+            else:
+                self.of_datapath = self.client_info['datapaths'][decoded_header[4]]
+                #print self.client_info['datapaths'][decoded_header[4]]
+
+            with self.channel_lock:
+                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[1])
+                if message_type == 'NETIDE_OPENFLOW':
+                    #print decoded_header
+                    self.of_datapath.handle_event(message_data)
+
+
+#Forwards the decapsulated messages to the controller and handles gets the response.
+class ControllerChannel(asyncore.dispatcher):
+    def __init__(self, host, port):
+        asyncore.dispatcher.__init__(self)
+        self.host = host
+        self.port = port
+
+    def switch_connet(self):
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect((self.host, self.port))
+
+    def send_data(self, msg):
+        self.send(msg)
+
+    def receive_data(self):
+        return self.recv(4096)
+
+
+
+
+class BackendDatapath(controller.Datapath):
     def __init__(self, id, channel, ofp, ofpp):
-        super(BackendDatapath, self).__init__()
-        
-        self.is_active = True
-        self.ofproto = ofp
-        self.ofproto_parser = ofpp
-        self.xid = random.randint(0, self.ofproto.MAX_XID)
-        self.backend_channel = channel
+        dummy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        dummy_address = ('127.0.0.1', 0)
+        super(BackendDatapath, self).__init__(dummy_socket, dummy_address)
+
+        self.channel = channel
+        self.ofp = ofp
+        self.ofpp = ofpp
         self.id = id
         self.xid = 0
-        self.ports = {}
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
-        self.set_state(handler.HANDSHAKE_DISPATCHER)
-        self.condition = threading.Condition()
-    
-    def to_hex_string(self,value,bytes):
-        encoded = format(value, 'x')
-     	length = len(encoded)
-      	encoded = encoded.zfill(length+length%2)
-      	decoded = encoded.decode('hex')
-      	length = len(encoded)/2
-      	if length < bytes:
-      		decoded = '\x00' * (bytes-length) + decoded
-     	return decoded
-   
-    def packet_from_network(self, **kwargs):
-        return kwargs
+        self.set_state(HANDSHAKE_DISPATCHER)
+        self.flow_format = ofproto_v1_0.NXFF_OPENFLOW10
+        self.is_active = True
 
-    def packet_to_network(self, packet):
-        return packet['raw']
-        
-    def close(self):
-        self.set_state(handler.DEAD_DISPATCHER)
+    def handle_write(self):
+        pass
+
+    def get_xid(self):
+        self.xid += 1
+        self.xid &= self.ofproto.MAX_XID
+        return self.xid
+
 
     def set_state(self, state):
         self.state = state
         ev = ofp_event.EventOFPStateChange(self)
         ev.state = state
         self.ofp_brick.send_event_to_observers(ev, state)
-    
-    def get_xid(self):
-        self.xid += 1
-        self.xid &= self.ofproto.MAX_XID
-        return self.xid
 
-    def set_xid(self, msg):
-        self.xid += 1
-        self.xid &= self.ofproto.MAX_XID
-        msg.set_xid(self.xid)
-        return self.xid
-        
-    def send_msg(self, msg):
-        assert isinstance(msg, self.ofproto_parser.MsgBase)
-        
-        if msg.xid is None:
-            self.set_xid(msg)
-
-        msg.serialize()
-        
-        if msg.msg_type == ofproto.OFPT_FEATURES_REQUEST:
-            t = threading.Thread(target=self.switch_features_handler, args=(msg,))
-            t.start()
-        elif msg.msg_type == ofproto.OFPT_PACKET_OUT:
-            self.backend_channel.send_packet(msg)
-        elif msg.msg_type == ofproto.OFPT_FLOW_MOD:
-            self.backend_channel.send_install(msg)
-                
-        
-    def hello_handler(self):
-        version = ofproto.OFP_VERSION
-        msg_type = ofproto.OFPT_HELLO
-        msg_len = ofproto.OFP_HEADER_SIZE
-        data = '\x00' * 4  
+    def of_hello_handler(self):
+        version = self.ofproto.OFP_VERSION
+        msg_type = self.ofproto.OFPT_HELLO
+        msg_len = self.ofproto.OFP_HEADER_SIZE
+        data = '\x00' * 4
         xid = self.get_xid()
 
-        fmt = ofproto.OFP_HEADER_PACK_STR
+        fmt = self.ofproto.OFP_HEADER_PACK_STR
         buf = struct.pack(fmt, version, msg_type, msg_len, xid) + data
-        hello = OFPHello.parser(self, version, msg_type, msg_len, xid,
-                              bytearray(buf))
-        self.register_event(hello)
-    
-    def switch_features_handler(self,msg):     
-        # TODO: missing details from the client
-        # 1. port hw address
-        # 2. port name
-        # workaorund that waits until the state is updated to 'config'
-        
-        self.condition.acquire()
-        while not self.state == CONFIG_DISPATCHER:
-            self.condition.wait(0.1)  
-        self.condition.release()
-        
-        version = ofproto.OFP_VERSION
-        msg_type = ofproto.OFPT_FEATURES_REPLY
-        msg_len = ofproto.OFP_SWITCH_FEATURES_SIZE + ofproto.OFP_PHY_PORT_SIZE * len(self.ports)
-        xid = msg.xid   
-        zfill = '\x00' * 3    
-        
-        data = self.to_hex_string(version,1) \
-            + self.to_hex_string(msg_type,1) \
-            + self.to_hex_string(msg_len,2) \
-            + self.to_hex_string(xid,4) \
-            + self.to_hex_string(self.id,8) \
-            + self.to_hex_string(0xFF,4) \
-            + self.to_hex_string(0xFF,1) \
-            + zfill \
-            + self.to_hex_string(0xFFFFFFFF,4) \
-            + self.to_hex_string(0xFFFFFFFF,4)  
-        
-        # adding ports  
-        for port_no in self.ports:
-            port_curr = 0
-            for curr_str in self.ports[port_no]['curr']:
-                port_curr = port_curr + ofp_port_features_rev_map.get(curr_str)
-            
-            data = data + \
-            self.to_hex_string(self.ports[port_no]['port_no'], 2) \
-            + addrconv.mac.text_to_bin('00:00:00:00:00:00') \
-            + 'port-' + str(self.ports[port_no]['port_no']).rjust(11,'0') \
-            + self.to_hex_string(self.ports[port_no]['config'],4) \
-            + self.to_hex_string(self.ports[port_no]['state'],4) \
-            + self.to_hex_string(port_curr,4) \
-            + self.to_hex_string(0xFFFFFFFF,4) \
-            + self.to_hex_string(0xFFFFFFFF,4) \
-            + self.to_hex_string(0xFFFFFFFF,4)
-        
-        fmt = ofproto.OFP_SWITCH_FEATURES_PACK_STR
-        features_reply = OFPSwitchFeatures.parser(self, version, msg_type, msg_len, xid, data)
-        self.register_event(features_reply)
-    
-    def packet_in_handler(self,msg): 
-        version = ofproto.OFP_VERSION
-        msg_type = ofproto.OFPT_PACKET_IN
-        msg_len = ofproto.OFP_PACKET_IN_SIZE
-        in_port = msg['inport']
-        buf = self.packet_to_network(msg)
-        buf_len = len(buf)
-        zfill = '\x00' * 1    
-        
-        # TODO: buffer_id is set to -1 since is not provided by the shim client
-        data =  self.to_hex_string(version,1) \
-                + self.to_hex_string(msg_type,1) \
-                + self.to_hex_string(msg_len,2) \
-                + self.to_hex_string(0,4) \
-                + self.to_hex_string(0xFFFFFFFF,4) \
-                + self.to_hex_string(msg_len + buf_len,2) \
-                + self.to_hex_string(in_port,2) \
-                + self.to_hex_string(ofproto.OFPR_NO_MATCH,1) \
-                + zfill \
-                + buf
-        
-        packet_in = ofproto_parser.msg(self, version, msg_type, msg_len, 0, data)
-        print "Backend. Datapath: " , self.id, " packet_in:", packet_in
-        self.register_event(packet_in)
-    
-    def register_event(self,msg):
+        #print hello.type
+        self.handle_event(buf)
+        self.set_state(CONFIG_DISPATCHER)
+
+    #Sends the reply from the switch back to the shim
+    def send_msg(self, msg):
+        assert isinstance(msg, self.ofproto_parser.MsgBase)
+        if msg.xid is None:
+            self.set_xid(msg)
+        msg.serialize()
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, msg.datapath.id, str(msg.buf))
+        self.channel.send(msg_to_send)
+        # LOG.debug('send_msg %s', msg)
+        #print msg.buf
+        #self.send(msg.buf)
+
+
+
+    #Handles the events and sends them to the listening RYU Applications
+    def handle_event(self, msg):
+        #required_len = self.ofp.OFP_HEADER_SIZE
+        ret = bytearray(msg)
+        (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
+        msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
         if msg:
-            print "Datapath ", self.id, " current state 1: ", self.state, " message type: ", msg.msg_type
-            ev = ofp_event.ofp_msg_to_ev(msg)        
+            ev = ofp_event.ofp_msg_to_ev(msg)
             self.ofp_brick.send_event_to_observers(ev, self.state)
+
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
-        	
             handlers = [handler for handler in
                         self.ofp_brick.get_handlers(ev) if
                         self.state in dispatchers(handler)]
-            print "handlers: ", self.ofp_brick.get_handlers(ev)
+            #print "handlers: ", self.ofp_brick.get_handlers(ev)
             for handler in handlers:
                 handler(ev)
-                print "Datapath ", self.id, " current state 2: ", self.state, " message type: ", msg.msg_type
+                #print "Datapath ", self.id, " current state : ", self.state, " message type: ", msg.msg_type
+
+#Starts the asyncore client as a threaded process so the application can continue running
+class asyncore_loop(threading.Thread):
+        def run(self):
+            asyncore.loop()
+
+
+
+class RYUClient(app_manager.RyuApp):
+
+    def __init__(self, *args, **kwargs):
+        super(RYUClient, self).__init__(*args, **kwargs)
+
+        #Various Variables that can be edited
+        __SERVER_IP__ = '127.0.0.1'
+        __SERVER_PORT__ = RYU_BACKEND_PORT #Default Port 41414
+
+        #Ryu Controller listen IP and port
+        __CONTROLLER_IP__ = '127.0.0.1'
+        __CONTROLLER_PORT__ = 7733
+
+        #Start the asyncore loop (Server) to listen to incomming connections
+        print('RYU Client initiated')
+        self.backend_channel = BackendChannel(__SERVER_IP__, __SERVER_PORT__, self)
+        self.al = asyncore_loop()
+        self.al.start()
+
+
+
+
+
+
+
+
+
+class NetIDEOps:
+
+    #Define the NetIDE Version
+    NetIDE_version = 0x01
+    #Define the NetIDE message types and codes
+    NetIDE_type = {
+        'NETIDE_HELLO'      : 0x01,
+        'NETIDE_ERROR'      : 0x40,
+        'NETIDE_OPENFLOW'   : 0x11,
+        'NETIDE_NETCONF'    : 0x12,
+        'NETIDE_OPFLEX'     : 0x13
+    }
+
+    #Define the supported switch control protocols we support and versios
+    #Should be determined by underlying network/switches??
+    #Protocol:
+    #0x11 = OpenFlow: versions - 0x01 = 1.0; 0x02 = 1.1; 0x03 = 1.2; 0x04 = 1.3; 0x05 = 1.4
+    #0x12 = NetConf: versions - 0x01 = RFC6241 of NetConf
+    #0x13 = OpFlex: versions - 0x00 = Version in development
+    NetIDE_supported_protocols = {
+        0x11    : {0x01, 0x02, 0x03, 0x04, 0x5},
+        0x12    : {0x01},
+        0x13    : {0x00},
+        0x14    : {0x01}
+    }
+
+ #Encode a message in the NetIDE protocol format
+    @staticmethod
+    def netIDE_encode(type, xid, datapath_id, msg):
+        length = len(msg)
+        type_code = NetIDEOps.NetIDE_type[type]
+        #if no transaction id is given, generate a random one.
+        if xid is None:
+            xid = random.getrandbits(32)
+        values = (NetIDEOps.NetIDE_version, type_code, length, xid, datapath_id, msg)
+        packer = struct.Struct('!BBHIQ'+str(length)+'s')
+        packed_msg = packer.pack(*values)
+        return packed_msg
+
+    #Decode NetIDE header of a message (first 16 Bytes of the read message
+    @staticmethod
+    def netIDE_decode_header(raw_data):
+        unpacker = struct.Struct('!BBHIQ')
+        return unpacker.unpack(raw_data)
+
+    #Decode NetIDE messages received in binary format. Iput: Raw data and length of the encapsulated message
+    #Length can be retrieve by decoding the header first
+    #NEEDS TO BE CHANGED MAYBE?
+    @staticmethod
+    def netIDE_decode(raw_data, length):
+        unpacker = struct.Struct('!BBHIQ'+str(length)+'s')
+        return unpacker.unpack(raw_data)
+
+    #Encode the hello handshake message
+    @staticmethod
+    def netIDE_encode_handshake(protocols):
+
+        #Get count for number of supported protocols and versions
+        count = 0
+        values = []
+        for protocol in protocols.items():
+            for version in protocol[1]:
+                count += 1
+                values.append(protocol[0])
+                values.append(version)
+
+        packer = struct.Struct('!'+str(count*2)+'B')
+        return packer.pack(*values)
+
+
+    #Decode the hello handshake message and return tuple
+    @staticmethod
+    def netIDE_decode_handshake(raw_data, length):
+        packer = struct.Struct('!'+str(length)+'B')
+        unpacked = packer.unpack(raw_data)
+        return unpacked
+
+    #Return the key name from a value in a dictionary
+    @staticmethod
+    def key_by_value(dictionary, value):
+        for key, val in dictionary.iteritems():
+            if value == val:
+                return key
+
+
+
