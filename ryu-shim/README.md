@@ -35,10 +35,12 @@ Where ```ryu-backend.py``` is the module that provides the communication with th
 To test the Ryu shim layer it is necessary to run one of the backends provided in this github repository that supports the NetIDE Intermediate protocol v1.0.
 For instance, it can be tested with the Ryu backend by using the following command:
 ```
-ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py
+sudo mn --topo linear,4 --controller=remote,ip=IP_ADDRESS,port=6633
 ```
 
 Where ```simple_switch``` is a simple application provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
+
+Within the Mininet CLI, the command ```pingall``` should demonstrate that the hosts are able to comminicate with each others.
 
 ## License
 
@@ -63,7 +65,7 @@ ryu-client: 2014-08-27 Wed Roberto Doriguzzi Corin <roberto.doriguzzi@create-net
 
   * First public release of the ryu-client. Tested with the master branch of Pyretic (commit 376f63a6d249c9a2e434b87f565982cab24fb6ad of 7th Aug 2014)
 
-## Appendix - Short overview to the NetIDE Intermediate protocol v1.0
+# Appendix - Short overview to the NetIDE Intermediate protocol v1.0
 
 The intermediate protocol serves several needs. It has to
 (i) carry control messages between the modules of the Network Engine (such as shim and backend), e.g., to start up/take down a particular module, providing
