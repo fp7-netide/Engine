@@ -99,7 +99,9 @@ class Package(object):
         return True
 
     def start(self):
-        return {cls.__name__: { "procs": c.start(), "apps": [str(a) for a in c.applications] }
+        return {cls.__name__:
+                 { "procs": c.start(),
+                   "apps": [os.path.basename(str(a)) for a in c.applications] }
                 for cls, c in self.controllers.items()}
 
     def get_clients(self):
