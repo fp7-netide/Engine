@@ -1,27 +1,34 @@
+
 package eu.netide.core.api.composition;
 
-import eu.netide.core.api.NetworkApplicationInfo;
-
-import java.util.ArrayList;
+import javax.xml.bind.annotation.*;
 import java.util.List;
 
-/**
- * Created by timvi on 25.06.2015.
- */
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = "", propOrder = {"modules", "composition"})
+@XmlRootElement(name = "CompositionSpecification", namespace = "http://netide.eu/schemas/compositionspecification/v1")
 public class CompositionSpecification {
-    private List<NetworkApplicationInfo> _subApplications;
-    private List<ExecutionFlowNode> _executionFlow;
+    private List<Module> modules;
+    private List<ExecutionFlowNode> composition;
 
-    public CompositionSpecification() {
-        _subApplications = new ArrayList<NetworkApplicationInfo>();
-        _executionFlow = new ArrayList<ExecutionFlowNode>();
+    @XmlElementWrapper(name = "Modules", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
+    @XmlElement(name = "Module", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
+    public List<Module> getModules() {
+        return modules;
     }
 
-    public List<NetworkApplicationInfo> GetSubApplications() {
-        return _subApplications;
+    public void setModules(List<Module> value) {
+        this.modules = value;
     }
 
-    public List<ExecutionFlowNode> GetExecutionFlow() {
-        return _executionFlow;
+    @XmlElementWrapper(name = "Composition", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
+    @XmlElementRef(required = true, namespace = "http://netide.eu/schemas/compositionspecification/v1")
+    public List<ExecutionFlowNode> getComposition() {
+        return composition;
     }
+
+    public void setComposition(List<ExecutionFlowNode> value) {
+        this.composition = value;
+    }
+
 }

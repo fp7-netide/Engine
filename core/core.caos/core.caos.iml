@@ -8,7 +8,7 @@
           <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0" />
           <property key="Import-Package" value="eu.netide.core.api,*" />
           <property key="Bundle-Name" value="core.caos Bundle" />
-          <property key="Include-Resource" value="OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml,META-INF/MANIFEST.MF=$MODULE_DIR$/src/main/resources/META-INF/MANIFEST.MF" />
+          <property key="Include-Resource" value="META-INF/MANIFEST.MF=$MODULE_DIR$/src/main/resources/META-INF/MANIFEST.MF,OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
@@ -26,6 +26,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="eu.netide.core:core.api:1.0.0.0" level="project" />
     <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.jdom:jdom2:2.0.6" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
   </component>
 </module>

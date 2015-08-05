@@ -1,7 +1,14 @@
+
 package eu.netide.core.api.composition;
 
-/**
- * Created by timvi on 25.06.2015.
- */
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlSeeAlso;
+import javax.xml.bind.annotation.XmlType;
+
+@XmlAccessorType(XmlAccessType.NONE)
+@XmlType(name = "ExecutionFlowNode", namespace = "http://netide.eu/schemas/compositionspecification/v1")
+@XmlSeeAlso({ModuleCall.class, ParallelCall.class, Branch.class})
 public abstract class ExecutionFlowNode {
+
 }
