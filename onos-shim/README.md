@@ -5,9 +5,10 @@ The ONOS shim layer is implemented as a bundle for the [ONOS controller](http://
 ## Installation
 
 STEP 1: Download ONOS
-
-From URL http://downloads.onosproject.org/release/onos-1.2.0.tar.gz, download ONOS 1.2.0 release and unpack it.
-
+```
+git clone https://gerrit.onosproject.org/onos
+git checkout -b v1.2.0 v1.2.0
+```
 STEP 2: ONOS Prerequisites
 
 Follow the ONOS WiKi (“https://wiki.onosproject.org/display/ONOS/Installing+and+Running+ONOS”) in order to setup your environment to compile and run ONOS
@@ -24,7 +25,7 @@ Add the ```onos-shim``` in the pom.xml file contained in the ```apps``` folder (
 ```
 
 STEP 4: Compile ONOS
-Run ```mvn clean install``` in the ONOS parent folder to compile all the ONOS modules. You should see the ```onos-shim``` app in the list of the compiled apps.
+Run ```mvn clean install -Dcheckstyle.skip``` in the ONOS parent folder to compile all the ONOS modules. You should see the ```onos-shim``` app in the list of the compiled apps.
 
 STEP 5: Run ONOS
 Run ONOS as explained the link cited in STEP 2. Once logged in Karaf, start the ```onos-shim``` using the command:
