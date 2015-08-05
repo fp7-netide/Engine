@@ -42,6 +42,7 @@ import inspect
 import json
 import logging
 import os
+import platform
 import signal
 import sys
 import time
@@ -124,12 +125,13 @@ def list_controllers(args):
             logging.warning("Package argument only makes sense on the server controller")
         try:
             with util.FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
-                print(f.read())
+                d = { platform.node(): json.load(f) }
+                print(json.dumps(d, indent=2))
         except Exception as err:
             logging.error(err)
             return 1
     else:
-        output = {}
+        data = {}
         if args.package is None:
             logging.error("Package argument required")
             return 1
@@ -139,11 +141,10 @@ def list_controllers(args):
                 ssh, _ = util.build_ssh_commands(c)
                 cmd = "cd ~/netide-loader; ./netideloader.py list --mode=appcontroller"
                 try:
-                    data = sp.check_output(ssh + [cmd], stderr=sp.DEVNULL).strip().decode('utf-8')
-                    output[c[0]] = json.loads(data)
+                    data.update(json.loads(sp.check_output(ssh + [cmd], stderr=sp.DEVNULL).strip().decode('utf-8')))
                 except sp.CalledProcessError as e:
                     logging.warning("Could not get list output from {}: {}".format(c[0], e))
-        print(json.dumps(output, indent=2))
+        print(json.dumps(data, indent=2))
     return 0
 
 
