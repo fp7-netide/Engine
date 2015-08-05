@@ -1,146 +1,146 @@
-<?xml version="1.0"?>
-
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://netide.eu/schemas/compositionspecification/v1" xmlns="http://netide.eu/schemas/compositionspecification/v1">
-
-  <xs:element name="CompositionSpecification">
-    <xs:complexType>
-      <xs:all>
-        <xs:element ref="Modules"/>
-        <xs:element ref="Composition"/>
-      </xs:all>
-    </xs:complexType>
-  </xs:element>
-
-  <!-- ### Modules section ### -->
-
-  <xs:element name="Modules">
-    <xs:complexType>
-      <xs:sequence minOccurs="1" maxOccurs="unbounded">
-        <xs:element ref="Module"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-
-  <xs:element name="Module">
-    <xs:complexType>
-      <xs:choice minOccurs="0">
-        <xs:element ref="CallFilter"/>
-      </xs:choice>
-      <xs:attribute name="id" type="moduleID" use="required"/>
-      <xs:attribute name="loaderIdentification" type="loaderIdentification" use="required"/>
-    </xs:complexType>
-  </xs:element>
-
-  <!-- ### Composition section ### -->
-
-  <xs:element name="Composition" type="compositionBlock"/>
-
-  <xs:complexType name="compositionBlock">
-    <xs:choice minOccurs="1" maxOccurs="unbounded">
-      <xs:element ref="ModuleCall"/>
-      <xs:element ref="ParallelCall"/>
-      <xs:element ref="Branch"/>
-    </xs:choice>
-  </xs:complexType>
-
-  <xs:element name="ModuleCall">
-    <xs:complexType>
-      <xs:choice minOccurs="0">
-        <xs:element ref="CallFilter"/>
-      </xs:choice>
-      <xs:attribute name="id" type="moduleIDREF" use="required"/>
-      <xs:attribute name="allowVetoResult" type="xs:boolean" use="optional" default="false"/>
-    </xs:complexType>
-  </xs:element>
-
-  <xs:element name="ParallelCall">
-    <xs:complexType>
-      <xs:sequence minOccurs="2" maxOccurs="unbounded">
-        <xs:element ref="ModuleCall"/>
-      </xs:sequence>
-      <xs:attribute name="mergePolicy" type="mergePolicy" use="optional" default="ignore"/>
-    </xs:complexType>
-  </xs:element>
-
-  <!-- Branch -->
-  <xs:element name="Branch">
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://netide.eu/schemas/compositionspecification/v1" xmlns:tns="http://netide.eu/schemas/compositionspecification/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  
+   <xs:element name="CompositionSpecification">
     <xs:complexType>
       <xs:sequence>
-        <xs:element ref="If"/>
-        <xs:element ref="Else"/>
+        <xs:element name="Modules">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element ref="tns:Module" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="Composition" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="tns:ModuleCall"/>
+                <xs:element ref="tns:ParallelCall"/>
+                <xs:element ref="tns:Branch"/>
+              </xs:choice>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  
+  <xs:element name="Branch">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="tns:ExecutionFlowNode">
+          <xs:sequence>
+            <xs:element ref="tns:If"/>
+            <xs:element ref="tns:Else"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="Else">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="tns:ExecutionFlowNodeContainer">
+          <xs:sequence/>
+        </xs:extension>
+      </xs:complexContent>
     </xs:complexType>
   </xs:element>
 
   <xs:element name="If">
     <xs:complexType>
       <xs:complexContent>
-        <xs:extension base="compositionBlock">
-          <xs:attributeGroup ref="callFilterAttributes"/>
+        <xs:extension base="tns:ExecutionFlowNodeContainer">
+          <xs:sequence/>
+          <xs:attribute name="event">
+            <xs:simpleType>
+              <xs:list itemType="tns:Events"/>
+            </xs:simpleType>
+          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
   </xs:element>
 
-  <xs:element name="Else" type="compositionBlock"/>
+  <xs:element name="Module">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="CallFilter" type="tns:Filter" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="id" type="xs:ID" use="required"/>
+      <xs:attribute name="loaderIdentification" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
 
-  <!-- Filters -->
-  <xs:element name="CallFilter" type="filter"/>
+  <xs:element name="ModuleCall">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="tns:ExecutionFlowNode">
+          <xs:sequence>
+            <xs:element name="CallFilter" type="tns:Filter" minOccurs="0"/>
+          </xs:sequence>
+          <xs:attribute name="allowVetoResult" type="xs:boolean"/>
+          <xs:attribute name="module" type="xs:IDREF" use="required"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
 
-  <xs:complexType name="filter">
-    <xs:attributeGroup ref="callFilterAttributes"/>
+  <xs:element name="ParallelCall">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="tns:ExecutionFlowNode">
+          <xs:sequence>
+            <xs:element ref="tns:ModuleCall" maxOccurs="unbounded"/>
+          </xs:sequence>
+          <xs:attribute name="mergePolicy" type="tns:MergePolicy"/>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="Filter">
+    <xs:sequence/>
+    <xs:attribute name="events">
+      <xs:simpleType>
+        <xs:list itemType="tns:Events"/>
+      </xs:simpleType>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:attributeGroup name="callFilterAttributes">
-    <xs:attribute name="event" type="eventList"/>
-  </xs:attributeGroup>
+  <xs:complexType name="ExecutionFlowNode" abstract="true">
+    <xs:sequence/>
+  </xs:complexType>
 
-  <!-- ### Simple Type Declarations ### -->
+  <xs:complexType name="ExecutionFlowNodeContainer" abstract="true">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="tns:ModuleCall"/>
+        <xs:element ref="tns:ParallelCall"/>
+        <xs:element ref="tns:Branch"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
 
-  <!-- Loader loaderIdentification -->
-  <xs:simpleType name="loaderIdentification">
-    <xs:restriction base="xs:string"/>
+  <xs:simpleType name="Events">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="connectionDown"/>
+      <xs:enumeration value="flowMod"/>
+      <xs:enumeration value="portStatus"/>
+      <xs:enumeration value="packetIn"/>
+      <xs:enumeration value="errorIn"/>
+      <xs:enumeration value="connectionUp"/>
+      <xs:enumeration value="barrierIn"/>
+      <xs:enumeration value="flowRemoved"/>
+    </xs:restriction>
   </xs:simpleType>
 
-  <!-- Core moduleID -->
-  <xs:simpleType name="moduleID">
-    <xs:restriction base="xs:ID"/>
-  </xs:simpleType>
-
-  <!-- Core moduleID reference -->
-  <xs:simpleType name="moduleIDREF">
-    <xs:restriction base="xs:IDREF"/>
-  </xs:simpleType>
-
-  <!-- Merge policies -->
-  <xs:simpleType name="mergePolicy">
+  <xs:simpleType name="MergePolicy">
     <xs:restriction base="xs:string">
       <xs:enumeration value="priority"/>
       <xs:enumeration value="ignore"/>
     </xs:restriction>
   </xs:simpleType>
-
-  <!-- Events -->
-  <xs:simpleType name="eventList">
-    <xs:restriction>
-      <xs:simpleType>
-        <xs:list itemType="events"/>
-      </xs:simpleType>
-      <xs:minLength value="1"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="events">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="packetIn"/>
-      <xs:enumeration value="flowMod"/>
-      <xs:enumeration value="connectionUp"/>
-      <xs:enumeration value="connectionDown"/>
-      <xs:enumeration value="portStatus"/>
-      <xs:enumeration value="flowRemoved"/>
-      <xs:enumeration value="errorIn"/>
-      <xs:enumeration value="barrierIn"/>
-    </xs:restriction>
-  </xs:simpleType>
-
 </xs:schema>
