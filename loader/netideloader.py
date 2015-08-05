@@ -60,19 +60,6 @@ dataroot = "/tmp/netide"
 
 logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=logging.DEBUG)
 
-class FLock(object):
-    "Context manager for locking file objects with flock"
-    def __init__(self, f, t=fcntl.LOCK_EX):
-        self.f = f
-        self.t = t
-
-    def __enter__(self):
-        fcntl.flock(self.f, self.t)
-        return self.f
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        fcntl.flock(self.f, fcntl.LOCK_UN)
-
 def load_package(args):
     if args.mode == "appcontroller":
         p = Package(args.package, dataroot)
@@ -82,11 +69,15 @@ def load_package(args):
 
         os.makedirs(dataroot, exist_ok=True)
 
-        with FLock(open(os.path.join(dataroot, "controllers.json"), "w+")) as f:
+        with util.FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
             try:
                 data  = json.load(f)
             except ValueError:
                 data = {}
+            if data.get("cksum", "") != p.cksum:
+                logging.debug("{} != {}".format(data.get("cksum", ""), p.cksum))
+                logging.error("Package changed since installation. Re-run `install' with this package.")
+                return 1
             f.seek(0)
             f.truncate()
             try:
@@ -132,7 +123,7 @@ def list_controllers(args):
         if args.package is not None:
             logging.warning("Package argument only makes sense on the server controller")
         try:
-            with FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
+            with util.FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
                 print(f.read())
         except Exception as err:
             logging.error(err)
@@ -163,7 +154,7 @@ def stop_controllers(args):
         if args.package is not None:
             logging.error("Package argument is only meaningful on server controllers")
             return 1
-        with FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
+        with util.FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
             try:
                 d = json.load(f)
                 for c in d["controllers"]:
@@ -233,7 +224,7 @@ def install(args):
         # [ ] Once done, return success/failure and pack up logs as a compressed tarball
     else:
         try:
-            installer.do_appcontroller_install(args.package)
+            installer.do_appcontroller_install(args.package, dataroot)
         except installer.InstallException as e:
             logging.error("Failed to install requirements for package {}".format(args.package))
             return 1

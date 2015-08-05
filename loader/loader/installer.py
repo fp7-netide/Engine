@@ -13,6 +13,7 @@
      Gregor Best, gbe@mail.upb.de
 """
 
+import json
 import logging
 import os
 import platform
@@ -115,7 +116,7 @@ def do_client_installs(pkgpath):
             # [X] Remove package from app controller
             p = sp.check_output(ssh + ["rm -r {}".format(dir)], stderr=sp.STDOUT).strip().decode('utf-8')
 
-def do_appcontroller_install(pkg):
+def do_appcontroller_install(pkg, dataroot):
     # TODO
     # For all apps on local controller:
     #   [ ] Check hardware requirements
@@ -125,7 +126,7 @@ def do_appcontroller_install(pkg):
     logging.debug("Running app controller install for package {}".format(pkg))
     with util.TempDir("netide-appcontroller-install") as t:
         pkg = Package(pkg, t)
-        if pkg.applies():
+        if pkg.applies(dataroot):
             logging.info("Nothing to be done for '{}'".format(pkg))
             return
 
@@ -191,6 +192,20 @@ def do_appcontroller_install(pkg):
                     logging.debug("Installing java {} now".format(version))
                     r = util.spawn_logged(["sudo", "apt-get", "install", "--yes", "openjdk-{}-jdk".format(version)])
 
+        os.makedirs(dataroot, exist_ok=True)
+        with util.FLock(open(os.path.join(dataroot, "controllers.json"), "w+")) as f:
+            try:
+                data = json.load(f)
+            except ValueError:
+                data = {}
+
+            data["cksum"] = pkg.cksum
+
+            f.seek(0)
+            f.truncate()
+            json.dump(data, f, indent=2)
+            logging.debug("post-inst: {} ({})".format(dataroot, str(pkg.cksum)))
+
         # Sanity check
-        if not pkg.applies():
+        if not pkg.applies(dataroot):
             logging.error("Failed to resolve dependencies for {}".format(pkg))

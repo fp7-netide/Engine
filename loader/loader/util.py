@@ -1,8 +1,22 @@
+import fcntl
 import logging
 import shutil
 import tempfile
 
 import subprocess as sp
+
+class FLock(object):
+    "Context manager for locking file objects with flock"
+    def __init__(self, f, t=fcntl.LOCK_EX):
+        self.f = f
+        self.t = t
+
+    def __enter__(self):
+        fcntl.flock(self.f, self.t)
+        return self.f
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        fcntl.flock(self.f, fcntl.LOCK_UN)
 
 class TempDir(object):
     "Context manager for temporary directories"

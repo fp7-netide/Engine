@@ -21,8 +21,10 @@ import platform
 import shutil
 import tempfile
 import zipfile
+import hashlib
 
 from loader import controllers
+from loader import util
 from loader.application import Application
 
 class Package(object):
@@ -31,6 +33,7 @@ class Package(object):
     cleanup = False
 
     def __init__(self, prefix, dataroot):
+        self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         if prefix.endswith(".zip") and os.path.isfile(self.path):
             p = tempfile.mkdtemp(prefix="netide-tmp")
@@ -57,6 +60,14 @@ class Package(object):
                 self.controllers[ctrl] = ctrl(dataroot)
             self.controllers[ctrl].applications.append(Application(app))
 
+        hash = hashlib.sha1()
+        for (dirpath, dirnames, filenames) in os.walk(self.path):
+            for f in filenames:
+                hash.update(bytes(f, 'utf-8'))
+                with open(os.path.join(dirpath, f), 'rb') as fh:
+                    hash.update(fh.read())
+        self.cksum = hash.hexdigest()
+
     def __del__(self):
         if self.cleanup:
             shutil.rmtree(self.path, ignore_errors=True)
@@ -64,13 +75,26 @@ class Package(object):
     def __str__(self):
         return 'Package("{}")'.format(self.path)
 
-    def applies(self):
+    def applies(self, dataroot=None):
         # FIXME: there's a lot of validation missing here: checking topology and what not
+        if dataroot is None:
+            dataroot = self.dataroot
+
         for c in self.controllers:
             for a in c.applications:
                 if not a.valid_requirements():
                     logging.error("Requirements for application {} not met".format(a))
                     return False
+
+        try:
+            with util.FLock(open(os.path.join(dataroot, "controllers.json"), "r")) as fh:
+                data = json.load(fh)
+                if self.cksum != data["cksum"]:
+                    logging.debug("{} != {}".format(self.cksum, data["cksum"]))
+                    return False
+        except Exception as e:
+            logging.error("{}: {} ({})".format(str(type(e)), e, dataroot))
+            return False
 
         return True
 
