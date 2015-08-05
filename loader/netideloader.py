@@ -129,19 +129,21 @@ def list_controllers(args):
             logging.error(err)
             return 1
     else:
+        output = {}
         if args.package is None:
             logging.error("Package argument required")
             return 1
         with util.TempDir("netide-show") as t:
-            for c in Package(args.package, t).get_clients():
+            pkg = Package(args.package, t)
+            for c in pkg.get_clients():
                 ssh, _ = util.build_ssh_commands(c)
                 cmd = "cd ~/netide-loader; ./netideloader.py list --mode=appcontroller"
                 try:
                     data = sp.check_output(ssh + [cmd], stderr=sp.DEVNULL).strip().decode('utf-8')
-                except sp.CalledProcessError:
-                    logging.warning("Could not get list output from {}".format(c[0]))
-                else:
-                    print(data)
+                    output[c[0]] = json.loads(data)
+                except sp.CalledProcessError as e:
+                    logging.warning("Could not get list output from {}: {}".format(c[0], e))
+        print(json.dumps(output, indent=2))
     return 0
 
 
