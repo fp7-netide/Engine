@@ -2,6 +2,8 @@ package eu.netide.core.shimconnectivity;
 
 import eu.netide.core.api.IShimConnector;
 import eu.netide.core.api.IShimMessageListener;
+import eu.netide.core.api.netip.Message;
+import eu.netide.core.api.netip.NetIPConverter;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -39,12 +41,11 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
         System.out.println("ZeroMQBasedShimConnector stopped.");
     }
 
-    public void SendMessage(String message) {
-        System.out.println("Message for sending to shim: " + message);
+    public void SendMessage(Message message) {
         ZMsg msg = new ZMsg();
-        msg.add("PS1"); // TODO replace with shim id
+        msg.add("shim");
         msg.add("");
-        msg.add(message);
+        msg.add(message.toByteRepresentation());
         if (_isOpen)
             msg.send(_socket);
     }
@@ -66,12 +67,8 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
             if (signalled == 1) {
                 ZMsg message = ZMsg.recvMsg(_socket);
                 String senderId = message.getFirst().toString();
-                String messageText = message.getLast().toString();
-                System.out.println("Received from '" + senderId + "':" + messageText);
-                ZMsg response = new ZMsg();
-                response.add(senderId);
-                response.add("Pingback. You sent '" + messageText + "'.");
-                response.send(_socket);
+                byte[] data = message.getLast().getData();
+                _listener.OnMessage(NetIPConverter.parseConcreteMessage(data));
             }
             try {
                 Thread.sleep(10);
