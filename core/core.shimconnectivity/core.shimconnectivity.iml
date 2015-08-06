@@ -6,7 +6,7 @@
         <additionalProperties>
           <property key="Bundle-Description" value="core.shimconnectivity OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.shimconnectivity;version=1.0.0.0" />
-          <property key="Import-Package" value="*" />
+          <property key="Import-Package" value="org.osgi.framework,eu.netide.core.api,eu.netide.core.api.netip" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.shimconnectivity Bundle" />

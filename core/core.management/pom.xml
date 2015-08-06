@@ -29,11 +29,13 @@
             <groupId>org.apache.karaf.config</groupId>
             <artifactId>org.apache.karaf.config.core</artifactId>
             <version>4.0.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
             <version>0.3.4</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -60,7 +62,7 @@
                             eu.netide.core.management;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,*
+                            eu.netide.core.api,eu.netide.core.api.netip,eu.netide.core.api.composition,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

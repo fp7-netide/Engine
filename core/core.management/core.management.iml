@@ -6,13 +6,13 @@
         <additionalProperties>
           <property key="Bundle-Description" value="core.management OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.management;version=1.0.0.0" />
-          <property key="Import-Package" value="eu.netide.core.api,*" />
+          <property key="Import-Package" value="eu.netide.core.api,eu.netide.core.api.netip,eu.netide.core.api.composition,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.management Bundle" />
-          <property key="Bundle-ClassPath" value=".,slf4j-api-1.7.12.jar,org.apache.felix.utils-1.8.0.jar,org.apache.karaf.util-4.0.0.jar,org.apache.karaf.config.core-4.0.0.jar,jeromq-0.3.4.jar,org.apache.karaf.jaas.boot-4.0.0.jar" />
-          <property key="Include-Resource" value="slf4j-api-1.7.12.jar=$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar,org.apache.felix.utils-1.8.0.jar=$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.utils/1.8.0/org.apache.felix.utils-1.8.0.jar,org.apache.karaf.util-4.0.0.jar=$MAVEN_REPOSITORY$/org/apache/karaf/org.apache.karaf.util/4.0.0/org.apache.karaf.util-4.0.0.jar,org.apache.karaf.config.core-4.0.0.jar=$MAVEN_REPOSITORY$/org/apache/karaf/config/org.apache.karaf.config.core/4.0.0/org.apache.karaf.config.core-4.0.0.jar,jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar,org.apache.karaf.jaas.boot-4.0.0.jar=$MAVEN_REPOSITORY$/org/apache/karaf/jaas/org.apache.karaf.jaas.boot/4.0.0/org.apache.karaf.jaas.boot-4.0.0.jar" />
-          <property key="Embedded-Artifacts" value="slf4j-api-1.7.12.jar;g=&quot;org.slf4j&quot;;a=&quot;slf4j-api&quot;;v=&quot;1.7.12&quot;,org.apache.felix.utils-1.8.0.jar;g=&quot;org.apache.felix&quot;;a=&quot;org.apache.felix.utils&quot;;v=&quot;1.8.0&quot;,org.apache.karaf.util-4.0.0.jar;g=&quot;org.apache.karaf&quot;;a=&quot;org.apache.karaf.util&quot;;v=&quot;4.0.0&quot;,org.apache.karaf.config.core-4.0.0.jar;g=&quot;org.apache.karaf.config&quot;;a=&quot;org.apache.karaf.config.core&quot;;v=&quot;4.0.0&quot;,jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;,org.apache.karaf.jaas.boot-4.0.0.jar;g=&quot;org.apache.karaf.jaas&quot;;a=&quot;org.apache.karaf.jaas.boot&quot;;v=&quot;4.0.0&quot;" />
+          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
+          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
+          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
@@ -23,6 +23,7 @@
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
@@ -36,11 +37,11 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:4.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.karaf:org.apache.karaf.util:4.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.felix:org.apache.felix.utils:1.8.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.karaf.jaas:org.apache.karaf.jaas.boot:4.0.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:4.0.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf:org.apache.karaf.util:4.0.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.felix:org.apache.felix.utils:1.8.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.jaas:org.apache.karaf.jaas.boot:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
   </component>
 </module>

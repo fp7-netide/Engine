@@ -6,7 +6,7 @@
         <additionalProperties>
           <property key="Bundle-Description" value="core.caos OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0" />
-          <property key="Import-Package" value="eu.netide.core.api,*" />
+          <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.caos Bundle" />

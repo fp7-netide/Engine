@@ -50,7 +50,7 @@
                             eu.netide.core.caos;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,*
+                            eu.netide.core.api,org.osgi.framework
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
