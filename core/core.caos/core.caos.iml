@@ -2,11 +2,13 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.caos-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.caos" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.caos-1.0.0.0.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.caos" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.caos OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0" />
           <property key="Import-Package" value="eu.netide.core.api,*" />
+          <property key="Embed-Dependency" value="*;scope=compile|runtime" />
+          <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.caos Bundle" />
           <property key="Include-Resource" value="META-INF/MANIFEST.MF=$MODULE_DIR$/src/main/resources/META-INF/MANIFEST.MF,OSGI-INF/blueprint/blueprint.xml=$MODULE_DIR$/src/main/resources/OSGI-INF/blueprint/blueprint.xml" />
         </additionalProperties>
@@ -14,7 +16,7 @@
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_5" inherit-compiler-output="false">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -27,6 +29,13 @@
     <orderEntry type="library" scope="PROVIDED" name="eu.netide.core:core.api:1.0.0.0" level="project" />
     <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.jdom:jdom2:2.0.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.onosproject:openflowj:0.3.9.oe" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:17.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
   </component>
 </module>

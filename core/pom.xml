@@ -9,6 +9,7 @@
         <module>core.api</module>
         <module>core.caos</module>
         <module>core.shimconnectivity</module>
+        <module>core.management</module>
     </modules>
     <build>
         <pluginManagement>
