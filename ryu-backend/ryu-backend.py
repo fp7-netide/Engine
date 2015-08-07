@@ -277,7 +277,7 @@ class NetIDEOps:
     #Define the NetIDE message types and codes
     NetIDE_type = {
         'NETIDE_HELLO'      : 0x01,
-        'NETIDE_ERROR'      : 0x40,
+        'NETIDE_ERROR'      : 0x02,
         'NETIDE_OPENFLOW'   : 0x11,
         'NETIDE_NETCONF'    : 0x12,
         'NETIDE_OPFLEX'     : 0x13
