@@ -101,7 +101,7 @@ class Package(object):
     def start(self):
         return {cls.__name__:
                  { "procs": c.start(),
-                   "apps": [os.path.basename(str(a)) for a in c.applications] }
+                   "apps": [str(a) for a in c.applications] }
                 for cls, c in self.controllers.items()}
 
     def get_clients(self):

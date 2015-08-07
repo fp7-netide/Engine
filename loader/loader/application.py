@@ -40,7 +40,7 @@ class Application(object):
         self.enabled = self.metadata.get("enabled", True)
 
     def __str__(self):
-        return self.path
+        return os.path.basename(self.path)
 
 
     def valid_requirements(self):
