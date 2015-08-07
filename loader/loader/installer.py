@@ -17,6 +17,7 @@ import json
 import logging
 import os
 import platform
+import requests
 import subprocess as sp
 import sys
 
@@ -28,6 +29,10 @@ class InstallException(Exception): pass
 
 def do_server_install(pkg):
     logging.debug("Doing server install for '{}' now".format(pkg))
+
+    oldpwd = os.getcwd()
+    prefix = os.path.expanduser("~")
+
     with util.TempDir("netide-server-install") as t:
         p = Package(pkg, t)
         if "server" not in p.config:
@@ -37,6 +42,29 @@ def do_server_install(pkg):
         if "host" in conf and platform.node() != conf["host"]:
             raise InstallException("Attempted server installation on host {} (!= {})".format(platform.node(), conf["host"]))
 
+        logging.info("Starting installation/update of NetIDE core")
+        # Install NetIDE core
+        if not os.path.exists(os.path.join(prefix, "Core")):
+            os.makedirs(prefix, exist_ok=True)
+            os.chdir(prefix)
+            util.spawn_logged(["git", "clone", "-b", "CoreImplementation", "https://github.com/fp7-netide/Engine.git", "Core"])
+        else:
+            os.chdir(os.path.join(prefix, "Core"))
+            util.spawn_logged(["git", "pull", "origin", "CoreImplementation"])
+        os.chdir(os.path.join(prefix, "Core", "core"))
+        util.spawn_logged(["mvn", "clean", "install", "-DskipTests"])
+
+        os.makedirs(os.path.join(prefix, "karaf"), exist_ok=True)
+        os.chdir(os.path.join(prefix, "karaf"))
+        p = sp.Popen(["tar", "xzvf", "-"], stdin=sp.PIPE, stderr=sp.STDOUT)
+        req = requests.get("http://mirror.netcologne.de/apache.org/karaf/4.0.0/apache-karaf-4.0.0.tar.gz", stream=True)
+        for c in req.iter_content(2048):
+            p.stdin.write(c)
+        p.kill()
+        (out, err) = p.communicate()
+        logging.debug(out)
+
+        # Install server controller
         if "type" not in conf:
             raise InstallException('"type" section missing from configuration!')
 
@@ -45,10 +73,7 @@ def do_server_install(pkg):
         if conf["type"] not in ["odl"]:
             raise InstallException("Don't know how to do a server controller installation for controller {}!".format(conf["type"]))
 
-        oldpwd = os.getcwd()
-
         scripts = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
-        prefix = os.path.expanduser("~")
         if not os.path.exists(os.path.join(prefix, "IDE")):
             # Repo not yet checked out
             os.makedirs(prefix, exist_ok=True)
