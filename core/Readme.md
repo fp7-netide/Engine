@@ -13,14 +13,16 @@ The modules are built using Maven, the root pom.xml combines them into the core 
 ### Module core.api
 This bundle contains all shared interfaces and classes for the core, structured into the following Java packages:
 - core.api: Shared interfaces and classes for core services
-- core.api.composition: Classes for the (de-)serialization of composition specifications and in-memory representation
 - core.api.netip: Classes for parsing and creating messages using the NetIDE Intermediate Protocol
 
-This bundle does not have any OSGi-dependencies (except for the framework itself), but embeds JDOM2 and OpenFlowJ.
+This bundle does not have any OSGi-dependencies (except for the framework itself), but embeds OpenFlowJ.
 
 ### Module core.caos
-This bundle contains the composition and conflict resolution logic and related services inside the core.caos package.
-It has a dependency on the core.api bundle.
+This bundle contains the composition and conflict resolution logic and related services inside the core.caos package in the following packages:
+- core.caos: Runtime logic and services for composition and conflict resolution
+- core.caos.composition: Classes for the (de-)serialization of composition specifications and their in-memory representation
+
+It has a dependency on the core.api bundle and embeds JDOM2.
 
 ### Module core.shimconnectivity
 This bundle implements the services necessary to establish a connection with the shim. Currently, it implements a ZeroMQ-based connector inside the core.shimconnectivity package.
@@ -33,8 +35,8 @@ It has a dependency on the core.api and org.apache.karaf.config.core bundles and
 ## Used frameworks and technologies
 - Maven for building the projects (especially the maven-bundle-plugin)
 - Apache Karaf as the runtime OSGi container
-- Apache Karaf Blueprint for service discovery and injection
-- Apache Karaf Blueprint Configuration for dynamic adaption to configuration changes
+- Apache Aries Blueprint for service discovery and injection
+- Apache Aries Blueprint Configuration (using Karaf's ConfigAdmin service) for dynamic adaption to configuration changes
 	- In cooperation with Karaf's JMX MBeanServer for configuration changes through code
 - ZeroMQ for external interfaces (using the Java-only JeroMQ library)
 - OpenFlowJ from the ONOS project to parse and generate OpenFlow messages
