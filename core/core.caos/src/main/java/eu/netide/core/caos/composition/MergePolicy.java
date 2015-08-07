@@ -1,5 +1,5 @@
 
-package eu.netide.core.api.composition;
+package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
@@ -8,9 +8,9 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * <p>Java-Klasse für mergePolicy.
- * <p/>
+ * <p>
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
- * <p/>
+ * <p>
  * <pre>
  * &lt;simpleType name="mergePolicy">
  *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">

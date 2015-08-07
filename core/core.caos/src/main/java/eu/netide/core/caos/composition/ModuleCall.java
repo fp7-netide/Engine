@@ -1,5 +1,5 @@
 
-package eu.netide.core.api.composition;
+package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.*;
 
@@ -39,4 +39,8 @@ public class ModuleCall extends ExecutionFlowNode {
         this.allowVetoResult = value;
     }
 
+    @Override
+    public ExecutionResult Execute(ExecutionFlowStatus status) {
+        return null; // TODO
+    }
 }

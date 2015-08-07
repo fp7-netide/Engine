@@ -1,5 +1,5 @@
 
-package eu.netide.core.api.composition;
+package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.*;
 
@@ -28,4 +28,8 @@ public class Branch extends ExecutionFlowNode {
         this._else = value;
     }
 
+    @Override
+    public ExecutionResult Execute(ExecutionFlowStatus status) {
+        return null; //TODO
+    }
 }

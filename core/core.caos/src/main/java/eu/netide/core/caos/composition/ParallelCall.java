@@ -1,5 +1,5 @@
 
-package eu.netide.core.api.composition;
+package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.*;
 import java.util.List;
@@ -34,4 +34,8 @@ public class ParallelCall extends ExecutionFlowNode {
         this.mergePolicy = value;
     }
 
+    @Override
+    public ExecutionResult Execute(ExecutionFlowStatus status) {
+        return null; // TODO
+    }
 }

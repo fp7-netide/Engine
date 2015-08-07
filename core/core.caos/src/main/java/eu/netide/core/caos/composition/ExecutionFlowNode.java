@@ -1,5 +1,5 @@
 
-package eu.netide.core.api.composition;
+package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -11,4 +11,5 @@ import javax.xml.bind.annotation.XmlType;
 @XmlSeeAlso({ModuleCall.class, ParallelCall.class, Branch.class})
 public abstract class ExecutionFlowNode {
 
+    public abstract ExecutionResult Execute(ExecutionFlowStatus status);
 }

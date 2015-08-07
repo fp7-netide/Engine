@@ -1,7 +1,8 @@
 
-package eu.netide.core.api.composition;
+package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -10,6 +11,11 @@ import java.util.List;
 public class CompositionSpecification {
     private List<Module> modules;
     private List<ExecutionFlowNode> composition;
+
+    public CompositionSpecification() {
+        this.modules = new ArrayList<>();
+        this.composition = new ArrayList<>();
+    }
 
     @XmlElementWrapper(name = "Modules", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
     @XmlElement(name = "Module", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)

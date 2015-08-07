@@ -1,5 +1,5 @@
-import eu.netide.core.api.composition.CompositionSpecification;
-import eu.netide.core.api.composition.CompositionSpecificationLoader;
+import eu.netide.core.caos.composition.CompositionSpecification;
+import eu.netide.core.caos.composition.CompositionSpecificationLoader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -21,9 +21,7 @@ public class DeserializationTest {
         CompositionSpecification cs = null;
         try {
             cs = CompositionSpecificationLoader.Load(testFile);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (JAXBException | IOException e) {
             e.printStackTrace();
         }
         Assert.assertNotNull(cs, "CompositionSpecification is null");
@@ -39,9 +37,7 @@ public class DeserializationTest {
         CompositionSpecification cs = null;
         try {
             cs = CompositionSpecificationLoader.Load(testFile);
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (JAXBException | IOException e) {
             e.printStackTrace();
         }
         Assert.assertNotNull(cs, "CompositionSpecification is null");
