@@ -1,9 +1,7 @@
 package eu.netide.core.shimconnectivity;
 
+import eu.netide.core.api.IConnectorListener;
 import eu.netide.core.api.IShimConnector;
-import eu.netide.core.api.IShimMessageListener;
-import eu.netide.core.api.netip.Message;
-import eu.netide.core.api.netip.NetIPConverter;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -12,26 +10,26 @@ import org.zeromq.ZMsg;
  */
 public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
 
-    private int _port;
-    private ZMQ.Context _context;
-    private ZMQ.Socket _socket;
-    private Thread _thread;
-    private boolean _isOpen = false;
+    private int port;
+    private ZMQ.Context context;
+    private ZMQ.Socket socket;
+    private Thread thread;
+    private boolean isOpen = false;
 
-    private IShimMessageListener _listener;
+    private IConnectorListener listener;
 
     public ZeroMQBasedShimConnector() {
 
     }
 
     public void Start() {
-        _thread = new Thread(this);
-        _thread.start();
+        thread = new Thread(this);
+        thread.start();
     }
 
     public void Stop() {
-        if (_thread != null) {
-            _thread.interrupt();
+        if (thread != null) {
+            thread.interrupt();
             try {
                 Thread.sleep(600);
             } catch (InterruptedException e) {
@@ -41,34 +39,44 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
         System.out.println("ZeroMQBasedShimConnector stopped.");
     }
 
-    public void SendMessage(Message message) {
+    @Override
+    public void RegisterListener(IConnectorListener listener) {
+        this.listener = listener;
+    }
+
+    public boolean SendData(byte[] data) {
         ZMsg msg = new ZMsg();
         msg.add("shim");
         msg.add("");
-        msg.add(message.toByteRepresentation());
-        if (_isOpen)
-            msg.send(_socket);
+        msg.add(data);
+        if (isOpen) {
+            msg.send(socket);
+            return true;
+        }
+        return false;
     }
 
     public void run() {
         System.out.println("ZeroMQBasedShimConnector started.");
-        _context = ZMQ.context(1);
-        _socket = _context.socket(ZMQ.ROUTER);
-        System.out.println("Listening for shim on port " + _port);
-        _socket.bind("tcp://*:" + _port);
-        _socket.setReceiveTimeOut(10);
-        _isOpen = true;
+        context = ZMQ.context(1);
+        socket = context.socket(ZMQ.ROUTER);
+        System.out.println("Listening for shim on port " + port);
+        socket.bind("tcp://*:" + port);
+        socket.setReceiveTimeOut(10);
+        isOpen = true;
 
         ZMQ.Poller poller = new ZMQ.Poller(1);
-        poller.register(_socket, ZMQ.Poller.POLLIN);
+        poller.register(socket, ZMQ.Poller.POLLIN);
 
         while (!Thread.currentThread().isInterrupted()) {
             int signalled = poller.poll(10);
             if (signalled == 1) {
-                ZMsg message = ZMsg.recvMsg(_socket);
+                ZMsg message = ZMsg.recvMsg(socket);
                 String senderId = message.getFirst().toString();
                 byte[] data = message.getLast().getData();
-                _listener.OnMessage(NetIPConverter.parseConcreteMessage(data));
+                if (listener != null) {
+                    listener.OnDataReceived(data);
+                }
             }
             try {
                 Thread.sleep(10);
@@ -76,17 +84,17 @@ public class ZeroMQBasedShimConnector implements IShimConnector, Runnable {
                 break;
             }
         }
-        _isOpen = false;
-        _socket.close();
-        _context.term();
+        isOpen = false;
+        socket.close();
+        context.term();
     }
 
     public void setPort(int port) {
-        _port = port;
+        this.port = port;
         System.out.println("ZeroMQ server port set to " + port);
     }
 
     public int getPort() {
-        return _port;
+        return port;
     }
 }

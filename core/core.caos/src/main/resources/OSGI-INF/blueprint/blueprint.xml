@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+
+    <cm:property-placeholder persistent-id="eu.netide.core.caos" update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="compositionSpecification" value=""/>
+        </cm:default-properties>
+    </cm:property-placeholder>
 
     <reference id="shimmanager"
                interface="eu.netide.core.api.IShimManager"
@@ -14,5 +21,10 @@
           init-method="Start"
           destroy-method="Stop">
         <property name="shimManager" ref="shimmanager"/>
+        <property name="compositionSpecificationXml" value="${compositionSpecification}"/>
     </bean>
+
+    <service ref="compositionManager"
+             activation="eager"
+             interface="eu.netide.core.api.IShimMessageListener"/>
 </blueprint>

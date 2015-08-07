@@ -16,7 +16,7 @@ import java.util.Map;
 public class ManagementHandler {
 
     public void Start() throws IOException, MBeanException, MalformedObjectNameException {
-        System.out.println("ManagementHandler started!");
+        System.out.println("ManagementHandler started.");
         JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root");
         Map<String, String[]> environment = new HashMap<>();
         String[] creds = {"karaf", "karaf"};
@@ -31,6 +31,6 @@ public class ManagementHandler {
     }
 
     public void Stop() {
-
+        System.out.println("ManagementHandler stopped.");
     }
 }

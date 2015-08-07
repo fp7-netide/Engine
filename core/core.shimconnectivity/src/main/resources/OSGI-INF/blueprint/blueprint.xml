@@ -14,6 +14,7 @@
           init-method="Start"
           destroy-method="Stop">
         <property name="connector" ref="shimConnector"/>
+        <property name="shimMessageListeners" ref="listeners"/>
     </bean>
 
     <bean id="shimConnector" class="eu.netide.core.shimconnectivity.ZeroMQBasedShimConnector"
@@ -26,4 +27,6 @@
              activation="eager"
              interface="eu.netide.core.api.IShimManager"/>
 
+    <reference-list id="listeners" interface="eu.netide.core.api.IShimMessageListener" activation="eager"
+                    availability="optional" member-type="service-object"/>
 </blueprint>

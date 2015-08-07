@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0" name="NetIDE Core Features">
-    <feature name="netide-core-api">
+    <feature name="netide-core-api" start-level="70">
         <bundle>mvn:eu.netide.core/core.api/1.0.0.0</bundle>
     </feature>
     <feature name="netide-core-caos">
@@ -13,7 +13,7 @@
         <bundle>mvn:eu.netide.core/core.management/1.0.0.0</bundle>
     </feature>
     <feature name="netide-core">
-        <feature prerequisite="true">netide-core-api</feature>
+        <feature>netide-core-api</feature>
         <feature>netide-core-shimconnectivity</feature>
         <feature>netide-core-caos</feature>
         <feature>netide-core-management</feature>

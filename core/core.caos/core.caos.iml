@@ -6,7 +6,7 @@
         <additionalProperties>
           <property key="Bundle-Description" value="core.caos OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0" />
-          <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework" />
+          <property key="Import-Package" value="eu.netide.core.api,eu.netide.core.api.netip,eu.netide.core.api.composition,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.caos Bundle" />
@@ -22,6 +22,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
@@ -37,5 +38,8 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
   </component>
 </module>
