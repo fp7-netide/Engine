@@ -53,10 +53,10 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>eu.netide.core.caos.Activator</Bundle-Activator>
                         <Export-Package>
-                            eu.netide.core.caos;version=${project.version}
+                            eu.netide.core.caos;version=${project.version},eu.netide.core.caos.composition;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,eu.netide.core.api.netip,eu.netide.core.api.composition,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers
+                            eu.netide.core.api,eu.netide.core.api.netip,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

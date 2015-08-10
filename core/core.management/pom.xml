@@ -62,7 +62,7 @@
                             eu.netide.core.management;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,eu.netide.core.api.netip,eu.netide.core.api.composition,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote
+                            eu.netide.core.api,eu.netide.core.api.netip,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
