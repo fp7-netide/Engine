@@ -4,8 +4,8 @@ import eu.netide.core.api.IConnectorListener;
 import eu.netide.core.api.IShimConnector;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
-import eu.netide.core.api.netip.Message;
-import eu.netide.core.api.netip.NetIPConverter;
+import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.NetIPConverter;
 
 import java.util.ArrayList;
 import java.util.List;

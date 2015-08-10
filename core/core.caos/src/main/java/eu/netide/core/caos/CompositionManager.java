@@ -2,8 +2,8 @@ package eu.netide.core.caos;
 
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
-import eu.netide.core.api.netip.Message;
 import eu.netide.core.caos.composition.*;
+import eu.netide.lib.netip.Message;
 
 import javax.xml.bind.JAXBException;
 import java.util.concurrent.Semaphore;
