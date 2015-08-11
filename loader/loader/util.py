@@ -1,9 +1,24 @@
 import fcntl
 import logging
+import os
 import shutil
 import tempfile
 
 import subprocess as sp
+
+class Chdir(object):
+    "Context manager for switching to a directory, doing something and switching back"
+    oldcwd = None
+    def __init__(self, newpath):
+        self.newpath = newpath
+
+    def __enter__(self):
+        self.oldcwd = os.getcwd()
+        os.chdir(self.newpath)
+
+    def __exit__(self, *rest):
+        os.chdir(self.oldcwd)
+
 
 class FLock(object):
     "Context manager for locking file objects with flock"

@@ -92,9 +92,16 @@ def load_package(args):
     else:
         # TODO:
         # [ ] Start server controller (if not already running)
+        # [X] Start NetIDE core (if not already running)
         # [X] Connect to application controllers:
         #   [X] Copy package to remote machine
         #   [X] Run `load' with --mode=appcontroller
+        # [ ] Ping core about new composition
+        p = os.path.join("~", "karaf", "apache-karaf-4.0.0", "assemblies", "apache-karaf", "target", "assembly", "bin")
+        p = os.path.expanduser(p)
+        with util.Chdir(p):
+            if util.spawn_logged(["bash", "./client", "-r", "2", "logout"]) == 1:
+                util.spawn_logged(["bash", "./start"])
         with util.TempDir("netide-client-dispatch") as t:
             pkg = Package(args.package, t)
             for c in pkg.get_clients():

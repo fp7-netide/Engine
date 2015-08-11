@@ -86,15 +86,22 @@ class Package(object):
                     logging.error("Requirements for application {} not met".format(a))
                     return False
 
-        try:
-            with util.FLock(open(os.path.join(dataroot, "controllers.json"), "r")) as fh:
+        p = os.path.join(dataroot, "controllers.json")
+        if not os.path.exists(p):
+            logging.debug("No {} to check".format(p))
+            return True
+
+        with util.FLock(open(p, "r")) as fh:
+            try:
                 data = json.load(fh)
                 if self.cksum != data["cksum"]:
                     logging.debug("{} != {}".format(self.cksum, data["cksum"]))
                     return False
-        except Exception as e:
-            logging.error("{}: {} ({})".format(str(type(e)), e, dataroot))
-            return False
+            except Exception as e:
+                logging.error("{}: {} ({})".format(str(type(e)), e, dataroot))
+                fh.seek(0)
+                logging.debug("{}".format(fh.read()))
+                return False
 
         return True
 
