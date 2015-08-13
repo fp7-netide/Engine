@@ -40,7 +40,7 @@ class Package(object):
             with zipfile.ZipFile(self.path) as zf:
                 zf.extractall(path=p)
             self.path = p
-            self.cleanup = True
+            # self.cleanup = True
 
         p = os.path.join(self.path, "controllers.json")
         if os.path.exists(p):
