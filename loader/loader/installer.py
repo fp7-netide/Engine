@@ -71,8 +71,20 @@ def do_server_install(pkg):
                 logging.debug("o: {}, e: {}".format(out, err))
                 with util.Chdir("apache-karaf-4.0.0"):
                     util.spawn_logged(["mvn", "-Pfastinstall"])
-        path = os.path.join(prefix, "karaf", "apache-karaf-4.0.0", "assemblies", "apache-karaf", "target", "assembly", "bin")
-        with util.Chdir(path):
+        path = os.path.join(prefix, "karaf", "apache-karaf-4.0.0", "assemblies", "apache-karaf", "target", "assembly")
+        lines = []
+        with open(os.path.join(path, "etc", "org.apache.karaf.management.cfg"), "r") as fh:
+            for l in fh:
+                l = l.strip()
+                if l.startswith("rmiRegistryPort"):
+                    l = l.replace("1099", "1100")
+                if l.startswith("rmiServerPort"):
+                    l  = l.replace("44444", "55555")
+                lines.append(l)
+        with open(os.path.join(path, "etc", "org.apache.karaf.management.cfg"), "w") as fh:
+            fh.write("\n".join(lines))
+
+        with util.Chdir(os.path.join(path, "bin")):
             m = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
             os.chmod("karaf", m)
             os.chmod("start", m)
