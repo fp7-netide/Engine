@@ -105,11 +105,18 @@ class Package(object):
 
         return True
 
-    def start(self):
-        return {cls.__name__:
-                 { "procs": c.start(),
-                   "apps": [str(a) for a in c.applications] }
-                for cls, c in self.controllers.items()}
+    def start(self, data):
+        for cls, c in self.controllers.items():
+            n = cls.__name__
+
+            p = data.get(n, {}).get("procs", [])
+            p.extend(c.start())
+
+            a = set(data.get(n, {}).get("apps", [])) | {str(app) for app in c.applications}
+
+            data[n] = { "procs": p, "apps": list(a) }
+
+        return data
 
     def get_clients(self):
         clients = [ ]

@@ -81,7 +81,7 @@ def load_package(args):
                 logging.error("Package changed since installation. Re-run `install' with this package.")
                 return 1
         try:
-            pids = p.start()
+            pids = p.start(data.get("controllers", {}))
             logging.info(pids)
             data["controllers"] = pids
             with util.FLock(open(dp, "w")) as f:
