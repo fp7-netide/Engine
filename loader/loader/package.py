@@ -91,7 +91,7 @@ class Package(object):
             logging.debug("No {} to check".format(p))
             return True
 
-        with util.FLock(open(p, "r")) as fh:
+        with util.FLock(open(p, "r"), shared=True) as fh:
             try:
                 data = json.load(fh)
                 if self.cksum != data["cksum"]:

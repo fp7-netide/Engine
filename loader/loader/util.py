@@ -22,9 +22,12 @@ class Chdir(object):
 
 class FLock(object):
     "Context manager for locking file objects with flock"
-    def __init__(self, f, t=fcntl.LOCK_EX):
+    def __init__(self, f, shared=False):
         self.f = f
-        self.t = t
+        if shared:
+            self.t = fcntl.LOCK_SH
+        else:
+            self.t = fcntl.LOCK_EX
 
     def __enter__(self):
         fcntl.flock(self.f, self.t)

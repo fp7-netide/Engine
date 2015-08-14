@@ -69,8 +69,9 @@ def load_package(args):
             return 2
 
         os.makedirs(dataroot, exist_ok=True)
+        dp = os.path.join(dataroot, "controllers.json")
 
-        with util.FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
+        with util.FLock(open(dp, "r"), shared=True) as f:
             try:
                 data  = json.load(f)
             except ValueError:
@@ -79,16 +80,15 @@ def load_package(args):
                 logging.debug("{} != {}".format(data.get("cksum", ""), p.cksum))
                 logging.error("Package changed since installation. Re-run `install' with this package.")
                 return 1
-            f.seek(0)
-            f.truncate()
-            try:
-                pids = p.start()
-                logging.info(pids)
-                data["controllers"] = pids
+        try:
+            pids = p.start()
+            logging.info(pids)
+            data["controllers"] = pids
+            with util.FLock(open(dp, "w")) as f:
                 json.dump(data, f, indent=2)
-            except Exception as err:
-                logging.error(err)
-                return 1
+        except Exception as err:
+            logging.error(err)
+            return 1
     else:
         # TODO:
         # [ ] Start server controller (if not already running)
@@ -131,7 +131,7 @@ def list_controllers(args):
         if args.package is not None:
             logging.warning("Package argument only makes sense on the server controller")
         try:
-            with util.FLock(open(os.path.join(dataroot, "controllers.json")), fcntl.LOCK_SH) as f:
+            with util.FLock(open(os.path.join(dataroot, "controllers.json")), shared=True) as f:
                 d = { platform.node(): json.load(f) }
                 print(json.dumps(d, indent=2))
         except Exception as err:
