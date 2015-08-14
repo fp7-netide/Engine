@@ -127,9 +127,20 @@ class FloodLight(Base):
 
     def start(self):
         # XXX: application modules are not copied into floodlight right now, they need to be copied manually
+        try:
+            with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
+                data = json.load(fh)
+        except Exception as err:
+            logging.debug("{}: {}".format(type(err), err))
+            data = {}
+        running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+
         for a in self.applications:
             if not a.enabled:
                 logging.info("Skipping disabled application {}".format(a))
+                continue
+            if a in running_apps:
+                logging.info("App {} is already running".format(a))
                 continue
 
             prefix = os.path.expanduser("~/floodlight/src/main/resources")
