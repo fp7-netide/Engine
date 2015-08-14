@@ -14,12 +14,15 @@
      Gregor Best, gbe@mail.upb.de
 """
 
+import json
 import logging
 import os
 import subprocess
 import sys
 import time
 import uuid
+
+from loader import util
 
 class Base(object):
     applications = []
@@ -58,9 +61,21 @@ class Ryu(Base):
         rv = []
         appidx = 0
 
+        try:
+            with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
+                data = json.load(fh)
+        except Exception as err:
+            logging.debug("{}: {}".format(type(err), err))
+            data = {}
+        logging.debug("{}".format(data))
+        running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+
         for a in self.applications:
             if not a.enabled:
                 logging.info("Skipping disabled application {}".format(a))
+                continue
+            if str(a) in running_apps:
+                logging.info("App {} already running".format(a))
                 continue
 
             appidx += 1
