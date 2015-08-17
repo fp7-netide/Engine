@@ -25,7 +25,7 @@ public class ManagementHandler {
         MBeanServerConnection mbeanServer = connector.getMBeanServerConnection();
         ObjectName systemMBean = new ObjectName("org.apache.karaf:type=config,name=root");
         ConfigMBean bean = (ConfigMBean) JMX.newMBeanProxy(mbeanServer, systemMBean, ConfigMBean.class);
-        bean.setProperty("eu.netide.core.shimconnectivity", "port", "12345");
+        bean.setProperty("eu.netide.core.connectivity", "port", "12345");
         System.out.println("ManagementHandler set port to 12345!");
         connector.close();
     }

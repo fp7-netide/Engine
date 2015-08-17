@@ -12,8 +12,8 @@
   <Composition>
     <ModuleCall module="fw" allowVetoResult="true"/>
     <ParallelCall mergePolicy="priority">
-      <ModuleCall module="appA"/>
-      <ModuleCall module="appB"/>
+      <ModuleCall module="appA" priority="1"/>
+      <ModuleCall module="appB" priority="2"/>
     </ParallelCall>
     <Branch>
       <If event="flowRemoved">

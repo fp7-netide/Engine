@@ -45,11 +45,26 @@
         <processorPath useClasspath="true" />
         <module name="core.management" />
       </profile>
+      <profile default="false" name="Annotation profile for core.backendconnectivity" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Annotation profile for core.connectivity" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="core.connectivity" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="core" target="1.5" />
       <module name="core.api" target="1.8" />
+      <module name="core.backendconnectivity" target="1.8" />
       <module name="core.caos" target="1.8" />
+      <module name="core.connectivity" target="1.8" />
       <module name="core.management" target="1.8" />
       <module name="core.shimconnectivity" target="1.8" />
     </bytecodeTargetLevel>
@@ -60,9 +75,10 @@
   </component>
   <component name="FrameworkDetectionExcludesConfiguration">
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.api" />
+    <file type="Osmorc" url="file://$PROJECT_DIR$/core.backendconnectivity" />
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.caos" />
+    <file type="Osmorc" url="file://$PROJECT_DIR$/core.connectivity" />
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.management" />
-    <file type="Osmorc" url="file://$PROJECT_DIR$/core.shimconnectivity" />
   </component>
   <component name="InspectionProjectProfileManager">
     <profile version="1.0">
@@ -86,6 +102,11 @@
         <option value="$PROJECT_DIR$/pom.xml" />
       </list>
     </option>
+    <option name="ignoredFiles">
+      <set>
+        <option value="$PROJECT_DIR$/core.backendconnectivity/pom.xml" />
+      </set>
+    </option>
   </component>
   <component name="ProjectDictionaryState">
     <dictionary name="timvi" />
@@ -105,8 +126,8 @@
       <module fileurl="file://$PROJECT_DIR$/core.iml" filepath="$PROJECT_DIR$/core.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.api/core.api.iml" filepath="$PROJECT_DIR$/core.api/core.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.caos/core.caos.iml" filepath="$PROJECT_DIR$/core.caos/core.caos.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core.connectivity/core.connectivity.iml" filepath="$PROJECT_DIR$/core.connectivity/core.connectivity.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.management/core.management.iml" filepath="$PROJECT_DIR$/core.management/core.management.iml" />
-      <module fileurl="file://$PROJECT_DIR$/core.shimconnectivity/core.shimconnectivity.iml" filepath="$PROJECT_DIR$/core.shimconnectivity/core.shimconnectivity.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">

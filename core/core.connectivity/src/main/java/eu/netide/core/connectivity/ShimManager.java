@@ -1,4 +1,4 @@
-package eu.netide.core.shimconnectivity;
+package eu.netide.core.connectivity;
 
 import eu.netide.core.api.IConnectorListener;
 import eu.netide.core.api.IShimConnector;
@@ -34,7 +34,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
     }
 
     @Override
-    public void OnDataReceived(byte[] data) {
+    public void OnDataReceived(byte[] data, String originId) {
         Message message = NetIPConverter.parseConcreteMessage(data);
         try {
             listenerLock.acquire();
@@ -50,7 +50,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
 
     public void setConnector(IShimConnector connector) {
         this.connector = connector;
-        connector.RegisterListener(this);
+        connector.RegisterShimListener(this);
     }
 
     public IShimConnector getConnector() {

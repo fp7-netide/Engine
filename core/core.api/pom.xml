@@ -41,7 +41,7 @@
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
             <version>1.0.0.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -80,7 +80,7 @@
                         <Export-Package>
                             eu.netide.core.api;version=${project.version}
                         </Export-Package>
-                        <Import-Package>org.osgi.framework</Import-Package>
+                        <Import-Package>org.osgi.framework,eu.netide.lib.netip</Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

@@ -34,7 +34,7 @@
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
             <version>1.0.0.0</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -62,7 +62,7 @@
                             eu.netide.core.caos;version=${project.version},eu.netide.core.caos.composition;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers
+                            eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

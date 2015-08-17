@@ -7,5 +7,5 @@ public interface IShimConnector {
 
     boolean SendData(byte[] data);
 
-    void RegisterListener(IConnectorListener listener);
+    void RegisterShimListener(IConnectorListener listener);
 }

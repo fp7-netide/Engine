@@ -77,7 +77,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>
-                            eu.netide.lib*;version=${project.version}
+                            eu.netide.lib.netip;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.osgi.framework

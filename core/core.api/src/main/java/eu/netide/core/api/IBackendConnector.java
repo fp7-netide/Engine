@@ -6,5 +6,5 @@ package eu.netide.core.api;
 public interface IBackendConnector {
     boolean SendData(byte[] data, String backendId);
 
-    void RegisterListener(IConnectorListener listener);
+    void RegisterBackendListener(IConnectorListener listener);
 }

@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package eu.netide.core.shimconnectivity;
+package eu.netide.core.connectivity;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
