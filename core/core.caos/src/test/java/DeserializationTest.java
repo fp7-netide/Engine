@@ -15,7 +15,7 @@ public class DeserializationTest {
 
     @Test
     public void TestMinimalDeserialization() {
-        File testFile = new File("specification/MinimalSpecification.xml");
+        File testFile = new File("../specification/MinimalSpecification.xml");
         Assert.assertNotNull(testFile);
         Assert.assertTrue(testFile.exists(), "Testfile does not exist ('" + testFile.getAbsolutePath() + "')");
         CompositionSpecification cs = null;
@@ -31,7 +31,7 @@ public class DeserializationTest {
 
     @Test
     public void TestDeserialization() {
-        File testFile = new File("specification/CompositionSpecification.xml");
+        File testFile = new File("../specification/CompositionSpecification.xml");
         Assert.assertNotNull(testFile);
         Assert.assertTrue(testFile.exists(), "Testfile does not exist ('" + testFile.getAbsolutePath() + "')");
         CompositionSpecification cs = null;
