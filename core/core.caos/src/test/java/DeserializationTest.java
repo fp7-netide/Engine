@@ -4,9 +4,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Created by timvi on 05.08.2015.
@@ -15,12 +15,12 @@ public class DeserializationTest {
 
     @Test
     public void TestMinimalDeserialization() {
-        Path testFile = FileSystems.getDefault().getPath("C:\\Users\\timvi\\Source\\Repos\\Masterarbeit\\Engine\\core\\specification\\MinimalSpecification.xml");
+        File testFile = new File("specification/MinimalSpecification.xml");
         Assert.assertNotNull(testFile);
-        Assert.assertTrue(testFile.toFile().exists(), "Testfile does not exist");
+        Assert.assertTrue(testFile.exists(), "Testfile does not exist ('" + testFile.getAbsolutePath() + "')");
         CompositionSpecification cs = null;
         try {
-            cs = CompositionSpecificationLoader.Load(testFile);
+            cs = CompositionSpecificationLoader.Load(Paths.get(testFile.getAbsolutePath()));
         } catch (JAXBException | IOException e) {
             e.printStackTrace();
         }
@@ -31,12 +31,12 @@ public class DeserializationTest {
 
     @Test
     public void TestDeserialization() {
-        Path testFile = FileSystems.getDefault().getPath("C:\\Users\\timvi\\Source\\Repos\\Masterarbeit\\Engine\\core\\specification\\CompositionSpecification.xml");
+        File testFile = new File("specification/CompositionSpecification.xml");
         Assert.assertNotNull(testFile);
-        Assert.assertTrue(testFile.toFile().exists(), "Testfile does not exist");
+        Assert.assertTrue(testFile.exists(), "Testfile does not exist ('" + testFile.getAbsolutePath() + "')");
         CompositionSpecification cs = null;
         try {
-            cs = CompositionSpecificationLoader.Load(testFile);
+            cs = CompositionSpecificationLoader.Load(Paths.get(testFile.getAbsolutePath()));
         } catch (JAXBException | IOException e) {
             e.printStackTrace();
         }
