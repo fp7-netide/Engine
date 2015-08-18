@@ -1,17 +1,20 @@
 package eu.netide.core.connectivity;
 
-import eu.netide.core.api.IBackendConnector;
-import eu.netide.core.api.IBackendManager;
-import eu.netide.core.api.IBackendMessageListener;
-import eu.netide.core.api.IConnectorListener;
+import eu.netide.core.api.*;
+import eu.netide.lib.netip.HelloMessage;
+import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 
 /**
+ * BackendManager implementation for the core.
+ *
  * Created by timvi on 11.08.2015.
  */
 public class BackendManager implements IBackendManager, IConnectorListener {
@@ -19,53 +22,129 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private List<IBackendMessageListener> backendMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
     private List<String> backendIds = new ArrayList<>();
+    private Dictionary<Integer, String> moduleMappings = new Hashtable<>();
 
+    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final Dictionary<Integer, RequestResult> locks = new Hashtable<>();
+
+    /**
+     * Called by Apache Aries on startup (configured in blueprint.xml)
+     */
     public void Start() {
         System.out.println("BackendManager started.");
     }
 
+    /**
+     * Called by Apache Aries on shutdown (configured in blueprint.xml)
+     */
     public void Stop() {
         System.out.println("BackendManager stopped.");
     }
 
     @Override
-    public boolean sendMessage(Message message, String backendId) {
-        return connector.SendData(message.toByteRepresentation(), backendId);
+    public boolean sendMessage(Message message) {
+        return connector.SendData(message.toByteRepresentation(), getBackend(message.getHeader().getModuleId()));
     }
 
     @Override
-    public List<String> getBackendIds() {
+    public RequestResult sendRequest(Message message) {
+        Integer id = message.getHeader().getModuleId();
+        if (locks.get(id) != null) {
+            throw new IllegalStateException("Still waiting for former request to finish.");
+        }
+        RequestResult result = new RequestResult(message);
+        locks.put(id, result);
+        sendMessage(message);
+
+        while (!result.isDone()) {
+            try {
+                result.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        locks.remove(id);
+        return result;
+    }
+
+    @Override
+    public Future<RequestResult> sendRequestAsync(Message message) {
+        return pool.submit(() -> sendRequest(message));
+    }
+
+    @Override
+    public Iterable<String> getBackendIds() {
         return backendIds;
+    }
+
+    @Override
+    public Iterable<Integer> getModules() {
+        return Collections.list(moduleMappings.keys());
+    }
+
+    @Override
+    public String getBackend(Integer moduleId) {
+        return moduleMappings.get(moduleId);
     }
 
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message = NetIPConverter.parseConcreteMessage(data);
-        try {
-            listenerLock.acquire();
-            for (IBackendMessageListener listener : backendMessageListeners) {
-                listener.OnBackendMessage(message, backendId);
+
+        RequestResult r = locks.get(message.getHeader().getModuleId());
+        if (r != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
+            // Message belongs to former request
+            if (message instanceof ManagementMessage) {
+                // check for finished execution
+                // TODO real check
+                r.signalIsDone((ManagementMessage) message);
+                r.notify();
+            } else {
+                // add to result
+                r.addResultMessage(message);
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            listenerLock.release();
+        } else {
+            // Random message from backend
+            if (message instanceof HelloMessage) {
+                // remember backend and mapping
+                if (!backendIds.stream().anyMatch(a -> a.equals(backendId))) {
+                    backendIds.add(backendId);
+                }
+                moduleMappings.put(message.getHeader().getModuleId(), backendId);
+                // TODO handle message appropriately
+            } else if (message instanceof ManagementMessage) {
+                // TODO handle appropriately
+            } else {
+                try {
+                    listenerLock.acquire();
+                    for (IBackendMessageListener listener : backendMessageListeners) {
+                        listener.OnBackendMessage(message, backendId);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } finally {
+                    listenerLock.release();
+                }
+            }
         }
     }
 
+    /**
+     * Setter for injecting the connector using Aries.
+     *
+     * @param connector The connector.
+     */
     public void setConnector(IBackendConnector connector) {
         this.connector = connector;
         connector.RegisterBackendListener(this);
     }
 
-    public IBackendConnector getConnector() {
-        return connector;
-    }
-
-    public List<IBackendMessageListener> getBackendMessageListeners() {
-        return backendMessageListeners;
-    }
-
+    /**
+     * Setter for injecting the list of message listeners using Aries.
+     *
+     * @param backendMessageListeners The list of backend message listeners.
+     * @throws InterruptedException
+     */
     public void setBackendMessageListeners(List<IBackendMessageListener> backendMessageListeners) throws InterruptedException {
         listenerLock.acquire();
         this.backendMessageListeners = backendMessageListeners == null ? new ArrayList<>() : backendMessageListeners;
