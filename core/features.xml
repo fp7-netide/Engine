@@ -13,10 +13,14 @@
     <feature name="netide-core-management">
         <bundle>mvn:eu.netide.core/core.management/1.0.0.0</bundle>
     </feature>
+    <feature name="netide-core-logpub">
+        <bundle>mvn:eu.netide.core/core.logpub/1.0.0.0</bundle>
+    </feature>
     <feature name="netide-core">
         <feature>netide-core-api</feature>
         <feature>netide-core-shimconnectivity</feature>
         <feature>netide-core-caos</feature>
         <feature>netide-core-management</feature>
+        <feature>netide-core-logpub</feature>
     </feature>
 </features>

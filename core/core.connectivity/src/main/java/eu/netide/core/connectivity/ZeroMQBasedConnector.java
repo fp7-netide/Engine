@@ -13,6 +13,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
 
     private static final String STOP_COMMAND = "Control.STOP";
     private static final String CONTROL_ADDRESS = "inproc://ShimConnectorControl";
+    private static final String LOGPUB_ADDRESS = "inproc://LogPubData";
 
     private int port;
     private ZMQ.Context context;
@@ -86,6 +87,10 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
         ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
 
+        // socket to push messages to the LogPub
+        ZMQ.Socket logPubSocket = context.socket(ZMQ.PUSH);
+        logPubSocket.connect(LOGPUB_ADDRESS);
+
         ZMQ.Poller poller = new ZMQ.Poller(2);
         poller.register(socket, ZMQ.Poller.POLLIN);
         poller.register(controlSocket, ZMQ.Poller.POLLIN);
@@ -101,6 +106,10 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
                 } else if (backendListener != null) {
                     backendListener.OnDataReceived(data, senderId);
                 }
+                ZMsg msg = new ZMsg();
+                msg.add(senderId);
+                msg.add(data);
+                msg.send(logPubSocket);
             }
             if (poller.pollin(1)) {
                 ZMsg message = ZMsg.recvMsg(controlSocket);
@@ -114,6 +123,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
         }
         socket.close();
         controlSocket.close();
+        logPubSocket.close();
     }
 
     public void setPort(int port) {

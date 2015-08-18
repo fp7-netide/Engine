@@ -1,23 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
-  <component name="FacetManager">
-    <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.management-1.0.0.0.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.management" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
-        <additionalProperties>
-          <property key="Bundle-Description" value="core.management OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core.management;version=1.0.0.0" />
-          <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip" />
-          <property key="Embed-Dependency" value="*;scope=compile|runtime" />
-          <property key="Embed-Transitive" value="true" />
-          <property key="Bundle-Name" value="core.management Bundle" />
-          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
-          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
-          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
-        </additionalProperties>
-        <additionalJARContents />
-      </configuration>
-    </facet>
-  </component>
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />

@@ -10,6 +10,7 @@
         <module>core.caos</module>
         <module>core.connectivity</module>
         <module>core.management</module>
+        <module>core.logpub</module>
     </modules>
     <build>
         <pluginManagement>
