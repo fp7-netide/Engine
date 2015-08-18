@@ -18,6 +18,9 @@ package eu.netide.core.api;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+/**
+ * Generic bundle activator for core.api.
+ */
 public class Activator implements BundleActivator {
 
     public void start(BundleContext context) {
