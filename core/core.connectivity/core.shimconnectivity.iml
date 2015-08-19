@@ -6,7 +6,7 @@
         <additionalProperties>
           <property key="Bundle-Description" value="core.connectivity OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.connectivity;version=1.0.0.0" />
-          <property key="Import-Package" value="org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip" />
+          <property key="Import-Package" value="org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip,org.slf4j" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.connectivity Bundle" />
@@ -35,7 +35,6 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:17.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
     <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
@@ -44,5 +43,6 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
   </component>
 </module>

@@ -2,10 +2,6 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-<<<<<<< HEAD
-      <configuration manifestGenerationMode="Manually" manifestLocation="src/main/resources/META-INF/MANIFEST.MF" jarfileLocation="core.management.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="" bundleVersion="1.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="false" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
-        <additionalProperties />
-=======
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.management-1.0.0.0.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.management" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.management OSGi bundle project." />
@@ -18,7 +14,6 @@
           <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar,json-20141113.jar=$MAVEN_REPOSITORY$/org/json/json/20141113/json-20141113.jar" />
           <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;,json-20141113.jar;g=&quot;org.json&quot;;a=&quot;json&quot;;v=&quot;20141113&quot;" />
         </additionalProperties>
->>>>>>> CoreImplementation
         <additionalJARContents />
       </configuration>
     </facet>
