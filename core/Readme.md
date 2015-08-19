@@ -36,6 +36,26 @@ It has a dependency on the core.api and org.apache.karaf.config.core bundles and
 This bundle contains the LogPub module of the core. It has a interprocess queue to receive the messages pushed by the core.connectivity and publish them to a PUB queue.
 The external tools (like the Logger) will subscribe to that queue.
 
+```
+                                                                                     
+                                                                             backend 
+                                                                                +    
+                                                                                |    
+  +--------+           +--------------+            +--------------+             |    
+  |        |      +----+              +---+        |              +---+         |    
+  | Tools  +-<--+     ||   LogPub     ||    <------+ connectivity |    <--------+    
+  |        |      +----+              +---+        |              +---+         |    
+  |        |           |              |            |              |             |    
+  +--------+           +--------------+            +--------------+             |    
+                                                                                |    
+                                                                                |    
+                                                                                |    
+                                                                                +    
+                                                                              shim   
+                                                                                     
+
+```
+
 ## Used frameworks and technologies
 - Maven for building the projects (especially the maven-bundle-plugin)
 - Apache Karaf as the runtime OSGi container
