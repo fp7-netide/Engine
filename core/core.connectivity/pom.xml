@@ -23,12 +23,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>eu.netide.core</groupId>
-    <artifactId>core.shimconnectivity</artifactId>
+    <artifactId>core.connectivity</artifactId>
     <version>1.0.0.0</version>
     <packaging>bundle</packaging>
 
-    <name>core.shimconnectivity Bundle</name>
-    <description>core.shimconnectivity OSGi bundle project.</description>
+    <name>core.connectivity Bundle</name>
+    <description>core.connectivity OSGi bundle project.</description>
 
     <dependencies>
         <dependency>
@@ -84,7 +84,7 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>eu.netide.core.connectivity.Activator</Bundle-Activator>
                         <Export-Package>
-                            eu.netide.core.shimconnectivity;version=${project.version}
+                            eu.netide.core.connectivity;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip

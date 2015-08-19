@@ -5,7 +5,7 @@
     <Module id="appA" loaderIdentification="appA.py"/>
     <Module id="appB" loaderIdentification="appB.py"/>
     <Module id="lb" loaderIdentification="loadbalancer.jar">
-      <CallFilter events="packetIn"/>
+      <CallCondition events="packetIn"/>
     </Module>
     <Module id="log" loaderIdentification="logger.py"/>
   </Modules>
@@ -16,7 +16,8 @@
       <ModuleCall module="appB" priority="2"/>
     </ParallelCall>
     <Branch>
-      <If event="flowRemoved">
+      <BranchCondition events="flowMod"/>
+      <If>
         <ModuleCall module="log"/>
       </If>
       <Else>

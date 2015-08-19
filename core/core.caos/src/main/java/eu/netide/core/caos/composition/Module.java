@@ -28,19 +28,19 @@ import javax.xml.bind.annotation.*;
 @XmlRootElement(name = "Module", namespace = "http://netide.eu/schemas/compositionspecification/v1")
 public class Module {
 
-    protected Filter callFilter;
+    protected Condition callCondition;
 
     protected String id;
 
     protected String loaderIdentification;
 
-    @XmlElement(name = "CallFilter", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
-    public Filter getCallFilter() {
-        return callFilter;
+    @XmlElement(name = "CallCondition", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
+    public Condition getCallCondition() {
+        return callCondition;
     }
 
-    public void setCallFilter(Filter value) {
-        this.callFilter = value;
+    public void setCallCondition(Condition value) {
+        this.callCondition = value;
     }
 
     @XmlAttribute(name = "id", required = true)
