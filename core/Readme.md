@@ -32,6 +32,10 @@ It has a dependency on the core.api bundle and embeds JeroMQ.
 This bundle implements the management interface for the core using ZeroMQ transport and a yet-to-be-determined protocol. It allows to set and query configuration data. Internally, it uses Blueprint configuration to dynamically adapt the running core.
 It has a dependency on the core.api and org.apache.karaf.config.core bundles and embeds JeroMQ.
 
+### Module core.logpub
+This bundle contains the LogPub module of the core. It has a interprocess queue to receive the messages pushed by the core.connectivity and publish them to a PUB queue.
+The external tools (like the Logger) will subscribe to that queue.
+
 ## Used frameworks and technologies
 - Maven for building the projects (especially the maven-bundle-plugin)
 - Apache Karaf as the runtime OSGi container

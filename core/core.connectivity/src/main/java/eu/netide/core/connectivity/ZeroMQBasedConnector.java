@@ -13,7 +13,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
 
     private static final String STOP_COMMAND = "Control.STOP";
     private static final String CONTROL_ADDRESS = "inproc://ShimConnectorControl";
-    private static final String LOGPUB_ADDRESS = "inproc://LogPubData";
+    private static final String LOGPUB_ADDRESS = "ipc://LogPubData";
 
     private int port;
     private ZMQ.Context context;

@@ -87,7 +87,7 @@
                             eu.netide.core.logpub;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip
+                            org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip,eu.netide.core.connectivity
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

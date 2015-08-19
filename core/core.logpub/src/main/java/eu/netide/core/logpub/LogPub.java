@@ -68,17 +68,17 @@ public class LogPub implements Runnable{
             poller.poll(10);
             if (poller.pollin(0)) {
                 ZMsg message = ZMsg.recvMsg(inprocSocket);
-                System.out.println("Received message:" + message.toString());
-                message.send(pubSocket);
+                //System.out.println("Received message:" + message.toString());
+                message.send(pubSocket); // TODO : we need to define a logic in the message format (for now [shim|backend][message])
             }
             if (poller.pollin(1)) {
                 ZMsg message = ZMsg.recvMsg(controlSocket);
 
                 if (message.getFirst().toString().equals(STOP_COMMAND)) {
-                    System.out.println("Received STOP command from management.\nExiting...");
+                    System.out.println("Received STOP command.\nExiting...");
                     break;
                 } else {
-                   // message.send(pubSocket);
+                   message.send(pubSocket); // I really don't think that should be the case
                 }
             }
         }

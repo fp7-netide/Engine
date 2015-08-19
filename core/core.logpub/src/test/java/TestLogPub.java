@@ -28,6 +28,7 @@ public class TestLogPub {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
+            System.out.println("Control test");
             l.Stop();
         }
     }
