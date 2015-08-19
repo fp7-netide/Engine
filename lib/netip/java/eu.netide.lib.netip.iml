@@ -5,7 +5,7 @@
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="netip-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.lib.Activator" bundleSymbolicName="netip" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="Java Library for handling the NetIDE intermediate protocol." />
-          <property key="Export-Package" value="eu.netide.lib*;version=1.0.0.0" />
+          <property key="Export-Package" value="eu.netide.lib.netip;version=1.0.0.0" />
           <property key="Import-Package" value="org.osgi.framework" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
