@@ -6,6 +6,8 @@ import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,16 +18,18 @@ import java.util.concurrent.Semaphore;
  */
 public class ShimManager implements IShimManager, IConnectorListener {
 
+    private static final Logger logger = LoggerFactory.getLogger(ShimManager.class);
+
     private IShimConnector connector;
     private List<IShimMessageListener> shimMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
 
     public void Start() {
-        System.out.println("ShimManager started.");
+        logger.info("ShimManager started.");
     }
 
     public void Stop() {
-        System.out.println("ShimManager stopped.");
+        logger.info("ShimManager stopped.");
     }
 
     @Override
@@ -42,7 +46,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
                 listener.OnShimMessage(message);
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("", e);
         } finally {
             listenerLock.release();
         }

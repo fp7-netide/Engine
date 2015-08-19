@@ -61,6 +61,12 @@
             <version>6.9.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -87,7 +93,7 @@
                             eu.netide.core.connectivity;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip
+                            org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip,org.slf4j
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
