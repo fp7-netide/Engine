@@ -308,6 +308,17 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/javatuples/javatuples/1.2/javatuples-1.2-sources.jar!/" />
       </SOURCES>
     </library>
+    <library name="Maven: org.json:json:20141113">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/json/json/20141113/json-20141113.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/json/json/20141113/json-20141113-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/json/json/20141113/json-20141113-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: org.onosproject:openflowj:0.3.9.oe">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe.jar!/" />

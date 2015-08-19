@@ -2,8 +2,18 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="Manually" manifestLocation="src/main/resources/META-INF/MANIFEST.MF" jarfileLocation="core.logpub.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="" bundleVersion="1.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="false" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
-        <additionalProperties />
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.logpub-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.logpub.Activator" bundleSymbolicName="core.logpub" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
+        <additionalProperties>
+          <property key="Bundle-Description" value="core.logpub OSGi bundle project." />
+          <property key="Export-Package" value="eu.netide.core.logpub;version=1.0.0.0" />
+          <property key="Import-Package" value="org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip,eu.netide.core.connectivity" />
+          <property key="Embed-Dependency" value="*;scope=compile|runtime" />
+          <property key="Embed-Transitive" value="true" />
+          <property key="Bundle-Name" value="core.logpub Bundle" />
+          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
+          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
+          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
+        </additionalProperties>
         <additionalJARContents />
       </configuration>
     </facet>
@@ -20,7 +30,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="module" module-name="core.logpub" scope="PROVIDED" />
+    <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.onosproject:openflowj:0.3.9.oe" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
@@ -34,6 +44,5 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
-    <orderEntry type="module" module-name="core.api" />
   </component>
 </module>

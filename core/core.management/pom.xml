@@ -43,6 +43,18 @@
             <version>1.0.0.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20141113</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -68,7 +80,7 @@
                             eu.netide.core.management;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip
+                            eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip,org.slf4j
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

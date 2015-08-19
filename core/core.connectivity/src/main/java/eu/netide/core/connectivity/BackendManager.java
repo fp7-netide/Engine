@@ -5,6 +5,8 @@ import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -18,6 +20,9 @@ import java.util.concurrent.Semaphore;
  * Created by timvi on 11.08.2015.
  */
 public class BackendManager implements IBackendManager, IConnectorListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(BackendManager.class);
+
     private IBackendConnector connector;
     private List<IBackendMessageListener> backendMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
@@ -31,14 +36,14 @@ public class BackendManager implements IBackendManager, IConnectorListener {
      * Called by Apache Aries on startup (configured in blueprint.xml)
      */
     public void Start() {
-        System.out.println("BackendManager started.");
+        logger.info("BackendManager started.");
     }
 
     /**
      * Called by Apache Aries on shutdown (configured in blueprint.xml)
      */
     public void Stop() {
-        System.out.println("BackendManager stopped.");
+        logger.info("BackendManager stopped.");
     }
 
     @Override
@@ -60,7 +65,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             try {
                 result.wait();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error("", e);
             }
         }
         locks.remove(id);
@@ -121,7 +126,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                         listener.OnBackendMessage(message, backendId);
                     }
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    logger.error("", e);
                 } finally {
                     listenerLock.release();
                 }

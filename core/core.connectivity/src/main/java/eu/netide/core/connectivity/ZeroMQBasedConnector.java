@@ -3,6 +3,8 @@ package eu.netide.core.connectivity;
 import eu.netide.core.api.IBackendConnector;
 import eu.netide.core.api.IConnectorListener;
 import eu.netide.core.api.IShimConnector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -12,7 +14,9 @@ import org.zeromq.ZMsg;
 public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, Runnable {
 
     private static final String STOP_COMMAND = "Control.STOP";
-    private static final String CONTROL_ADDRESS = "inproc://ShimConnectorControl";
+    private static final String CONTROL_ADDRESS = "inproc://ZeroMQConnectorControl";
+
+    private static final Logger logger = LoggerFactory.getLogger(ZeroMQBasedConnector.class);
 
     private int port;
     private ZMQ.Context context;
@@ -28,6 +32,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
     public void Start() {
         context = ZMQ.context(1);
         thread = new Thread(this);
+        thread.setName("ZeroMQBasedConnector Receive Loop");
         thread.start();
     }
 
@@ -41,10 +46,10 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
                 thread.join();
                 context.term();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error("", e);
             }
         }
-        System.out.println("ZeroMQBasedConnector stopped.");
+        logger.info("ZeroMQBasedConnector stopped.");
     }
 
     @Override
@@ -78,10 +83,10 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
 
     @Override
     public void run() {
-        System.out.println("ZeroMQBasedConnector started.");
+        logger.info("ZeroMQBasedConnector started.");
         ZMQ.Socket socket = context.socket(ZMQ.ROUTER);
         socket.bind("tcp://*:" + port);
-        System.out.println("Listening on port " + port);
+        logger.info("Listening on port " + port);
 
         ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
