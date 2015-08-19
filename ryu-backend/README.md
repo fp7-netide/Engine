@@ -1,8 +1,9 @@
-#Backend for the Ryu platform
+# Backend for the Ryu platform
+
 The Ryu backend is one of the components of the NetIDE Network Engine and is implemented as application for the [Ryu controller](http://osrg.github.io/ryu/) by using the OpenFlow libraries included in the Ryu's [source code](https://github.com/osrg/ryu).  
 Differently from previous versions of the Network Engine implementation which leveraged on the protocol used between the [Pyretic backend and the OpenFlow client](http://www.cs.princeton.edu/~jrex/papers/pyretic13.pdf), the current modules (such as shim layer and backend) use the NetIDE Intermediate protocol v1.0 to communicate with each other (see a short description in the [Network Engine introduction](https://github.com/fp7-netide/Engine)).
 
-#Installation
+## Installation
 
 The Ryu backend is provided as an additional module for the Ryu controller. In order to use it, first clone the Ryu code (from [here](https://github.com/osrg/ryu)) on a local machine and copy the ```netide``` folder into the ```ryu/ryu``` folder. After that, install Ryu by running the command ```python ./setup.py install``` from the ```ryu``` folder.
 Then, add the Ryu's installation path to the PYTHONPATH variable in your ~/.profile or ~/.bashrc (e.g. in a Ubuntu 14.04 Linux OS: ```export PYTHONPATH=/usr/local/lib/python2.7/dist-packages/ryu```).
@@ -17,7 +18,7 @@ Additional python packages may be required in order to succefully complete the i
 * ```pip install stevedore```
 * ```pip install greenlet```
 
-#Running
+## Running
 Within the  ```ryu-backend``` folder, run the following command to use the Ryu backend with the, e.g., ```simple_switch ``` application on top of it:
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
@@ -27,7 +28,7 @@ The ```--ofp-tcp-listen-port 7733``` is used to avoid possible conflicts that ma
 
 Finally, ```simple_switch``` is a simple L2 learning switch application provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
 
-#Testing
+## Testing
 
 To test the Ryu backend it is necessary to run one of the shim layers provided in this github repository that supports the NetIDE Intermediate protocol v1.0.
 For instance, it can be tested with the Ryu shim by using the following command:
@@ -47,8 +48,11 @@ Once the Ryu shim is running and listening on TCP port 41414, the backend can be
 
 Within the Mininet CLI, a successful ```pingall``` demonstrates that the hosts are able to comminicate with each others.
 
+## License
 
-#ChangeLog
+See the LICENSE file.
+
+## ChangeLog
 
 ryu-backend: 2015-07-01 Wed Rinor Bytyçi <rinorb@gmail.com>
 
