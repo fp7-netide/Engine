@@ -6,13 +6,13 @@
         <additionalProperties>
           <property key="Bundle-Description" value="core.management OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.management;version=1.0.0.0" />
-          <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip" />
+          <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip,org.slf4j" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.management Bundle" />
-          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
-          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
-          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
+          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar,json-20141113.jar" />
+          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar,json-20141113.jar=$MAVEN_REPOSITORY$/org/json/json/20141113/json-20141113.jar" />
+          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;,json-20141113.jar;g=&quot;org.json&quot;;a=&quot;json&quot;;v=&quot;20141113&quot;" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
@@ -37,12 +37,13 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:4.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf:org.apache.karaf.util:4.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.felix:org.apache.felix.utils:1.8.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.jaas:org.apache.karaf.jaas.boot:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+    <orderEntry type="library" name="Maven: org.json:json:20141113" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
   </component>
 </module>
