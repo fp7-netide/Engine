@@ -28,10 +28,24 @@ import java.util.List;
 public class Filter {
 
     protected List<Events> events;
+    protected String originAddress;
+    protected String destinationAddress;
+    protected int inPort;
+    protected int outPort;
 
     @XmlAttribute(name = "events")
     public List<Events> getEvents() {
         return this.events;
+    }
+
+    @XmlAttribute(name = "originAddress")
+    public String getOriginAddress() {
+        return originAddress;
+    }
+
+    @XmlAttribute(name = "destinationAddress")
+    public String getDestinationAddress() {
+        return destinationAddress;
     }
 
     public void setEvents(List<Events> events) {
