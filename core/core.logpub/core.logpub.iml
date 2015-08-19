@@ -20,7 +20,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
+    <orderEntry type="module" module-name="core.logpub" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.onosproject:openflowj:0.3.9.oe" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
