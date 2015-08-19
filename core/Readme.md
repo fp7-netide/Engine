@@ -5,7 +5,7 @@ Base package: eu.netide.*
 The core project is built on top of Apache Karaf and is therefore implemented as OSGi bundles. The core currently consists of the following modules:
 - core.api
 - core.caos
-- core.shimconnectivity
+- core.connectivity
 - core.management
 
 The modules are built using Maven, the root pom.xml combines them into the core project.
@@ -24,13 +24,13 @@ This bundle contains the composition and conflict resolution logic and related s
 
 It has a dependency on the core.api bundle and embeds JDOM2.
 
-### Module core.shimconnectivity
-This bundle implements the services necessary to establish a connection with the shim. Currently, it implements a ZeroMQ-based connector inside the core.shimconnectivity package.
+### Module core.connectivity
+This bundle implements the services necessary to establish a connection with the shim and backends. Currently, it implements a ZeroMQ-based connector inside the core.connectivity package.
 It has a dependency on the core.api bundle and embeds JeroMQ.
 
 ### Module core.management
 This bundle implements the management interface for the core using ZeroMQ transport and a yet-to-be-determined protocol. It allows to set and query configuration data. Internally, it uses Blueprint configuration to dynamically adapt the running core.
-It has a dependency on the core.api and org.apache.karaf.config.core bundles and embeds JeroMQ.
+It has a dependency on the core.api and org.apache.karaf.config.core bundles and embeds JeroMQ and org.json.
 
 ## Used frameworks and technologies
 - Java NetIP library (see [lib](../lib) folder)
@@ -41,6 +41,8 @@ It has a dependency on the core.api and org.apache.karaf.config.core bundles and
 	- In cooperation with Karaf's JMX MBeanServer for configuration changes through code
 - ZeroMQ for external interfaces (using the Java-only JeroMQ library)
 - OpenFlowJ from the ONOS project to parse and generate OpenFlow messages
+- org.json for parsing and creating payloads for ManagementMessages
+- SLF4J for logging (provided by Karaf)
 
 ## How to deploy
 ### Prerequisites
