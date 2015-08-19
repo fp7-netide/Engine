@@ -1,18 +1,25 @@
 package eu.netide.core.logpub;
 
 import java.lang.Runnable;
+
+import eu.netide.core.api.*;
+import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.MessageType;
+import eu.netide.lib.netip.NetIDEProtocolVersion;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
+import eu.netide.lib.netip.MessageHeader;
 
-public class LogPub implements Runnable{
+public class LogPub implements IBackendMessageListener, IShimMessageListener,Runnable{
 
     private static final String STOP_COMMAND = "Control.logpub.STOP";
     private static final String CONTROL_ADDRESS = "inproc://LogPubControl";
-    private static final String INTERPROCESS_ADDRESS = "ipc://LogPubData";
 
     private int port;
     private ZMQ.Context context;
     private Thread thread;
+    ZMQ.Socket pubSocket;
+    ZMQ.Socket controlSocket;
 
     public LogPub() {
 
@@ -20,6 +27,8 @@ public class LogPub implements Runnable{
 
     public void Start() {
         context = ZMQ.context(1);
+        pubSocket = context.socket(ZMQ.PUB);
+        controlSocket = context.socket(ZMQ.PULL);
         thread = new Thread(this);
         thread.start();
     }
@@ -44,46 +53,30 @@ public class LogPub implements Runnable{
     public void run() {
         System.out.println("LogPub started.");
 
-        // Publish queue for the Logger
-        ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
         pubSocket.bind("tcp://*:" + port);
         System.out.println("Listening PUB queue on port " + port);
 
-        // Pull queue for the Connector
-        ZMQ.Socket inprocSocket = context.socket(ZMQ.PULL);
-        inprocSocket.bind(INTERPROCESS_ADDRESS);
-        System.out.println("Data queue on address: " + INTERPROCESS_ADDRESS);
-
-        // Pull queue for control
-        ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
         System.out.println("Control queue on address: " + CONTROL_ADDRESS);
 
         // Register the queues in the poller
-        ZMQ.Poller poller = new ZMQ.Poller(2);
-        poller.register(inprocSocket, ZMQ.Poller.POLLIN);
+        ZMQ.Poller poller = new ZMQ.Poller(1);
         poller.register(controlSocket, ZMQ.Poller.POLLIN);
 
         while (!Thread.currentThread().isInterrupted()) {
             poller.poll(10);
             if (poller.pollin(0)) {
-                ZMsg message = ZMsg.recvMsg(inprocSocket);
-                //System.out.println("Received message:" + message.toString());
-                message.send(pubSocket); // TODO : we need to define a logic in the message format (for now [shim|backend][message])
-            }
-            if (poller.pollin(1)) {
                 ZMsg message = ZMsg.recvMsg(controlSocket);
 
                 if (message.getFirst().toString().equals(STOP_COMMAND)) {
                     System.out.println("Received STOP command.\nExiting...");
                     break;
                 } else {
-                   message.send(pubSocket); // I really don't think that should be the case
+                   message.send(pubSocket);
                 }
             }
         }
         pubSocket.close();
-        inprocSocket.close();
         controlSocket.close();
     }
 
@@ -94,4 +87,27 @@ public class LogPub implements Runnable{
     public int getPort() {
         return port;
     }
+
+    @Override
+    public void OnBackendMessage(Message message, String originId) {
+        ZMsg Zmessage = new ZMsg();
+        Zmessage.add("backend");
+        Zmessage.add(originId);
+        Zmessage.add(message.getHeader().toByteRepresentation());
+        Zmessage.add(message.getPayload());
+        System.out.println("Received message:" + Zmessage.toString());
+        Zmessage.send(pubSocket);
+    }
+
+    @Override
+    public void OnShimMessage(Message message) {
+        ZMsg Zmessage = new ZMsg();
+        Zmessage.add("shim");
+        Zmessage.add("");
+        Zmessage.add(message.getHeader().toByteRepresentation());
+        Zmessage.add(message.getPayload());
+        System.out.println("Received message:" + Zmessage.toString());
+        Zmessage.send(pubSocket);
+    }
+
 }

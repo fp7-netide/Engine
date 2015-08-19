@@ -32,11 +32,9 @@ It has a dependency on the core.api bundle and embeds JeroMQ.
 This bundle implements the management interface for the core using ZeroMQ transport and a yet-to-be-determined protocol. It allows to set and query configuration data. Internally, it uses Blueprint configuration to dynamically adapt the running core.
 It has a dependency on the core.api and org.apache.karaf.config.core bundles and embeds JeroMQ.
 
-### Module core.logpub
-This bundle contains the LogPub module of the core. It has a interprocess queue to receive the messages pushed by the core.connectivity and publish them to a PUB queue.
-The external tools (like the Logger) will subscribe to that queue.
 
 ## Used frameworks and technologies
+- Java NetIP library (see [lib](../lib) folder)
 - Maven for building the projects (especially the maven-bundle-plugin)
 - Apache Karaf as the runtime OSGi container
 - Apache Aries Blueprint for service discovery and injection
@@ -46,6 +44,10 @@ The external tools (like the Logger) will subscribe to that queue.
 - OpenFlowJ from the ONOS project to parse and generate OpenFlow messages
 
 ## How to deploy
+### Prerequisites
+- The core requires the Java NetIP library in your local Maven repository for a successful build. Therefore, go to the [lib/netip/java](../lib/netip/java) directory and run `mvn clean install` before continuing.
+
+### Core Deployment
 1. Clone the *CoreImplementation* branch of the repository to your machine.
 2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
 3. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html). (I recommend at least version 4.0.0.0)

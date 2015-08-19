@@ -2,43 +2,17 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
 
-    <cm:property-placeholder persistent-id="eu.netide.core.connectivity" update-strategy="reload">
+    <cm:property-placeholder persistent-id="eu.netide.core.logpub" update-strategy="reload">
         <cm:default-properties>
-            <cm:property name="port" value="5555"/>
+            <cm:property name="port" value="5556"/>
         </cm:default-properties>
     </cm:property-placeholder>
 
-    <bean id="ShimManager"
-          class="eu.netide.core.connectivity.ShimManager"
-          scope="singleton"
-          init-method="Start"
-          destroy-method="Stop">
-        <property name="connector" ref="connector"/>
-        <property name="shimMessageListeners" ref="shimListeners"/>
-    </bean>
-
-    <bean id="BackendManager"
-          class="eu.netide.core.connectivity.BackendManager"
-          scope="singleton"
-          init-method="Start"
-          destroy-method="Stop">
-        <property name="connector" ref="connector"/>
-        <property name="backendMessageListeners" ref="backendListeners"/>
-    </bean>
-
-    <bean id="connector" class="eu.netide.core.connectivity.ZeroMQBasedConnector"
+    <bean id="logpub" class="eu.netide.core.logpub.LogPub"
           init-method="Start"
           destroy-method="Stop">
         <property name="port" value="${port}"/>
     </bean>
-
-    <service ref="ShimManager"
-             activation="eager"
-             interface="eu.netide.core.api.IShimManager"/>
-
-    <service ref="BackendManager"
-             activation="eager"
-             interface="eu.netide.core.api.IBackendManager"/>
 
     <reference-list id="shimListeners" interface="eu.netide.core.api.IShimMessageListener" activation="eager"
                     availability="optional" member-type="service-object"/>

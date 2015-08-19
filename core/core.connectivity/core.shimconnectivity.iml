@@ -2,8 +2,18 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="Manually" manifestLocation="src/main/resources/META-INF/MANIFEST.MF" jarfileLocation="core.shimconnectivity.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="" bundleVersion="1.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="false" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
-        <additionalProperties />
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.connectivity-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.connectivity.Activator" bundleSymbolicName="core.connectivity" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
+        <additionalProperties>
+          <property key="Bundle-Description" value="core.connectivity OSGi bundle project." />
+          <property key="Export-Package" value="eu.netide.core.connectivity;version=1.0.0.0" />
+          <property key="Import-Package" value="org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip" />
+          <property key="Embed-Dependency" value="*;scope=compile|runtime" />
+          <property key="Embed-Transitive" value="true" />
+          <property key="Bundle-Name" value="core.connectivity Bundle" />
+          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
+          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
+          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
+        </additionalProperties>
         <additionalJARContents />
       </configuration>
     </facet>

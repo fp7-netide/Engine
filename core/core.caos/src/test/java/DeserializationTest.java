@@ -43,7 +43,7 @@ public class DeserializationTest {
         Assert.assertNotNull(cs, "CompositionSpecification is null");
         Assert.assertNotNull(cs.getModules(), "Modules is null");
         Assert.assertEquals(cs.getModules().size(), 5, "Size of Modules list does not match");
-        Assert.assertEquals(cs.getModules().get(3).getCallFilter().getEvents().get(0).value(), "packetIn", "Did not find packetIn event filter");
+        Assert.assertEquals(cs.getModules().get(3).getCallCondition().getEvents().get(0).value(), "packetIn", "Did not find packetIn event filter");
         Assert.assertEquals(cs.getComposition().size(), 3, "Size of Composition list does not match");
     }
 }

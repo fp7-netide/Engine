@@ -4,11 +4,21 @@ package eu.netide.core.caos.composition;
 import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = "", propOrder = {"if", "else"})
+@XmlType(name = "", propOrder = {"condition", "if", "else"})
 @XmlRootElement(name = "Branch", namespace = "http://netide.eu/schemas/compositionspecification/v1")
 public class Branch extends ExecutionFlowNode {
+    private Condition condition;
     private If _if;
     private Else _else;
+
+    @XmlElement(name = "BranchCondition", namespace = "http://netide.eu/schemas/compositionspecification/v1")
+    public Condition getCondition() {
+        return condition;
+    }
+
+    public void setCondition(Condition value) {
+        this.condition = value;
+    }
 
     @XmlElement(name = "If", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
     public If getIf() {

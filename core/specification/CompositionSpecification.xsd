@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<xs:schema version="1.0" targetNamespace="http://netide.eu/schemas/compositionspecification/v1" xmlns:tns="http://netide.eu/schemas/compositionspecification/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
-  
-   <xs:element name="CompositionSpecification">
+<xs:schema version="1.0" targetNamespace="http://netide.eu/schemas/compositionspecification/v1" xmlns:tns="http://netide.eu/schemas/compositionspecification/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:element name="Branch">
+    <xs:complexType>
+      <xs:complexContent>
+        <xs:extension base="tns:ExecutionFlowNode">
+          <xs:sequence>
+            <xs:element name="BranchCondition" type="tns:Condition" form="qualified" minOccurs="0"/>
+            <xs:element ref="tns:If"/>
+            <xs:element ref="tns:Else"/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="CompositionSpecification">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="Modules">
+        <xs:element name="Modules" form="qualified">
           <xs:complexType>
             <xs:sequence>
               <xs:element ref="tns:Module" maxOccurs="unbounded"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
-        <xs:element name="Composition" minOccurs="0">
+        <xs:element name="Composition" form="qualified" minOccurs="0">
           <xs:complexType>
             <xs:sequence>
               <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -23,19 +37,6 @@
           </xs:complexType>
         </xs:element>
       </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-  
-  <xs:element name="Branch">
-    <xs:complexType>
-      <xs:complexContent>
-        <xs:extension base="tns:ExecutionFlowNode">
-          <xs:sequence>
-            <xs:element ref="tns:If"/>
-            <xs:element ref="tns:Else"/>
-          </xs:sequence>
-        </xs:extension>
-      </xs:complexContent>
     </xs:complexType>
   </xs:element>
 
@@ -54,11 +55,6 @@
       <xs:complexContent>
         <xs:extension base="tns:ExecutionFlowNodeContainer">
           <xs:sequence/>
-          <xs:attribute name="event">
-            <xs:simpleType>
-              <xs:list itemType="tns:Events"/>
-            </xs:simpleType>
-          </xs:attribute>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -67,7 +63,7 @@
   <xs:element name="Module">
     <xs:complexType>
       <xs:sequence>
-        <xs:element name="CallFilter" type="tns:Filter" minOccurs="0"/>
+        <xs:element name="CallCondition" type="tns:Condition" form="qualified" minOccurs="0"/>
       </xs:sequence>
       <xs:attribute name="id" type="xs:ID" use="required"/>
       <xs:attribute name="loaderIdentification" type="xs:string" use="required"/>
@@ -79,10 +75,11 @@
       <xs:complexContent>
         <xs:extension base="tns:ExecutionFlowNode">
           <xs:sequence>
-            <xs:element name="CallFilter" type="tns:Filter" minOccurs="0"/>
+            <xs:element name="CallCondition" type="tns:Condition" form="qualified" minOccurs="0"/>
           </xs:sequence>
           <xs:attribute name="allowVetoResult" type="xs:boolean"/>
           <xs:attribute name="module" type="xs:IDREF" use="required"/>
+          <xs:attribute name="priority" type="xs:int" use="optional"/>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -101,13 +98,26 @@
     </xs:complexType>
   </xs:element>
 
-  <xs:complexType name="Filter">
+  <xs:complexType name="Condition">
     <xs:sequence/>
+    <xs:attribute name="ethDst" type="xs:string"/>
+    <xs:attribute name="ethSrc" type="xs:string"/>
+    <xs:attribute name="ethType" type="xs:string"/>
     <xs:attribute name="events">
       <xs:simpleType>
         <xs:list itemType="tns:Events"/>
       </xs:simpleType>
     </xs:attribute>
+    <xs:attribute name="inPort" type="xs:string"/>
+    <xs:attribute name="ipv4Dst" type="xs:string"/>
+    <xs:attribute name="ipv4Src" type="xs:string"/>
+    <xs:attribute name="ipv6Dst" type="xs:string"/>
+    <xs:attribute name="ipv6Src" type="xs:string"/>
+    <xs:attribute name="ipProto" type="xs:string"/>
+    <xs:attribute name="tcpDst" type="xs:string"/>
+    <xs:attribute name="tcpSrc" type="xs:string"/>
+    <xs:attribute name="udpDst" type="xs:string"/>
+    <xs:attribute name="udpSrc" type="xs:string"/>
   </xs:complexType>
 
   <xs:complexType name="ExecutionFlowNode" abstract="true">
@@ -144,3 +154,4 @@
     </xs:restriction>
   </xs:simpleType>
 </xs:schema>
+
