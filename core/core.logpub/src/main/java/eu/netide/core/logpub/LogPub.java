@@ -2,13 +2,11 @@ package eu.netide.core.logpub;
 
 import java.lang.Runnable;
 
-import eu.netide.core.api.*;
+import eu.netide.core.api.IBackendMessageListener;
+import eu.netide.core.api.IShimMessageListener;
 import eu.netide.lib.netip.Message;
-import eu.netide.lib.netip.MessageType;
-import eu.netide.lib.netip.NetIDEProtocolVersion;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
-import eu.netide.lib.netip.MessageHeader;
 
 public class LogPub implements IBackendMessageListener, IShimMessageListener,Runnable{
 
