@@ -6,6 +6,7 @@
     <cm:property-placeholder persistent-id="eu.netide.core.caos" update-strategy="reload">
         <cm:default-properties>
             <cm:property name="compositionSpecification" value=""/>
+            <cm:property name="maxModuleWaitSeconds" value="60"/>
         </cm:default-properties>
     </cm:property-placeholder>
 
@@ -22,6 +23,7 @@
           destroy-method="Stop">
         <property name="shimManager" ref="shimmanager"/>
         <property name="compositionSpecificationXml" value="${compositionSpecification}"/>
+        <property name="maxModuleWaitSeconds" value="${maxModuleWaitSeconds}"/>
     </bean>
 
     <service ref="compositionManager"

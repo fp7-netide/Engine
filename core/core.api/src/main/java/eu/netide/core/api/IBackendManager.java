@@ -3,6 +3,7 @@ package eu.netide.core.api;
 import eu.netide.lib.netip.Message;
 
 import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 /**
  * Interface for BackendManagers.
@@ -40,14 +41,21 @@ public interface IBackendManager {
      *
      * @return The list of backend ids.
      */
-    Iterable<String> getBackendIds();
+    Stream<String> getBackendIds();
 
     /**
      * Returns the list of all known module ids.
      *
      * @return The list of module ids.
      */
-    Iterable<Integer> getModules();
+    Stream<Integer> getModuleIds();
+
+    /**
+     * Returns the list of all known module names.
+     *
+     * @return The list of module names.
+     */
+    Stream<String> getModules();
 
     /**
      * Gets the backend id for a given module id.
