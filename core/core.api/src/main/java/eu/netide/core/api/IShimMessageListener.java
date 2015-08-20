@@ -12,6 +12,7 @@ public interface IShimMessageListener {
      * Called by the manager when a message from the shim is received.
      *
      * @param message The received message.
+     * @param originId The id of the shim that sent the message.
      */
-    void OnShimMessage(Message message);
+    void OnShimMessage(Message message, String originId);
 }
