@@ -24,9 +24,9 @@ public class TestLogPub {
             mh.setMessageType(MessageType.HELLO);
             mh.setModuleId(23);
             mh.setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_0);
-            mh.setPayloadLength((short) 5);
-            mh.setTransactionId(0);
-            byte[] p = new byte[5];
+            mh.setPayloadLength((short) 4);
+            mh.setTransactionId(8);
+            byte[] p = new byte[4];
             Message m = new Message(mh,p);
             l.OnBackendMessage(m, "b1");
             Thread.sleep(100);

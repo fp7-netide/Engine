@@ -19,4 +19,9 @@
 
     <reference-list id="backendListeners" interface="eu.netide.core.api.IBackendMessageListener" activation="eager"
                     availability="optional" member-type="service-object"/>
+
+    <service ref="logPub"
+             interface="eu.netide.core.api.IShimMessageListener"/>
+    <service ref="logPub"
+             interface="eu.netide.core.api.IBackendMessageListener"/>
 </blueprint>

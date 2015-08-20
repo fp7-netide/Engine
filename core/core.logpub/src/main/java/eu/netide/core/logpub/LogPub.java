@@ -5,6 +5,8 @@ import java.lang.Runnable;
 import eu.netide.core.api.IBackendMessageListener;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.lib.netip.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -12,12 +14,11 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener,Run
 
     private static final String STOP_COMMAND = "Control.logpub.STOP";
     private static final String CONTROL_ADDRESS = "inproc://LogPubControl";
+    private static final Logger log = LoggerFactory.getLogger(LogPub.class);
 
     private int port;
     private ZMQ.Context context;
     private Thread thread;
-    ZMQ.Socket pubSocket;
-    ZMQ.Socket controlSocket;
 
     public LogPub() {
 
@@ -25,8 +26,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener,Run
 
     public void Start() {
         context = ZMQ.context(1);
-        pubSocket = context.socket(ZMQ.PUB);
-        controlSocket = context.socket(ZMQ.PULL);
         thread = new Thread(this);
         thread.start();
     }
@@ -44,18 +43,19 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener,Run
                 e.printStackTrace();
             }
         }
-        System.out.println("LogPub stopped.");
+        log.info("LogPub stopped.");
     }
 
     @Override
     public void run() {
-        System.out.println("LogPub started.");
-
+        log.info("LogPub started.");
+        ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
         pubSocket.bind("tcp://*:" + port);
-        System.out.println("Listening PUB queue on port " + port);
+        log.info("Listening PUB queue on port " + port);
 
+        ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
-        System.out.println("Control queue on address: " + CONTROL_ADDRESS);
+        log.info("Control queue on address: " + CONTROL_ADDRESS);
 
         // Register the queues in the poller
         ZMQ.Poller poller = new ZMQ.Poller(1);
@@ -67,8 +67,8 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener,Run
                 ZMsg message = ZMsg.recvMsg(controlSocket);
 
                 if (message.getFirst().toString().equals(STOP_COMMAND)) {
-                    System.out.println("Received STOP command.\nExiting...");
-                    break;
+                   log.info("Received STOP command.\nExiting...");
+                   break;
                 } else {
                    message.send(pubSocket);
                 }
@@ -89,23 +89,25 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener,Run
     @Override
     public void OnBackendMessage(Message message, String originId) {
         ZMsg Zmessage = new ZMsg();
-        Zmessage.add("backend");
-        Zmessage.add(originId);
-        Zmessage.add(message.getHeader().toByteRepresentation());
-        Zmessage.add(message.getPayload());
-        System.out.println("Received message:" + Zmessage.toString());
-        Zmessage.send(pubSocket);
+        Zmessage.add("0");
+        // Zmessage.add(originId); // don't know how to handle this yet
+        Zmessage.add(message.toByteRepresentation());
+        log.info("Received message:" + Zmessage.toString());
+        ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
+        sendSocket.connect(CONTROL_ADDRESS);
+        Zmessage.send(sendSocket);
+        sendSocket.close();
     }
 
     @Override
     public void OnShimMessage(Message message) {
         ZMsg Zmessage = new ZMsg();
-        Zmessage.add("shim");
-        Zmessage.add("");
-        Zmessage.add(message.getHeader().toByteRepresentation());
-        Zmessage.add(message.getPayload());
-        System.out.println("Received message:" + Zmessage.toString());
-        Zmessage.send(pubSocket);
-    }
+        Zmessage.add("1");
+        Zmessage.add(message.toByteRepresentation());
+        log.info("Received message:" + Zmessage.toString());
+        ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
+        sendSocket.connect(CONTROL_ADDRESS);
+        Zmessage.send(sendSocket);
+        sendSocket.close();    }
 
 }
