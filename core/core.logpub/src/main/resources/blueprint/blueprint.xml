@@ -14,12 +14,6 @@
         <property name="port" value="${port}"/>
     </bean>
 
-    <reference-list id="shimListeners" interface="eu.netide.core.api.IShimMessageListener" activation="eager"
-                    availability="optional" member-type="service-object"/>
-
-    <reference-list id="backendListeners" interface="eu.netide.core.api.IBackendMessageListener" activation="eager"
-                    availability="optional" member-type="service-object"/>
-
     <service ref="logPub"
              interface="eu.netide.core.api.IShimMessageListener"/>
     <service ref="logPub"
