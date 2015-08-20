@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
+import java.util.stream.Stream;
 
 /**
  * BackendManager implementation for the core.
@@ -27,7 +28,8 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private List<IBackendMessageListener> backendMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
     private List<String> backendIds = new ArrayList<>();
-    private Dictionary<Integer, String> moduleMappings = new Hashtable<>();
+    private Dictionary<Integer, String> moduleToBackendMappings = new Hashtable<>();
+    private Dictionary<Integer, String> moduleToNameMappings = new Hashtable<>(); // TODO populate dictionary with correct values
 
     private final ExecutorService pool = Executors.newCachedThreadPool();
     private final Dictionary<Integer, RequestResult> locks = new Hashtable<>();
@@ -36,14 +38,14 @@ public class BackendManager implements IBackendManager, IConnectorListener {
      * Called by Apache Aries on startup (configured in blueprint.xml)
      */
     public void Start() {
-        logger.info("BackendManager started.");
+        logger.debug("BackendManager started.");
     }
 
     /**
      * Called by Apache Aries on shutdown (configured in blueprint.xml)
      */
     public void Stop() {
-        logger.info("BackendManager stopped.");
+        logger.debug("BackendManager stopped.");
     }
 
     @Override
@@ -65,7 +67,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             try {
                 result.wait();
             } catch (InterruptedException e) {
-                logger.error("", e);
+                logger.error("InterruptedException occurred while waiting for results", e);
             }
         }
         locks.remove(id);
@@ -78,18 +80,23 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     }
 
     @Override
-    public Iterable<String> getBackendIds() {
-        return backendIds;
+    public Stream<String> getBackendIds() {
+        return backendIds.stream();
     }
 
     @Override
-    public Iterable<Integer> getModules() {
-        return Collections.list(moduleMappings.keys());
+    public Stream<Integer> getModuleIds() {
+        return Collections.list(moduleToBackendMappings.keys()).stream();
+    }
+
+    @Override
+    public Stream<String> getModules() {
+        return Collections.list(moduleToNameMappings.elements()).stream();
     }
 
     @Override
     public String getBackend(Integer moduleId) {
-        return moduleMappings.get(moduleId);
+        return moduleToBackendMappings.get(moduleId);
     }
 
     @Override
@@ -115,7 +122,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                 if (!backendIds.stream().anyMatch(a -> a.equals(backendId))) {
                     backendIds.add(backendId);
                 }
-                moduleMappings.put(message.getHeader().getModuleId(), backendId);
+                moduleToBackendMappings.put(message.getHeader().getModuleId(), backendId);
                 // TODO handle message appropriately
             } else if (message instanceof ManagementMessage) {
                 // TODO handle appropriately
