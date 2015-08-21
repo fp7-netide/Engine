@@ -14,8 +14,8 @@
         <property name="port" value="${port}"/>
     </bean>
 
-    <service ref="logPub"
+    <service ref="logpub"
              interface="eu.netide.core.api.IShimMessageListener"/>
-    <service ref="logPub"
+    <service ref="logpub"
              interface="eu.netide.core.api.IBackendMessageListener"/>
 </blueprint>
