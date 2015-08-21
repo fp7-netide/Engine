@@ -12,8 +12,9 @@ import org.zeromq.ZMsg;
 
 public class LogPub implements IBackendMessageListener, IShimMessageListener, IManagementMessageListener, Runnable{
 
-    private static final String STOP_COMMAND = "Control.logpub.STOP";
+    private static final String STOP_COMMAND = "Control.STOP";
     private static final String CONTROL_ADDRESS = "inproc://LogPubControl";
+
     private static final Logger log = LoggerFactory.getLogger(LogPub.class);
 
     private int port;
@@ -21,12 +22,14 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     private Thread thread;
 
     public LogPub() {
-
+        log.info("LogPub Constructor.");
     }
 
     public void Start() {
+        log.info("LogPub Start().");
         context = ZMQ.context(1);
         thread = new Thread(this);
+        thread.setName("LogPub Receive Loop");
         thread.start();
     }
 
@@ -40,7 +43,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
                 thread.join();
                 context.term();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("", e);
             }
         }
         log.info("LogPub stopped.");

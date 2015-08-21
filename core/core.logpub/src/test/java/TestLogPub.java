@@ -7,7 +7,7 @@ import org.testng.annotations.Test;
 import org.zeromq.ZMQ;
 
 /**
- * Created by KévinPhemius on 18.08.2015.
+ * Created by Kï¿½vinPhemius on 18.08.2015.
  */
 public class TestLogPub {
 
@@ -29,6 +29,7 @@ public class TestLogPub {
             byte[] p = new byte[4];
             Message m = new Message(mh,p);
             l.OnBackendMessage(m, "b1");
+            l.OnShimMessage(m,"s1");
             Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();

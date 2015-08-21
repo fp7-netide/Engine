@@ -19,8 +19,8 @@
     <feature name="netide-core">
         <feature>netide-core-api</feature>
         <feature>netide-core-connectivity</feature>
+        <feature>netide-core-logpub</feature>
         <feature>netide-core-caos</feature>
         <feature>netide-core-management</feature>
-        <feature>netide-core-logpub</feature>
     </feature>
 </features>
