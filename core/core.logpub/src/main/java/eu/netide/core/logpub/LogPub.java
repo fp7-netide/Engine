@@ -1,16 +1,16 @@
 package eu.netide.core.logpub;
 
-import java.lang.Runnable;
-
 import eu.netide.core.api.IBackendMessageListener;
+import eu.netide.core.api.IManagementMessageListener;
 import eu.netide.core.api.IShimMessageListener;
+import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
-public class LogPub implements IBackendMessageListener, IShimMessageListener,Runnable{
+public class LogPub implements IBackendMessageListener, IShimMessageListener, IManagementMessageListener, Runnable{
 
     private static final String STOP_COMMAND = "Control.logpub.STOP";
     private static final String CONTROL_ADDRESS = "inproc://LogPubControl";
@@ -88,26 +88,36 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener,Run
 
     @Override
     public void OnBackendMessage(Message message, String originId) {
-        ZMsg Zmessage = new ZMsg();
-        Zmessage.add("0");
-        // Zmessage.add(originId); // don't know how to handle this yet
-        Zmessage.add(message.toByteRepresentation());
-        log.info("Received message:" + Zmessage.toString());
+        ZMsg zmq_message = new ZMsg();
+        zmq_message.add("0_" + originId);
+        zmq_message.add(message.toByteRepresentation());
+        log.debug("Received message from backend:" + zmq_message.toString());
         ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
         sendSocket.connect(CONTROL_ADDRESS);
-        Zmessage.send(sendSocket);
+        zmq_message.send(sendSocket);
         sendSocket.close();
     }
 
     @Override
-    public void OnShimMessage(Message message) {
-        ZMsg Zmessage = new ZMsg();
-        Zmessage.add("1");
-        Zmessage.add(message.toByteRepresentation());
-        log.info("Received message:" + Zmessage.toString());
+    public void OnShimMessage(Message message, String originId) {
+        ZMsg zmq_message = new ZMsg();
+        zmq_message.add("1_" + originId);
+        zmq_message.add(message.toByteRepresentation());
+        log.debug("Received message form shim:" + zmq_message.toString());
         ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
         sendSocket.connect(CONTROL_ADDRESS);
-        Zmessage.send(sendSocket);
-        sendSocket.close();    }
+        zmq_message.send(sendSocket);
+        sendSocket.close();
+    }
 
+    @Override
+    public void OnManagementMessage(ManagementMessage message) {
+        ZMsg zmq_message = new ZMsg();
+        zmq_message.add(message.toByteRepresentation());
+        log.debug("Received message form management:" + zmq_message.toString());
+        ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
+        sendSocket.connect(CONTROL_ADDRESS);
+        zmq_message.send(sendSocket);
+        sendSocket.close();
+    }
 }
