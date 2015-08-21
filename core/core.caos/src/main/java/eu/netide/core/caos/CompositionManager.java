@@ -120,8 +120,14 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             previousCompositionSpecificationXml = this.compositionSpecificationXml;
             Reconfigure();
         } catch (InterruptedException | JAXBException ex) {
-            logger.error("Unable to read new CompositionSpecification. Provided XML was '" + this.compositionSpecificationXml + "'.", ex);
+            if (compositionSpecificationXml.trim().isEmpty()) {
+                // prevent stacktrace on empty specifications
+                logger.error("Unable to read new CompositionSpecification. Provided XML was empty.");
+            } else {
+                logger.error("Unable to read new CompositionSpecification. Provided XML was '" + this.compositionSpecificationXml + "'.", ex);
+            }
             logger.warn("Reusing previous specification '" + previousCompositionSpecificationXml + "'.");
+            this.compositionSpecificationXml = previousCompositionSpecificationXml;
         } catch (TimeoutException ex) {
             logger.error("TimeoutException occurred.", ex);
         } finally {
