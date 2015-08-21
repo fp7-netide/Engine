@@ -43,7 +43,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
         try {
             listenerLock.acquire();
             for (IShimMessageListener listener : shimMessageListeners) {
-                listener.OnShimMessage(message);
+                listener.OnShimMessage(message, originId);
             }
         } catch (InterruptedException e) {
             logger.error("", e);
