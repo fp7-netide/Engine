@@ -70,7 +70,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     }
 
     @Override
-    public void OnShimMessage(Message message) {
+    public void OnShimMessage(Message message, String originId) {
         logger.debug("CompositionManager received message from shim: " + new String(message.getPayload()));
         try {
             csLock.acquire(); // can only handle when not reconfiguring
