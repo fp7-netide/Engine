@@ -101,7 +101,13 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
-        Message message = NetIPConverter.parseConcreteMessage(data);
+        Message message;
+        try {
+            message = NetIPConverter.parseConcreteMessage(data);
+        } catch (Exception ex) {
+            logger.error("Unable to parse received data from '" + backendId + "' (" + Arrays.toString(data) + ").", ex);
+            return;
+        }
 
         RequestResult r = locks.get(message.getHeader().getModuleId());
         if (r != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {

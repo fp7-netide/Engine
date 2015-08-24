@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -39,7 +40,13 @@ public class ShimManager implements IShimManager, IConnectorListener {
 
     @Override
     public void OnDataReceived(byte[] data, String originId) {
-        Message message = NetIPConverter.parseConcreteMessage(data);
+        Message message;
+        try {
+            message = NetIPConverter.parseConcreteMessage(data);
+        } catch (Exception ex) {
+            logger.error("Unable to parse received data from '" + originId + "' (" + Arrays.toString(data) + ").", ex);
+            return;
+        }
         try {
             listenerLock.acquire();
             for (IShimMessageListener listener : shimMessageListeners) {
