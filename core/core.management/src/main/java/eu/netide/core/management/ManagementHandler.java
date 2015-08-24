@@ -16,10 +16,7 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -45,7 +42,13 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
 
     @Override
     public void OnDataReceived(byte[] data, String originId) {
-        Message message = NetIPConverter.parseConcreteMessage(data);
+        Message message;
+        try {
+            message = NetIPConverter.parseConcreteMessage(data);
+        } catch (Exception ex) {
+            logger.error("Unable to parse received data from '" + originId + "' (" + Arrays.toString(data) + ").", ex);
+            return;
+        }
         try {
             listenerLock.acquire();
             for (IManagementMessageListener listener : managementMessageListeners) {
