@@ -1,23 +1,25 @@
 package org.opendaylight.netide.shim;
 
-import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ConsumerContext;
-
-import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Activator implements BindingAwareConsumer, AutoCloseable {
+public class Activator implements BundleActivator{
 
     private static final Logger LOG = LoggerFactory.getLogger(Activator.class);
 
-	public void close() throws Exception {
+	@Override
+	public void start(BundleContext context) throws Exception {
 		// TODO Auto-generated method stub
-		LOG.info("ODL SHIM CORE ACTIVATOR: Session Closed");
+		LOG.info("ODL SHIM CORE ACTIVATOR: Bundle start");
+		
 	}
 
-	public void onSessionInitialized(ConsumerContext arg0) {
+	@Override
+	public void stop(BundleContext context) throws Exception {
 		// TODO Auto-generated method stub
-		LOG.info("ODL SHIM CORE ACTIVATOR: Session Initialized");
+		LOG.info("ODL SHIM CORE ACTIVATOR: Bunlde stop");
 	}
 
    

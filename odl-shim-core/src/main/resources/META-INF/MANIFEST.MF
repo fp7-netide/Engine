@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-Activator: org.opendaylight.netide.shim.Activator
+Bundle-Description: odl-shim-core OSGi bundle project.
+Bundle-ManifestVersion: 2
+Bundle-Name: odl-shim-core
+Bundle-SymbolicName: odl-shim-core
+Bundle-Version: 1.0.0-SNAPSHOT
+Created-By: 1.8.0_45 (Oracle Corporation)
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.5))"
