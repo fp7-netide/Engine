@@ -112,7 +112,10 @@ def load_package(args):
 
                 dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.DEVNULL).strip().decode('utf-8')
                 logging.debug("Temp: {}".format(dir))
-                util.spawn_logged(scp + [args.package, "{host}:{dir}".format(host=c[0], dir=dir)])
+                p = args.package
+                if os.path.isdir(p):
+                    p += "/"
+                util.spawn_logged(scp + [p, "{host}:{dir}".format(host=c[0], dir=dir)])
 
                 cmd = "cd ~/netide-loader; ./netideloader.py load --mode=appcontroller {}"
                 if os.path.isfile(args.package): # package in a zip file

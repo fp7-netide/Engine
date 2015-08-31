@@ -158,6 +158,8 @@ def do_client_installs(pkgpath):
             # [X] Copy package to app controller
             dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.DEVNULL).strip().decode('utf-8')
             logging.info("Copying NetIDE package '{}' to target '{}'".format(pkgpath, c))
+            if os.path.isdir(pkgpath):
+                pkgpath += "/"
             util.spawn_logged(scp + [pkgpath, "{host}:{dir}".format(host=c[0], dir=dir)])
 
             # [X] Run self with arguments ['install-appcontroller', args.package]
