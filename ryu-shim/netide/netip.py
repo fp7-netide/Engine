@@ -22,7 +22,7 @@ NETIDE_VERSION = 0x2
 
 #Define the NetIDE Version
 NetIDE_version = NETIDE_VERSION
-NetIDE_Header_Format = '!BBHIQ'
+NetIDE_Header_Format = '!BBHIIQ'
 NetIDE_Header_Size = struct.calcsize(NetIDE_Header_Format)
 
 
@@ -54,17 +54,17 @@ class NetIDEOps:
 
  #Encode a message in the NetIDE protocol format
     @staticmethod
-    def netIDE_encode(type, xid, datapath_id, msg):
+    def netIDE_encode(type, xid, module_id, datapath_id, msg):
         length = len(msg)
         type_code = NetIDEOps.NetIDE_type[type]
         #if no transaction id is given, generate a random one.
         if xid is None:
             xid = 0
-        #if module_id is None:
-        module_id = 0
+        if module_id is None:
+            module_id = 0
         if datapath_id is None:
             datapath_id = 0
-        values = (NetIDEOps.NetIDE_version, type_code, length, xid, datapath_id, msg)
+        values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id, msg)
         packer = struct.Struct(NetIDE_Header_Format+str(length)+'s')
         packed_msg = packer.pack(*values)
         return packed_msg

@@ -60,7 +60,7 @@ class BackendChannel(asyncore.dispatcher):
         #If new client is connecting
         if 'connected' not in self.client_info:
             with self.channel_lock:
-                header = self.recv(16)
+                header = self.recv(20)
                 decoded_header = NetIDEOps.netIDE_decode_header(header)
                 message_length = decoded_header[2]
                 if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_HELLO']:
@@ -95,13 +95,13 @@ class BackendChannel(asyncore.dispatcher):
                     self.client_info['connected'] = True
                     #After protocols have been negotiated, send back message to client to notify for common protocols
                     proto_data = NetIDEOps.netIDE_encode_handshake(self.client_info['negotiated_protocols'])
-                    msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, 0, proto_data)
+                    msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
                     self.send(msg)
                     print "Server handshake sent"
 
         #If client has already performed handshake with the server
         else:
-            header = self.recv(16)
+            header = self.recv(20)
             decoded_header = NetIDEOps.netIDE_decode_header(header)
             message_length = decoded_header[2]
             message_data = self.recv(message_length)
@@ -115,8 +115,8 @@ class BackendChannel(asyncore.dispatcher):
                     self.handle_close()
                     return
                 #If datapath id is not 0, broadcast?
-                if decoded_header[4] is not 0:
-                    self.datapath = self.server.controller.switches[int(decoded_header[4])]
+                if decoded_header[5] is not 0:
+                    self.datapath = self.server.controller.switches[int(decoded_header[5])]
                     self.datapath.send(message_data)
                 else:
                     self.datapath = None
@@ -258,7 +258,7 @@ class RYUShim(app_manager.RyuApp):
             self.switches[self.datapath.id] = self.datapath
 
         #Encapsulate the feature request and send to connected client
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, self.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, self.datapath.id, str(msg.buf))
         #Forward the message to all the connected NetIDE clients
         for client in self.backend_server.clients:
             client.send(msg_to_send)

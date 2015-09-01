@@ -72,14 +72,14 @@ class BackendChannel(asyncore.dispatcher):
     def handle_connect(self):
         #Initiate handshake with the server
         proto_data = NetIDEOps.netIDE_encode_handshake(NetIDEOps.NetIDE_supported_protocols)
-        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, 0, proto_data)
+        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
         print msg.encode("hex")
         self.send(msg)
 
 
 
     def handle_read(self):
-        header = self.recv(16)
+        header = self.recv(20)
         decoded_header = NetIDEOps.netIDE_decode_header(header)
         message_length = decoded_header[2]
         message_data = self.recv(message_length)
@@ -120,20 +120,20 @@ class BackendChannel(asyncore.dispatcher):
                         print "OF Protocol not supported"
                         self.close()
 
-                self.of_datapath = BackendDatapath(decoded_header[4], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[4]] = self.of_datapath
+                self.of_datapath = BackendDatapath(decoded_header[5], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[5]] = self.of_datapath
                 self.of_datapath.of_hello_handler()
 
         #If client has been previously connected and handshake has been made
         #Make sure to select the correct datapath to send the message to!
         else:
-            if decoded_header[4] not in self.client_info['datapaths']:
-                self.of_datapath = BackendDatapath(decoded_header[4], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[4]] = self.of_datapath
+            if decoded_header[5] not in self.client_info['datapaths']:
+                self.of_datapath = BackendDatapath(decoded_header[5], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[5]] = self.of_datapath
                 self.of_datapath.of_hello_handler()
             else:
-                self.of_datapath = self.client_info['datapaths'][decoded_header[4]]
-                #print self.client_info['datapaths'][decoded_header[4]]
+                self.of_datapath = self.client_info['datapaths'][decoded_header[5]]
+                #print self.client_info['datapaths'][decoded_header[5]]
 
             with self.channel_lock:
                 message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[1])
@@ -212,7 +212,7 @@ class BackendDatapath(controller.Datapath):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, msg.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, msg.datapath.id, str(msg.buf))
         self.channel.send(msg_to_send)
         # LOG.debug('send_msg %s', msg)
         #print msg.buf
