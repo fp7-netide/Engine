@@ -42,8 +42,7 @@ from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
-sys.path.append('/home/doriguzzi/Projects/NetIDE/git_repository/Engine/ryu-shim/netide')
-from netip import *
+from ryu.netide.netip import *
 
 #Hadles the connection with the client. One backend channel is created per client.
 class BackendChannel(asyncore.dispatcher):
