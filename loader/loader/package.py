@@ -118,6 +118,10 @@ class Package(object):
 
         return data
 
+    def get_composition(self):
+        with open(os.path.join(self.path, "composition.comp"), "r") as fh:
+            return fh.read()
+
     def get_clients(self):
         clients = [ ]
         for (name, d) in self.config.get("clients", {}).items():

@@ -46,6 +46,7 @@ import platform
 import signal
 import sys
 import time
+import zmq
 
 import subprocess as sp
 
@@ -91,7 +92,8 @@ def load_package(args):
             return 1
     else:
         # TODO:
-        # [ ] Start server controller (if not already running)
+        # [X] Start server controller (if not already running)
+        # [ ] Make sure NetIDE stuff is running in server controller
         # [X] Start NetIDE core (if not already running)
         # [X] Connect to application controllers:
         #   [X] Copy package to remote machine
@@ -124,6 +126,12 @@ def load_package(args):
                     cmd = cmd.format(dir)
                 logging.debug("cmd: {}".format(cmd))
                 util.spawn_logged(ssh + [cmd])
+            # XXX: [ ] Enable
+            #      [ ] Use NetIDE message format
+            if False:
+                with zmq.Context() as ctx, ctx.socket(zmq.REQ) as s:
+                    s.connect("tcp://localhost:5555")
+                    s.send(json.dumps({"command": "update_composition", "parameters": {"composition": pkg.get_composition()}}).encode())
     return 0
 
 def list_controllers(args):
