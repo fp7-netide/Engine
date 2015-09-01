@@ -48,9 +48,4 @@ public class ModuleCall extends ExecutionFlowNode {
     public void setPriority(int priority) {
         this.priority = priority;
     }
-
-    @Override
-    public ExecutionResult Execute(ExecutionFlowStatus status) {
-        return null; // TODO
-    }
 }

@@ -19,14 +19,14 @@ public class Condition {
     protected String IN_PORT; /* Switch input port. */
     protected String ETH_DST; /* Ethernet destination address. */
     protected String ETH_SRC; /* Ethernet source address. */
-    protected String ETH_TYPE; /* Ethernet frame type. */
+    protected EthType ETH_TYPE; /* Ethernet frame type. */
     protected String IP_PROTO; /* IP protocol. */
     protected String IPV4_SRC; /* IPv4 source address. */
     protected String IPV4_DST; /* IPv4 destination address. */
-    protected String TCP_SRC; /* TCP source port. */
-    protected String TCP_DST; /* TCP destination port. */
-    protected String UDP_SRC; /* UDP source port. */
-    protected String UDP_DST; /* UDP destination port. */
+    protected int TCP_SRC; /* TCP source port. */
+    protected int TCP_DST; /* TCP destination port. */
+    protected int UDP_SRC; /* UDP source port. */
+    protected int UDP_DST; /* UDP destination port. */
     protected String IPV6_SRC; /* IPv6 source address. */
     protected String IPV6_DST; /* IPv6 destination address. */
     // IN_PHY_PORT; /* Switch physical input port. */
@@ -94,11 +94,11 @@ public class Condition {
     }
 
     @XmlAttribute(name = "ethType")
-    public String getETH_TYPE() {
+    public EthType getETH_TYPE() {
         return ETH_TYPE;
     }
 
-    public void setETH_TYPE(String ETH_TYPE) {
+    public void setETH_TYPE(EthType ETH_TYPE) {
         this.ETH_TYPE = ETH_TYPE;
     }
 
@@ -130,38 +130,38 @@ public class Condition {
     }
 
     @XmlAttribute(name = "tcpSrc")
-    public String getTCP_SRC() {
+    public int getTCP_SRC() {
         return TCP_SRC;
     }
 
-    public void setTCP_SRC(String TCP_SRC) {
+    public void setTCP_SRC(int TCP_SRC) {
         this.TCP_SRC = TCP_SRC;
     }
 
     @XmlAttribute(name = "tcpDst")
-    public String getTCP_DST() {
+    public int getTCP_DST() {
         return TCP_DST;
     }
 
-    public void setTCP_DST(String TCP_DST) {
+    public void setTCP_DST(int TCP_DST) {
         this.TCP_DST = TCP_DST;
     }
 
     @XmlAttribute(name = "udpSrc")
-    public String getUDP_SRC() {
+    public int getUDP_SRC() {
         return UDP_SRC;
     }
 
-    public void setUDP_SRC(String UDP_SRC) {
+    public void setUDP_SRC(int UDP_SRC) {
         this.UDP_SRC = UDP_SRC;
     }
 
     @XmlAttribute(name = "udpDst")
-    public String getUDP_DST() {
+    public int getUDP_DST() {
         return UDP_DST;
     }
 
-    public void setUDP_DST(String UDP_DST) {
+    public void setUDP_DST(int UDP_DST) {
         this.UDP_DST = UDP_DST;
     }
 

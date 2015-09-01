@@ -3,7 +3,10 @@ package eu.netide.core.caos;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
-import eu.netide.core.caos.composition.*;
+import eu.netide.core.caos.composition.CompositionSpecification;
+import eu.netide.core.caos.composition.CompositionSpecificationLoader;
+import eu.netide.core.caos.composition.ExecutionFlowStatus;
+import eu.netide.core.caos.execution.FlowExecutors;
 import eu.netide.lib.netip.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,10 +79,11 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             csLock.acquire(); // can only handle when not reconfiguring
             if (correctlyConfigured) {
                 ExecutionFlowStatus status = new ExecutionFlowStatus(message);
-                for (ExecutionFlowNode efn : compositionSpecification.getComposition()) {
-                    ExecutionResult result = efn.Execute(status);
-                    // TODO handle results
-                }
+
+                status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition(), backendManager);
+
+                // send resulting messages to shim
+                status.getResultMessages().forEach(shimManager::sendMessage);
             } else {
                 logger.error("Could not handle incoming message due to configuration error.", message);
             }

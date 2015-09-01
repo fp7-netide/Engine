@@ -42,6 +42,12 @@
             <version>1.7.12</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>openflowj</artifactId>
+            <version>0.4.0.onos</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

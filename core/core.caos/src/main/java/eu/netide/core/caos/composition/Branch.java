@@ -37,9 +37,4 @@ public class Branch extends ExecutionFlowNode {
     public void setElse(Else value) {
         this._else = value;
     }
-
-    @Override
-    public ExecutionResult Execute(ExecutionFlowStatus status) {
-        return null; //TODO
-    }
 }

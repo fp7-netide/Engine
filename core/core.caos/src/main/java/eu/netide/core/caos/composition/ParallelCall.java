@@ -10,7 +10,7 @@ import java.util.List;
 public class ParallelCall extends ExecutionFlowNode {
 
     protected List<ModuleCall> moduleCalls;
-    protected MergePolicy mergePolicy;
+    protected ResolutionPolicy resolutionPolicy;
 
     @XmlElement(name = "ModuleCall", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
     public List<ModuleCall> getModuleCalls() {
@@ -21,21 +21,16 @@ public class ParallelCall extends ExecutionFlowNode {
         this.moduleCalls = moduleCalls;
     }
 
-    @XmlAttribute(name = "mergePolicy")
-    public MergePolicy getMergePolicy() {
-        if (mergePolicy == null) {
-            return MergePolicy.IGNORE;
+    @XmlAttribute(name = "resolutionPolicy")
+    public ResolutionPolicy getResolutionPolicy() {
+        if (resolutionPolicy == null) {
+            return ResolutionPolicy.IGNORE;
         } else {
-            return mergePolicy;
+            return resolutionPolicy;
         }
     }
 
-    public void setMergePolicy(MergePolicy value) {
-        this.mergePolicy = value;
-    }
-
-    @Override
-    public ExecutionResult Execute(ExecutionFlowStatus status) {
-        return null; // TODO
+    public void setResolutionPolicy(ResolutionPolicy value) {
+        this.resolutionPolicy = value;
     }
 }

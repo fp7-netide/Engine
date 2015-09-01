@@ -11,5 +11,4 @@ import javax.xml.bind.annotation.XmlType;
 @XmlSeeAlso({ModuleCall.class, ParallelCall.class, Branch.class})
 public abstract class ExecutionFlowNode {
 
-    public abstract ExecutionResult Execute(ExecutionFlowStatus status);
 }
