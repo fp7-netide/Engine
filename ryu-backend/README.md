@@ -54,18 +54,23 @@ See the LICENSE file.
 
 ## ChangeLog
 
+ryu-backend: 2015-09-01 Tue Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Added support to the NetIDE Intermediate protocol specification v1.1
+  * Moved the NetIDE protocol-specific methods into a dedicated library
+
 ryu-backend: 2015-07-01 Wed Rinor Bytyçi <rinorb@gmail.com>
 
   * New version with support for the new NetIDE Intermediate protocol.
 
-ryu-backend: 2015-01-13 Tue Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
+ryu-backend: 2015-01-13 Tue Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
 * Updated README
 
-ryu-backend: 2014-11-13 Thu Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
+ryu-backend: 2014-11-13 Thu Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
 * First working release of the Ryu backend. Tested with the ```simple_switch``` application, mininet and the POX client developed by the Pyretic team (http://frenetic-lang.org/pyretic/)
 
-ryu-backend: 2014-10-21 Tue Roberto Doriguzzi Corin roberto.doriguzzi@create-net.org
+ryu-backend: 2014-10-21 Tue Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
 * First release of the development branch. Not ready for testing.
