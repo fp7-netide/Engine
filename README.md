@@ -9,12 +9,11 @@ The **Network Engine** follows the layered SDN controller approach proposed by t
 The challenge is to integrate client and server controllers. A first idea is to connect a client’s South-bound Interface (SBI) to a server’s North-bound Interface (NBI). But as these interfaces do not match, adaptation is necessary. This adaptation has to cater for the idiosyncrasies of the controller frameworks and has to be implemented for each single one.
 For maximal reuse, we use separate adaptors for the clients’SBI – the Backend – and the server’s NBI – the Shim. This separation necessitates a protocol between them, the NetIDE
 Intermediate Protocol.
-While such a shim/backend structure connected by an intermediate protocol is feasible, it would still leave substantial adaptation logic in these modules. To overcome this shortcoming, we introduce a further intermediate layer, the Core: it hosts all logic and data structures that
-are independent of the particular controller frameworks and communicates with both shim and backend using the same NetIDE intermediate protocol. The core makes both shim and backend light-weight and easier to implement for new controllers. Moreover, it provides a convenient place to connect additional run-time tools using a standardized interface. The core introduces some overhead but makes the architecture much more flexible; for production, faster, tightly integrated implementations are easily conceivable.
+While such a shim/backend structure connected by an intermediate protocol is feasible, it would still leave substantial adaptation logic in these modules. To overcome this shortcoming, we introduce a further intermediate layer, the Core: it hosts all logic and data structures that are independent of the particular controller frameworks and communicates with both shim and backend using the same NetIDE intermediate protocol. The core makes both shim and backend light-weight and easier to implement for new controllers. Moreover, it provides a convenient place to connect additional run-time tools using a standardized interface. The core introduces some overhead but makes the architecture much more flexible; for production, faster, tightly integrated implementations are easily conceivable.
 
 ![Alt text](/NetIDE-architecture.png?raw=true " ")
 
-## The NetIDE Intermediate protocol v1.0
+## The NetIDE Intermediate protocol v1.1
 
 The intermediate protocol serves several needs. It has to
 (i) carry control messages between the modules of the Network Engine (such as shim and backend), e.g., to start up/take down a particular module, providing
@@ -31,7 +30,7 @@ concept, its current version limits the network applications
 running on top of the Network Engine to only use a subset
 of OF v1.0 messages and its definition does not provide the
 necessary functions required by the composition mechanism
-running in the core layer. Especially considering the latter limitation, we defined a new intermediate protocol fromscratch that ensures the delivery of control messages and that
+running in the core layer. Especially considering the latter limitation, we defined a new intermediate protocol from scratch that ensures the delivery of control messages and that
 supports different SBI protocols. The protocol uses TCP as
 a transport and encapsulates the payload with the following
 header:
