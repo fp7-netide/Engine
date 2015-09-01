@@ -34,6 +34,7 @@ class NetIDEOps:
     NetIDE_type = {
         'NETIDE_HELLO'      : 0x01,
         'NETIDE_ERROR'      : 0x02,
+        'NETIDE_MGMT'       : 0x03,
         'NETIDE_OPENFLOW'   : 0x11,
         'NETIDE_NETCONF'    : 0x12,
         'NETIDE_OPFLEX'     : 0x13
@@ -59,6 +60,8 @@ class NetIDEOps:
         #if no transaction id is given, generate a random one.
         if xid is None:
             xid = 0
+        #if module_id is None:
+        module_id = 0
         if datapath_id is None:
             datapath_id = 0
         values = (NetIDEOps.NetIDE_version, type_code, length, xid, datapath_id, msg)
@@ -106,6 +109,6 @@ class NetIDEOps:
     #Return the key name from a value in a dictionary
     @staticmethod
     def key_by_value(dictionary, value):
-        for key, val in dictionary:
+        for key, val in dictionary.iteritems():
             if value == val:
                 return key
