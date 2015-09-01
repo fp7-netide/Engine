@@ -18,6 +18,8 @@ import random
 import binascii
 import time
 import ryu
+import asyncore
+import socket
 from ryu.base import app_manager
 from ryu.exception import RyuException
 from ryu.controller import mac_to_port
@@ -44,7 +46,8 @@ from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
-from ryu.netide.comm import *
+sys.path.append('/home/doriguzzi/Projects/NetIDE/git_repository/Engine/ryu-shim/netide')
+from netip import *
 
 
 
