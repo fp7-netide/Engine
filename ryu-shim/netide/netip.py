@@ -31,6 +31,15 @@ class NetIDEOps:
     #Define the NetIDE Version
     NetIDE_version = 0x01
     #Define the NetIDE message types and codes
+    NetIDE_header = {
+        'VERSION'             : 0x00,
+        'TYPE'                : 0x01,
+        'LENGTH'              : 0x02,
+        'XID'                 : 0x03,
+        'MOD_ID'              : 0x04,
+        'DPID'                : 0x05
+    }
+    
     NetIDE_type = {
         'NETIDE_HELLO'      : 0x01,
         'NETIDE_ERROR'      : 0x02,

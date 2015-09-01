@@ -60,10 +60,10 @@ class BackendChannel(asyncore.dispatcher):
         #If new client is connecting
         if 'connected' not in self.client_info:
             with self.channel_lock:
-                header = self.recv(20)
+                header = self.recv(NetIDE_Header_Size)
                 decoded_header = NetIDEOps.netIDE_decode_header(header)
-                message_length = decoded_header[2]
-                if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_HELLO']:
+                message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                if decoded_header[NetIDEOps.NetIDE_header['VERSION']] is not NetIDEOps.NetIDE_version or decoded_header[NetIDEOps.NetIDE_header['TYPE']] is not NetIDEOps.NetIDE_type['NETIDE_HELLO']:
                     print "Attempt to connect from unsupported client"
                     self.recv(4096)
 
@@ -101,11 +101,11 @@ class BackendChannel(asyncore.dispatcher):
 
         #If client has already performed handshake with the server
         else:
-            header = self.recv(20)
+            header = self.recv(NetIDE_Header_Size)
             decoded_header = NetIDEOps.netIDE_decode_header(header)
-            message_length = decoded_header[2]
+            message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
             message_data = self.recv(message_length)
-            if decoded_header[0] is not NetIDEOps.NetIDE_version or decoded_header[1] is not NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
+            if decoded_header[NetIDEOps.NetIDE_header['VERSION']] is not NetIDEOps.NetIDE_version or decoded_header[NetIDEOps.NetIDE_header['TYPE']] is not NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
                 print "Attempt to connect from unsupported client"
                 self.recv(4096)
                 self.handle_close()
@@ -115,8 +115,8 @@ class BackendChannel(asyncore.dispatcher):
                     self.handle_close()
                     return
                 #If datapath id is not 0, broadcast?
-                if decoded_header[5] is not 0:
-                    self.datapath = self.server.controller.switches[int(decoded_header[5])]
+                if decoded_header[NetIDEOps.NetIDE_header['DPID']] is not 0:
+                    self.datapath = self.server.controller.switches[int(decoded_header[NetIDEOps.NetIDE_header['DPID']])]
                     self.datapath.send(message_data)
                 else:
                     self.datapath = None
@@ -129,10 +129,6 @@ class BackendChannel(asyncore.dispatcher):
             self.server.clients.remove(self)
             print "Client disconnected"
             self.close()
-
-
-
-
 
 
 #Backend Server - Listens for incoming connections to the server and handles them properly

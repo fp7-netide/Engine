@@ -79,9 +79,9 @@ class BackendChannel(asyncore.dispatcher):
 
 
     def handle_read(self):
-        header = self.recv(20)
+        header = self.recv(NetIDE_Header_Size)
         decoded_header = NetIDEOps.netIDE_decode_header(header)
-        message_length = decoded_header[2]
+        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = self.recv(message_length)
 
         message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
@@ -120,23 +120,23 @@ class BackendChannel(asyncore.dispatcher):
                         print "OF Protocol not supported"
                         self.close()
 
-                self.of_datapath = BackendDatapath(decoded_header[5], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[5]] = self.of_datapath
+                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
                 self.of_datapath.of_hello_handler()
 
         #If client has been previously connected and handshake has been made
         #Make sure to select the correct datapath to send the message to!
         else:
-            if decoded_header[5] not in self.client_info['datapaths']:
-                self.of_datapath = BackendDatapath(decoded_header[5], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[5]] = self.of_datapath
+            if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
+                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
                 self.of_datapath.of_hello_handler()
             else:
-                self.of_datapath = self.client_info['datapaths'][decoded_header[5]]
-                #print self.client_info['datapaths'][decoded_header[5]]
+                self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
+                #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
 
             with self.channel_lock:
-                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[1])
+                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[NetIDEOps.NetIDE_header['TYPE']])
                 if message_type == 'NETIDE_OPENFLOW':
                     #print decoded_header
                     self.of_datapath.handle_event(message_data)
