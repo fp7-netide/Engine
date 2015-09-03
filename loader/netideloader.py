@@ -117,7 +117,7 @@ def load_package(args):
                 p = args.package
                 if os.path.isdir(p):
                     p += "/"
-                util.spawn_logged(scp + [p, "{host}:{dir}".format(host=c[0], dir=dir)])
+                util.spawn_logged(scp + [p, "{host}:{dir}".format(host=c[1], dir=dir)])
 
                 cmd = "cd ~/netide-loader; ./netideloader.py load --mode=appcontroller {}"
                 if os.path.isfile(args.package): # package in a zip file
