@@ -56,7 +56,7 @@ class TempDir(object):
 def build_ssh_commands(c):
     """Build ssh command lists from client tuple"""
     # Tuple layout:
-    # (host, port, identity)
+    # (name, sshhost, sshport, sshidentity)
 
     # Let's see if we can use rsync instead of scp
     use_rsync = True
@@ -75,16 +75,16 @@ def build_ssh_commands(c):
     else:
         scp = ["scp", "-B", "-C", "-r"]
 
-    if len(c) >= 2:
-        ssh.extend(["-p", str(c[1])])
+    if len(c) >= 3:
+        ssh.extend(["-p", str(c[2])])
         if not use_rsync:
-            scp.extend(["-P", str(c[1])])
-    if len(c) == 3:
-        ssh.extend(["-i", str(c[2])])
+            scp.extend(["-P", str(c[2])])
+    if len(c) >= 4:
+        ssh.extend(["-i", str(c[3])])
         if not use_rsync:
-            scp.extend(["-i", str(c[2])])
+            scp.extend(["-i", str(c[3])])
     ssh.extend(["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile={}".format(tempfile.mktemp())]) # XXX
-    ssh.append(c[0])
+    ssh.append(c[1])
 
     if use_rsync:
         scp.extend(["-e", " ".join(ssh[:-1])])

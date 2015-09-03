@@ -236,18 +236,9 @@ def install(args):
             return 1
 
         try:
-            installer.do_client_installs(args.package)
+            installer.do_client_installs(args.package, dataroot)
         except installer.InstallException as e:
             logging.error("Failed to install clients: {}".format(str(e)))
-            return 1
-
-        # TODO:
-        # [ ] Once done, return success/failure and pack up logs as a compressed tarball
-    else:
-        try:
-            installer.do_appcontroller_install(args.package, dataroot)
-        except installer.InstallException as e:
-            logging.error("Failed to install requirements for package {}".format(args.package))
             return 1
 
     return 0

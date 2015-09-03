@@ -27,6 +27,9 @@ from loader import environment
 from loader import util
 from loader.package import Package
 
+# XXX make this configurable
+install_package_command = "apt-get install --yes {}"
+
 class InstallException(Exception): pass
 
 def do_server_install(pkg):
@@ -122,7 +125,26 @@ def do_server_install(pkg):
         util.spawn_logged(["bash", script])
 
 
-def do_client_installs(pkgpath):
+def write_ansible_hosts(clients, path):
+    # Tuple layout:
+    # (name, ssh host, ssh port, ssh identity)
+    with open(path, "w") as ah:
+        ah.write("localhost ansible_connection=local\n")
+        ah.write("\n[clients]\n")
+        for c in clients:
+            try:
+                user, host = c[1].split("@", 1)
+                ah.write("{} ansible_ssh_host={} ansible_ssh_user={}".format(c[0], host, user))
+            except ValueError:
+                ah.write("{} ansible_ssh_host={}".format(c[0], c[1]))
+            if len(c) >= 3:
+                ah.write(" ansible_ssh_port={}".format(c[2]))
+            if len(c) >= 4:
+                ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
+            ah.write("\n")
+
+
+def do_client_installs(pkgpath, dataroot):
     "Dispatches installation requests to client machines after gaining a foothold on them. Requires passwordless SSH access to \
     client machines and passwordless root via sudo on client machines"
     # Feels like a worm...
@@ -135,127 +157,103 @@ def do_client_installs(pkgpath):
         pkg = Package(pkgpath, t)
         clients = pkg.get_clients()
 
+        write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
+
+        tasks = []
+
+        tasks.append({
+            "name": "Install NetIDE loader",
+            "synchronize": {
+                "dest": "~/netide-loader",
+                "src" : os.getcwd() + "/"}})
+
+        tasks.append({
+            "name": "Bootstrap NetIDE loader",
+            "shell": "./setup.sh",
+            "args": { "chdir": "~/netide-loader" }})
+
+        # XXX: update repo if it already exists
+        tasks.append({
+            "name": "Clone IDE repository",
+            "shell": "git clone -b development http://github.com/fp7-netide/IDE.git",
+            "args": {
+                "creates": "~/IDE",
+                "chdir": "~" }})
+
+        tasks.append({
+            "name": "Install Engine",
+            "shell": "bash ~/IDE/plugins/eu.netide.configuration.launcher/scripts/install_engine.sh"})
+
+        tasks.append({
+            "name": "Create {}".format(dataroot),
+            "file": {
+                "path": dataroot,
+                "state": "directory"}})
+
+        tasks.append({
+            "name": "Register Package checksum",
+            "copy": {
+                "content": json.dumps({"cksum": pkg.cksum}, indent=2),
+                "dest": os.path.join(dataroot, "controllers.json")}})
+
+        playbook = [{"hosts": "clients", "tasks": tasks}]
+
         logging.debug("Client list for {}: {}".format(pkgpath, clients))
         for c in clients:
-            ssh, scp = util.build_ssh_commands(c)
+            ctasks = []
+            ssh, _ = util.build_ssh_commands(c)
 
             logging.debug("SSH: {}".format(ssh))
-            logging.debug("SCP: {}".format(scp))
-            logging.info("Doing client install for '{}' on host {} now".format(pkgpath, c))
-            # TODO:
-            # [X] Copy self to application controller (SCP)
-            where = sp.check_output(ssh + ["pwd"], stderr=sp.DEVNULL).strip().decode('utf-8')
-            where = "{}/netide-loader".format(where)
 
-            p = sp.check_output(ssh + ["mkdir -p {}".format(where)], stderr=sp.DEVNULL)
-            logging.info("Copying NetIDE loader to target '{}'".format(c))
-            util.spawn_logged(scp + [".", "{}:{}".format(c[0], where)])
+            # Install Python2.7 so we can use ansible
+            # XXX: make the package name configurable
+            # XXX: use ansible -m raw instead of plain ssh
+            util.spawn_logged(ssh + ["sudo", install_package_command.format("python2.7")])
 
-            # [X] Run setup.sh on app controller to bootstrap ourselves
-            logging.info("Bootstrapping NetIDE loader on '{}'".format(c))
-            util.spawn_logged(ssh + ["cd {}; ./setup.sh".format(where)])
+            apps = []
+            # Collect controllers per client machine and collect applications
+            for con in pkg.controllers_for_node(c[0]):
+                apps.extend(con.applications)
+                cname = con.__name__.lower()
+                logging.debug("Adding controller {} to ansible playbook".format(cname))
+                if cname not in ["ryu", "floodlight", "odl", "pox", "pyretic"]:
+                    raise InstallException("Don't know how to install controller {}".format(cname))
 
-            # [X] Copy package to app controller
-            dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.DEVNULL).strip().decode('utf-8')
-            logging.info("Copying NetIDE package '{}' to target '{}'".format(pkgpath, c))
-            if os.path.isdir(pkgpath):
-                pkgpath += "/"
-            util.spawn_logged(scp + [pkgpath, "{host}:{dir}".format(host=c[0], dir=dir)])
+                script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
+                script.append("install_{}.sh".format(cname))
 
-            # [X] Run self with arguments ['install-appcontroller', args.package]
-            # [ ] Log output somewhere
-            # [ ] Catch failure
-            logging.info("Running NetIDE client controller installation on {}".format(c))
-            util.spawn_logged(ssh + ["cd {where}; ./netideloader.py install --mode appcontroller {pkg}".format(where=where,
-                pkg=os.path.join(dir, pkgpath))])
+                ctasks.append({
+                    "name": "install {}".format(cname),
+                    "shell": "bash {}".format(os.path.join(*script)),
+                    "args": {"chdir": "~"}})
 
-            # [X] Remove package from app controller
-            p = sp.check_output(ssh + ["rm -r {}".format(dir)], stderr=sp.STDOUT).strip().decode('utf-8')
+            # Install application dependencies
+            # XXX: ugly :/
+            # XXX: libraries
+            for a in apps:
+                reqs = a.metadata.get("requirements", {}).get("Software", {})
 
-def do_appcontroller_install(pkg, dataroot):
-    # TODO
-    # For all apps on local controller:
-    #   [ ] Check hardware requirements
-    #   [ ] Gather required software
-    #   [ ] Install required software
-    #       [ ] Controllers: Use IDE install scripts
-    logging.debug("Running app controller install for package {}".format(pkg))
-    with util.TempDir("netide-appcontroller-install") as t:
-        pkg = Package(pkg, t)
-        if pkg.applies(dataroot):
-            logging.info("Nothing to be done for '{}'".format(pkg))
-            return
+                # Languages
+                for l in reqs.get("Languages", {}):
+                    if l["name"] == "python":
+                        if l["version"].startswith("3"):
+                            l["name"] += "3"
+                        else:
+                            l["name"] += "2"
+                    elif l["name"] == "java":
+                        if "7" in l["version"]:
+                            l["name"] = "openjdk-7-jdk"
+                        elif "8" in l["version"]:
+                            l["name"] = "openjdk-8-jdk"
+                        else:
+                            l["name"] = "openjdk-6-jdk"
 
-        if os.path.exists(os.path.expanduser("~/IDE")):
-            # Already checked out, update
-            with util.Chdir(os.path.expanduser("~/IDE")):
-                logging.info("Updating NetIDE repository")
-                s = sp.check_output(["git", "pull", "origin", "development"], stderr=sp.STDOUT).decode("utf-8").strip()
-        else:
-            logging.info("Cloning NetIDE IDE repository")
-            with util.Chdir(os.path.expanduser("~")):
-                s = sp.check_output(["git", "clone", "-b", "development", "https://github.com/fp7-netide/IDE.git"],
-                        stderr=sp.STDOUT).decode('utf-8').strip()
-        logging.debug(s)
+                    ctasks.append({
+                        "name": "install {} (for app {})".format(l["name"], str(a)),
+                        "apt": {"pkg": "{}={}*".format(l["name"], l["version"])}})
+            playbook.append({"hosts": c[0], "tasks": ctasks})
 
-        # Install Engine
-        script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts", "install_engine.sh"]
-        script = os.path.expanduser(os.path.join(*script))
-        logging.debug("Installing Engine with script '{}'".format(script))
-        r = util.spawn_logged(["bash", script])
-
-        # The goodies are now in ~/IDE/plugins/eu.netide.configuration.launcher/scripts/
-        for c in pkg.controllers:
-            cname = c.__name__.lower()
-            logging.debug("Handling controller {}".format(cname))
-            if cname not in ["ryu", "floodlight", "odl", "pox", "pyretic"]:
-                raise InstallException("Don't know how to install controller {}".format(cname))
-
-            script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
-            script.append("install_{}.sh".format(cname))
-            script = os.path.expanduser(os.path.join(*script))
-
-            logging.debug("Using script {} ({})".format(script, os.path.exists(script)))
-            with util.Chdir(os.path.expanduser("~")):
-                r = util.spawn_logged(["bash", script])
-            logging.debug("Finished installing controller {} with exit code {}".format(cname, r))
-
-        # TODO:
-        # [ ] Install languages
-        # [ ] Install libraries
-        apps = []
-        for c in pkg.controllers:
-            apps.extend(c.applications)
-        for a in apps:
-            logging.debug("Handling deps for application {}".format(a))
-            reqs = a.metadata.get("requirements", {}).get("Software", {})
-
-            # Languages
-            try:
-                environment.check_languages(reqs.get("Languages", {}))
-            except environment.LanguageCheckException as e:
-                if e.dunno:
-                    raise e
-                logging.debug("Would attempt to install {what} version {want} now".format(what=e.what, want=e.want))
-                if e.what not in ["java", "python"]:
-                    raise Exception("Don't know how to install {what} version {want}".format(what=e.what, want=e.want))
-                if e.what == "python":
-                    # TODO: use an external script?
-                    r = util.spawn_logged(["sudo", "apt-get", "install", "--yes", "{}{}".format(e.what, e.want)])
-                else:
-                    version = e.want.split(".", 2)[1]
-                    logging.debug("Installing java {} now".format(version))
-                    r = util.spawn_logged(["sudo", "apt-get", "install", "--yes", "openjdk-{}-jdk".format(version)])
-
-        os.makedirs(dataroot, exist_ok=True)
-        with util.FLock(open(os.path.join(dataroot, "controllers.json"), "a+")) as f:
-            f.seek(0)
-            try:
-                data = json.load(f)
-            except ValueError:
-                data = {}
-
-            data["cksum"] = pkg.cksum
-
-            json.dump(data, f, indent=2)
-            logging.debug("post-inst: {} ({})".format(dataroot, str(pkg.cksum)))
+        # A valid JSON-document is also valid YAML, so we can take a small shortcut here
+        with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
+            json.dump(playbook, ah, indent=2)
+        util.spawn_logged(["env", "ANSIBLE_HOST_KEY_CHECKING=False", "ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])

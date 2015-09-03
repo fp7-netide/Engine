@@ -50,15 +50,20 @@ class Package(object):
         logging.debug("Loading applications for host {}".format(platform.node()))
         p = os.path.join(self.path, "_apps")
         for d in os.listdir(p):
-            if d not in self.config.get("clients", {}).get(platform.node(), {}).get("apps", []):
-                logging.debug("Skipping application {} (not for this host)".format(d))
-                continue
+            nodes = []
+            print(self.config.get("clients", {}))
+            for node, v in self.config.get("clients", {}).items():
+                if d in v.get("apps", []):
+                    nodes.append(node)
             logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
             app = os.path.join(p, d)
             ctrl = Application.get_controller(app)
-            if ctrl not in self.controllers:
-                self.controllers[ctrl] = ctrl(dataroot)
-            self.controllers[ctrl].applications.append(Application(app))
+            for n in nodes:
+                if n not in self.controllers:
+                    self.controllers[n] = {}
+                if ctrl not in self.controllers[n]:
+                    self.controllers[n][ctrl] = ctrl(dataroot)
+                self.controllers[n][ctrl].applications.append(Application(app))
 
         hash = hashlib.sha1()
         for (dirpath, dirnames, filenames) in os.walk(self.path):
@@ -75,12 +80,17 @@ class Package(object):
     def __str__(self):
         return 'Package("{}")'.format(self.path)
 
+    def controllers_for_node(self, node=None):
+        if node is None:
+            node = platform.node()
+        return self.controllers[node]
+
     def applies(self, dataroot=None):
         # FIXME: there's a lot of validation missing here: checking topology and what not
         if dataroot is None:
             dataroot = self.dataroot
 
-        for c in self.controllers:
+        for c in self.controllers_for_node():
             for a in c.applications:
                 if not a.valid_requirements():
                     logging.error("Requirements for application {} not met".format(a))
@@ -106,7 +116,7 @@ class Package(object):
         return True
 
     def start(self, data):
-        for cls, c in self.controllers.items():
+        for cls, c in self.controllers_for_node().items():
             n = cls.__name__
 
             p = data.get(n, {}).get("procs", [])
@@ -129,7 +139,7 @@ class Package(object):
             if "user" in d:
                 host = "{}@{}".format(d["user"], host)
 
-            entry = [ host ]
+            entry = [ name, host ]
             if "port" in d:
                 entry.append(d["port"])
             if "identity" in d:
