@@ -50,8 +50,8 @@ from ryu.netide.netip import *
 
 
 
+NETIDE_CORE_PORT = 41414
 
-#
 class BackendChannel(asyncore.dispatcher):
     """Handles the data channel to the server
     """

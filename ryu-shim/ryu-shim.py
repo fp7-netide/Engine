@@ -23,8 +23,8 @@ import sys
 import random
 import binascii
 import time
-import asyncore
 import socket
+import zmq
 from ryu.base import app_manager
 from ryu.exception import RyuException
 from ryu.controller import mac_to_port
@@ -42,24 +42,28 @@ from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
-from ryu.netide.netip import *
+sys.path.append('/home/doriguzzi/Projects/NetIDE/workspace/ryu-zeromq/ryu/netide')
+from netip import *
+#from ryu.netide.netip import *
+#from time import sleep
 
-#Hadles the connection with the client. One backend channel is created per client.
-class BackendChannel(asyncore.dispatcher):
+NETIDE_CORE_PORT = 41414
+
+#Handles the connection with the core. 
+class BackendChannel():
 
 
     def __init__(self, sock, server):
         self.server = server
-        self.channel_lock = threading.Lock()
+        #self.channel_lock = threading.Lock()
         self.client_info = {'negotiated_protocols':{}}
-        asyncore.dispatcher.__init__(self, sock)
 
     def handle_read(self):
 
         #If new client is connecting
         if 'connected' not in self.client_info:
             with self.channel_lock:
-                header = self.recv(NetIDE_Header_Size)
+                header = self.recv(NetIDEOps.NetIDE_Header_Size)
                 decoded_header = NetIDEOps.netIDE_decode_header(header)
                 message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
                 if decoded_header[NetIDEOps.NetIDE_header['VERSION']] is not NetIDEOps.NetIDE_version or decoded_header[NetIDEOps.NetIDE_header['TYPE']] is not NetIDEOps.NetIDE_type['NETIDE_HELLO']:
@@ -100,7 +104,7 @@ class BackendChannel(asyncore.dispatcher):
 
         #If client has already performed handshake with the server
         else:
-            header = self.recv(NetIDE_Header_Size)
+            header = self.recv(NetIDEOps.NetIDE_Header_Size)
             decoded_header = NetIDEOps.netIDE_decode_header(header)
             message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
             message_data = self.recv(message_length)
@@ -130,62 +134,64 @@ class BackendChannel(asyncore.dispatcher):
             self.close()
 
 
-#Backend Server - Listens for incoming connections to the server and handles them properly
-class BackendServer(asyncore.dispatcher):
+# Connection with the core
+class CoreConnection(threading.Thread):
+    def __init__(self, id, host, port):
+        threading.Thread.__init__(self)
+        self.id = id
+        self.host = host
+        self.port = port
 
-    def __init__(self, controller, address):
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.set_reuse_addr()
-        self.bind(address)
-        self.listen(5)
-        self.controller = controller
-        self.clients = []
-        return
+    def run(self):
+        print "Waiting...."
+        context = zmq.Context()
+        self.socket = context.socket(zmq.DEALER)
+        self.socket.setsockopt(zmq.IDENTITY, self.id)
+        print('Connecting to Core on %s:%s...' % (self.host,self.port))
+        self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
 
-    #Once a new connection is set up, create a channel with the client to be able to send/receive data
-    def handle_accept(self):
-        # Called when a backend connects to our socket
-        backend_info = self.accept()
-
-        if backend_info is not None:
-            sock, addr = backend_info
-            print "Incoming connection from client: %s" % repr(addr)
-            client = BackendChannel(sock, self)
-            self.clients.append(client)
-
-            #Resend request for features for the new client
-            self.controller.send_features_request()
-
-        return
-
-
-#Starts the asyncore server as a threaded process so the application can continue running
-class asyncore_loop(threading.Thread):
-        def run(self):
-            asyncore.loop()
-
+        print('Connected to Core.')
+        #self.socket.send(b"First Hello from " + self.id)
+        while True:
+            message = self.socket.recv_multipart()
+            #TODO: handle message
+            #time.sleep(1000000)
+            
+            print("Received message from Core: %s" % message[0])
+        
+        self.socket.close()
+        context.term()
+        
+class TestThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        while True:
+            sleep(1)
+            print "Thread"
+    
+    
 class RYUShim(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         self.__class__.name = "RYUShim"
         super(RYUShim, self).__init__(*args, **kwargs)
-        #Various Variables that can be edited
-        __LISTEN_IP__ = 'localhost'
-        __LISTEN_PORT__ = RYU_BACKEND_PORT #Default Port 41414
 
-        #Internal variables
+        # Various Variables that can be edited
+        __LISTEN_IP__ = 'localhost'
+        __LISTEN_PORT__ = NETIDE_CORE_PORT
+
+        # Internal variables
         self.switches = {}
         self.ofp_version = None
 
-        #Default listen IP and port
-        address = (__LISTEN_IP__, __LISTEN_PORT__)
+        # Start the connection to the core
+        print('RYU Shim initiated')
 
-        #Start the asyncore loop (Server) to listen to incomming connections
-        print('RYUShim initiated')
-        self.backend_server = BackendServer(self,address)
-        self.al = asyncore_loop()
-        self.al.start()
-
+        # self.backend_server = BackendServer(self,address)
+        self.CoreConnection = CoreConnection("shim", __LISTEN_IP__,__LISTEN_PORT__)
+        #self.CoreConnection = TestThread()
+        self.CoreConnection.setDaemon(True)
+        self.CoreConnection.start()
 
     #Explicitly sends a feature request to all the switches
     #OF Only? To check for other protocols!
@@ -255,6 +261,8 @@ class RYUShim(app_manager.RyuApp):
         #Encapsulate the feature request and send to connected client
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, self.datapath.id, str(msg.buf))
         #Forward the message to all the connected NetIDE clients
-        for client in self.backend_server.clients:
-            client.send(msg_to_send)
+        
+        print ':'.join(x.encode('hex') for x in msg_to_send)
+        self.CoreConnection.socket.send(msg_to_send)
+
 

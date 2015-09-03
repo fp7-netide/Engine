@@ -17,19 +17,14 @@
 ################################################################################
 import struct
 
-RYU_BACKEND_PORT=41414
-NETIDE_VERSION = 0x2
-
-#Define the NetIDE Version
-NetIDE_version = NETIDE_VERSION
+NETIDE_VERSION = 0x02
 NetIDE_Header_Format = '!BBHIIQ'
-NetIDE_Header_Size = struct.calcsize(NetIDE_Header_Format)
 
 
 class NetIDEOps:
+    NetIDE_version = NETIDE_VERSION
+    NetIDE_Header_Size = struct.calcsize(NetIDE_Header_Format)
 
-    #Define the NetIDE Version
-    NetIDE_version = 0x01
     #Define the NetIDE message types and codes
     NetIDE_header = {
         'VERSION'             : 0x00,
