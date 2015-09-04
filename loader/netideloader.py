@@ -59,6 +59,7 @@ from loader.package import Package
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
+os.environ["ANSIBLE_HOST_KEY_CHECKING"] = "False"
 
 logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=logging.DEBUG)
 

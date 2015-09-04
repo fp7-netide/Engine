@@ -28,7 +28,7 @@ from loader import util
 from loader.package import Package
 
 # XXX make this configurable
-install_package_command = "apt-get install --yes {}"
+install_package_command = "sudo apt-get install --yes {}"
 
 class InstallException(Exception): pass
 
@@ -159,33 +159,46 @@ def do_client_installs(pkgpath, dataroot):
 
         write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
 
+        # Install Python2.7 so we can use ansible
+        # XXX: make the package name configurable
+        util.spawn_logged(["ansible", "clients", "-i", os.path.join(t, "ansible-hosts"),
+            "-m", "raw", "-a", install_package_command.format("python2.7")])
+
         tasks = []
 
+        # Can't use `synchronize' here because that doesn't play nice with ssh options
         tasks.append({
-            "name": "Install NetIDE loader",
-            "synchronize": {
-                "dest": "~/netide-loader",
-                "src" : os.getcwd() + "/"}})
+            "name": "Copy NetIDE loader",
+            "copy": {
+                "dest": '{{ansible_user_dir}}/netide-loader-tmp',
+                "src" : os.getcwd()}})
+
+        # We need to do this dance because `copy' copies to a subdir unless
+        # `src' ends with a '/', in which case it doesn't work at all (tries
+        # to write to '/' instead)
+        tasks.append({
+            "shell": "mv {{ansible_user_dir}}/netide-loader-tmp/loader {{ansible_user_dir}}/netide-loader",
+            "args": {"creates": "{{ansible_user_dir}}/netide-loader"}})
+        tasks.append({"file": {"path": "{{ansible_user_dir}}/netide-loader-tmp", "state": "absent"}})
+        tasks.append({"file": {"path": "{{ansible_user_dir}}/netide-loader/netideloader.py", "mode": "ugo+rx"}})
 
         tasks.append({
             "name": "Bootstrap NetIDE loader",
-            "shell": "./setup.sh",
-            "args": { "chdir": "~/netide-loader" }})
+            "shell": "bash ./setup.sh",
+            "args": { "chdir": "{{ansible_user_dir}}/netide-loader" }})
 
-        # XXX: update repo if it already exists
         tasks.append({
             "name": "Clone IDE repository",
-            "shell": "git clone -b development http://github.com/fp7-netide/IDE.git",
-            "args": {
-                "creates": "~/IDE",
-                "chdir": "~" }})
+            "git": {
+                "repo": "http://github.com/fp7-netide/IDE.git",
+                "dest": "{{ansible_user_dir}}/IDE",
+                "version": "development"}})
 
         tasks.append({
             "name": "Install Engine",
-            "shell": "bash ~/IDE/plugins/eu.netide.configuration.launcher/scripts/install_engine.sh"})
+            "shell": "bash {{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts/install_engine.sh"})
 
         tasks.append({
-            "name": "Create {}".format(dataroot),
             "file": {
                 "path": dataroot,
                 "state": "directory"}})
@@ -198,34 +211,24 @@ def do_client_installs(pkgpath, dataroot):
 
         playbook = [{"hosts": "clients", "tasks": tasks}]
 
-        logging.debug("Client list for {}: {}".format(pkgpath, clients))
         for c in clients:
             ctasks = []
-            ssh, _ = util.build_ssh_commands(c)
-
-            logging.debug("SSH: {}".format(ssh))
-
-            # Install Python2.7 so we can use ansible
-            # XXX: make the package name configurable
-            # XXX: use ansible -m raw instead of plain ssh
-            util.spawn_logged(ssh + ["sudo", install_package_command.format("python2.7")])
 
             apps = []
             # Collect controllers per client machine and collect applications
             for con in pkg.controllers_for_node(c[0]):
                 apps.extend(con.applications)
                 cname = con.__name__.lower()
-                logging.debug("Adding controller {} to ansible playbook".format(cname))
                 if cname not in ["ryu", "floodlight", "odl", "pox", "pyretic"]:
                     raise InstallException("Don't know how to install controller {}".format(cname))
 
-                script = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
+                script = ["{{ansible_user_dir}}", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
                 script.append("install_{}.sh".format(cname))
 
                 ctasks.append({
-                    "name": "install {}".format(cname),
+                    "name": "install controller {}".format(cname),
                     "shell": "bash {}".format(os.path.join(*script)),
-                    "args": {"chdir": "~"}})
+                    "args": {"chdir": "{{ansible_user_dir}}"}})
 
             # Install application dependencies
             # XXX: ugly :/
@@ -256,4 +259,4 @@ def do_client_installs(pkgpath, dataroot):
         # A valid JSON-document is also valid YAML, so we can take a small shortcut here
         with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
             json.dump(playbook, ah, indent=2)
-        util.spawn_logged(["env", "ANSIBLE_HOST_KEY_CHECKING=False", "ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
+        util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
