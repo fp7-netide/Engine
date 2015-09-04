@@ -32,6 +32,27 @@ install_package_command = "sudo apt-get install --yes {}"
 
 class InstallException(Exception): pass
 
+
+def write_ansible_hosts(clients, path):
+    # Tuple layout:
+    # (name, ssh host, ssh port, ssh identity)
+    with open(path, "w") as ah:
+        ah.write("localhost ansible_connection=local\n")
+
+        ah.write("\n[clients]\n")
+        for c in clients:
+            try:
+                user, host = c[1].split("@", 1)
+                ah.write("{} ansible_ssh_host={} ansible_ssh_user={}".format(c[0], host, user))
+            except ValueError:
+                ah.write("{} ansible_ssh_host={}".format(c[0], c[1]))
+            if len(c) >= 3:
+                ah.write(" ansible_ssh_port={}".format(c[2]))
+            if len(c) >= 4:
+                ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
+            ah.write("\n")
+
+
 def do_server_install(pkg):
     logging.debug("Doing server install for '{}' now".format(pkg))
 
@@ -46,102 +67,103 @@ def do_server_install(pkg):
         if "host" in conf and platform.node() != conf["host"]:
             raise InstallException("Attempted server installation on host {} (!= {})".format(platform.node(), conf["host"]))
 
-        logging.info("Starting installation/update of NetIDE core")
-        # Install NetIDE core
-        if not os.path.exists(os.path.join(prefix, "Core")):
-            os.makedirs(prefix, exist_ok=True)
-            with util.Chdir(prefix):
-                util.spawn_logged(["git", "clone", "-b", "CoreImplementation", "https://github.com/fp7-netide/Engine.git", "Core"])
-        else:
-            with util.Chdir(os.path.join(prefix, "Core")):
-                util.spawn_logged(["git", "pull", "origin", "CoreImplementation"])
+        tasks = []
 
-        with util.Chdir(os.path.join(prefix, "Core", "lib", "netip", "java")):
-            util.spawn_logged(["mvn", "install", "-DskipTests"])
+        tasks.append({
+            "name": "Clone NetIDE Engine (master)",
+            "git": {
+                "repo": "https://github.com/fp7-netide/Engine.git",
+                "dest": "{{ansible_user_dir}}/Engine"}})
+        tasks.append({
+            "name": "Clone NetIDE Engine (Core)",
+            "git": {
+                "repo": "https://github.com/fp7-netide/Engine.git",
+                "dest": "{{ansible_user_dir}}/Core",
+                "version": "CoreImplementation"}})
+        tasks.append({
+            "name": "Clone NetIDE IDE",
+            "git": {
+                "repo": "https://github.com/fp7-netide/IDE.git",
+                "dest": "{{ansible_user_dir}}/IDE",
+                "version": "development"}})
 
-        with util.Chdir(os.path.join(prefix, "Core", "core")):
-            util.spawn_logged(["mvn", "install", "-DskipTests"])
+        tasks.append({
+            "name": "Build NetIDE netip library (java)",
+            "shell": "mvn install -Dskiptests",
+            "args": {
+                "chdir": "{{ansible_user_dir}}/Engine/libraries/netip/java",
+                "creates": "{{ansible_user_dir}}/Engine/libraries/netip/java/target/netip-1.0.0.0.jar"}})
+        tasks.append({
+            "name": "Build NetIDE Core",
+            "shell": "mvn install -DskipTests",
+            "args": {
+                "chdir": "{{ansible_user_dir}}/Core/core",
+                "creates": "{{ansible_user_dir}}/Core/core/core.caos/target/core.caos-1.0.0.0.jar"}})
 
-        if not os.path.exists(os.path.join(prefix, "karaf", "apache-karaf-4.0.0", "assemblies", "apache-karaf", "target", "assembly", "bin")):
-            logging.info("Installing Karaf")
-            os.makedirs(os.path.join(prefix, "karaf"), exist_ok=True)
-            with util.Chdir(os.path.join(prefix, "karaf")):
-                p = sp.Popen(["tar", "xzvf", "-"], stdin=sp.PIPE, stdout=sp.DEVNULL)
-                req = requests.get("http://apache.lauf-forum.at/karaf/4.0.0/apache-karaf-4.0.0-src.tar.gz", stream=True)
-                for c in req.iter_content(2048):
-                    p.stdin.write(c)
-                (out, err) = p.communicate()
-                logging.debug("o: {}, e: {}".format(out, err))
-                with util.Chdir("apache-karaf-4.0.0"):
-                    util.spawn_logged(["mvn", "-Pfastinstall"])
-        path = os.path.join(prefix, "karaf", "apache-karaf-4.0.0", "assemblies", "apache-karaf", "target", "assembly")
-        lines = []
-        with open(os.path.join(path, "etc", "org.apache.karaf.management.cfg"), "r") as fh:
-            for l in fh:
-                l = l.strip()
-                if l.startswith("rmiRegistryPort"):
-                    l = l.replace("1099", "1100")
-                if l.startswith("rmiServerPort"):
-                    l  = l.replace("44444", "55555")
-                lines.append(l)
-        with open(os.path.join(path, "etc", "org.apache.karaf.management.cfg"), "w") as fh:
-            fh.write("\n".join(lines))
+        tasks.append({"file": {"path": "{{ansible_user_dir}}/karaf", "state": "directory"}})
+        tasks.append({
+            "name": "Downloading Karaf",
+            "unarchive": {
+                "copy": "no",
+                "creates": "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0",
+                "dest": "{{ansible_user_dir}}/karaf",
+                "src": "http://apache.lauf-forum.at/karaf/4.0.0/apache-karaf-4.0.0-src.tar.gz"}})
+        tasks.append({
+            "name": "Building and installing Karaf",
+            "shell": "mvn -Pfastinstall",
+            "args": {
+                "chdir": "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0",
+                "creates": "{{netide_karaf_assembly}}/bin"}})
+        # This avoids conflicts with ODL's Karaf instance
+        tasks.append({
+            "name": "Reconfiguring Karaf RMI ports (1/2)",
+            "lineinfile": {
+                "dest": "{{netide_karaf_assembly}}/etc/org.apache.karaf.management.cfg",
+                "regexp": "^rmiRegistryPort.*1099",
+                "line": "rmiRegistryPort = 1100"}})
+        tasks.append({
+            "name": "Reconfiguring Karaf RMI ports (2/2)",
+            "lineinfile": {
+                "dest": "{{netide_karaf_assembly}}/etc/org.apache.karaf.management.cfg",
+                "regexp": "^rmiServerPort.*44444",
+                "line": "rmiServerPort = 55555"}})
+        tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/karaf", "mode": "ugo+rx"}})
+        tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/start", "mode": "ugo+rx"}})
+        tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/client", "mode": "ugo+rx"}})
+        # if util.spawn_logged(["bash", "./client", "-r", "2", "logout"]) == 1:
+        tasks.append({
+            "name": "Starting Karaf",
+            "shell": "bash ./start",
+            "args": { "chdir": "{{netide_karaf_assembly}}/bin" }})
+        tasks.append({
+            "name": "Adding NetIDE Maven Repo to Karaf",
+            "shell": 'bash ./client -r 10 "feature:repo-add mvn:eu.netide.core/core/1.0.0.0/xml/features"',
+            "args": { "chdir": "{{netide_karaf_assembly}}/bin" }})
+        tasks.append({
+            "name": "Installing NetIDE Core Karaf feature",
+            "shell": 'bash ./client -r 10 "feature:install netide-core"',
+            "args": { "chdir": "{{netide_karaf_assembly}}/bin"}})
 
-        with util.Chdir(os.path.join(path, "bin")):
-            m = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH
-            os.chmod("karaf", m)
-            os.chmod("start", m)
-            os.chmod("client", m)
-            if util.spawn_logged(["bash", "./client", "-r", "2", "logout"]) == 1:
-                util.spawn_logged(["bash", "./start"])
-            util.spawn_logged(["bash", "./client", "-r", "10", "feature:repo-add mvn:eu.netide.core/core/1.0.0.0/xml/features"])
-            util.spawn_logged(["bash", "./client", "-r", "10", "feature:install netide-core"])
-
-        # Install server controller
-        if "type" not in conf:
-            raise InstallException('"type" section missing from configuration!')
-
-        logging.debug("Attempting install of server controller {}".format(conf["type"]))
+        tasks.append({
+            "name": "Installing NetIDE Engine",
+            "shell": "bash {{netide_scripts}}/install_engine.sh"})
 
         if conf["type"] not in ["odl"]:
             raise InstallException("Don't know how to do a server controller installation for controller {}!".format(conf["type"]))
+        tasks.append({
+            "name": "Installing {}".format(conf["type"]),
+            "shell": "bash {{netide_scripts}}/install_{}.sh".format(conf["type"])})
 
-        scripts = ["~", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
-        if not os.path.exists(os.path.join(prefix, "IDE")):
-            # Repo not yet checked out
-            os.makedirs(prefix, exist_ok=True)
-            with util.Chdir(prefix):
-                util.spawn_logged(["git", "clone", "-b", "development", "https://github.com/fp7-netide/IDE.git"])
-        else:
-            with util.Chdir(os.path.join(prefix, "IDE")):
-                util.spawn_logged(["git", "pull", "origin", "development"])
-
-        script = os.path.expanduser(os.path.join(*scripts + ["install_engine.sh"]))
-        util.spawn_logged(["bash", script])
-
-        script = os.path.expanduser(os.path.join(*scripts + ["install_{}.sh".format(conf["type"])]))
-        logging.debug("Using script {} to install {} ({})".format(script, conf["type"], os.path.exists(script)))
-
-        util.spawn_logged(["bash", script])
-
-
-def write_ansible_hosts(clients, path):
-    # Tuple layout:
-    # (name, ssh host, ssh port, ssh identity)
-    with open(path, "w") as ah:
-        ah.write("localhost ansible_connection=local\n")
-        ah.write("\n[clients]\n")
-        for c in clients:
-            try:
-                user, host = c[1].split("@", 1)
-                ah.write("{} ansible_ssh_host={} ansible_ssh_user={}".format(c[0], host, user))
-            except ValueError:
-                ah.write("{} ansible_ssh_host={}".format(c[0], c[1]))
-            if len(c) >= 3:
-                ah.write(" ansible_ssh_port={}".format(c[2]))
-            if len(c) >= 4:
-                ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
-            ah.write("\n")
+        with open(os.path.join(t, "a-playbook.yml"), "w") as fh:
+            json.dump([{
+                "hosts": "localhost",
+                "tasks": tasks,
+                "vars": {
+                    "netide_karaf_assembly":
+                        "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0/assemblies/apache-karaf/target/assembly",
+                    "netide_scripts": "{{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts" }}], fh)
+        write_ansible_hosts([], os.path.join(t, "a-hosts"))
+        util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "a-hosts"), os.path.join(t, "a-playbook.yml")])
 
 
 def do_client_installs(pkgpath, dataroot):
