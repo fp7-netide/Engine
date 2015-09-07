@@ -1,5 +1,6 @@
 package eu.netide.core.caos.resolution;
 
+import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.OpenFlowMessage;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 
@@ -20,11 +21,20 @@ public class OFMatchConflict extends Conflict {
      * @param field    The Matchfield that creates the conflict.
      * @param type     The type of the conflict.
      */
-    public OFMatchConflict(OpenFlowMessage message1, OpenFlowMessage message2, MatchField field, OFMatchConflict.Type type) {
-        this.message1 = message1;
-        this.message2 = message2;
+    public OFMatchConflict(OpenFlowMessage maskedOrExactMessage, OpenFlowMessage exactMessage, MatchField field, OFMatchConflict.Type type) {
+        this.message1 = maskedOrExactMessage;
+        this.message2 = exactMessage;
         this.matchField = field;
         this.type = type;
+    }
+
+    /**
+     * Returns the first message which contains a masked match creating the conflict. If neither of both messages contains the masked field, this returns the first message.
+     *
+     * @return The message containing the matchfield masked or exact.
+     */
+    public Message getMaskedOrExactMessage() {
+        return this.message1;
     }
 
     /**
@@ -49,10 +59,10 @@ public class OFMatchConflict extends Conflict {
         /**
          * Indicates that the conflict is compatible, i.e. that one match is a superset of the other.
          */
-        Compatible,
+        Superset,
         /**
          * Indicates that the conflict is incompatible, i.e. that the matches directly contradict each other.
          */
-        Incompatible
+        Same
     }
 }

@@ -5,8 +5,10 @@ package eu.netide.core.caos.resolution;
  */
 public enum ResolutionAction {
     IGNORED("ignored"),
-    CREATED_AUTO("created by automerge"),
+    CREATED_AUTO_COMBINATION("created by automerge as combination"),
+    CREATED_AUTO_REPLACEMENT("created by automerge as replacement"),
     PROMOTED_AUTO("promoted by automerge"),
+    REPLACED_AUTO("replaced by automerge"),
     NONE("none");
 
 

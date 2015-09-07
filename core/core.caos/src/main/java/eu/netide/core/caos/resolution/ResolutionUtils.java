@@ -20,7 +20,7 @@ import static org.projectfloodlight.openflow.protocol.OFFlowModCommand.DELETE_ST
  */
 public class ResolutionUtils {
 
-    private static final MatchField[] MATCH_FIELDS_TO_CHECK = new MatchField[]{
+    public static final MatchField[] MATCH_FIELDS_TO_CHECK = new MatchField[]{
             MatchField.IPV4_SRC,
             MatchField.IPV4_DST,
             MatchField.IPV6_SRC,
@@ -53,15 +53,15 @@ public class ResolutionUtils {
             if (!match1.isFullyWildcarded(mf) && !match2.isFullyWildcarded(mf)) {
                 if (match1.isExact(mf) && match2.isExact(mf)) {
                     if (match1.get(mf).compareTo(match2.get(mf)) == 0) {
-                        foundConflicts.add(new OFMatchConflict(message1, message2, mf, OFMatchConflict.Type.Incompatible));
+                        foundConflicts.add(new OFMatchConflict(message1, message2, mf, OFMatchConflict.Type.Same));
                     }
                 } else if (match1.isExact(mf) && match2.isPartiallyMasked(mf)) {
                     if ((match2.getMasked(mf)).matches(match1.get(mf))) {
-                        foundConflicts.add(new OFMatchConflict(message1, message2, mf, OFMatchConflict.Type.Compatible));
+                        foundConflicts.add(new OFMatchConflict(message2, message1, mf, OFMatchConflict.Type.Superset));
                     }
                 } else if (match1.isPartiallyMasked(mf) && match2.isExact(mf)) {
                     if ((match1.getMasked(mf)).matches(match2.get(mf))) {
-                        foundConflicts.add(new OFMatchConflict(message1, message2, mf, OFMatchConflict.Type.Compatible));
+                        foundConflicts.add(new OFMatchConflict(message1, message2, mf, OFMatchConflict.Type.Superset));
                     }
                 }
             }
@@ -82,6 +82,8 @@ public class ResolutionUtils {
         OFFlowModCommand c1 = offm1.getCommand();
         OFFlowModCommand c2 = offm2.getCommand();
         if (c1 != DELETE && c1 != DELETE_STRICT && c2 != DELETE && c2 != DELETE_STRICT) {
+
+            // TODO check for flowmod actions
             return offm1.getActions().stream().anyMatch(a -> offm2.getActions().stream().anyMatch(b -> a == b));
         }
         return false;
