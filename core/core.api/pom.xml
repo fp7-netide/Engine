@@ -52,7 +52,7 @@
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>openflowj</artifactId>
-            <version>0.3.9.oe</version>
+            <version>0.4.0.onos</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
