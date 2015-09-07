@@ -46,10 +46,10 @@ public class RuleWorkingSet {
     }
 
     public Stream<Pair<OpenFlowMessage, OpenFlowMessage>> getPairs() {
-        return this.messages.stream().flatMap(m1 -> this.messages.stream().skip(this.messages.indexOf(m1) + 1).map(m2 -> new Pair(m1, m2)));
+        return this.messages.stream().flatMap(m1 -> this.messages.stream().skip(this.messages.indexOf(m1) + 1).map(m2 -> new Pair<OpenFlowMessage, OpenFlowMessage>(m1, m2)));
     }
 
     public OpenFlowMessage[] toMessageArray() {
-        return (OpenFlowMessage[]) this.messages.toArray();
+        return this.messages.stream().toArray(OpenFlowMessage[]::new);
     }
 }

@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -129,8 +130,8 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                     throw new UnsupportedOperationException("Can only automatically merge FLOW_MOD messages. Found '" + m1.getOfMessage().getType().name() + "' and '" + m2.getOfMessage().getType().name() + "'.");
                 }
 
-                Stream<OFMatchConflict> conflicts = ResolutionUtils.getMatchConflicts(m1, m2, fM(m1).getMatch(), fM(m2).getMatch());
-                if (conflicts.count() == 0) {
+                List<OFMatchConflict> conflicts = ResolutionUtils.getMatchConflicts(m1, m2, fM(m1).getMatch(), fM(m2).getMatch()).collect(Collectors.toList());
+                if (conflicts.size() == 0) {
                     // no conflicts for these two messages -> take both to the next round
                     newWorkingSet.addDistinct(m1);
                     newWorkingSet.addDistinct(m2);
@@ -140,7 +141,7 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                     // there are conflicts -> merge both messages into one (replacing or combining)
                     // when all match fields are equal, we replace the two rules by a new one that has all actions.
                     // Otherwise, we just introduce a new rule for the combined case with all actions.
-                    boolean replacing = conflicts.allMatch(c -> c.getType() == Same);
+                    boolean replacing = conflicts.stream().allMatch(c -> c.getType() == Same);
                     Match.Builder matchBuilder = fM(m1).getMatch().createBuilder(); // start from m1 clone
                     conflicts.forEach(c -> {
                         // replace each conflicting field with the value of the exact message (message2)
@@ -199,7 +200,8 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                 }
 
             }
-            workingSet = newWorkingSet;
+            if (hasOptimized)
+                workingSet = newWorkingSet;
         }
         return new ResolutionResult(workingSet.toMessageArray(), actions);
     }

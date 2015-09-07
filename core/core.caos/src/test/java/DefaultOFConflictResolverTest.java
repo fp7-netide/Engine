@@ -1,0 +1,72 @@
+import eu.netide.core.caos.composition.ResolutionPolicy;
+import eu.netide.core.caos.resolution.DefaultOFConflictResolver;
+import eu.netide.core.caos.resolution.ResolutionAction;
+import eu.netide.core.caos.resolution.ResolutionResult;
+import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.MessageType;
+import eu.netide.lib.netip.NetIPUtils;
+import eu.netide.lib.netip.OpenFlowMessage;
+import org.projectfloodlight.openflow.protocol.OFFactories;
+import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
+import org.projectfloodlight.openflow.protocol.OFVersion;
+import org.projectfloodlight.openflow.protocol.match.Match;
+import org.projectfloodlight.openflow.protocol.match.MatchField;
+import org.projectfloodlight.openflow.types.EthType;
+import org.projectfloodlight.openflow.types.IpProtocol;
+import org.projectfloodlight.openflow.types.TransportPort;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * Created by timvi on 07.09.2015.
+ */
+public class DefaultOFConflictResolverTest {
+    @Test
+    public void TwoEqualRulesTest() {
+        OFFactory fact = OFFactories.getFactory(OFVersion.OF_10);
+        // FM1: TCP_DST:80 -> TpDst:123
+        Match match1 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm1 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpDst(TransportPort.of(123))).collect(Collectors.toList()))
+                .setMatch(match1)
+                .build();
+        OpenFlowMessage ofm1 = messageFromFlowMod(offm1);
+        // FM1: TCP_DST:80 -> TpSrc:80
+        Match match2 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm2 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpSrc(TransportPort.of(80))).collect(Collectors.toList()))
+                .setMatch(match2)
+                .build();
+        OpenFlowMessage ofm2 = messageFromFlowMod(offm2);
+
+        DefaultOFConflictResolver resolver = new DefaultOFConflictResolver();
+        ResolutionResult result = resolver.resolve(new Message[]{ofm1, ofm2}, ResolutionPolicy.AUTO, null);
+
+        System.out.println(result.getTakenActions().get(ofm1).name());
+        System.out.println(result.getTakenActions().get(ofm2).name());
+        Assert.assertTrue(result.getTakenActions().get(ofm1) == ResolutionAction.REPLACED_AUTO);
+        Assert.assertTrue(result.getTakenActions().get(ofm2) == ResolutionAction.REPLACED_AUTO);
+        Assert.assertEquals(result.getResultingMessagesToSend().length, 1);
+    }
+
+    private OpenFlowMessage messageFromFlowMod(OFFlowMod flowMod) {
+        OpenFlowMessage newMessage = new OpenFlowMessage();
+        newMessage.setOfMessage(flowMod);
+        newMessage.setHeader(NetIPUtils.StubHeaderFromPayload(newMessage.getPayload()));
+        newMessage.getHeader().setMessageType(MessageType.OPENFLOW);
+        newMessage.getHeader().setModuleId(0); // TODO core indicator module id
+        newMessage.getHeader().setDatapathId(0); // TODO calculate new value
+        newMessage.getHeader().setTransactionId(0); // TODO calculate new value
+        return newMessage;
+    }
+}
