@@ -38,7 +38,7 @@ public class DefaultOFConflictResolverTest {
                 .setMatch(match1)
                 .build();
         OpenFlowMessage ofm1 = messageFromFlowMod(offm1);
-        // FM1: TCP_DST:80 -> TpSrc:80
+        // FM2: TCP_DST:80 -> TpSrc:80
         Match match2 = fact.buildMatch()
                 .setExact(MatchField.ETH_TYPE, EthType.IPv4)
                 .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
@@ -52,11 +52,125 @@ public class DefaultOFConflictResolverTest {
         DefaultOFConflictResolver resolver = new DefaultOFConflictResolver();
         ResolutionResult result = resolver.resolve(new Message[]{ofm1, ofm2}, ResolutionPolicy.AUTO, null);
 
-        System.out.println(result.getTakenActions().get(ofm1).name());
-        System.out.println(result.getTakenActions().get(ofm2).name());
         Assert.assertTrue(result.getTakenActions().get(ofm1) == ResolutionAction.REPLACED_AUTO);
         Assert.assertTrue(result.getTakenActions().get(ofm2) == ResolutionAction.REPLACED_AUTO);
         Assert.assertEquals(result.getResultingMessagesToSend().length, 1);
+    }
+
+    @Test
+    public void ThreeEqualRulesTest() {
+        OFFactory fact = OFFactories.getFactory(OFVersion.OF_10);
+        // FM1: TCP_DST:80 -> TpDst:123
+        Match match1 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm1 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpDst(TransportPort.of(123))).collect(Collectors.toList()))
+                .setMatch(match1)
+                .build();
+        OpenFlowMessage ofm1 = messageFromFlowMod(offm1);
+        // FM2: TCP_DST:80 -> TpSrc:80
+        Match match2 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm2 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpSrc(TransportPort.of(80))).collect(Collectors.toList()))
+                .setMatch(match2)
+                .build();
+        OpenFlowMessage ofm2 = messageFromFlowMod(offm2);
+        // FM3: TCP_DST:80 -> TpSrc:80
+        Match match3 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm3 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpSrc(TransportPort.of(42))).collect(Collectors.toList()))
+                .setMatch(match3)
+                .build();
+        OpenFlowMessage ofm3 = messageFromFlowMod(offm3);
+
+        DefaultOFConflictResolver resolver = new DefaultOFConflictResolver();
+        ResolutionResult result = resolver.resolve(new Message[]{ofm1, ofm2, ofm3}, ResolutionPolicy.AUTO, null);
+
+        Assert.assertTrue(result.getTakenActions().get(ofm1) == ResolutionAction.REPLACED_AUTO);
+        Assert.assertTrue(result.getTakenActions().get(ofm2) == ResolutionAction.REPLACED_AUTO);
+        Assert.assertTrue(result.getTakenActions().get(ofm3) == ResolutionAction.REPLACED_AUTO);
+        Assert.assertEquals(result.getResultingMessagesToSend().length, 1);
+    }
+
+    @Test
+    public void TwoOverlappingRulesTest() {
+        OFFactory fact = OFFactories.getFactory(OFVersion.OF_10);
+        // FM1: IPv4,TCP,TCP_DST:80 -> TpDst:123
+        Match match1 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm1 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpDst(TransportPort.of(123))).collect(Collectors.toList()))
+                .setMatch(match1)
+                .build();
+        OpenFlowMessage ofm1 = messageFromFlowMod(offm1);
+        // FM2: IPv4,TCP -> TpSrc:80
+        Match match2 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP).build();
+        OFFlowMod offm2 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpSrc(TransportPort.of(80))).collect(Collectors.toList()))
+                .setMatch(match2)
+                .build();
+        OpenFlowMessage ofm2 = messageFromFlowMod(offm2);
+
+        DefaultOFConflictResolver resolver = new DefaultOFConflictResolver();
+        ResolutionResult result = resolver.resolve(new Message[]{ofm1, ofm2}, ResolutionPolicy.AUTO, null);
+
+        Assert.assertEquals(result.getTakenActions().get(ofm1), ResolutionAction.REPLACED_AUTO);
+        Assert.assertEquals(result.getTakenActions().get(ofm2), ResolutionAction.NONE);
+        Assert.assertEquals(result.getResultingMessagesToSend().length, 2);
+    }
+
+    @Test
+    public void ThreeOverlappingRulesTest() {
+        OFFactory fact = OFFactories.getFactory(OFVersion.OF_10);
+        // FM1: IPv4,TCP,TCP_DST:80 -> TpDst:123
+        Match match1 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_DST, TransportPort.of(80)).build();
+        OFFlowMod offm1 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpDst(TransportPort.of(123))).collect(Collectors.toList()))
+                .setMatch(match1)
+                .build();
+        OpenFlowMessage ofm1 = messageFromFlowMod(offm1);
+        // FM2: IPv4,TCP -> TpSrc:80
+        Match match2 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP).build();
+        OFFlowMod offm2 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpSrc(TransportPort.of(80))).collect(Collectors.toList()))
+                .setMatch(match2)
+                .build();
+        OpenFlowMessage ofm2 = messageFromFlowMod(offm2);
+        // FM3: IPv4,TCP,TCP_SRC:80 -> TpSrc:80
+        Match match3 = fact.buildMatch()
+                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
+                .setExact(MatchField.IP_PROTO, IpProtocol.TCP)
+                .setExact(MatchField.TCP_SRC, TransportPort.of(80)).build();
+        OFFlowMod offm3 = fact.buildFlowModify()
+                .setActions(Stream.of(fact.actions().setTpSrc(TransportPort.of(42))).collect(Collectors.toList()))
+                .setMatch(match3)
+                .build();
+        OpenFlowMessage ofm3 = messageFromFlowMod(offm3);
+
+        DefaultOFConflictResolver resolver = new DefaultOFConflictResolver();
+        ResolutionResult result = resolver.resolve(new Message[]{ofm1, ofm2, ofm3}, ResolutionPolicy.AUTO, null);
+
+        Assert.assertEquals(result.getTakenActions().get(ofm1), ResolutionAction.REPLACED_AUTO);
+        Assert.assertEquals(result.getTakenActions().get(ofm2), ResolutionAction.NONE);
+        Assert.assertEquals(result.getTakenActions().get(ofm3), ResolutionAction.REPLACED_AUTO);
+        Assert.assertEquals(result.getResultingMessagesToSend().length, 4);
     }
 
     private OpenFlowMessage messageFromFlowMod(OFFlowMod flowMod) {
