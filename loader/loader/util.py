@@ -97,3 +97,23 @@ def spawn_logged(cmd):
         l = l.decode('utf-8').rstrip()
         logging.debug(l)
     return p.wait()
+
+
+def write_ansible_hosts(clients, path):
+    # Tuple layout:
+    # (name, ssh host, ssh port, ssh identity)
+    with open(path, "w") as ah:
+        ah.write("localhost ansible_connection=local\n")
+
+        ah.write("\n[clients]\n")
+        for c in clients:
+            try:
+                user, host = c[1].split("@", 1)
+                ah.write("{} ansible_ssh_host={} ansible_ssh_user={}".format(c[0], host, user))
+            except ValueError:
+                ah.write("{} ansible_ssh_host={}".format(c[0], c[1]))
+            if len(c) >= 3:
+                ah.write(" ansible_ssh_port={}".format(c[2]))
+            if len(c) >= 4:
+                ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
+            ah.write("\n")

@@ -33,26 +33,6 @@ install_package_command = "sudo apt-get install --yes {}"
 class InstallException(Exception): pass
 
 
-def write_ansible_hosts(clients, path):
-    # Tuple layout:
-    # (name, ssh host, ssh port, ssh identity)
-    with open(path, "w") as ah:
-        ah.write("localhost ansible_connection=local\n")
-
-        ah.write("\n[clients]\n")
-        for c in clients:
-            try:
-                user, host = c[1].split("@", 1)
-                ah.write("{} ansible_ssh_host={} ansible_ssh_user={}".format(c[0], host, user))
-            except ValueError:
-                ah.write("{} ansible_ssh_host={}".format(c[0], c[1]))
-            if len(c) >= 3:
-                ah.write(" ansible_ssh_port={}".format(c[2]))
-            if len(c) >= 4:
-                ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
-            ah.write("\n")
-
-
 def do_server_install(pkg):
     logging.debug("Doing server install for '{}' now".format(pkg))
 
@@ -162,7 +142,7 @@ def do_server_install(pkg):
                     "netide_karaf_assembly":
                         "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0/assemblies/apache-karaf/target/assembly",
                     "netide_scripts": "{{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts" }}], fh)
-        write_ansible_hosts([], os.path.join(t, "a-hosts"))
+        util.write_ansible_hosts([], os.path.join(t, "a-hosts"))
         util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "a-hosts"), os.path.join(t, "a-playbook.yml")])
 
 
@@ -179,7 +159,7 @@ def do_client_installs(pkgpath, dataroot):
         pkg = Package(pkgpath, t)
         clients = pkg.get_clients()
 
-        write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
+        util.write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
 
         # Install Python2.7 so we can use ansible
         # XXX: make the package name configurable
