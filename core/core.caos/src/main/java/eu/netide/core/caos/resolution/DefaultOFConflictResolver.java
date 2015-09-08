@@ -6,21 +6,14 @@ import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.NetIPUtils;
 import eu.netide.lib.netip.OpenFlowMessage;
 import org.javatuples.Pair;
-import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
-import org.projectfloodlight.openflow.protocol.OFVersion;
-import org.projectfloodlight.openflow.protocol.match.Match;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Dictionary;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static eu.netide.core.caos.resolution.OFMatchConflict.Type.Same;
 import static org.projectfloodlight.openflow.protocol.OFType.FLOW_MOD;
 
 /**
@@ -116,9 +109,16 @@ public class DefaultOFConflictResolver implements IConflictResolver {
      * @return The result of the resolution.
      */
     private ResolutionResult resolveAuto(Message[] messages, PriorityInfo priorities) {
-        Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
         RuleWorkingSet workingSet = new RuleWorkingSet(Arrays.stream(messages).map(m -> (OpenFlowMessage) NetIPUtils.ConcretizeMessage(m)));
+
+        // If the messages are not flow mods, we cannot do anything
+        if (!workingSet.getMessages().allMatch(m -> m.getOfMessage().getType() == FLOW_MOD)) {
+            throw new UnsupportedOperationException("Can only automatically merge FLOW_MOD messages.");
+        }
+
+        Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
         boolean hasOptimized = true;
+        List<Pair<OpenFlowMessage, OpenFlowMessage>> processedPairs = new ArrayList<>();
         while (hasOptimized) {
             hasOptimized = false;
             RuleWorkingSet newWorkingSet = new RuleWorkingSet();
@@ -126,79 +126,54 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                 OpenFlowMessage m1 = pair.getValue0();
                 OpenFlowMessage m2 = pair.getValue1();
 
-                if (m1.getOfMessage().getType() != FLOW_MOD || m2.getOfMessage().getType() != FLOW_MOD) {
-                    throw new UnsupportedOperationException("Can only automatically merge FLOW_MOD messages. Found '" + m1.getOfMessage().getType().name() + "' and '" + m2.getOfMessage().getType().name() + "'.");
-                }
+                // if this pair was already processed, skip it
+                if (processedPairs.stream().anyMatch(p -> p.getValue0().equals(m1) && p.getValue1().equals(m2)))
+                    continue;
 
                 List<OFMatchConflict> conflicts = ResolutionUtils.getMatchConflicts(m1, m2, fM(m1).getMatch(), fM(m2).getMatch()).collect(Collectors.toList());
                 if (conflicts.size() == 0) {
                     // no conflicts for these two messages -> take both to the next round
-                    newWorkingSet.addDistinct(m1);
-                    newWorkingSet.addDistinct(m2);
+                    workingSet.getMessages().forEach(newWorkingSet::addDistinct);
                     actions.put(m1, ResolutionAction.NONE);
                     actions.put(m2, ResolutionAction.NONE);
+                    processedPairs.add(pair);
+                    hasOptimized = true;
+                    break;
                 } else {
-                    // there are conflicts -> merge both messages into one (replacing or combining)
-                    // when all match fields are equal, we replace the two rules by a new one that has all actions.
-                    // Otherwise, we just introduce a new rule for the combined case with all actions.
-                    boolean replacing = conflicts.stream().allMatch(c -> c.getType() == Same);
-                    Match.Builder matchBuilder = fM(m1).getMatch().createBuilder(); // start from m1 clone
-                    conflicts.forEach(c -> {
-                        // replace each conflicting field with the value of the exact message (message2)
-                        matchBuilder.setExact(c.getMatchField(), fM((OpenFlowMessage) c.getMessage2()).getMatch().get(c.getMatchField()));
-                    });
-                    // create new flowmod
-                    OFFlowMod flowMod = OFFactories.getFactory(OFVersion.OF_10).buildFlowModify()
-                            .setActions(Stream.concat(fM(m1).getActions().stream(), fM(m2).getActions().stream()).collect(Collectors.toList()))
-                            .setMatch(fM(m1).getMatch())
-                            .setPriority(Math.max(fM(m1).getPriority(), fM(m2).getPriority()) + 1).build();
-                    // TODO calculate priority, set remaining important fields (?), check OF version
-                    OpenFlowMessage newMessage = messageFromFlowMod(flowMod);
-                    // add to ruleset
-                    boolean added = newWorkingSet.addDistinctBasedOnMatch(newMessage);
-                    if (added) {
-                        log.debug("Introduced new " + (replacing ? "replacement" : "combination") + " rule for two flowMods");
-                        actions.put(newMessage, replacing ? ResolutionAction.CREATED_AUTO_REPLACEMENT : ResolutionAction.CREATED_AUTO_COMBINATION);
-                        actions.put(m1, replacing ? ResolutionAction.REPLACED_AUTO : ResolutionAction.NONE);
-                        actions.put(m2, replacing ? ResolutionAction.REPLACED_AUTO : ResolutionAction.NONE);
-                        hasOptimized = true;
-                        if (!replacing) {
-                            newWorkingSet.addDistinct(m1);
-                            newWorkingSet.addDistinct(m2);
-                        }
-                    } else {
-                        if (priorities == null) {
-                            // fallback impossible if priorities are missing
-                            throw new IllegalStateException("Unable to introduce required " + (replacing ? "replacement" : "combination") + " rule (Missing dependencies for fallback).");
-                        } else {
-                            // priority-based fallback (higher priority wins by either getting promoted or replacing the other)
-                            log.warn("Unable to introduce " + (replacing ? "replacement" : "combination") + " rule. Trying priority fallback.");
-                            OpenFlowMessage promoted = null;
-                            OpenFlowMessage other = null;
-                            if (priorities.getPriority(m1.getHeader().getModuleId()) > priorities.getPriority(m1.getHeader().getModuleId())) {
-                                if (!replacing)
-                                    m1.setOfMessage(fM(m1).createBuilder().setPriority(Math.max(fM(m1).getPriority(), fM(m2).getPriority()) + 1).build());
-                                promoted = m1;
-                                other = m2;
+                    // Generate a candidate combination flowmod
+                    OFFlowMod candidate = ResolutionUtils.generateCandidate(fM(m1), fM(m2));
+                    OpenFlowMessage candidateMessage = ResolutionUtils.messageFromFlowMod(candidate);
 
-                            } else if (priorities.getPriority(m1.getHeader().getModuleId()) < priorities.getPriority(m1.getHeader().getModuleId())) {
-                                if (!replacing)
-                                    m2.setOfMessage(fM(m2).createBuilder().setPriority(Math.max(fM(m1).getPriority(), fM(m2).getPriority()) + 1).build());
-                                promoted = m2;
-                                other = m1;
-                            } else {
-                                throw new IllegalStateException("Unable to introduce required " + (replacing ? "replacement" : "combination") + " rule (Insufficient dependencies for fallback).");
-                            }
-                            newWorkingSet.addDistinct(promoted);
-                            if (!replacing)
-                                newWorkingSet.addDistinct(other);
-                            actions.put(promoted, replacing ? ResolutionAction.NONE : ResolutionAction.PROMOTED_AUTO);
-                            actions.put(other, replacing ? ResolutionAction.REPLACED_AUTO : ResolutionAction.NONE);
-                            log.debug("Successfully used priority fallback. One rule promoted.");
-                        }
+                    // Check candidate applicability
+                    if (ResolutionUtils.areEquivalentMatches(fM(m1).getMatch(), fM(m2).getMatch())) {
+                        // m1 == m2 -> candidate represents combination, can replace both
+                        actions.put(m1, ResolutionAction.REPLACED_AUTO);
+                        actions.put(m2, ResolutionAction.REPLACED_AUTO);
+                        actions.put(candidateMessage, ResolutionAction.CREATED_AUTO_REPLACEMENT);
+                        newWorkingSet.addDistinct(candidateMessage);
+                        workingSet.getMessages().forEach(m -> {
+                            if (!m.equals(m1) && !m.equals(m2))
+                                newWorkingSet.addDistinct(m);
+                        });
+                        hasOptimized = true;
+                        break;
+                    } else if (ResolutionUtils.areEquivalent(candidate, fM(m1)) || ResolutionUtils.areEquivalent(candidate, fM(m2))) {// check whether candidate is equivalent to existing rule
+                        // don't introduce candidate, keep m1,m2
+                        actions.put(m1, ResolutionAction.NONE);
+                        actions.put(m2, ResolutionAction.NONE);
+                        workingSet.getMessages().forEach(newWorkingSet::addDistinct);
+                        processedPairs.add(pair);
+                        hasOptimized = true;
+                        break;
+                    } else {
+                        newWorkingSet.addDistinct(candidateMessage);
+                        actions.put(candidateMessage, ResolutionAction.CREATED_AUTO_COMBINATION);
+                        workingSet.getMessages().forEach(newWorkingSet::addDistinct);
+                        processedPairs.add(pair);
+                        hasOptimized = true;
+                        break;
                     }
                 }
-
             }
             if (hasOptimized)
                 workingSet = newWorkingSet;
@@ -214,23 +189,6 @@ public class DefaultOFConflictResolver implements IConflictResolver {
      */
     private OFFlowMod fM(OpenFlowMessage message) {
         return (OFFlowMod) message.getOfMessage();
-    }
-
-    /**
-     * Creates a new OpenFlowMessage from a given OFFlowMod.
-     *
-     * @param flowMod The OFFlowMod to encapsule.
-     * @return An OpenFlowMessage wrapping the OFFlowMod.
-     */
-    private OpenFlowMessage messageFromFlowMod(OFFlowMod flowMod) {
-        OpenFlowMessage newMessage = new OpenFlowMessage();
-        newMessage.setOfMessage(flowMod);
-        newMessage.setHeader(NetIPUtils.StubHeaderFromPayload(newMessage.getPayload()));
-        newMessage.getHeader().setMessageType(MessageType.OPENFLOW);
-        newMessage.getHeader().setModuleId(0); // TODO core indicator module id
-        newMessage.getHeader().setDatapathId(0); // TODO calculate new value
-        newMessage.getHeader().setTransactionId(0); // TODO calculate new value
-        return newMessage;
     }
 
     /**

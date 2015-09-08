@@ -6,6 +6,7 @@ import org.projectfloodlight.openflow.protocol.OFFlowMod;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -32,8 +33,8 @@ public class RuleWorkingSet {
 
     public boolean addDistinctBasedOnMatch(OpenFlowMessage flowMod) {
         if (!this.messages.stream().anyMatch(m -> {
-            Stream<OFMatchConflict> conflicts = ResolutionUtils.getMatchConflicts(m, flowMod, fM(m).getMatch(), fM(flowMod).getMatch());
-            return conflicts.allMatch(c -> c.getType() == OFMatchConflict.Type.Same) & conflicts.count() == ResolutionUtils.MATCH_FIELDS_TO_CHECK.length;
+            List<OFMatchConflict> conflicts = ResolutionUtils.getMatchConflicts(m, flowMod, fM(m).getMatch(), fM(flowMod).getMatch()).collect(Collectors.toList());
+            return conflicts.stream().allMatch(c -> c.getType() == OFMatchConflict.Type.Same) & conflicts.size() == ResolutionUtils.MATCH_FIELDS_TO_CHECK.length;
         })) {
             this.messages.add(flowMod);
             return true;
@@ -51,5 +52,9 @@ public class RuleWorkingSet {
 
     public OpenFlowMessage[] toMessageArray() {
         return this.messages.stream().toArray(OpenFlowMessage[]::new);
+    }
+
+    public Stream<OpenFlowMessage> getMessages() {
+        return this.messages.stream();
     }
 }
