@@ -48,6 +48,12 @@
             <version>0.4.0.onos</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>onlab-misc</artifactId>
+            <version>1.2.1</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
