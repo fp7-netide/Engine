@@ -40,8 +40,9 @@ public class SequentialFlowExecutor implements IFlowExecutor {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow PacketIn message.");
         }
         OFPacketIn originalPacketIn = (OFPacketIn) originalMessage.getOfMessage();
-        log.debug("Starting sequential execution for original packetIn: " + originalPacketIn.toString());
+        log.debug("Starting sequential execution for original packetIn: " + originalPacketIn.toString() + ".");
         status.setCurrentMessage(originalMessage);
+        int i = 0;
         for (ExecutionFlowNode efn : nodes) {
             // request results
             ExecutionResult result = FlowNodeExecutors.getExecutor(efn).execute(efn, status, backendManager);
@@ -58,7 +59,9 @@ public class SequentialFlowExecutor implements IFlowExecutor {
             OpenFlowMessage newMessage = new OpenFlowMessage();
             newMessage.setOfMessage(newPacketIn);
             status.setCurrentMessage(newMessage);
+            i++;
         }
+        log.debug("Sequential execution finished for " + i + " nodes.");
         return status;
     }
 }

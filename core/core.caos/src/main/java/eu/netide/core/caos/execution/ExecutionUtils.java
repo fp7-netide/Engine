@@ -17,9 +17,19 @@ import java.util.List;
 import java.util.Optional;
 
 /**
+ * Class containing utility methods for executors.
+ *
  * Created by timvi on 08.09.2015.
  */
 public class ExecutionUtils {
+    /**
+     * Applies all applicable FlowMods from a list of given FlowMods to the given Ethernet packet. The wrapperMessage is necessary for FlowMods that match on the InPort.
+     *
+     * @param flowMods       The list of flowmods to apply.
+     * @param original       The packet to apply them to.
+     * @param wrapperMessage The PakcetIn message that caused this. Needed for FlowMods that match on the InPort.
+     * @return The modified packet.
+     */
     public static Ethernet applyFlowMods(final List<OFFlowMod> flowMods, Ethernet original, OFPacketIn wrapperMessage) {
         OFFlowMod matchingFlowMod = getFirstMatchingFlowMod(flowMods, original, wrapperMessage);
         Ethernet modified = (Ethernet) original.clone();
@@ -38,6 +48,14 @@ public class ExecutionUtils {
         return modified;
     }
 
+    /**
+     * Returns the applicable FlowMod with the highest priority from the given list of FlowMods.
+     *
+     * @param flowMods       The list of FlowMods to select from.
+     * @param packet         The packet to match against.
+     * @param wrapperMessage The original PacketIn message, required for matching against the InPort.
+     * @return The matching FlowMod with the highest priority.
+     */
     public static OFFlowMod getFirstMatchingFlowMod(List<OFFlowMod> flowMods, Ethernet packet, OFPacketIn wrapperMessage) {
         Optional<OFFlowMod> result = flowMods.stream().filter(fm -> Arrays.stream(ResolutionUtils.MATCH_FIELDS_TO_CHECK).allMatch(field -> {
             try {
@@ -45,10 +63,18 @@ public class ExecutionUtils {
             } catch (Exception ex) {
                 return false;
             }
-        })).findFirst();
+        })).sorted((first, second) -> Integer.compare(first.getPriority(), second.getPriority())).findFirst();
         return result.isPresent() ? result.get() : null;
     }
 
+    /**
+     * Gets an OFValue representation of the Matchfield from the given packet, effectively converting between IPacket and OpenFlowJ.
+     *
+     * @param packet         The packet to retrieve the values from.
+     * @param field          The field to get.
+     * @param wrapperMessage The original PacketIn message, necessary for the InPort value.
+     * @return The OFValue representing the value of the given field in the given packet.
+     */
     public static OFValueType<?> getValue(Ethernet packet, MatchField field, OFPacketIn wrapperMessage) {
         try {
             if (field == MatchField.IN_PORT) {
