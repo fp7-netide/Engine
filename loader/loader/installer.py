@@ -110,10 +110,16 @@ def do_server_install(pkg):
         tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/karaf", "mode": "ugo+rx"}})
         tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/start", "mode": "ugo+rx"}})
         tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/client", "mode": "ugo+rx"}})
-        # if util.spawn_logged(["bash", "./client", "-r", "2", "logout"]) == 1:
+        tasks.append({
+            "name": "Checking of Karaf is running",
+            "shell": "bash ./client -r 2 logout",
+            "args": {"chdir": "{{netide_karaf_assembly}}/bin"},
+            "ignore_errors": True,
+            "register": "karaf_running"})
         tasks.append({
             "name": "Starting Karaf",
             "shell": "bash ./start",
+            "when": "karaf_running.rc != 0",
             "args": { "chdir": "{{netide_karaf_assembly}}/bin" }})
         tasks.append({
             "name": "Adding NetIDE Maven Repo to Karaf",
