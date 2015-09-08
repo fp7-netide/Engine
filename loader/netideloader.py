@@ -100,33 +100,46 @@ def load_package(args):
         #   [X] Copy package to remote machine
         #   [X] Run `load' with --mode=appcontroller
         # [ ] Ping core about new composition
-        p = os.path.join("~", "karaf", "apache-karaf-4.0.0", "assemblies", "apache-karaf", "target", "assembly", "bin")
-        p = os.path.expanduser(p)
-        with util.Chdir(p):
-            if util.spawn_logged(["bash", "./client", "-r", "2", "logout"]) == 1:
-                util.spawn_logged(["bash", "./start"])
+
         with util.TempDir("netide-client-dispatch") as t:
             pkg = Package(args.package, t)
-            for c in pkg.get_clients():
-                ssh, scp = util.build_ssh_commands(c)
-                logging.debug("SSH {}".format(ssh))
-                logging.debug("SCP {}".format(scp))
-                logging.debug(c)
+            util.write_ansible_hosts(pkg.get_clients(), os.path.join(t, "ansible-hosts"))
 
-                dir = sp.check_output(ssh + ["mktemp", "-d"], stderr=sp.DEVNULL).strip().decode('utf-8')
-                logging.debug("Temp: {}".format(dir))
-                p = args.package
-                if os.path.isdir(p):
-                    p += "/"
-                util.spawn_logged(scp + [p, "{host}:{dir}".format(host=c[1], dir=dir)])
+            vars = {"netide_karaf_bin":
+                    "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0/assemblies/apache-karaf/target/assembly/bin"}
+            tasks = []
+            tasks.append({
+                "name": "checking if Karaf (for NetIDE core) is running",
+                "shell": "bash ./client -r 2 logout",
+                "args": {"chdir": "{{netide_karaf_bin}}"},
+                "ignore_errors": True,
+                "register": "karaf_running"})
+            tasks.append({
+                "name": "launching karaf (for NetIDE core)",
+                "shell": "bash ./start",
+                "args": {"chdir": "{{netide_karaf_bin}}"},
+                "when": "karaf_running.rc != 0"})
 
-                cmd = "cd ~/netide-loader; ./netideloader.py load --mode=appcontroller {}"
-                if os.path.isfile(args.package): # package in a zip file
-                    cmd = cmd.format(os.path.join(dir, args.package))
-                else:
-                    cmd = cmd.format(dir)
-                logging.debug("cmd: {}".format(cmd))
-                util.spawn_logged(ssh + [cmd])
+            ctasks = []
+            ctasks.append({
+                "shell": "mktemp -d",
+                "register": "tmpdir"})
+            src = os.path.join(os.getcwd(), args.package)
+            ctasks.append({
+                "copy": {
+                    "dest": "{{tmpdir.stdout}}",
+                    "src": src}})
+
+            ctasks.append({
+                "name": "loading package",
+                "shell": "nohup ./netideloader.py load --mode=appcontroller {{tmpdir.stdout}}/" + str(args.package),
+                "args": {"chdir": "~/netide-loader"}})
+
+            playbook = [{"hosts": "localhost", "tasks": tasks, "vars": vars}, {"hosts": "clients", "tasks": ctasks}]
+            with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
+                json.dump(playbook, ah, indent=2)
+            util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
+
             # XXX: [ ] Enable
             #      [ ] Use NetIDE message format
             if False:
