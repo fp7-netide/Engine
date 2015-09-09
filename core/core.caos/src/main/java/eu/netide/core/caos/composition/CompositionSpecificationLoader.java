@@ -4,7 +4,6 @@ package eu.netide.core.caos.composition;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.helpers.DefaultValidationEventHandler;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
@@ -22,7 +21,7 @@ public class CompositionSpecificationLoader {
     public static CompositionSpecification Load(String xml) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(CompositionSpecification.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
-        unmarshaller.setEventHandler(new DefaultValidationEventHandler());
+        //unmarshaller.setEventHandler(new DefaultValidationEventHandler()); // Use only for debugging - print validation erros to stdout
         return (CompositionSpecification) unmarshaller.unmarshal(new StringReader(xml));
     }
 }

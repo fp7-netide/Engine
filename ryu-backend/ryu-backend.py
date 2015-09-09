@@ -18,6 +18,8 @@ import random
 import binascii
 import time
 import ryu
+import asyncore
+import socket
 from ryu.base import app_manager
 from ryu.exception import RyuException
 from ryu.controller import mac_to_port
@@ -44,7 +46,7 @@ from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
-from ryu.netide.comm import *
+from ryu.netide.netip import *
 
 
 
@@ -69,16 +71,16 @@ class BackendChannel(asyncore.dispatcher):
     def handle_connect(self):
         #Initiate handshake with the server
         proto_data = NetIDEOps.netIDE_encode_handshake(NetIDEOps.NetIDE_supported_protocols)
-        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, 0, proto_data)
+        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
         print msg.encode("hex")
         self.send(msg)
 
 
 
     def handle_read(self):
-        header = self.recv(16)
+        header = self.recv(NetIDE_Header_Size)
         decoded_header = NetIDEOps.netIDE_decode_header(header)
-        message_length = decoded_header[2]
+        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = self.recv(message_length)
 
         message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
@@ -117,23 +119,23 @@ class BackendChannel(asyncore.dispatcher):
                         print "OF Protocol not supported"
                         self.close()
 
-                self.of_datapath = BackendDatapath(decoded_header[4], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[4]] = self.of_datapath
+                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
                 self.of_datapath.of_hello_handler()
 
         #If client has been previously connected and handshake has been made
         #Make sure to select the correct datapath to send the message to!
         else:
-            if decoded_header[4] not in self.client_info['datapaths']:
-                self.of_datapath = BackendDatapath(decoded_header[4], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[4]] = self.of_datapath
+            if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
+                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
                 self.of_datapath.of_hello_handler()
             else:
-                self.of_datapath = self.client_info['datapaths'][decoded_header[4]]
-                #print self.client_info['datapaths'][decoded_header[4]]
+                self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
+                #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
 
             with self.channel_lock:
-                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[1])
+                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[NetIDEOps.NetIDE_header['TYPE']])
                 if message_type == 'NETIDE_OPENFLOW':
                     #print decoded_header
                     self.of_datapath.handle_event(message_data)
@@ -209,7 +211,7 @@ class BackendDatapath(controller.Datapath):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, msg.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, msg.datapath.id, str(msg.buf))
         self.channel.send(msg_to_send)
         # LOG.debug('send_msg %s', msg)
         #print msg.buf
@@ -261,98 +263,6 @@ class RYUClient(app_manager.RyuApp):
         self.backend_channel = BackendChannel(__SERVER_IP__, __SERVER_PORT__, self)
         self.al = asyncore_loop()
         self.al.start()
-
-
-
-
-
-
-
-
-
-class NetIDEOps:
-
-    #Define the NetIDE Version
-    NetIDE_version = 0x01
-    #Define the NetIDE message types and codes
-    NetIDE_type = {
-        'NETIDE_HELLO'      : 0x01,
-        'NETIDE_ERROR'      : 0x02,
-        'NETIDE_OPENFLOW'   : 0x11,
-        'NETIDE_NETCONF'    : 0x12,
-        'NETIDE_OPFLEX'     : 0x13
-    }
-
-    #Define the supported switch control protocols we support and versios
-    #Should be determined by underlying network/switches??
-    #Protocol:
-    #0x11 = OpenFlow: versions - 0x01 = 1.0; 0x02 = 1.1; 0x03 = 1.2; 0x04 = 1.3; 0x05 = 1.4
-    #0x12 = NetConf: versions - 0x01 = RFC6241 of NetConf
-    #0x13 = OpFlex: versions - 0x00 = Version in development
-    NetIDE_supported_protocols = {
-        0x11    : {0x01, 0x02, 0x03, 0x04, 0x5},
-        0x12    : {0x01},
-        0x13    : {0x00},
-        0x14    : {0x01}
-    }
-
- #Encode a message in the NetIDE protocol format
-    @staticmethod
-    def netIDE_encode(type, xid, datapath_id, msg):
-        length = len(msg)
-        type_code = NetIDEOps.NetIDE_type[type]
-        #if no transaction id is given, generate a random one.
-        if xid is None:
-            xid = random.getrandbits(32)
-        values = (NetIDEOps.NetIDE_version, type_code, length, xid, datapath_id, msg)
-        packer = struct.Struct('!BBHIQ'+str(length)+'s')
-        packed_msg = packer.pack(*values)
-        return packed_msg
-
-    #Decode NetIDE header of a message (first 16 Bytes of the read message
-    @staticmethod
-    def netIDE_decode_header(raw_data):
-        unpacker = struct.Struct('!BBHIQ')
-        return unpacker.unpack(raw_data)
-
-    #Decode NetIDE messages received in binary format. Iput: Raw data and length of the encapsulated message
-    #Length can be retrieve by decoding the header first
-    #NEEDS TO BE CHANGED MAYBE?
-    @staticmethod
-    def netIDE_decode(raw_data, length):
-        unpacker = struct.Struct('!BBHIQ'+str(length)+'s')
-        return unpacker.unpack(raw_data)
-
-    #Encode the hello handshake message
-    @staticmethod
-    def netIDE_encode_handshake(protocols):
-
-        #Get count for number of supported protocols and versions
-        count = 0
-        values = []
-        for protocol in protocols.items():
-            for version in protocol[1]:
-                count += 1
-                values.append(protocol[0])
-                values.append(version)
-
-        packer = struct.Struct('!'+str(count*2)+'B')
-        return packer.pack(*values)
-
-
-    #Decode the hello handshake message and return tuple
-    @staticmethod
-    def netIDE_decode_handshake(raw_data, length):
-        packer = struct.Struct('!'+str(length)+'B')
-        unpacked = packer.unpack(raw_data)
-        return unpacked
-
-    #Return the key name from a value in a dictionary
-    @staticmethod
-    def key_by_value(dictionary, value):
-        for key, val in dictionary.iteritems():
-            if value == val:
-                return key
 
 
 

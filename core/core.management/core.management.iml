@@ -36,10 +36,8 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:4.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf:org.apache.karaf.util:4.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.felix:org.apache.felix.utils:1.8.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.jaas:org.apache.karaf.jaas.boot:4.0.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:3.0.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.felix:org.apache.felix.utils:1.6.0" level="project" />
     <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />

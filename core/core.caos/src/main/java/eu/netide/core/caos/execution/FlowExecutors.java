@@ -5,5 +5,8 @@ package eu.netide.core.caos.execution;
  */
 public class FlowExecutors {
 
+    /**
+     * The default flow executor for sequential flows.
+     */
     public static final IFlowExecutor SEQUENTIAL = new SequentialFlowExecutor();
 }

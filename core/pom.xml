@@ -15,7 +15,7 @@
         <module>core.management</module>
         <module>core.topology</module>
         <module>core.globalfib</module>
-
+        <module>core.logpub</module>
     </modules>
     <build>
         <pluginManagement>
@@ -46,8 +46,13 @@
                         </goals>
                         <configuration>
                             <artifacts>
-                                <artifact>
+                                <!--<artifact>
                                     <file>features.xml</file>
+                                    <type>xml</type>
+                                    <classifier>features</classifier>
+                                </artifact>-->
+                                <artifact>
+                                    <file>featuresv3.xml</file>
                                     <type>xml</type>
                                     <classifier>features</classifier>
                                 </artifact>

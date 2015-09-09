@@ -37,10 +37,16 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     private boolean correctlyConfigured = false;
 
 
+    /**
+     * Called by blueprint on startup.
+     */
     public void Start() {
         logger.debug("CompositionManager started.");
     }
 
+    /**
+     * Called by blueprint on shutdown.
+     */
     public void Stop() {
         logger.debug("CompositionManager stopped.");
     }
@@ -94,26 +100,56 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         }
     }
 
+    /**
+     * Sets the shim manager.
+     *
+     * @param manager the manager
+     */
     public void setShimManager(IShimManager manager) {
         shimManager = manager;
     }
 
+    /**
+     * Gets the shim manager.
+     *
+     * @return the shim manager
+     */
     public IShimManager getShimManager() {
         return shimManager;
     }
 
+    /**
+     * Sets the backend manager.
+     *
+     * @param manager the manager
+     */
     public void setBackendManager(IBackendManager manager) {
         backendManager = manager;
     }
 
+    /**
+     * Gets the backend manager.
+     *
+     * @return the backend manager
+     */
     public IBackendManager getBackendManager() {
         return backendManager;
     }
 
+    /**
+     * Gets the current composition specification as XML string.
+     *
+     * @return composition specification xml
+     */
     public String getCompositionSpecificationXml() {
         return compositionSpecificationXml;
     }
 
+    /**
+     * Sets the composition specification and triggers a reconfiguration if it was loaded successfully.
+     *
+     * @param compositionSpecificationXml The composition specification as XML string.
+     */
     public void setCompositionSpecificationXml(String compositionSpecificationXml) {
         this.compositionSpecificationXml = compositionSpecificationXml;
         try {
@@ -139,10 +175,20 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         }
     }
 
+    /**
+     * Gets the maximum wait time for module connections in seconds.
+     *
+     * @return The maximum wait time in seconds.
+     */
     public int getMaxModuleWaitSeconds() {
         return this.maxModuleWaitSeconds;
     }
 
+    /**
+     * Sets the maximum wait time for module connections in seconds.
+     *
+     * @param value The new maximum wait time in seconds.
+     */
     public void setMaxModuleWaitSeconds(int value) {
         this.maxModuleWaitSeconds = value;
     }

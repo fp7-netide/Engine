@@ -30,7 +30,7 @@ public class ZeroMQBasedManagementConnector implements IManagementConnector, Run
     public void Start() {
         context = ZMQ.context(1);
         thread = new Thread(this);
-        thread.setName("ZeroMQBasedManagementConnector Recieve Loop");
+        thread.setName("ZeroMQBasedManagementConnector Receive Loop");
         thread.start();
     }
 

@@ -62,6 +62,7 @@ public abstract class NetIPUtils {
     private static HelloMessage toHelloMessage(Message message) {
         if (message.getHeader().getMessageType() != MessageType.HELLO)
             throw new IllegalArgumentException("Can only convert HELLO messages");
+        if (message instanceof HelloMessage) return (HelloMessage) message;
         HelloMessage hm = new HelloMessage();
         hm.setHeader(message.getHeader());
         for (int i = 0; i < message.getPayload().length; i += 2) {
@@ -80,6 +81,7 @@ public abstract class NetIPUtils {
     private static ErrorMessage toErrorMessage(Message message) {
         if (message.getHeader().getMessageType() != MessageType.ERROR)
             throw new IllegalArgumentException("Can only convert ERROR messages");
+        if (message instanceof ErrorMessage) return (ErrorMessage) message;
         ErrorMessage em = new ErrorMessage();
         em.setHeader(message.getHeader());
         for (int i = 0; i < message.getPayload().length; i += 2) {
@@ -99,6 +101,7 @@ public abstract class NetIPUtils {
     private static OpenFlowMessage toOpenFlowMessage(Message message) throws OFParseError {
         if (message.getHeader().getMessageType() != MessageType.OPENFLOW)
             throw new IllegalArgumentException("Can only convert OPENFLOW messages");
+        if (message instanceof OpenFlowMessage) return (OpenFlowMessage) message;
         OpenFlowMessage ofm = new OpenFlowMessage();
         ofm.setHeader(message.getHeader());
         ofm.setOfMessage(OFFactories.getGenericReader().readFrom(new ByteBufferBackedChannelBuffer(ByteBuffer.wrap(message.payload))));
@@ -114,6 +117,7 @@ public abstract class NetIPUtils {
     private static NetconfMessage toNetconfMessage(Message message) {
         if (message.getHeader().getMessageType() != MessageType.NETCONF)
             throw new IllegalArgumentException("Can only convert NETCONF messages");
+        if (message instanceof NetconfMessage) return (NetconfMessage) message;
         NetconfMessage ncm = new NetconfMessage();
         ncm.setHeader(message.getHeader());
         ncm.setPayload(message.getPayload());
@@ -129,6 +133,7 @@ public abstract class NetIPUtils {
     private static OpFlexMessage toOpFlexMessage(Message message) {
         if (message.getHeader().getMessageType() != MessageType.OPFLEX)
             throw new IllegalArgumentException("Can only convert OPFLEX messages");
+        if (message instanceof OpFlexMessage) return (OpFlexMessage) message;
         OpFlexMessage ofm = new OpFlexMessage();
         ofm.setHeader(message.getHeader());
         ofm.setPayload(message.getPayload());
@@ -144,6 +149,7 @@ public abstract class NetIPUtils {
     private static ManagementMessage toManagementMessage(Message message) {
         if (message.getHeader().getMessageType() != MessageType.MANAGEMENT)
             throw new IllegalArgumentException("Can only convert MANAGEMENT messages");
+        if (message instanceof ManagementMessage) return (ManagementMessage) message;
         ManagementMessage ofm = new ManagementMessage();
         ofm.setHeader(message.getHeader());
         ofm.setPayloadString(new String(message.getPayload()));
