@@ -43,9 +43,16 @@ public class SequentialFlowExecutor implements IFlowExecutor {
         log.debug("Starting sequential execution for original packetIn: " + originalPacketIn.toString() + ".");
         status.setCurrentMessage(originalMessage);
         int i = 0;
+        int skipped = 0;
         for (ExecutionFlowNode efn : nodes) {
             // request results
             ExecutionResult result = FlowNodeExecutors.getExecutor(efn).execute(efn, status, backendManager);
+
+            if (result.equals(ExecutionResult.SKIPPED)) {
+                skipped++;
+                continue;
+            }
+
             // merge results
             Message[] newMessages = result.getMessagesToSend().toArray(Message[]::new);
             IConflictResolver resolver = ConflictResolvers.getMatchingResolver(newMessages);
@@ -61,7 +68,7 @@ public class SequentialFlowExecutor implements IFlowExecutor {
             status.setCurrentMessage(newMessage);
             i++;
         }
-        log.debug("Sequential execution finished for " + i + " nodes.");
+        log.debug("Sequential execution finished for " + i + " nodes (" + skipped + " skipped).");
         return status;
     }
 }

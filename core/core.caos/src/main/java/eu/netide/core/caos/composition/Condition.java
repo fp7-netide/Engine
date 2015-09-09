@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -15,12 +16,15 @@ import java.util.List;
 @XmlType(name = "Condition", namespace = "http://netide.eu/schemas/compositionspecification/v1")
 public class Condition {
 
+    public static final String UNDEFINED_STRING = "UNDEFINED";
+    public static final int UNDEFINED_INT = -1;
+
     protected List<Events> events; /* Trigger event */
-    protected String IN_PORT; /* Switch input port. */
+    protected int IN_PORT; /* Switch input port. */
     protected String ETH_DST; /* Ethernet destination address. */
     protected String ETH_SRC; /* Ethernet source address. */
     protected EthType ETH_TYPE; /* Ethernet frame type. */
-    protected String IP_PROTO; /* IP protocol. */
+    protected IpProtocol IP_PROTO; /* IP protocol. */
     protected String IPV4_SRC; /* IPv4 source address. */
     protected String IPV4_DST; /* IPv4 destination address. */
     protected int TCP_SRC; /* TCP source port. */
@@ -57,6 +61,24 @@ public class Condition {
     // TUNNEL_ID; /* Logical Port Metadata. */
     // IPV6_EXTHDR; /* IPv6 Extension Header pseudo-field */
 
+    public Condition() {
+        events = new ArrayList<>();
+        IN_PORT = UNDEFINED_INT;
+        ETH_TYPE = EthType.UNDEFINED;
+        ETH_SRC = UNDEFINED_STRING;
+        ETH_DST = UNDEFINED_STRING;
+        IP_PROTO = IpProtocol.HOPOPT;
+        IPV4_SRC = UNDEFINED_STRING;
+        IPV4_DST = UNDEFINED_STRING;
+        IPV6_SRC = UNDEFINED_STRING;
+        IPV6_DST = UNDEFINED_STRING;
+        TCP_SRC = UNDEFINED_INT;
+        TCP_DST = UNDEFINED_INT;
+        UDP_SRC = UNDEFINED_INT;
+        UDP_DST = UNDEFINED_INT;
+    }
+
+
     @XmlAttribute(name = "events")
     public List<Events> getEvents() {
         return this.events;
@@ -67,11 +89,11 @@ public class Condition {
     }
 
     @XmlAttribute(name = "inPort")
-    public String getIN_PORT() {
+    public int getIN_PORT() {
         return IN_PORT;
     }
 
-    public void setIN_PORT(String IN_PORT) {
+    public void setIN_PORT(int IN_PORT) {
         this.IN_PORT = IN_PORT;
     }
 
@@ -103,11 +125,11 @@ public class Condition {
     }
 
     @XmlAttribute(name = "ipProto")
-    public String getIP_PROTO() {
+    public IpProtocol getIP_PROTO() {
         return IP_PROTO;
     }
 
-    public void setIP_PROTO(String IP_PROTO) {
+    public void setIP_PROTO(IpProtocol IP_PROTO) {
         this.IP_PROTO = IP_PROTO;
     }
 

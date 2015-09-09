@@ -29,6 +29,12 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
 
         ModuleCall mc = (ModuleCall) node;
 
+        // check for conditions
+        if ((mc.getCallCondition() != null && !ConditionEvaluator.evaluate(mc.getCallCondition(), status)
+                || (mc.getModule().getCallCondition() != null && !ConditionEvaluator.evaluate(mc.getModule().getCallCondition(), status)))) {
+            return ExecutionResult.SKIPPED;
+        }
+
         MessageHeader header = new MessageHeader();
         header.setTransactionId(42); // TODO how to determine transaction IDs
         header.setDatapathId(1); // TODO how to determine datapath IDs

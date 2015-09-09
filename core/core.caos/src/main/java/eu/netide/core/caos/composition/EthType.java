@@ -7,6 +7,7 @@ import java.util.Optional;
  * Created by timvi on 31.08.2015.
  */
 public enum EthType {
+    UNDEFINED(0x0000), //special empty type
     IPv4(0x0800), // Internet Protocol version 4 (IPv4)
     ARP(0x0806), // Address Resolution Protocol (ARP)
     WAKE_ON_LAN(0x0842), // Wake-on-LAN[3]
@@ -57,7 +58,7 @@ public enum EthType {
         this.value = value;
     }
 
-    public EthType fromValue(int intValue) {
+    public static EthType fromValue(int intValue) {
         Optional<EthType> ethType = Arrays.stream(values()).filter(e -> e.value == intValue).findFirst();
         if (!ethType.isPresent()) throw new IllegalArgumentException("No EthType for value '" + intValue + "'.");
         return ethType.get();

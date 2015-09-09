@@ -13,6 +13,7 @@ import org.projectfloodlight.openflow.types.*;
 import org.projectfloodlight.openflow.types.MacAddress;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,13 +58,14 @@ public class ExecutionUtils {
      * @return The matching FlowMod with the highest priority.
      */
     public static OFFlowMod getFirstMatchingFlowMod(List<OFFlowMod> flowMods, Ethernet packet, OFPacketIn wrapperMessage) {
+        Comparator<OFFlowMod> comparator = (OFFlowMod first, OFFlowMod second) -> Integer.compare(first.getPriority(), second.getPriority());
         Optional<OFFlowMod> result = flowMods.stream().filter(fm -> Arrays.stream(ResolutionUtils.MATCH_FIELDS_TO_CHECK).allMatch(field -> {
             try {
                 return fm.getMatch().isFullyWildcarded(field) || getValue(packet, field, wrapperMessage).equals(fm.getMatch().get(field));
             } catch (Exception ex) {
                 return false;
             }
-        })).sorted((first, second) -> Integer.compare(first.getPriority(), second.getPriority())).findFirst();
+        })).sorted(comparator).findFirst();
         return result.isPresent() ? result.get() : null;
     }
 
