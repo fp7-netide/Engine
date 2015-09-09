@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.netide.core</groupId>
     <artifactId>core.caos</artifactId>
     <version>1.0.0.0</version>
     <packaging>bundle</packaging>
 
     <name>core.caos Bundle</name>
     <description>core.caos OSGi bundle project.</description>
-
+    <parent>
+        <groupId>eu.netide.core</groupId>
+        <artifactId>core</artifactId>
+        <version>1.0.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
     <dependencies>
         <dependency>
             <groupId>eu.netide.core</groupId>
@@ -67,16 +73,19 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}
+                        </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Bundle-Activator>eu.netide.core.caos.Activator</Bundle-Activator>
+                        <Bundle-Activator>eu.netide.core.caos.Activator
+                        </Bundle-Activator>
                         <Export-Package>
                             eu.netide.core.caos;version=${project.version},eu.netide.core.caos.composition;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip,org.slf4j
                         </Import-Package>
-                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Dependency>*;scope=compile|runtime
+                        </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
