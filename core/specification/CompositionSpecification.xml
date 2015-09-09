@@ -11,7 +11,7 @@
   </Modules>
   <Composition>
     <ModuleCall module="fw" allowVetoResult="true"/>
-    <ParallelCall mergePolicy="priority">
+    <ParallelCall resolutionPolicy="priority">
       <ModuleCall module="appA" priority="1"/>
       <ModuleCall module="appB" priority="2"/>
     </ParallelCall>
