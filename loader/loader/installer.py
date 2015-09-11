@@ -155,11 +155,6 @@ def do_server_install(pkg):
 def do_client_installs(pkgpath, dataroot):
     "Dispatches installation requests to client machines after gaining a foothold on them. Requires passwordless SSH access to \
     client machines and passwordless root via sudo on client machines"
-    # Feels like a worm...
-
-    # TODO:
-    # [ ] Monitor progress
-    # [ ] Concurrent launch on multiple client machines
 
     with util.TempDir("netide-client-installs") as t:
         pkg = Package(pkgpath, t)
