@@ -40,15 +40,16 @@ class TempDir(object):
     "Context manager for temporary directories"
     d = None
 
-    def __init__(self, prefix=""):
+    def __init__(self, prefix="", cleanup=True):
         self.p = prefix
+        self.c = cleanup
 
     def __enter__(self):
-        self.d = tempfile.mkdtemp(self.p)
+        self.d = tempfile.mkdtemp("-" + self.p)
         return self.d
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if self.d is None:
+        if self.d is None or not self.c:
             return
 
         shutil.rmtree(self.d, ignore_errors=True)
