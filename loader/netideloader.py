@@ -81,7 +81,8 @@ def load_package(args):
             if data.get("cksum", "") != p.cksum:
                 logging.debug("{} != {}".format(data.get("cksum", ""), p.cksum))
                 logging.error("Package changed since installation. Re-run `install' with this package.")
-                return 1
+                # XXX
+                # return 1
         try:
             pids = p.start(data.get("controllers", {}))
             logging.info(pids)
