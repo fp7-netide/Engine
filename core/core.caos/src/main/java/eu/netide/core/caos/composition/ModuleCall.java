@@ -48,4 +48,9 @@ public class ModuleCall extends ExecutionFlowNode {
     public void setPriority(int priority) {
         this.priority = priority;
     }
+
+    @Override
+    public String toString() {
+        return "ModuleCall [Module=" + module.toString() + "CallCondition=" + (callCondition == null ? "null" : callCondition.toString()) + ",Priority=" + priority + ",AllowVeto=" + allowVetoResult + "]";
+    }
 }

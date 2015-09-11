@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -24,6 +26,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
     private IShimConnector connector;
     private List<IShimMessageListener> shimMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
+    private ExecutorService pool = Executors.newCachedThreadPool();
 
     public void Start() {
         logger.info("ShimManager started.");
@@ -50,7 +53,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
         try {
             listenerLock.acquire();
             for (IShimMessageListener listener : shimMessageListeners) {
-                listener.OnShimMessage(message, originId);
+                pool.submit(() -> listener.OnShimMessage(message, originId));
             }
         } catch (InterruptedException e) {
             logger.error("", e);

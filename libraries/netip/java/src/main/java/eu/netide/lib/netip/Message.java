@@ -1,5 +1,7 @@
 package eu.netide.lib.netip;
 
+import java.util.Arrays;
+
 /**
  * Class representing a simple NetIP message. This also is the base class for concrete message classes.
  */
@@ -30,7 +32,7 @@ public class Message {
      * @return the header.
      */
     public MessageHeader getHeader() {
-        return header;
+        return this.header;
     }
 
     /**
@@ -49,7 +51,7 @@ public class Message {
      * @implNote This method has to ensure that the returned payload reflects the current state of any convenience fields!
      */
     public byte[] getPayload() {
-        return payload;
+        return this.payload;
     }
 
     /**
@@ -64,5 +66,10 @@ public class Message {
         System.arraycopy(header.toByteRepresentation(), 0, bytes, 0, MessageHeader.HEADER_BYTES);
         System.arraycopy(payload, 0, bytes, MessageHeader.HEADER_BYTES, payload.length);
         return bytes;
+    }
+
+    @Override
+    public String toString() {
+        return "Message [Header=" + header.toString() + ",Payload=" + Arrays.toString(getPayload()) + "]";
     }
 }

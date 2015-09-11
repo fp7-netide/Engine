@@ -73,11 +73,13 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
         msg.add(destinationId);
         msg.add("");
         msg.add(data);
+        logger.info("Sending to via relay to '" + destinationId + "'.");
         // relayed via control socket to prevent threading issues
         ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
         sendSocket.connect(CONTROL_ADDRESS);
         msg.send(sendSocket);
         sendSocket.close();
+        logger.info("Sent.");
         return true;
     }
 
@@ -90,35 +92,41 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
 
         ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
+        logger.info("ControlSocket bound to " + CONTROL_ADDRESS);
+        try {
+            ZMQ.Poller poller = new ZMQ.Poller(2);
+            poller.register(socket, ZMQ.Poller.POLLIN);
+            poller.register(controlSocket, ZMQ.Poller.POLLIN);
 
-        ZMQ.Poller poller = new ZMQ.Poller(2);
-        poller.register(socket, ZMQ.Poller.POLLIN);
-        poller.register(controlSocket, ZMQ.Poller.POLLIN);
+            while (!Thread.currentThread().isInterrupted()) {
+                poller.poll(10);
+                if (poller.pollin(0)) {
+                    ZMsg message = ZMsg.recvMsg(socket);
+                    String senderId = message.getFirst().toString();
+                    byte[] data = message.getLast().getData();
+                    logger.info("Data received from '" + senderId + "'.");
+                    if (senderId.equals("shim") && shimListener != null) {
+                        shimListener.OnDataReceived(data, senderId);
+                    } else if (backendListener != null) {
+                        backendListener.OnDataReceived(data, senderId);
+                    }
+                }
+                if (poller.pollin(1)) {
+                    ZMsg message = ZMsg.recvMsg(controlSocket);
 
-        while (!Thread.currentThread().isInterrupted()) {
-            poller.poll(10);
-            if (poller.pollin(0)) {
-                ZMsg message = ZMsg.recvMsg(socket);
-                String senderId = message.getFirst().toString();
-                byte[] data = message.getLast().getData();
-                if (senderId.equals("shim") && shimListener != null) {
-                    shimListener.OnDataReceived(data, senderId);
-                } else if (backendListener != null) {
-                    backendListener.OnDataReceived(data, senderId);
+                    if (message.getFirst().toString().equals(STOP_COMMAND)) {
+                        break;
+                    } else {
+                        message.send(socket);
+                    }
                 }
             }
-            if (poller.pollin(1)) {
-                ZMsg message = ZMsg.recvMsg(controlSocket);
-
-                if (message.getFirst().toString().equals(STOP_COMMAND)) {
-                    break;
-                } else {
-                    message.send(socket);
-                }
-            }
+        } catch (Exception ex) {
+            logger.error("Error in ZeroMQBasedConnector receive loop.", ex);
+        } finally {
+            socket.close();
+            controlSocket.close();
         }
-        socket.close();
-        controlSocket.close();
     }
 
     public void setPort(int port) {

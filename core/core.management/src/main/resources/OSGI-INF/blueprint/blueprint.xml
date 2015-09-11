@@ -21,6 +21,7 @@
           destroy-method="Stop"
           activation="eager">
         <property name="managementMessageListeners" ref="managementListeners"/>
+        <property name="connector" ref="connector"/>
     </bean>
 
     <reference-list id="managementListeners" interface="eu.netide.core.api.IManagementMessageListener"

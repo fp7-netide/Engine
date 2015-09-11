@@ -8,6 +8,7 @@ import eu.netide.core.caos.composition.ExecutionResult;
 import eu.netide.core.caos.composition.ModuleCall;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageHeader;
+import eu.netide.lib.netip.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,14 +37,16 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
         }
 
         MessageHeader header = new MessageHeader();
+        header.setMessageType(MessageType.OPENFLOW);
         header.setTransactionId(42); // TODO how to determine transaction IDs
         header.setDatapathId(1); // TODO how to determine datapath IDs
-        header.setModuleId(mc.hashCode()); // TODO get module id
-        
-        logger.debug("Sending Request...");
+        int moduleId = backendManager.getModuleId(mc.getModule().getId());
+        header.setModuleId(moduleId);
+
+        logger.info("Sending Request to module '" + moduleId + "'...");
         Message message = new Message(header, status.getCurrentMessage().getPayload());
         RequestResult result = backendManager.sendRequest(message);
-        logger.debug("Request returned.");
+        logger.info("Request returned from module '" + moduleId + "'.");
         ExecutionResult exresult = new ExecutionResult();
         for (Message m : result.getResultMessages())
             exresult.addMessageToSend(m);

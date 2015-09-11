@@ -2,6 +2,7 @@
 package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.*;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -23,4 +24,8 @@ public abstract class ExecutionFlowNodeContainer {
         return this.flowNodes;
     }
 
+    @Override
+    public String toString() {
+        return "ExecutionFlowNodeContainer [flowNodes={" + Arrays.toString(flowNodes.toArray()) + "}]";
+    }
 }

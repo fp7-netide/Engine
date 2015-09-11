@@ -49,12 +49,6 @@
             <version>6.9.4</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>openflowj</artifactId>
-            <version>0.3.9.oe</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -80,7 +74,9 @@
                         <Export-Package>
                             eu.netide.core.api;version=${project.version}
                         </Export-Package>
-                        <Import-Package>org.osgi.framework,eu.netide.lib.netip</Import-Package>
+                        <Import-Package>
+                            org.osgi.framework,eu.netide.lib.netip
+                        </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>

@@ -84,6 +84,7 @@ public class ZeroMQBasedManagementConnector implements IManagementConnector, Run
                 ZMsg message = ZMsg.recvMsg(socket);
                 String senderId = message.getFirst().toString();
                 byte[] data = message.getLast().getData();
+                logger.debug("Received data from '" + senderId + "': " + new String(data));
                 if (managementListener != null) {
                     managementListener.OnDataReceived(data, senderId);
                 }
@@ -113,5 +114,6 @@ public class ZeroMQBasedManagementConnector implements IManagementConnector, Run
     @Override
     public void RegisterManagementListener(IConnectorListener listener) {
         this.managementListener = listener;
+        logger.debug("Listener registered.");
     }
 }
