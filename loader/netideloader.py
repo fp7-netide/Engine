@@ -170,7 +170,7 @@ def list_controllers(args):
         with util.TempDir("netide-show") as t:
             pkg = Package(args.package, t)
             for c in pkg.get_clients():
-                ssh, _ = util.build_ssh_commands(c)
+                ssh = util.build_ssh_commands(c)
                 cmd = "cd ~/netide-loader; ./netideloader.py list --mode=appcontroller"
                 try:
                     data.update(json.loads(sp.check_output(ssh + [cmd], stderr=sp.DEVNULL).strip().decode('utf-8')))
@@ -219,7 +219,7 @@ def stop_controllers(args):
         with util.TempDir("netide-stop") as t:
             pkg = Package(args.package, t)
             for c in pkg.get_clients():
-                ssh, _ = util.build_ssh_commands(c)
+                ssh = util.build_ssh_commands(c)
                 logging.debug("SSH {}".format(ssh))
 
                 cmd = "cd ~/netide-loader; ./netideloader.py stop --mode=appcontroller"

@@ -58,38 +58,16 @@ def build_ssh_commands(c):
     # Tuple layout:
     # (name, sshhost, sshport, sshidentity)
 
-    # Let's see if we can use rsync instead of scp
-    use_rsync = True
-    try:
-        sp.check_output(["rsync"], stderr=sp.DEVNULL)
-    except sp.CalledProcessError:
-        # We can use rsync
-        pass
-    except FileNotFoundError:
-        # We have to use scp
-        use_rsync = False
-
     ssh = ["ssh"]
-    if use_rsync:
-        scp = ["rsync", "-a", "-H", "-A", "-X"]
-    else:
-        scp = ["scp", "-B", "-C", "-r"]
 
     if len(c) >= 3:
         ssh.extend(["-p", str(c[2])])
-        if not use_rsync:
-            scp.extend(["-P", str(c[2])])
     if len(c) >= 4:
         ssh.extend(["-i", str(c[3])])
-        if not use_rsync:
-            scp.extend(["-i", str(c[3])])
     ssh.extend(["-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile={}".format(tempfile.mktemp())]) # XXX
     ssh.append(c[1])
 
-    if use_rsync:
-        scp.extend(["-e", " ".join(ssh[:-1])])
-
-    return (ssh, scp)
+    return ssh
 
 def spawn_logged(cmd):
     p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.STDOUT)
