@@ -15,31 +15,44 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.system.rev130927.S
 import org.opendaylight.openflowjava.protocol.api.connection.ConnectionReadyListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZMQ;
+
+import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.MessageType;
+import eu.netide.lib.netip.NetIPConverter;
+import eu.netide.lib.netip.NetIPUtils;
+import eu.netide.lib.netip.OpenFlowMessage;
 
 
 public class ShimMessageListener implements OpenflowProtocolListener, SystemNotificationsListener, ConnectionReadyListener{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(ShimMessageListener.class);
-	private static ZMQ.Socket socket;
+	private static ZeroMQBaseConnector coreConnector;
 	
-	public ShimMessageListener(ZMQ.Socket socket){
-		this.socket = socket;
+	public ShimMessageListener(ZeroMQBaseConnector connector){
+		this.coreConnector = connector;
 	}
 	
-	
+	private void sendToCore(byte[] data){
+		Message message = new Message(NetIPUtils.StubHeaderFromPayload(data), data);
+		message.getHeader().setMessageType(MessageType.OPENFLOW);
+		message.getHeader().setDatapathId(0);
+		message.getHeader().setModuleId(0);
+		message.getHeader().setTransactionId(0);
+		coreConnector.SendData(message.toByteRepresentation());
+	}
 	
 	@Override
 	public void onEchoRequestMessage(EchoRequestMessage arg0) {
 		// TODO Auto-generated method stub
 		LOG.info("SHIM Message received: " + arg0.toString());
-		socket.send(arg0.getData());
+		sendToCore(arg0.getData());
 	}
 
 	@Override
 	public void onErrorMessage(ErrorMessage arg0) {
 		// TODO Auto-generated method stub
 		LOG.info("SHIM Message received: " + arg0.toString());
+		sendToCore(arg0.getData());
 	}
 
 	@Override
@@ -70,6 +83,7 @@ public class ShimMessageListener implements OpenflowProtocolListener, SystemNoti
 	public void onPacketInMessage(PacketInMessage arg0) {
 		// TODO Auto-generated method stub
 		LOG.info("SHIM Message received: " + arg0.toString());
+		sendToCore(arg0.getData());
 	}
 
 	@Override

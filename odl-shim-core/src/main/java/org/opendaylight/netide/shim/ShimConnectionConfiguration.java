@@ -18,7 +18,7 @@ public class ShimConnectionConfiguration implements ConnectionConfiguration{
 		InetAddress addr = null;
 		
 		try {
-			addr = InetAddress.getByName("0.0.0.0");
+			addr = InetAddress.getByName("127.0.0.1");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
