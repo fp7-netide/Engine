@@ -30,15 +30,14 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
-    <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.onosproject:openflowj:0.4.0.onos" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.guava:guava:17.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
+    <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />

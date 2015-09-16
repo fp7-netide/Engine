@@ -11,7 +11,7 @@
         <property name="shimMessageListeners" ref="listeners"/>
     </bean>
 
-    <bean id="shimConnector" class="eu.netide.core.shimconnectivity.ZeroMQBasedShimConnector"
+    <bean id="shimConnector" class="eu.netide.core.globalfib.ShimListener"
           init-method="Start"
           destroy-method="Stop">
         <property name="port" value="${port}"/>

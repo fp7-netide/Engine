@@ -18,15 +18,14 @@
         <processorPath useClasspath="true" />
       </profile>
       <profile default="false" name="Annotation profile for core.api" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
-        <module name="core.api" />
       </profile>
       <profile default="false" name="Annotation profile for core.caos" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="core.caos" />
@@ -39,8 +38,8 @@
         <module name="core.shimconnectivity" />
       </profile>
       <profile default="false" name="Annotation profile for core.management" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="core.management" />
@@ -52,15 +51,15 @@
         <processorPath useClasspath="true" />
       </profile>
       <profile default="false" name="Annotation profile for core.connectivity" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="core.connectivity" />
       </profile>
       <profile default="false" name="Annotation profile for core.logpub" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="core.logpub" />
@@ -73,11 +72,18 @@
         <module name="demo-shim" />
       </profile>
       <profile default="false" name="Annotation profile for demo" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="demo" />
+      </profile>
+      <profile default="false" name="Annotation profile for core.globalfib" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="core.globalfib" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
@@ -86,6 +92,7 @@
       <module name="core.backendconnectivity" target="1.8" />
       <module name="core.caos" target="1.8" />
       <module name="core.connectivity" target="1.8" />
+      <module name="core.globalfib" target="1.8" />
       <module name="core.logpub" target="1.8" />
       <module name="core.management" target="1.8" />
       <module name="core.shimconnectivity" target="1.8" />
@@ -94,6 +101,13 @@
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core.api" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core.caos" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core.globalfib" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/core.topology" charset="UTF-8" />
+  </component>
   <component name="EntryPointsManager">
     <entry_points version="2.0" />
   </component>
@@ -126,11 +140,13 @@
         <option value="$PROJECT_DIR$/core.shimconnectivity/pom.xml" />
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/demo/pom.xml" />
+        <option value="$PROJECT_DIR$/core.globalfib/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/core.backendconnectivity/pom.xml" />
+        <option value="$PROJECT_DIR$/core.topology/pom.xml" />
       </set>
     </option>
   </component>
@@ -153,6 +169,7 @@
       <module fileurl="file://$PROJECT_DIR$/core.api/core.api.iml" filepath="$PROJECT_DIR$/core.api/core.api.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.caos/core.caos.iml" filepath="$PROJECT_DIR$/core.caos/core.caos.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.connectivity/core.connectivity.iml" filepath="$PROJECT_DIR$/core.connectivity/core.connectivity.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core.globalfib/core.globalfib.iml" filepath="$PROJECT_DIR$/core.globalfib/core.globalfib.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.logpub/core.logpub.iml" filepath="$PROJECT_DIR$/core.logpub/core.logpub.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.management/core.management.iml" filepath="$PROJECT_DIR$/core.management/core.management.iml" />
       <module fileurl="file://$PROJECT_DIR$/demo/demo.iml" filepath="$PROJECT_DIR$/demo/demo.iml" />
@@ -347,6 +364,17 @@
         <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/2.6/commons-lang-2.6-sources.jar!/" />
       </SOURCES>
     </library>
+    <library name="Maven: eu.netide.core:core.topology:1.0.0.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.topology/1.0.0.0/core.topology-1.0.0.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.topology/1.0.0.0/core.topology-1.0.0.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.topology/1.0.0.0/core.topology-1.0.0.0-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: eu.netide.lib:netip:1.0.0.0">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/eu/netide/lib/netip/1.0.0.0/netip-1.0.0.0.jar!/" />
@@ -477,6 +505,17 @@
       </JAVADOC>
       <SOURCES>
         <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-misc/1.2.1/onlab-misc-1.2.1-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.onosproject:onlab-misc:1.2.2">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-misc/1.2.2/onlab-misc-1.2.2.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-misc/1.2.2/onlab-misc-1.2.2-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-misc/1.2.2/onlab-misc-1.2.2-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Maven: org.onosproject:openflowj:0.4.0.onos">
