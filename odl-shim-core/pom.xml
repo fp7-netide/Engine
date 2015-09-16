@@ -29,6 +29,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>0.3.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.openflowjava</groupId>
             <artifactId>openflow-protocol-impl</artifactId>
         </dependency>

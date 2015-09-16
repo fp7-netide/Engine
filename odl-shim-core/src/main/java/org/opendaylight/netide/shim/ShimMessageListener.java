@@ -15,15 +15,25 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.system.rev130927.S
 import org.opendaylight.openflowjava.protocol.api.connection.ConnectionReadyListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZMQ;
+
 
 public class ShimMessageListener implements OpenflowProtocolListener, SystemNotificationsListener, ConnectionReadyListener{
 	
 	private static final Logger LOG = LoggerFactory.getLogger(ShimMessageListener.class);
+	private static ZMQ.Socket socket;
+	
+	public ShimMessageListener(ZMQ.Socket socket){
+		this.socket = socket;
+	}
+	
+	
 	
 	@Override
 	public void onEchoRequestMessage(EchoRequestMessage arg0) {
 		// TODO Auto-generated method stub
 		LOG.info("SHIM Message received: " + arg0.toString());
+		socket.send(arg0.getData());
 	}
 
 	@Override

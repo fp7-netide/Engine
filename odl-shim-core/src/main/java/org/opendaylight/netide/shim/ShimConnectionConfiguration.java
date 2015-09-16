@@ -9,7 +9,7 @@ import org.opendaylight.openflowjava.protocol.api.connection.TlsConfiguration;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.config.rev140630.TransportProtocol;
 
 public class ShimConnectionConfiguration implements ConnectionConfiguration{
-	private String host = "127.0.0.1";
+	
 	private int port = 6633;
 	
 	@Override
@@ -18,7 +18,7 @@ public class ShimConnectionConfiguration implements ConnectionConfiguration{
 		InetAddress addr = null;
 		
 		try {
-			addr = InetAddress.getByName(host);
+			addr = InetAddress.getByName("0.0.0.0");
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
