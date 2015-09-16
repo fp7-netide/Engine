@@ -92,7 +92,7 @@
           <xs:sequence>
             <xs:element ref="tns:ModuleCall" maxOccurs="unbounded"/>
           </xs:sequence>
-          <xs:attribute name="mergePolicy" type="tns:MergePolicy"/>
+          <xs:attribute name="resolutionPolicy" type="tns:ResolutionPolicy"/>
         </xs:extension>
       </xs:complexContent>
     </xs:complexType>
@@ -102,22 +102,22 @@
     <xs:sequence/>
     <xs:attribute name="ethDst" type="xs:string"/>
     <xs:attribute name="ethSrc" type="xs:string"/>
-    <xs:attribute name="ethType" type="xs:string"/>
+    <xs:attribute name="ethType" type="tns:ethType"/>
     <xs:attribute name="events">
       <xs:simpleType>
         <xs:list itemType="tns:Events"/>
       </xs:simpleType>
     </xs:attribute>
-    <xs:attribute name="inPort" type="xs:string"/>
+    <xs:attribute name="inPort" type="xs:int"/>
     <xs:attribute name="ipv4Dst" type="xs:string"/>
     <xs:attribute name="ipv4Src" type="xs:string"/>
     <xs:attribute name="ipv6Dst" type="xs:string"/>
     <xs:attribute name="ipv6Src" type="xs:string"/>
-    <xs:attribute name="ipProto" type="xs:string"/>
-    <xs:attribute name="tcpDst" type="xs:string"/>
-    <xs:attribute name="tcpSrc" type="xs:string"/>
-    <xs:attribute name="udpDst" type="xs:string"/>
-    <xs:attribute name="udpSrc" type="xs:string"/>
+    <xs:attribute name="ipProto" type="tns:ipProtocol"/>
+    <xs:attribute name="tcpDst" type="xs:int"/>
+    <xs:attribute name="tcpSrc" type="xs:int"/>
+    <xs:attribute name="udpDst" type="xs:int"/>
+    <xs:attribute name="udpSrc" type="xs:int"/>
   </xs:complexType>
 
   <xs:complexType name="ExecutionFlowNode" abstract="true">
@@ -136,22 +136,220 @@
 
   <xs:simpleType name="Events">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="connectionDown"/>
-      <xs:enumeration value="flowMod"/>
-      <xs:enumeration value="portStatus"/>
-      <xs:enumeration value="packetIn"/>
-      <xs:enumeration value="errorIn"/>
-      <xs:enumeration value="connectionUp"/>
-      <xs:enumeration value="barrierIn"/>
       <xs:enumeration value="flowRemoved"/>
+      <xs:enumeration value="packetIn"/>
+      <xs:enumeration value="barrierIn"/>
+      <xs:enumeration value="connectionDown"/>
+      <xs:enumeration value="connectionUp"/>
+      <xs:enumeration value="flowMod"/>
+      <xs:enumeration value="errorIn"/>
+      <xs:enumeration value="portStatus"/>
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="MergePolicy">
+  <xs:simpleType name="ResolutionPolicy">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="priority"/>
       <xs:enumeration value="ignore"/>
+      <xs:enumeration value="priority"/>
+      <xs:enumeration value="auto"/>
     </xs:restriction>
   </xs:simpleType>
+
+
+  <xs:simpleType name="ethType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ETH_FLOW"/>
+      <xs:enumeration value="COBRANET"/>
+      <xs:enumeration value="UNDEFINED"/>
+      <xs:enumeration value="IPv6"/>
+      <xs:enumeration value="EAP_OVER_LAN"/>
+      <xs:enumeration value="JUMBO_FRAMES"/>
+      <xs:enumeration value="POWERLINK"/>
+      <xs:enumeration value="IPX_8137"/>
+      <xs:enumeration value="PPPoE_DISCOVERY"/>
+      <xs:enumeration value="TRILL"/>
+      <xs:enumeration value="BRIDGING"/>
+      <xs:enumeration value="SLOW_PROTOCOLS"/>
+      <xs:enumeration value="ARP"/>
+      <xs:enumeration value="HSR"/>
+      <xs:enumeration value="Q_IN_Q"/>
+      <xs:enumeration value="CONF_TEST"/>
+      <xs:enumeration value="RoCE"/>
+      <xs:enumeration value="APPLE_TALK_ARP"/>
+      <xs:enumeration value="REV_ARP"/>
+      <xs:enumeration value="FCoE"/>
+      <xs:enumeration value="WAKE_ON_LAN"/>
+      <xs:enumeration value="HOMEPLUG_AV"/>
+      <xs:enumeration value="APPLE_TALK"/>
+      <xs:enumeration value="PPPoE_SESSION"/>
+      <xs:enumeration value="HOMEPLUG_10"/>
+      <xs:enumeration value="IPX_8138"/>
+      <xs:enumeration value="MAC_SEC"/>
+      <xs:enumeration value="MPLS_MULTICAST"/>
+      <xs:enumeration value="CFM"/>
+      <xs:enumeration value="IPv4"/>
+      <xs:enumeration value="PTP"/>
+      <xs:enumeration value="PROFINET"/>
+      <xs:enumeration value="DECNET_IV"/>
+      <xs:enumeration value="ATA_OVER_ETH"/>
+      <xs:enumeration value="FCoE_INIT"/>
+      <xs:enumeration value="ETHERCAT"/>
+      <xs:enumeration value="QNX"/>
+      <xs:enumeration value="HYPERSCSI"/>
+      <xs:enumeration value="LLDP"/>
+      <xs:enumeration value="MRP"/>
+      <xs:enumeration value="VLAN_FRAME"/>
+      <xs:enumeration value="LLT"/>
+      <xs:enumeration value="SERCOS"/>
+      <xs:enumeration value="MPLS_UNICAST"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ipProtocol">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="EMCON"/>
+      <xs:enumeration value="SCPS"/>
+      <xs:enumeration value="IS_IS_OVER_IPv4"/>
+      <xs:enumeration value="RDP"/>
+      <xs:enumeration value="RSVP"/>
+      <xs:enumeration value="BNA"/>
+      <xs:enumeration value="MERIT_INP"/>
+      <xs:enumeration value="WB_EXPAK"/>
+      <xs:enumeration value="DCN_MEAS"/>
+      <xs:enumeration value="LOCAL_NET"/>
+      <xs:enumeration value="IPv6"/>
+      <xs:enumeration value="NSFNET_IGP"/>
+      <xs:enumeration value="VRRP"/>
+      <xs:enumeration value="LARP"/>
+      <xs:enumeration value="NVP_II"/>
+      <xs:enumeration value="MANET"/>
+      <xs:enumeration value="TLSP"/>
+      <xs:enumeration value="MFE_NSP"/>
+      <xs:enumeration value="COMPAQ_PEER"/>
+      <xs:enumeration value="TCF"/>
+      <xs:enumeration value="PTP"/>
+      <xs:enumeration value="IP_COMP"/>
+      <xs:enumeration value="SDRP"/>
+      <xs:enumeration value="IPv6_ICMP"/>
+      <xs:enumeration value="QNX"/>
+      <xs:enumeration value="ARIS"/>
+      <xs:enumeration value="UDP_LITE"/>
+      <xs:enumeration value="IPCV"/>
+      <xs:enumeration value="TTP_IPTM"/>
+      <xs:enumeration value="SECURE_VMTP"/>
+      <xs:enumeration value="IPv6_NO_NXT"/>
+      <xs:enumeration value="FIRE"/>
+      <xs:enumeration value="DCCP"/>
+      <xs:enumeration value="UTI"/>
+      <xs:enumeration value="HMP"/>
+      <xs:enumeration value="SAT_EXPAK"/>
+      <xs:enumeration value="GMTP"/>
+      <xs:enumeration value="ESP"/>
+      <xs:enumeration value="IATP"/>
+      <xs:enumeration value="ETHERIP"/>
+      <xs:enumeration value="ARGUS"/>
+      <xs:enumeration value="CHAOS"/>
+      <xs:enumeration value="WB_MON"/>
+      <xs:enumeration value="BR_SAT_MON"/>
+      <xs:enumeration value="IPX_IN_IP"/>
+      <xs:enumeration value="A_N"/>
+      <xs:enumeration value="IPv6_ROUTE"/>
+      <xs:enumeration value="LEAF_2"/>
+      <xs:enumeration value="CBT"/>
+      <xs:enumeration value="MICP"/>
+      <xs:enumeration value="SRP"/>
+      <xs:enumeration value="MHRP"/>
+      <xs:enumeration value="MOBILE"/>
+      <xs:enumeration value="TRUNK_1"/>
+      <xs:enumeration value="MUX"/>
+      <xs:enumeration value="TRUNK_2"/>
+      <xs:enumeration value="GRE"/>
+      <xs:enumeration value="SKIP"/>
+      <xs:enumeration value="IPIP"/>
+      <xs:enumeration value="IRTP"/>
+      <xs:enumeration value="DDX"/>
+      <xs:enumeration value="MPLS_IN_IP"/>
+      <xs:enumeration value="XTP"/>
+      <xs:enumeration value="VISA"/>
+      <xs:enumeration value="STP"/>
+      <xs:enumeration value="PGM"/>
+      <xs:enumeration value="PIM"/>
+      <xs:enumeration value="SUN_ND"/>
+      <xs:enumeration value="IPLT"/>
+      <xs:enumeration value="PVP"/>
+      <xs:enumeration value="KRYPTOLAN"/>
+      <xs:enumeration value="CFTP"/>
+      <xs:enumeration value="MTP"/>
+      <xs:enumeration value="CPHB"/>
+      <xs:enumeration value="IPv6_FRAG"/>
+      <xs:enumeration value="HOST_INTERNAL"/>
+      <xs:enumeration value="SWIPE"/>
+      <xs:enumeration value="PNNI"/>
+      <xs:enumeration value="XNS_IDP"/>
+      <xs:enumeration value="AX_25"/>
+      <xs:enumeration value="RVD"/>
+      <xs:enumeration value="I_NLSP"/>
+      <xs:enumeration value="PRIVATE_ENCRYPT"/>
+      <xs:enumeration value="GGP"/>
+      <xs:enumeration value="SM"/>
+      <xs:enumeration value="_3PC"/>
+      <xs:enumeration value="SHIM6"/>
+      <xs:enumeration value="IDPR_CMTP"/>
+      <xs:enumeration value="DIST_FS"/>
+      <xs:enumeration value="HOPOPT"/>
+      <xs:enumeration value="CRUDP"/>
+      <xs:enumeration value="IGP"/>
+      <xs:enumeration value="BBN_RCC_MON"/>
+      <xs:enumeration value="IDRP"/>
+      <xs:enumeration value="NETBLT"/>
+      <xs:enumeration value="VINES"/>
+      <xs:enumeration value="RSVP_E2E_IGNORE"/>
+      <xs:enumeration value="IPv6_OPTS"/>
+      <xs:enumeration value="IPPC"/>
+      <xs:enumeration value="Sprite_RPC"/>
+      <xs:enumeration value="L2TP"/>
+      <xs:enumeration value="ICMP"/>
+      <xs:enumeration value="SSCOPMCE"/>
+      <xs:enumeration value="FC"/>
+      <xs:enumeration value="WSN"/>
+      <xs:enumeration value="SPS"/>
+      <xs:enumeration value="XNET"/>
+      <xs:enumeration value="SAT_MON"/>
+      <xs:enumeration value="VMTP"/>
+      <xs:enumeration value="EGP"/>
+      <xs:enumeration value="TCP"/>
+      <xs:enumeration value="CPNX"/>
+      <xs:enumeration value="ST"/>
+      <xs:enumeration value="AH"/>
+      <xs:enumeration value="PUP"/>
+      <xs:enumeration value="SNP"/>
+      <xs:enumeration value="MOBILITY_HEADER"/>
+      <xs:enumeration value="TP_PP"/>
+      <xs:enumeration value="NARP"/>
+      <xs:enumeration value="SMP"/>
+      <xs:enumeration value="CRTP"/>
+      <xs:enumeration value="DDP"/>
+      <xs:enumeration value="SCC_SP"/>
+      <xs:enumeration value="IPv4"/>
+      <xs:enumeration value="SCTP"/>
+      <xs:enumeration value="HIP"/>
+      <xs:enumeration value="IGMP"/>
+      <xs:enumeration value="UDP"/>
+      <xs:enumeration value="ZERO_HOP"/>
+      <xs:enumeration value="EIGRP"/>
+      <xs:enumeration value="PRM"/>
+      <xs:enumeration value="DGP"/>
+      <xs:enumeration value="ISO_TP4"/>
+      <xs:enumeration value="ENCAP"/>
+      <xs:enumeration value="IFMP"/>
+      <xs:enumeration value="IL"/>
+      <xs:enumeration value="ISO_IP"/>
+      <xs:enumeration value="LEAF_1"/>
+      <xs:enumeration value="IDPR"/>
+      <xs:enumeration value="OSPF"/>
+      <xs:enumeration value="PIPE"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 

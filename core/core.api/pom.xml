@@ -74,6 +74,10 @@
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime
                         </Embed-Dependency>
+                        <Import-Package>
+                            org.osgi.framework,eu.netide.lib.netip
+                        </Import-Package>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>

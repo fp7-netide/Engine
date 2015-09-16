@@ -37,4 +37,9 @@ public class Branch extends ExecutionFlowNode {
     public void setElse(Else value) {
         this._else = value;
     }
+
+    @Override
+    public String toString() {
+        return "Branch [Condition=" + condition.toString() + ",If=" + _if.toString() + ",Else=" + _else.toString() + "]";
+    }
 }

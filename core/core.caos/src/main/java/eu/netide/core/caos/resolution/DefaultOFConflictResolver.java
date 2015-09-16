@@ -119,7 +119,11 @@ public class DefaultOFConflictResolver implements IConflictResolver {
         Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
         boolean hasOptimized = true;
         List<Pair<OpenFlowMessage, OpenFlowMessage>> processedPairs = new ArrayList<>();
+        int i = 0;
         while (hasOptimized) {
+            if (i % 100 == 0) {
+                log.info("Resolving in round " + i);
+            }
             hasOptimized = false;
             RuleWorkingSet newWorkingSet = new RuleWorkingSet();
             for (Pair<OpenFlowMessage, OpenFlowMessage> pair : workingSet.getPairs().collect(Collectors.toList())) {
@@ -150,6 +154,7 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                         actions.put(m1, ResolutionAction.REPLACED_AUTO);
                         actions.put(m2, ResolutionAction.REPLACED_AUTO);
                         actions.put(candidateMessage, ResolutionAction.CREATED_AUTO_REPLACEMENT);
+                        log.info("Introduced new replacement rule for messages '" + m1.toString() + "' and '" + m2.toString() + "'.");
                         newWorkingSet.addDistinct(candidateMessage);
                         workingSet.getMessages().forEach(m -> {
                             if (!m.equals(m1) && !m.equals(m2))
@@ -169,6 +174,7 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                         newWorkingSet.addDistinct(candidateMessage);
                         actions.put(candidateMessage, ResolutionAction.CREATED_AUTO_COMBINATION);
                         workingSet.getMessages().forEach(newWorkingSet::addDistinct);
+                        log.info("Introduced new combination rule for messages '" + m1.toString() + "' and '" + m2.toString() + "'.");
                         processedPairs.add(pair);
                         hasOptimized = true;
                         break;

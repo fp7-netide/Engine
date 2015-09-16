@@ -2,6 +2,7 @@
 package eu.netide.core.caos.composition;
 
 import javax.xml.bind.annotation.*;
+import java.util.Arrays;
 import java.util.List;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -32,5 +33,10 @@ public class ParallelCall extends ExecutionFlowNode {
 
     public void setResolutionPolicy(ResolutionPolicy value) {
         this.resolutionPolicy = value;
+    }
+
+    @Override
+    public String toString() {
+        return "ParallelCall [ResolutionPolicy=" + resolutionPolicy.name() + ",Modules={" + Arrays.toString(moduleCalls.toArray()) + "}]";
     }
 }

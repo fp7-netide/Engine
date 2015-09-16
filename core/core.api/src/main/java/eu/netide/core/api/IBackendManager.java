@@ -2,6 +2,7 @@ package eu.netide.core.api;
 
 import eu.netide.lib.netip.Message;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.Future;
 import java.util.stream.Stream;
 
@@ -63,5 +64,13 @@ public interface IBackendManager {
      * @param moduleId the module id.
      * @return The corresponding backend id.
      */
-    String getBackend(Integer moduleId);
+    String getBackend(Integer moduleId) throws NoSuchElementException;
+
+    /**
+     * Gets the moduleId from a given module name.
+     *
+     * @param moduleName The module name.
+     * @return The module id.
+     */
+    int getModuleId(String moduleName) throws NoSuchElementException;
 }

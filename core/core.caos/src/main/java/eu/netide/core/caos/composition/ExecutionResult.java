@@ -12,6 +12,9 @@ import java.util.stream.Stream;
  * Created by timvi on 07.08.2015.
  */
 public class ExecutionResult {
+
+    public static final ExecutionResult SKIPPED = new ExecutionResult();
+
     private List<Message> messagesToSend = new ArrayList<>();
 
     /**

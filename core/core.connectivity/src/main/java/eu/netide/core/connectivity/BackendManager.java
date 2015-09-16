@@ -29,16 +29,27 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private Semaphore listenerLock = new Semaphore(1);
     private List<String> backendIds = new ArrayList<>();
     private Dictionary<Integer, String> moduleToBackendMappings = new Hashtable<>();
-    private Dictionary<Integer, String> moduleToNameMappings = new Hashtable<>(); // TODO populate dictionary with correct values
+    private Dictionary<Integer, String> moduleToNameMappings = new Hashtable<>();
 
     private final ExecutorService pool = Executors.newCachedThreadPool();
-    private final Dictionary<Integer, RequestResult> locks = new Hashtable<>();
+    private final Dictionary<Integer, RequestResult> results = new Hashtable<>();
+    private final Dictionary<Integer, Semaphore> locks = new Hashtable<>();
+
+    // DEMO ONLY
+    private final Dictionary<Integer, String> demoMappings = new Hashtable<>();
 
     /**
      * Called by Apache Aries on startup (configured in blueprint.xml)
      */
     public void Start() {
         logger.debug("BackendManager started.");
+        // TODO populate dictionary with correct values
+        // ONLY FOR DEMO PURPOSES
+        demoMappings.put(1, "fw");
+        demoMappings.put(2, "lb");
+        demoMappings.put(3, "appA");
+        demoMappings.put(4, "appB");
+        demoMappings.put(5, "log");
     }
 
     /**
@@ -50,26 +61,31 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public boolean sendMessage(Message message) {
+        logger.info("Sending message '" + message.toString() + "' to backend '" + getBackend(message.getHeader().getModuleId()) + "'.");
         return connector.SendData(message.toByteRepresentation(), getBackend(message.getHeader().getModuleId()));
     }
 
     @Override
     public RequestResult sendRequest(Message message) {
         Integer id = message.getHeader().getModuleId();
-        if (locks.get(id) != null) {
+        if (results.get(id) != null) {
             throw new IllegalStateException("Still waiting for former request to finish.");
         }
         RequestResult result = new RequestResult(message);
-        locks.put(id, result);
+        Semaphore lock = new Semaphore(0);
+        results.put(id, result);
+        locks.put(id, lock);
         sendMessage(message);
 
         while (!result.isDone()) {
+            logger.info("Waiting for request with id '" + id + "' to complete...");
             try {
-                result.wait();
+                lock.acquire();
             } catch (InterruptedException e) {
                 logger.error("InterruptedException occurred while waiting for results", e);
             }
         }
+        results.remove(id);
         locks.remove(id);
         return result;
     }
@@ -99,6 +115,10 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return moduleToBackendMappings.get(moduleId);
     }
 
+    public int getModuleId(String moduleName) {
+        return Collections.list(moduleToNameMappings.keys()).stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
+    }
+
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message;
@@ -108,18 +128,25 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             logger.error("Unable to parse received data from '" + backendId + "' (" + Arrays.toString(data) + ").", ex);
             return;
         }
+        int id = message.getHeader().getModuleId();
 
-        RequestResult r = locks.get(message.getHeader().getModuleId());
-        if (r != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
+        logger.info("Data received from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'.");
+
+        RequestResult r = results.get(id);
+        Semaphore lock = locks.get(id);
+        logger.info("Result null? " + (r == null) + ", Lock null? " + (lock == null));
+        if (r != null && lock != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
             // Message belongs to former request
             if (message instanceof ManagementMessage) {
                 // check for finished execution
                 // TODO real check
                 r.signalIsDone((ManagementMessage) message);
-                r.notify();
+                lock.release();
+                logger.info("Data completes request (" + message.toString() + ").");
             } else {
                 // add to result
                 r.addResultMessage(message);
+                logger.info("Message adds to running request (" + message.toString() + ").");
             }
         } else {
             // Random message from backend
@@ -129,14 +156,19 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     backendIds.add(backendId);
                 }
                 moduleToBackendMappings.put(message.getHeader().getModuleId(), backendId);
+                // DEMO ONLY -> hello message signals that id is available
+                moduleToNameMappings.put(message.getHeader().getModuleId(), demoMappings.get(message.getHeader().getModuleId()));
+                logger.info("DEMO: Received HELLO from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'. Module '" + demoMappings.get(message.getHeader().getModuleId()) + "' now marked as available.");
                 // TODO handle message appropriately
             } else if (message instanceof ManagementMessage) {
+                logger.info("Received unrequested ManagementMessage: " + message.toString());
                 // TODO handle appropriately
             } else {
+                logger.info("Received unrequested Message: " + message.toString());
                 try {
                     listenerLock.acquire();
                     for (IBackendMessageListener listener : backendMessageListeners) {
-                        listener.OnBackendMessage(message, backendId);
+                        pool.submit(() -> listener.OnBackendMessage(message, backendId));
                     }
                 } catch (InterruptedException e) {
                     logger.error("", e);

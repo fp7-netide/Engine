@@ -11,8 +11,11 @@ import org.projectfloodlight.openflow.protocol.action.OFActionSetTpSrc;
 import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.*;
 import org.projectfloodlight.openflow.types.MacAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,6 +25,9 @@ import java.util.Optional;
  * Created by timvi on 08.09.2015.
  */
 public class ExecutionUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExecutionUtils.class);
+
     /**
      * Applies all applicable FlowMods from a list of given FlowMods to the given Ethernet packet. The wrapperMessage is necessary for FlowMods that match on the InPort.
      *
@@ -33,7 +39,8 @@ public class ExecutionUtils {
     public static Ethernet applyFlowMods(final List<OFFlowMod> flowMods, Ethernet original, OFPacketIn wrapperMessage) {
         OFFlowMod matchingFlowMod = getFirstMatchingFlowMod(flowMods, original, wrapperMessage);
         Ethernet modified = (Ethernet) original.clone();
-        while (matchingFlowMod != null) {
+        List<OFFlowMod> appliedFlowMods = new ArrayList<>();
+        while (matchingFlowMod != null && !appliedFlowMods.contains(matchingFlowMod)) {
             modified = (Ethernet) modified.clone();
             for (OFAction action : matchingFlowMod.getActions()) {
                 if (action.getType() == OFActionType.SET_TP_SRC) {
@@ -43,6 +50,7 @@ public class ExecutionUtils {
                 }
                 // TODO support more actions
             }
+            appliedFlowMods.add(matchingFlowMod);
             matchingFlowMod = getFirstMatchingFlowMod(flowMods, modified, wrapperMessage);
         }
         return modified;
@@ -57,14 +65,36 @@ public class ExecutionUtils {
      * @return The matching FlowMod with the highest priority.
      */
     public static OFFlowMod getFirstMatchingFlowMod(List<OFFlowMod> flowMods, Ethernet packet, OFPacketIn wrapperMessage) {
-        Optional<OFFlowMod> result = flowMods.stream().filter(fm -> Arrays.stream(ResolutionUtils.MATCH_FIELDS_TO_CHECK).allMatch(field -> {
-            try {
-                return fm.getMatch().isFullyWildcarded(field) || getValue(packet, field, wrapperMessage).equals(fm.getMatch().get(field));
-            } catch (Exception ex) {
-                return false;
+        try {
+            Comparator<OFFlowMod> comparator = (OFFlowMod first, OFFlowMod second) -> {
+                try {
+                    return Integer.compare(first.getPriority(), second.getPriority());
+                } catch (Throwable ex) {
+                    throw new RuntimeException(ex);
+                }
+            };
+            Optional<OFFlowMod> result = flowMods.stream()
+                    .filter(fm -> doesMatch(fm, packet, wrapperMessage))
+                    .sorted(comparator)
+                    .findFirst();
+            return result.isPresent() ? result.get() : null;
+        } catch (Throwable ex) {
+            logger.error("Error while finding matching flowmod.", ex);
+            return null;
+        }
+    }
+
+    private static boolean doesMatch(OFFlowMod flowMod, Ethernet packet, OFPacketIn wrapperMessage) {
+        try {
+            for (MatchField field : ResolutionUtils.MATCH_FIELDS_TO_CHECK) {
+                if (!flowMod.getMatch().isFullyWildcarded(field) && !getValue(packet, field, wrapperMessage).equals(flowMod.getMatch().get(field)))
+                    return false;
             }
-        })).sorted((first, second) -> Integer.compare(first.getPriority(), second.getPriority())).findFirst();
-        return result.isPresent() ? result.get() : null;
+            return true;
+        } catch (Throwable ex) {
+            logger.error("Exception while matching flowmod to packet.", ex);
+            return false;
+        }
     }
 
     /**
@@ -106,7 +136,7 @@ public class ExecutionUtils {
             } else {
                 throw new UnsupportedOperationException("Unknown field.");
             }
-        } catch (Exception ex) {
+        } catch (ClassCastException ex) {
             return TransportPort.NONE; // TODO check if this is a valid "matches nothing"
         }
     }

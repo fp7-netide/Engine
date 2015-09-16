@@ -1,18 +1,19 @@
 package eu.netide.core.caos.execution;
 
-import eu.netide.core.caos.composition.Condition;
-import eu.netide.core.caos.composition.Events;
-import eu.netide.core.caos.composition.ExecutionFlowStatus;
+import eu.netide.core.caos.composition.*;
+import eu.netide.core.caos.composition.EthType;
+import eu.netide.core.caos.composition.IpProtocol;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPUtils;
 import eu.netide.lib.netip.OpenFlowMessage;
+import org.onlab.packet.Ethernet;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
-import org.projectfloodlight.openflow.protocol.match.Match;
-import org.projectfloodlight.openflow.protocol.match.MatchField;
-import org.projectfloodlight.openflow.types.IPv4Address;
-import org.projectfloodlight.openflow.types.IPv6Address;
-import org.projectfloodlight.openflow.types.MacAddress;
-import org.projectfloodlight.openflow.types.TransportPort;
+import org.projectfloodlight.openflow.types.*;
+
+import static eu.netide.core.caos.composition.Condition.UNDEFINED_INT;
+import static eu.netide.core.caos.composition.Condition.UNDEFINED_STRING;
+import static eu.netide.core.caos.execution.ExecutionUtils.getValue;
+import static org.projectfloodlight.openflow.protocol.match.MatchField.*;
 
 /**
  * Class for evaluating conditions.
@@ -36,41 +37,43 @@ public class ConditionEvaluator {
         OpenFlowMessage openFlowMessage = (OpenFlowMessage) concreteMessage;
 
         Events event = Events.fromValue(openFlowMessage.getOfMessage().getType().name());
-        Match match;
-        if (!condition.getEvents().stream().anyMatch(ce -> ce == event))
-            return false;
-        switch (event) {
-            case PACKET_IN:
-                match = ((OFPacketIn) openFlowMessage.getOfMessage()).getMatch();
-                break;
-            default:
-                throw new UnsupportedOperationException("Unrecognized event type '" + openFlowMessage.getOfMessage().getType().name());
-        }
+        if (event != Events.PACKET_IN)
+            throw new UnsupportedOperationException("Can only evaluate on packetIn messages.");
+        // TODO support for other message types than PacketIn
 
+        if (!condition.getEvents().isEmpty() && !condition.getEvents().stream().anyMatch(ce -> ce == event))
+            return false;
 
-        if (!match.get(MatchField.IPV4_SRC).equals(IPv4Address.of(condition.getIPV4_SRC())))
+        OpenFlowMessage currentMessage = (OpenFlowMessage) status.getCurrentMessage();
+        OFPacketIn packetIn = (OFPacketIn) currentMessage.getOfMessage();
+
+        Ethernet ethernet = (Ethernet) new Ethernet().deserialize(packetIn.getData(), 0, packetIn.getData().length);
+
+        if (condition.getETH_TYPE() != EthType.UNDEFINED && condition.getETH_TYPE() != EthType.fromValue(ethernet.getEtherType()))
             return false;
-        if (!match.get(MatchField.IPV4_DST).equals(IPv4Address.of(condition.getIPV4_DST())))
+        if (!condition.getETH_SRC().equals(UNDEFINED_STRING) && MacAddress.of(condition.getETH_SRC()).equals(getValue(ethernet, ETH_SRC, null)))
             return false;
-        if (!match.get(MatchField.IPV6_SRC).equals(IPv6Address.of(condition.getIPV6_SRC())))
+        if (!condition.getETH_DST().equals(UNDEFINED_STRING) && MacAddress.of(condition.getETH_DST()).equals(getValue(ethernet, ETH_DST, null)))
             return false;
-        if (!match.get(MatchField.IPV6_DST).equals(IPv6Address.of(condition.getIPV6_DST())))
+        if (condition.getIP_PROTO() != IpProtocol.HOPOPT && condition.getIP_PROTO().toOFJIpProtocol().equals(getValue(ethernet, IP_PROTO, null)))
             return false;
-        if (!match.get(MatchField.ETH_SRC).equals(MacAddress.of(condition.getETH_SRC())))
+        if (condition.getIN_PORT() != UNDEFINED_INT && OFPort.of(condition.getIN_PORT()).equals(getValue(ethernet, IN_PORT, null)))
             return false;
-        if (!match.get(MatchField.ETH_DST).equals(MacAddress.of(condition.getETH_DST())))
+        if (!condition.getIPV4_SRC().equals(UNDEFINED_STRING) && IPv4Address.of(condition.getIPV4_SRC()).equals(getValue(ethernet, IPV4_SRC, null)))
             return false;
-        if (!match.get(MatchField.ETH_TYPE).equals(condition.getETH_TYPE().toOFJEthType()))
+        if (!condition.getIPV4_DST().equals(UNDEFINED_STRING) && IPv4Address.of(condition.getIPV4_DST()).equals(getValue(ethernet, IPV4_DST, null)))
             return false;
-        //if (!match.get(MatchField.IN_PORT).equals(condition.getIN_PORT())) // TODO handle OFJ ports
-        //  return false;
-        if (!match.get(MatchField.TCP_SRC).equals(TransportPort.of(condition.getTCP_SRC())))
+        if (!condition.getIPV6_SRC().equals(UNDEFINED_STRING) && IPv6Address.of(condition.getIPV6_SRC()).equals(getValue(ethernet, IPV6_SRC, null)))
             return false;
-        if (!match.get(MatchField.TCP_DST).equals(TransportPort.of(condition.getTCP_DST())))
+        if (!condition.getIPV4_DST().equals(UNDEFINED_STRING) && IPv6Address.of(condition.getIPV6_DST()).equals(getValue(ethernet, IPV6_DST, null)))
             return false;
-        if (!match.get(MatchField.UDP_SRC).equals(TransportPort.of(condition.getUDP_SRC())))
+        if (condition.getTCP_SRC() != UNDEFINED_INT && TransportPort.of(condition.getTCP_SRC()).equals(getValue(ethernet, TCP_SRC, null)))
             return false;
-        if (!match.get(MatchField.UDP_DST).equals(TransportPort.of(condition.getUDP_DST())))
+        if (condition.getTCP_DST() != UNDEFINED_INT && TransportPort.of(condition.getTCP_DST()).equals(getValue(ethernet, TCP_DST, null)))
+            return false;
+        if (condition.getUDP_SRC() != UNDEFINED_INT && TransportPort.of(condition.getUDP_SRC()).equals(getValue(ethernet, UDP_SRC, null)))
+            return false;
+        if (condition.getUDP_DST() != UNDEFINED_INT && TransportPort.of(condition.getUDP_DST()).equals(getValue(ethernet, UDP_DST, null)))
             return false;
 
         return true;

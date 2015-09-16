@@ -12,8 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * Implementation of ICompositionManager
@@ -23,6 +22,7 @@ import java.util.concurrent.TimeoutException;
 public class CompositionManager implements ICompositionManager, IShimMessageListener {
 
     private static final Logger logger = LoggerFactory.getLogger(CompositionManager.class);
+    private ExecutorService pool = Executors.newSingleThreadExecutor();
 
     // Settings
     private static String previousCompositionSpecificationXml = "";
@@ -34,7 +34,8 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     private IBackendManager backendManager;
     private CompositionSpecification compositionSpecification = new CompositionSpecification();
     private final Semaphore csLock = new Semaphore(1);
-    private boolean correctlyConfigured = false;
+    private volatile boolean correctlyConfigured = false;
+    private Future<?> reconfigurationFuture;
 
 
     /**
@@ -56,31 +57,46 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
      *
      * @throws TimeoutException Occurs when after maxModuleWaitSeconds not all required modules are connected
      */
-    private void Reconfigure() throws TimeoutException {
-        // wait for required modules to connect for at most maxModuleWaitSeconds
-        long modulesUnconnected = compositionSpecification.getModules().size();
-        int waitCount = 0;
-        do {
-            logger.info("Waiting for required modules to connect, " + modulesUnconnected + " left...");
-            modulesUnconnected = compositionSpecification.getModules().stream().filter(m -> backendManager.getModules().anyMatch(mn -> mn.equals(m.getId()))).count();
-            if (modulesUnconnected > 0) {
-                try {
-                    Thread.sleep(1000);
-                    waitCount++;
-                    if (waitCount >= maxModuleWaitSeconds) {
-                        throw new TimeoutException("Required modules did not connect.");
+    private void ReconfigureAsync() throws TimeoutException {
+        reconfigurationFuture = pool.submit(() -> {
+            try {
+                // wait for required modules to connect for at most maxModuleWaitSeconds
+                long modulesUnconnected = compositionSpecification.getModules().size();
+                logger.info("Waiting for required modules to connect, " + modulesUnconnected + " left...");
+                int waitCount = 0;
+                do {
+                    modulesUnconnected = compositionSpecification.getModules().stream().filter(m -> !backendManager.getModules().anyMatch(mn -> mn.equals(m.getId()))).count();
+                    if (modulesUnconnected > 0) {
+                        try {
+                            Thread.sleep(2000);
+                            waitCount++;
+                            if (waitCount % 10 == 0) {
+                                logger.info((maxModuleWaitSeconds - waitCount) + " seconds remaining for " + modulesUnconnected + " module(s) to connect...");
+                            }
+                            if (waitCount >= maxModuleWaitSeconds) {
+                                throw new TimeoutException("Required modules did not connect.");
+                            }
+                        } catch (InterruptedException e) {
+                            logger.error("Interrupted while waiting for required modules to connect.", e);
+                            return;
+                        } catch (TimeoutException e) {
+                            logger.error("Reconfiguration unsuccessful: timed out with " + modulesUnconnected + " unconnected modules.", e);
+                            return;
+                        }
                     }
-                } catch (InterruptedException e) {
-                    logger.error("Interrupted while waiting for required modules to connect.", e);
-                }
+                } while (modulesUnconnected > 0 && !Thread.interrupted());
+                correctlyConfigured = true;
+                logger.info("All required modules connected. Reconfiguration successful.");
+            } catch (Exception ex) {
+                logger.error("Error while reconfiguring.", ex);
+                correctlyConfigured = false;
             }
-        } while (modulesUnconnected > 0);
-        correctlyConfigured = true;
+        });
     }
 
     @Override
     public void OnShimMessage(Message message, String originId) {
-        logger.debug("CompositionManager received message from shim: " + new String(message.getPayload()));
+        logger.info("CompositionManager received message from shim: " + message.toString());
         try {
             csLock.acquire(); // can only handle when not reconfiguring
             if (correctlyConfigured) {
@@ -88,13 +104,14 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
 
                 status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition(), backendManager);
 
+                logger.info("Flow execution finished, sending " + status.getResultMessages().size() + " results to shim.");
                 // send resulting messages to shim
                 status.getResultMessages().forEach(shimManager::sendMessage);
             } else {
                 logger.error("Could not handle incoming message due to configuration error.", message);
             }
-        } catch (InterruptedException e) {
-            logger.error("InterruptedException occurred while handling shim message.", e);
+        } catch (Throwable e) {
+            logger.error("An exception occurred while handling shim message.", e);
         } finally {
             csLock.release();
         }
@@ -107,6 +124,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
      */
     public void setShimManager(IShimManager manager) {
         shimManager = manager;
+        logger.info("ShimManager set.");
     }
 
     /**
@@ -125,6 +143,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
      */
     public void setBackendManager(IBackendManager manager) {
         backendManager = manager;
+        logger.info("BackendManager set.");
     }
 
     /**
@@ -154,11 +173,16 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         this.compositionSpecificationXml = compositionSpecificationXml;
         try {
             csLock.acquire();
+            correctlyConfigured = false;
             this.compositionSpecification = CompositionSpecificationLoader.Load(this.compositionSpecificationXml);
             logger.info("Accepted new CompositionSpecification '" + this.compositionSpecificationXml + "'.");
             // Accepted specification can be used as fallback
             previousCompositionSpecificationXml = this.compositionSpecificationXml;
-            Reconfigure();
+            if (reconfigurationFuture != null) {
+                // abort running reconfiguration
+                reconfigurationFuture.cancel(true);
+            }
+            ReconfigureAsync();
         } catch (InterruptedException | JAXBException ex) {
             if (compositionSpecificationXml.trim().isEmpty()) {
                 // prevent stacktrace on empty specifications
@@ -168,10 +192,13 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             }
             logger.warn("Reusing previous specification '" + previousCompositionSpecificationXml + "'.");
             this.compositionSpecificationXml = previousCompositionSpecificationXml;
+            if (reconfigurationFuture == null)
+                correctlyConfigured = true;
         } catch (TimeoutException ex) {
             logger.error("TimeoutException occurred.", ex);
         } finally {
             csLock.release();
+            logger.info("Set composition finished.");
         }
     }
 

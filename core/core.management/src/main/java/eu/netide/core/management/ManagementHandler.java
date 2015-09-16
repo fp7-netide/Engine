@@ -17,6 +17,8 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 
 /**
@@ -31,6 +33,7 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
     private IManagementConnector connector;
     private List<IManagementMessageListener> managementMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
+    private ExecutorService pool = Executors.newCachedThreadPool();
 
     public void Start() throws IOException, MBeanException, MalformedObjectNameException {
         logger.info("ManagementHandler started.");
@@ -43,6 +46,7 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
     @Override
     public void OnDataReceived(byte[] data, String originId) {
         Message message;
+        logger.debug("Received message from '" + originId + "'.");
         try {
             message = NetIPConverter.parseConcreteMessage(data);
         } catch (Exception ex) {
@@ -51,9 +55,12 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
         }
         try {
             listenerLock.acquire();
+            int i = 0;
             for (IManagementMessageListener listener : managementMessageListeners) {
-                listener.OnManagementMessage((ManagementMessage) message);
+                pool.submit(() -> listener.OnManagementMessage((ManagementMessage) message));
+                i++;
             }
+            logger.debug("Notified " + i + " listeners.");
         } catch (InterruptedException e) {
             logger.error("", e);
         } finally {
@@ -62,6 +69,9 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
         // TODO handle configuration changes properly
         try {
             JSONObject mm = new JSONObject(new String(message.getPayload()));
+
+            logger.debug("Received JSON is:\r\n" + mm.toString(3));
+
             String command = mm.getString("command");
             JSONObject parameters = mm.optJSONObject("parameters");
 
