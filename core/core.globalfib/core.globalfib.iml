@@ -29,8 +29,8 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
-    <orderEntry type="library" name="Maven: org.javatuples:javatuples:1.2" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.core:core.topology:1.0.0.0" level="project" />
+    <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
+    <orderEntry type="module" module-name="core.topology" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.onosproject:openflowj:0.4.0.onos" level="project" />
@@ -54,5 +54,6 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.4.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.4.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.2" level="project" />
+    <orderEntry type="module" module-name="eu.netide.lib.netip" />
   </component>
 </module>

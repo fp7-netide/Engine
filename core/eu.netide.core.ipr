@@ -85,6 +85,13 @@
         <processorPath useClasspath="true" />
         <module name="core.globalfib" />
       </profile>
+      <profile default="false" name="Annotation profile for core.topology" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="core.topology" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="core" target="1.5" />
@@ -96,6 +103,7 @@
       <module name="core.logpub" target="1.8" />
       <module name="core.management" target="1.8" />
       <module name="core.shimconnectivity" target="1.8" />
+      <module name="core.topology" target="1.8" />
       <module name="demo" target="1.8" />
       <module name="demo-shim" target="1.8" />
     </bytecodeTargetLevel>
@@ -118,6 +126,7 @@
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.connectivity" />
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.logpub" />
     <file type="Osmorc" url="file://$PROJECT_DIR$/core.management" />
+    <file type="Osmorc" url="file://$PROJECT_DIR$/core.topology" />
   </component>
   <component name="InspectionProjectProfileManager">
     <profile version="1.0">
@@ -146,7 +155,6 @@
     <option name="ignoredFiles">
       <set>
         <option value="$PROJECT_DIR$/core.backendconnectivity/pom.xml" />
-        <option value="$PROJECT_DIR$/core.topology/pom.xml" />
       </set>
     </option>
   </component>
@@ -172,7 +180,9 @@
       <module fileurl="file://$PROJECT_DIR$/core.globalfib/core.globalfib.iml" filepath="$PROJECT_DIR$/core.globalfib/core.globalfib.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.logpub/core.logpub.iml" filepath="$PROJECT_DIR$/core.logpub/core.logpub.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.management/core.management.iml" filepath="$PROJECT_DIR$/core.management/core.management.iml" />
+      <module fileurl="file://$PROJECT_DIR$/core.topology/core.topology.iml" filepath="$PROJECT_DIR$/core.topology/core.topology.iml" />
       <module fileurl="file://$PROJECT_DIR$/demo/demo.iml" filepath="$PROJECT_DIR$/demo/demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" filepath="$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
@@ -364,17 +374,6 @@
         <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/2.6/commons-lang-2.6-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: eu.netide.core:core.topology:1.0.0.0">
-      <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.topology/1.0.0.0/core.topology-1.0.0.0.jar!/" />
-      </CLASSES>
-      <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.topology/1.0.0.0/core.topology-1.0.0.0-javadoc.jar!/" />
-      </JAVADOC>
-      <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/eu/netide/core/core.topology/1.0.0.0/core.topology-1.0.0.0-sources.jar!/" />
-      </SOURCES>
-    </library>
     <library name="Maven: eu.netide.lib:netip:1.0.0.0">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/eu/netide/lib/netip/1.0.0.0/netip-1.0.0.0.jar!/" />
@@ -441,6 +440,17 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.utils/1.6.0/org.apache.felix.utils-1.6.0-sources.jar!/" />
       </SOURCES>
     </library>
+    <library name="Maven: org.apache.felix:org.apache.felix.utils:1.8.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.utils/1.8.0/org.apache.felix.utils-1.8.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.utils/1.8.0/org.apache.felix.utils-1.8.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/felix/org.apache.felix.utils/1.8.0/org.apache.felix.utils-1.8.0-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:3.0.3">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/config/org.apache.karaf.config.core/3.0.3/org.apache.karaf.config.core-3.0.3.jar!/" />
@@ -450,6 +460,39 @@
       </JAVADOC>
       <SOURCES>
         <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/config/org.apache.karaf.config.core/3.0.3/org.apache.karaf.config.core-3.0.3-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:4.0.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/config/org.apache.karaf.config.core/4.0.0/org.apache.karaf.config.core-4.0.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/config/org.apache.karaf.config.core/4.0.0/org.apache.karaf.config.core-4.0.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/config/org.apache.karaf.config.core/4.0.0/org.apache.karaf.config.core-4.0.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.karaf.jaas:org.apache.karaf.jaas.boot:4.0.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/jaas/org.apache.karaf.jaas.boot/4.0.0/org.apache.karaf.jaas.boot-4.0.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/jaas/org.apache.karaf.jaas.boot/4.0.0/org.apache.karaf.jaas.boot-4.0.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/jaas/org.apache.karaf.jaas.boot/4.0.0/org.apache.karaf.jaas.boot-4.0.0-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.apache.karaf:org.apache.karaf.util:4.0.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/org.apache.karaf.util/4.0.0/org.apache.karaf.util-4.0.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/org.apache.karaf.util/4.0.0/org.apache.karaf.util-4.0.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/apache/karaf/org.apache.karaf.util/4.0.0/org.apache.karaf.util-4.0.0-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Maven: org.beanshell:bsh:2.0b4">

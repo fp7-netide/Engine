@@ -37,12 +37,6 @@
             <version>0.3.4</version>
             <scope>compile</scope>
         </dependency>
-        <dependency>
-            <groupId>eu.netide.lib</groupId>
-            <artifactId>netip</artifactId>
-            <version>1.0.0.0</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
