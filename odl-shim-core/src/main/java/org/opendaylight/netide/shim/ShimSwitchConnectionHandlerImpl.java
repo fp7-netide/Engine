@@ -7,6 +7,7 @@ import java.util.List;
 import org.opendaylight.openflowjava.protocol.api.connection.ConnectionAdapter;
 import org.opendaylight.openflowjava.protocol.api.connection.SwitchConnectionHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.protocol.rev130731.FlowModInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.protocol.rev130731.HelloInputBuilder;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +34,9 @@ public class ShimSwitchConnectionHandlerImpl implements SwitchConnectionHandler,
 
 	@Override
 	public void onSwitchConnected(ConnectionAdapter connectionAdapter) {
-		LOG.info("SHIM: on Switch connected");
+		LOG.info("SHIM: on Switch connected: " + connectionAdapter.getRemoteAddress().toString());
 		connectionAdapterList.add(connectionAdapter);
-		
-		ShimMessageListener listener = new ShimMessageListener(coreConnector);
+		ShimMessageListener listener = new ShimMessageListener(coreConnector, connectionAdapter);
 		connectionAdapter.setMessageListener(listener);
 		connectionAdapter.setSystemListener(listener);
 		connectionAdapter.setConnectionReadyListener(listener);

@@ -13,7 +13,7 @@ import eu.netide.lib.netip.NetIPConverter;
 public class ZeroMQBaseConnector implements Runnable {
 
     private static final String STOP_COMMAND = "Control.STOP";
-    private static final String CONTROL_ADDRESS = "inproc://ZeroMQConnectorControl";
+    private static final String CONTROL_ADDRESS = "inproc://ShimControllerQueue";
 
     private static final Logger logger = LoggerFactory.getLogger(ZeroMQBaseConnector.class);
 
@@ -73,7 +73,7 @@ public class ZeroMQBaseConnector implements Runnable {
         logger.info("ZeroMQBasedConnector started.");
         ZMQ.Socket socket = context.socket(ZMQ.DEALER);
         socket.setIdentity("shim".getBytes());
-        socket.bind("tcp://*:" + port);
+        socket.connect("tcp://localhost:" + port);
         logger.info("Listening on port " + port);
 
         ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
