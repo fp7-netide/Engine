@@ -50,4 +50,3 @@ You can avoid installing the json bundle if you copy .the jar (which is this one
 That should be everything. Now, when you create a new topology in mininet and ping between any of the nodes, you should be seeing things happening in the karaf console. 
 
 
-
