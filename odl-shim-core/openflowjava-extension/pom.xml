@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.opendaylight.openflowjava</groupId>
+    <artifactId>openflowjava-parent</artifactId>
+    <version>0.7.0-SNAPSHOT</version>
+    <relativePath>../parent</relativePath>
+  </parent>
+  <groupId>org.opendaylight.netide</groupId>
+  <artifactId>openflowjava-extension</artifactId>
+  <packaging>jar</packaging>
+  <name>NetIDE OpenFlowJava Extension</name>
+  <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Export-Package>
+                            org.opendaylight.openflowjava.protocol.impl.deserialization.factories;version=${project.version},org.opendaylight.openflowjava.protocol.impl.serialization.factories;version=${project.version}
+                        </Export-Package>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+    	<dependency>
+            <groupId>org.opendaylight.openflowjava</groupId>
+            <artifactId>openflow-protocol-impl</artifactId>
+        </dependency>
+    </dependencies>
+</project>

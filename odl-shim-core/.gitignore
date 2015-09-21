@@ -1,0 +1,48 @@
+.idea/
+*.iml
+dist
+**/logs
+products
+repository
+workspace
+*~
+MANIFEST.MF
+xtend-gen
+.externalToolBuilders
+maven-eclipse.xml
+
+# ignore Eclipse workspace files:
+.metadata
+.settings
+.project
+.classpath
+
+# ignore java compile time files:
+*.class
+out/
+bin/
+gen/
+target/
+target-android/
+**/target
+**/bin
+build/
+*.apk
+*.jar
+R.java
+*.dex
+*.dat
+*.lck
+*.ctrl
+
+# ignore temporary Linux files
+*.swp
+
+# ignore OSX temp files
+.DS_store
+# ignore thumbnails created by windows
+Thumbs.db
+
+# ignore intellij build files
+*.iws
+.idea

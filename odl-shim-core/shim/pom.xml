@@ -1,0 +1,44 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.opendaylight.openflowjava</groupId>
+    <artifactId>openflowjava-parent</artifactId>
+    <version>0.7.0-SNAPSHOT</version>
+    <relativePath>../parent</relativePath>
+  </parent>
+  <groupId>org.opendaylight.netide</groupId>
+  <artifactId>shim</artifactId>
+  <packaging>bundle</packaging>
+  <name>NetIDE Shim</name>
+  <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+    	<dependency>
+            <groupId>org.opendaylight.openflowjava</groupId>
+            <artifactId>openflow-protocol-impl</artifactId>
+        </dependency>
+        <dependency>
+      		<groupId>eu.netide.lib</groupId>
+      		<artifactId>netip</artifactId>
+      		<version>1.0.0.0</version>
+      		<scope>provided</scope>
+    	</dependency>
+    	<dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>0.3.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+        	<groupId>org.opendaylight.netide</groupId>
+        	<artifactId>openflowjava-extension</artifactId>
+        	<version>0.7.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+</project>
