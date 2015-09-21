@@ -47,13 +47,13 @@ public class ParallelCallNodeExecutor implements IFlowNodeExecutor {
             try {
                 return f.get();
             } catch (InterruptedException | ExecutionException e) {
-                logger.error("Unable to get result of ModuleCall", e); // TODO how to handle error properly
-                return null;
+                logger.error("Unable to get result of ModuleCall", e);
+                throw new RuntimeException("Unable to get result of ModuleCall", e);
             }
-        }).filter(er -> er != null).map(ExecutionResult::getMessagesToSend).flatMap(ms -> ms).toArray(Message[]::new);
+        }).flatMap(ExecutionResult::getMessagesToSend).toArray(Message[]::new);
 
         IConflictResolver resolver = ConflictResolvers.getMatchingResolver(results);
-        ResolutionResult resolutionResult = resolver.resolve(results, pc.getResolutionPolicy(), PriorityInfo.fromModuleCalls(pc.getModuleCalls()));
+        ResolutionResult resolutionResult = resolver.resolve(results, pc.getResolutionPolicy(), PriorityInfo.fromModuleCalls(pc.getModuleCalls(), backendManager));
         ExecutionResult executionResult = new ExecutionResult();
         Arrays.stream(resolutionResult.getResultingMessagesToSend()).forEach(executionResult::addMessageToSend);
         return executionResult;

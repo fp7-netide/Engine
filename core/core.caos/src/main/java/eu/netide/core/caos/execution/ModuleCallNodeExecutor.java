@@ -38,8 +38,8 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
 
         MessageHeader header = new MessageHeader();
         header.setMessageType(MessageType.OPENFLOW);
-        header.setTransactionId(42); // TODO how to determine transaction IDs
-        header.setDatapathId(1); // TODO how to determine datapath IDs
+        header.setTransactionId(status.getCurrentMessage().getHeader().getTransactionId());
+        header.setDatapathId(status.getCurrentMessage().getHeader().getDatapathId());
         int moduleId = backendManager.getModuleId(mc.getModule().getId());
         header.setModuleId(moduleId);
 

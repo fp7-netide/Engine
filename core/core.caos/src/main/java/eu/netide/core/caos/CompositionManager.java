@@ -102,11 +102,9 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             if (correctlyConfigured) {
                 ExecutionFlowStatus status = new ExecutionFlowStatus(message);
 
-                status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition(), backendManager);
+                FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), backendManager);
 
-                logger.info("Flow execution finished, sending " + status.getResultMessages().size() + " results to shim.");
-                // send resulting messages to shim
-                status.getResultMessages().forEach(shimManager::sendMessage);
+                logger.info("Flow execution finished.");
             } else {
                 logger.error("Could not handle incoming message due to configuration error.", message);
             }

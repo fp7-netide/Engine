@@ -25,8 +25,8 @@ public class BranchNodeExecutor implements IFlowNodeExecutor {
 
         Branch br = (Branch) node;
         ExecutionResult executionResult = new ExecutionResult();
-        ExecutionFlowStatus s = FlowExecutors.SEQUENTIAL.executeFlow(status, ConditionEvaluator.evaluate(br.getCondition(), status) ? br.getIf().getFlowNodes() : br.getElse().getFlowNodes(), backendManager);
-        s.getResultMessages().forEach(executionResult::addMessageToSend);
+        ExecutionFlowStatus s = FlowExecutors.SEQUENTIAL.executeFlow(status, ConditionEvaluator.evaluate(br.getCondition(), status) ? br.getIf().getFlowNodes().stream() : br.getElse().getFlowNodes().stream(), backendManager);
+        s.getResultMessages().values().stream().forEach(lst -> lst.stream().forEach(executionResult::addMessageToSend));
         return executionResult;
     }
 }

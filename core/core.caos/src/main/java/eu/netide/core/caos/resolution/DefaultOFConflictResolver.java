@@ -43,7 +43,7 @@ public class DefaultOFConflictResolver implements IConflictResolver {
     @Override
     public ResolutionResult resolve(Message[] existingMessages, Message[] newMessages, boolean preferExisting) {
         PriorityInfo priorities = new PriorityInfo(0);
-        for (Message message : existingMessages)
+        for (Message message : preferExisting ? existingMessages : newMessages)
             priorities.addInfo(message.getHeader().getModuleId(), 1);
         return resolvePriority(Stream.concat(Arrays.stream(existingMessages), Arrays.stream(newMessages)).toArray(Message[]::new), priorities);
     }

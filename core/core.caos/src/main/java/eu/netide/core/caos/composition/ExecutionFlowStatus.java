@@ -3,7 +3,9 @@ package eu.netide.core.caos.composition;
 import eu.netide.lib.netip.Message;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class representing the current status of an execution flow.
@@ -13,7 +15,7 @@ import java.util.List;
 public class ExecutionFlowStatus {
     private Message originalMessage;
     private Message currentMessage;
-    private List<Message> resultMessages;
+    private Map<Long, List<Message>> resultMessages;
 
     /**
      * Creates a new instance of the ExecutionFlowStatus class.
@@ -22,7 +24,8 @@ public class ExecutionFlowStatus {
      */
     public ExecutionFlowStatus(Message originalMessage) {
         this.originalMessage = originalMessage;
-        this.resultMessages = new ArrayList<>();
+        this.currentMessage = originalMessage;
+        this.resultMessages = new HashMap<>();
     }
 
     /**
@@ -46,7 +49,7 @@ public class ExecutionFlowStatus {
     /**
      * Sets the current message.
      *
-     * @param currentMessage The new current message, reflecting the state of execution up to this point.
+     * @param currentMessages The new set of current messages, reflecting the state of execution up to this point.
      */
     public void setCurrentMessage(Message currentMessage) {
         this.currentMessage = currentMessage;
@@ -57,7 +60,7 @@ public class ExecutionFlowStatus {
      *
      * @return The list of result messages.
      */
-    public List<Message> getResultMessages() {
+    public Map<Long, List<Message>> getResultMessages() {
         return resultMessages;
     }
 
@@ -66,7 +69,23 @@ public class ExecutionFlowStatus {
      *
      * @param resultMessages The new list of result messages.
      */
-    public void setResultMessages(List<Message> resultMessages) {
+    public void setResultMessages(Map<Long, List<Message>> resultMessages) {
         this.resultMessages = resultMessages;
+    }
+
+    /**
+     * Adds a new result message for the given datapath.
+     *
+     * @param datapathId The datapath ID.
+     * @param message    The message.
+     */
+    public void addResultMessage(long datapathId, Message message) {
+        if (resultMessages.containsKey(datapathId)) {
+            resultMessages.get(datapathId).add(message);
+        } else {
+            List<Message> lst = new ArrayList<>();
+            lst.add(message);
+            resultMessages.put(datapathId, lst);
+        }
     }
 }
