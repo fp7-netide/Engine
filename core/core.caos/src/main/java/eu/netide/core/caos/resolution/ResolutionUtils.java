@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import static eu.netide.core.caos.resolution.OFMatchConflict.Type.Same;
 import static org.projectfloodlight.openflow.protocol.OFFlowModCommand.DELETE;
 import static org.projectfloodlight.openflow.protocol.OFFlowModCommand.DELETE_STRICT;
+import static org.projectfloodlight.openflow.protocol.match.MatchField.*;
 
 /**
  * Class containing static utility methods for conflict resolution.
@@ -29,21 +30,25 @@ public class ResolutionUtils {
     /**
      * Contains all match fields that are checked when checking for e.g. equivalence.
      */
-    public static final MatchField[] MATCH_FIELDS_TO_CHECK = new MatchField[]{
-            MatchField.IPV4_SRC,
-            MatchField.IPV4_DST,
-            MatchField.IPV6_SRC,
-            MatchField.IPV6_DST,
-            MatchField.ETH_SRC,
-            MatchField.ETH_DST,
-            MatchField.IN_PORT,
-            MatchField.IP_PROTO,
-            MatchField.ETH_TYPE,
-            MatchField.TCP_SRC,
-            MatchField.TCP_DST,
-            MatchField.UDP_SRC,
-            MatchField.UDP_DST
-    };
+    public static final MatchField[] MATCH_FIELDS_TO_CHECK;
+
+    static {
+        MATCH_FIELDS_TO_CHECK = new MatchField[]{
+                IPV4_SRC,
+                IPV4_DST,
+                IPV6_SRC,
+                IPV6_DST,
+                ETH_SRC,
+                ETH_DST,
+                IN_PORT,
+                IP_PROTO,
+                ETH_TYPE,
+                TCP_SRC,
+                TCP_DST,
+                UDP_SRC,
+                UDP_DST
+        };
+    }
 
     /**
      * Gets a value indicating whether the given matches are equivalent. Matches are considered equivalent, if they expect the same values for each MatchField.

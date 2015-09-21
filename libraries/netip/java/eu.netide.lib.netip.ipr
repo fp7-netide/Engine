@@ -153,15 +153,15 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/javatuples/javatuples/1.2/javatuples-1.2-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="Maven: org.onosproject:openflowj:0.3.9.oe">
+    <library name="Maven: org.onosproject:openflowj:0.4.0.onos">
       <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos.jar!/" />
       </CLASSES>
       <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe-javadoc.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos-javadoc.jar!/" />
       </JAVADOC>
       <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe-sources.jar!/" />
+        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Maven: org.osgi:org.osgi.core:5.0.0">

@@ -62,4 +62,8 @@ public class Module {
         this.loaderIdentification = value;
     }
 
+    @Override
+    public String toString() {
+        return "Module [Name=" + id + ",loaderIdentification=" + loaderIdentification + ",CallCondition=" + (callCondition == null ? "null" : callCondition.toString()) + "]";
+    }
 }

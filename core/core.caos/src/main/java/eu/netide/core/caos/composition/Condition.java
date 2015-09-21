@@ -204,4 +204,9 @@ public class Condition {
     public void setIPV6_DST(String IPV6_DST) {
         this.IPV6_DST = IPV6_DST;
     }
+
+    @Override
+    public String toString() {
+        return "CallCondition [Events=" + events.toString() + ",IN_PORT=" + IN_PORT + ",ETH_TYPE=" + ETH_TYPE + ",ETH_SRC=" + ETH_SRC + ",ETH_DST=" + ETH_DST + ",IP_PROTO=" + IP_PROTO.name() + ",IPV4_SRC=" + IPV4_SRC + ",IPV4_DST=" + IPV4_DST + ",IPV6_SRC" + IPV6_SRC + ",IPV6_DST=" + IPV6_DST + ",TCP_SRC=" + TCP_SRC + ",TCP_DST=" + TCP_DST + ",UDP_SRC=" + UDP_SRC + ",UDP_DST=" + UDP_DST + "]";
+    }
 }

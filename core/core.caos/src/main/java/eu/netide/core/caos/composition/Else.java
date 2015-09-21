@@ -5,6 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.Arrays;
 
 
 /**
@@ -26,5 +27,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "Else", namespace = "http://netide.eu/schemas/compositionspecification/v1")
 public class Else extends ExecutionFlowNodeContainer {
 
-
+    @Override
+    public String toString() {
+        return "Else [flowNodes={" + Arrays.toString(this.getFlowNodes().toArray()) + "}]";
+    }
 }

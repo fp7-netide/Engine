@@ -16,12 +16,19 @@
                activation="eager"
                timeout="1500"/>
 
+    <reference id="backendmanager"
+               interface="eu.netide.core.api.IBackendManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
     <bean id="compositionManager"
           class="eu.netide.core.caos.CompositionManager"
           activation="eager"
           init-method="Start"
           destroy-method="Stop">
         <property name="shimManager" ref="shimmanager"/>
+        <property name="backendManager" ref="backendmanager"/>
         <property name="compositionSpecificationXml" value="${compositionSpecification}"/>
         <property name="maxModuleWaitSeconds" value="${maxModuleWaitSeconds}"/>
     </bean>

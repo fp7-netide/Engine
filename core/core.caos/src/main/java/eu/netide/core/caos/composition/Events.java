@@ -31,25 +31,27 @@ import javax.xml.bind.annotation.XmlType;
 public enum Events {
 
     @XmlEnumValue("packetIn")
-    PACKET_IN("packetIn"),
+    PACKET_IN("packetIn", "PACKET_IN"),
     @XmlEnumValue("flowMod")
-    FLOW_MOD("flowMod"),
+    FLOW_MOD("flowMod", "FLOW_MOD"),
     @XmlEnumValue("connectionUp")
-    CONNECTION_UP("connectionUp"),
+    CONNECTION_UP("connectionUp", "CONNECTION_UP"),
     @XmlEnumValue("connectionDown")
-    CONNECTION_DOWN("connectionDown"),
+    CONNECTION_DOWN("connectionDown", "CONNECTION_DOWN"),
     @XmlEnumValue("portStatus")
-    PORT_STATUS("portStatus"),
+    PORT_STATUS("portStatus", "PORT_STATUS"),
     @XmlEnumValue("flowRemoved")
-    FLOW_REMOVED("flowRemoved"),
+    FLOW_REMOVED("flowRemoved", "FLOW_REMOVED"),
     @XmlEnumValue("errorIn")
-    ERROR_IN("errorIn"),
+    ERROR_IN("errorIn", "ERROR_IN"),
     @XmlEnumValue("barrierIn")
-    BARRIER_IN("barrierIn");
+    BARRIER_IN("barrierIn", "BARRIER_IN");
     private final String value;
+    private final String value2;
 
-    Events(String v) {
+    Events(String v, String v2) {
         value = v;
+        value2 = v2;
     }
 
     public String value() {
@@ -58,7 +60,7 @@ public enum Events {
 
     public static Events fromValue(String v) {
         for (Events c : Events.values()) {
-            if (c.value.equals(v)) {
+            if (c.value.equals(v) || c.value2.equals(v)) {
                 return c;
             }
         }

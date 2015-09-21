@@ -65,6 +65,26 @@
         <processorPath useClasspath="true" />
         <module name="core.logpub" />
       </profile>
+      <profile default="false" name="Annotation profile for demo-shim" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="demo-shim" />
+      </profile>
+      <profile default="false" name="Annotation profile for demo" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Annotation profile for emulator" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="emulator" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="core" target="1.5" />
@@ -75,6 +95,9 @@
       <module name="core.logpub" target="1.8" />
       <module name="core.management" target="1.8" />
       <module name="core.shimconnectivity" target="1.8" />
+      <module name="demo" target="1.8" />
+      <module name="demo-shim" target="1.8" />
+      <module name="emulator" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
@@ -109,6 +132,7 @@
         <option value="$PROJECT_DIR$/core.caos/pom.xml" />
         <option value="$PROJECT_DIR$/core.shimconnectivity/pom.xml" />
         <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/tools/emulator/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
@@ -138,6 +162,7 @@
       <module fileurl="file://$PROJECT_DIR$/core.connectivity/core.connectivity.iml" filepath="$PROJECT_DIR$/core.connectivity/core.connectivity.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.logpub/core.logpub.iml" filepath="$PROJECT_DIR$/core.logpub/core.logpub.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.management/core.management.iml" filepath="$PROJECT_DIR$/core.management/core.management.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tools/emulator/emulator.iml" filepath="$PROJECT_DIR$/tools/emulator/emulator.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
@@ -307,6 +332,17 @@
         <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/17.0/guava-17.0-sources.jar!/" />
       </SOURCES>
     </library>
+    <library name="Maven: com.google.guava:guava:18.0">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/18.0/guava-18.0.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/18.0/guava-18.0-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/com/google/guava/guava/18.0/guava-18.0-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: commons-lang:commons-lang:2.6">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/commons-lang/commons-lang/2.6/commons-lang-2.6.jar!/" />
@@ -448,17 +484,6 @@
       </JAVADOC>
       <SOURCES>
         <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/onlab-misc/1.2.1/onlab-misc-1.2.1-sources.jar!/" />
-      </SOURCES>
-    </library>
-    <library name="Maven: org.onosproject:openflowj:0.3.9.oe">
-      <CLASSES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe.jar!/" />
-      </CLASSES>
-      <JAVADOC>
-        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe-javadoc.jar!/" />
-      </JAVADOC>
-      <SOURCES>
-        <root url="jar://$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.3.9.oe/openflowj-0.3.9.oe-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Maven: org.onosproject:openflowj:0.4.0.onos">

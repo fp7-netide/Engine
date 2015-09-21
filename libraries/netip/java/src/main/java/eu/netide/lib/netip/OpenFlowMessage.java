@@ -44,4 +44,9 @@ public class OpenFlowMessage extends Message {
         this.payload = dcb.array();
         return this.payload;
     }
+
+    @Override
+    public String toString() {
+        return "OpenFlowMessage [Header=" + header.toString() + ",Type=" + ofMessage.getType().toString() + ",OFMessage=" + ofMessage.toString() + "]";
+    }
 }
