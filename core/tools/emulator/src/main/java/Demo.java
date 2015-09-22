@@ -57,7 +57,7 @@ public class Demo implements Runnable {
         packetIn.setOfMessage(ofPacketIn);
         packetIn.setHeader(NetIPUtils.StubHeaderFromPayload(packetIn.getPayload()));
         packetIn.getHeader().setMessageType(MessageType.OPENFLOW);
-        packetIn.getHeader().setTransactionId(42);
+        packetIn.getHeader().setTransactionId(0);
 
         flowmod = new OpenFlowMessage();
         OFFactory fact = OFFactories.getFactory(OFVersion.OF_10);
@@ -75,7 +75,7 @@ public class Demo implements Runnable {
         flowmod.getHeader().setMessageType(MessageType.OPENFLOW);
         flowmod.getHeader().setModuleId(0);
         flowmod.getHeader().setDatapathId(0);
-        flowmod.getHeader().setTransactionId(42);
+        flowmod.getHeader().setTransactionId(0);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -126,7 +126,7 @@ public class Demo implements Runnable {
                     e.printStackTrace();
                 }
                 break;
-            } else if (command.equals("packetIn")) {
+            } else if (command.equals("packetIn") || command.equals("p")) {
                 ZMsg msg = new ZMsg();
                 msg.add(id);
                 msg.add("");
@@ -136,7 +136,7 @@ public class Demo implements Runnable {
                 msg.send(socket);
                 socket.close();
                 System.out.println("Sent packetIn message.");
-            } else if (command.equals("composition")) {
+            } else if (command.equals("composition") || command.equals("c")) {
                 System.out.print("Which file?\r\n> ");
                 String pathString = br.readLine();
 
@@ -171,7 +171,7 @@ public class Demo implements Runnable {
                 zMsg.send(msocket);
                 msocket.close();
                 System.out.println("Sent.");
-            } else if (command.equals("hello")) {
+            } else if (command.equals("hello") || command.equals("h")) {
                 System.out.print("Which moduleId? (default=1)\r\n> ");
                 String moduleIdString = br.readLine();
                 if (moduleIdString.isEmpty()) moduleIdString = "1";
@@ -192,13 +192,19 @@ public class Demo implements Runnable {
                 zMsg.send(socket);
                 socket.close();
                 System.out.println("Sent HELLO message with moduleId '" + moduleIdString + "'.");
-            } else if (command.equals("flowmod")) {
+            } else if (command.equals("flowmod") || command.equals("f")) {
                 System.out.print("Which moduleId? (default=1)\r\n> ");
                 String moduleIdString = br.readLine();
                 if (moduleIdString.isEmpty()) moduleIdString = "1";
                 int moduleId = Integer.parseInt(moduleIdString);
 
+                System.out.print("Which datapathId? (default=0)\r\n> ");
+                String datapathIdString = br.readLine();
+                if (datapathIdString.isEmpty()) datapathIdString = "0";
+                int datapathId = Integer.parseInt(datapathIdString);
+
                 flowmod.getHeader().setModuleId(moduleId);
+                flowmod.getHeader().setDatapathId(datapathId);
 
                 ZMsg msg = new ZMsg();
                 msg.add(id);
@@ -209,7 +215,7 @@ public class Demo implements Runnable {
                 msg.send(socket);
                 socket.close();
                 System.out.println("Sent flowmod message with moduleId '" + moduleIdString + "'.");
-            } else if (command.equals("requestend")) {
+            } else if (command.equals("requestend") || command.equals("r")) {
                 System.out.print("Which moduleId? (default=1)\r\n> ");
                 String moduleIdString = br.readLine();
                 if (moduleIdString.isEmpty()) moduleIdString = "1";
@@ -218,7 +224,7 @@ public class Demo implements Runnable {
                 JSONObject config = new JSONObject()
                         .put("command", "finish-request")
                         .put("parameters", new JSONObject()
-                                .put("transactionid", "42"));
+                                .put("transactionid", "0"));
 
                 System.out.println("Sending:\r\n" + config.toString(3));
 
@@ -226,7 +232,7 @@ public class Demo implements Runnable {
                 msg.setPayloadString(config.toString());
                 msg.setHeader(NetIPUtils.StubHeaderFromPayload(msg.getPayload()));
                 msg.getHeader().setMessageType(MessageType.MANAGEMENT);
-                msg.getHeader().setTransactionId(42);
+                msg.getHeader().setTransactionId(0);
                 msg.getHeader().setModuleId(moduleId);
                 ZMsg zMsg = new ZMsg();
                 zMsg.add(id);
