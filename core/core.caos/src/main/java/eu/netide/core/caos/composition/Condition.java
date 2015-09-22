@@ -20,6 +20,7 @@ public class Condition {
     public static final int UNDEFINED_INT = -1;
 
     protected List<Events> events; /* Trigger event */
+    protected List<Long> datapathIds; /* Datapath IDs */
     protected int IN_PORT; /* Switch input port. */
     protected String ETH_DST; /* Ethernet destination address. */
     protected String ETH_SRC; /* Ethernet source address. */
@@ -63,6 +64,7 @@ public class Condition {
 
     public Condition() {
         events = new ArrayList<>();
+        datapathIds = new ArrayList<>();
         IN_PORT = UNDEFINED_INT;
         ETH_TYPE = EthType.UNDEFINED;
         ETH_SRC = UNDEFINED_STRING;
@@ -86,6 +88,15 @@ public class Condition {
 
     public void setEvents(List<Events> events) {
         this.events = events;
+    }
+
+    @XmlAttribute(name = "datapaths")
+    public List<Long> getDatapathIds() {
+        return datapathIds;
+    }
+
+    public void setDatapathIds(List<Long> datapathIds) {
+        this.datapathIds = datapathIds;
     }
 
     @XmlAttribute(name = "inPort")
