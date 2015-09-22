@@ -1,10 +1,10 @@
 package eu.netide.core.caos.execution;
 
 import eu.netide.core.api.IBackendManager;
+import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.RequestResult;
 import eu.netide.core.caos.composition.ExecutionFlowNode;
 import eu.netide.core.caos.composition.ExecutionFlowStatus;
-import eu.netide.core.caos.composition.ExecutionResult;
 import eu.netide.core.caos.composition.ModuleCall;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageHeader;
@@ -25,7 +25,7 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionFlowNode node, ExecutionFlowStatus status, IBackendManager backendManager) {
+    public ExecutionFlowStatus execute(ExecutionFlowNode node, ExecutionFlowStatus status, IShimManager shimManager, IBackendManager backendManager) {
         if (!canExecute(node)) throw new UnsupportedOperationException("Cannot execute this type of node!");
 
         ModuleCall mc = (ModuleCall) node;
@@ -33,7 +33,7 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
         // check for conditions
         if ((mc.getCallCondition() != null && !ConditionEvaluator.evaluate(mc.getCallCondition(), status)
                 || (mc.getModule().getCallCondition() != null && !ConditionEvaluator.evaluate(mc.getModule().getCallCondition(), status)))) {
-            return ExecutionResult.SKIPPED;
+            return status;
         }
 
         MessageHeader header = new MessageHeader();
@@ -47,9 +47,6 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
         Message message = new Message(header, status.getCurrentMessage().getPayload());
         RequestResult result = backendManager.sendRequest(message);
         logger.info("Request returned from module '" + moduleId + "'.");
-        ExecutionResult exresult = new ExecutionResult();
-        for (Message m : result.getResultMessages())
-            exresult.addMessageToSend(m);
-        return exresult;
+        return ExecutionUtils.mergeMessagesIntoStatus(status, result.getResultMessages().toArray(Message[]::new));
     }
 }

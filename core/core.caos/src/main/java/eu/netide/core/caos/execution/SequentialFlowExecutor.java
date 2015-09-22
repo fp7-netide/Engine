@@ -1,9 +1,10 @@
 package eu.netide.core.caos.execution;
 
 import eu.netide.core.api.IBackendManager;
+import eu.netide.core.api.IShimManager;
 import eu.netide.core.caos.composition.ExecutionFlowNode;
 import eu.netide.core.caos.composition.ExecutionFlowStatus;
-import eu.netide.core.caos.composition.ExecutionResult;
+import eu.netide.core.caos.composition.ResolutionPolicy;
 import eu.netide.core.caos.resolution.ConflictResolvers;
 import eu.netide.core.caos.resolution.IConflictResolver;
 import eu.netide.core.caos.resolution.ResolutionResult;
@@ -30,7 +31,7 @@ public class SequentialFlowExecutor implements IFlowExecutor {
     private static final Logger log = LoggerFactory.getLogger(SequentialFlowExecutor.class);
 
     @Override
-    public ExecutionFlowStatus executeFlow(ExecutionFlowStatus status, Stream<ExecutionFlowNode> nodes, IBackendManager backendManager) {
+    public ExecutionFlowStatus executeFlow(ExecutionFlowStatus status, Stream<ExecutionFlowNode> nodes, IShimManager shimManager, IBackendManager backendManager) {
         if (status.getOriginalMessage().getHeader().getMessageType() != MessageType.OPENFLOW) {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow message.");
         }
@@ -39,78 +40,66 @@ public class SequentialFlowExecutor implements IFlowExecutor {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow PacketIn message.");
         }
         OFPacketIn originalPacketIn = (OFPacketIn) originalMessage.getOfMessage();
-
         List<ExecutionFlowNode> collectedNodes = nodes.collect(Collectors.toList());
         ExecutionFlowNode executionFlowNode = collectedNodes.get(0);
 
         // request results
-        ExecutionResult result = FlowNodeExecutors.getExecutor(executionFlowNode).execute(executionFlowNode, status, backendManager);
-
-        if (result.equals(ExecutionResult.SKIPPED)) {
-            log.info("Skipping node: " + executionFlowNode.toString());
-            // continue with the rest recursively (if existent)
-            if (collectedNodes.size() > 1) {
-                log.info("Finished execution for node " + executionFlowNode.toString());
-                return this.executeFlow(status, collectedNodes.stream().skip(1), backendManager);
-            } else {
-                handleFlowEnd(status, backendManager);
-                return status;
-            }
-        }
-
-        // merge results per datapath
-        log.info("Got " + result.getMessagesToSend().count() + " messages back for node " + executionFlowNode.toString());
-        Map<Long, List<Message>> newMessagesByDatapath = result.getMessagesToSend().collect(Collectors.groupingBy(message -> message.getHeader().getDatapathId()));
-
-        for (Long datapathId : newMessagesByDatapath.keySet()) {
-            if (!status.getResultMessages().containsKey(datapathId)) {
-                // no existing rules for that switch -> accept all new ones and continue
-                status.getResultMessages().put(datapathId, newMessagesByDatapath.get(datapathId));
-                log.info("Adding new rule for unused switch '" + datapathId + "': " + newMessagesByDatapath.get(datapathId).toString());
-                continue;
-            }
-            // resolve per switch
-            Message[] newMessages = newMessagesByDatapath.get(datapathId).stream().toArray(Message[]::new);
-            IConflictResolver resolver = ConflictResolvers.getMatchingResolver(newMessages);
-            log.info("Using resolver " + resolver.getClass().getName());
-            ResolutionResult rr = resolver.resolve(status.getResultMessages().get(datapathId).stream().toArray(Message[]::new), newMessages, true);
-            // TODO setting for preferExisting
-            status.getResultMessages().put(datapathId, Arrays.asList(rr.getResultingMessagesToSend()));
-        }
+        status = FlowNodeExecutors.getExecutor(executionFlowNode).execute(executionFlowNode, status, shimManager, backendManager);
 
         // prepare message(s) for next node, if there is one
         if (collectedNodes.size() > 1) {
             Ethernet ethernet = (Ethernet) new Ethernet().deserialize(originalPacketIn.getData(), 0, originalPacketIn.getData().length);
             IPacket[] newPackets = ExecutionUtils.emulateNetworkBehaviour(status.getResultMessages(), ethernet, originalPacketIn);
-            log.info("New packets generated.");
-            for (IPacket packet : newPackets) { // TODO do this in parallel?
-                // continue execution for each packet
-                OFPacketIn newPacketIn = originalPacketIn.createBuilder().setData(newPackets[0].serialize()).build();
+            if (newPackets.length == 1) {
+                // no multiflow
+                return this.executeFlow(status, collectedNodes.stream().skip(1), shimManager, backendManager);
+            }
+            // MultiFlow
+            ExecutionFlowStatus[] statuses = new ExecutionFlowStatus[newPackets.length];
+            int i = 0;
+            for (IPacket packet : newPackets) {
+                OFPacketIn newPacketIn = originalPacketIn.createBuilder().setData(packet.serialize()).build();
                 OpenFlowMessage newMessage = new OpenFlowMessage();
                 newMessage.setOfMessage(newPacketIn);
-                // create status for this execution branch
-                ExecutionFlowStatus clonedStatus = new ExecutionFlowStatus(newMessage);
-                Map<Long, List<Message>> clonedMap = new HashMap<>();
-                for (Long dpid : status.getResultMessages().keySet()) {
-                    clonedMap.put(dpid, (List<Message>) ((ArrayList<Message>) status.getResultMessages().get(dpid)).clone());
-                }
-                clonedStatus.setResultMessages(clonedMap);
-                // trigger execution
-                log.info("Finished execution for node " + executionFlowNode.toString());
-                this.executeFlow(clonedStatus, collectedNodes.stream().skip(1), backendManager);
+                statuses[i] = status.clone(newMessage);
+                i++;
             }
-            return null; // TODO handle this case properly
+            return this.executeMultiFlow(status, statuses, collectedNodes.stream().skip(1), shimManager, backendManager);
         } else {
-            handleFlowEnd(status, backendManager);
+            log.info("End of sequential flow reached. Collected " + status.getResultMessages().size() + " messages.");
             return status;
         }
     }
 
-    private void handleFlowEnd(ExecutionFlowStatus endStatus, IBackendManager backendManager) {
-        log.info("End of sequential flow reached. Sending to " + endStatus.getResultMessages().size() + " different switches.");
-        for (Map.Entry<Long, List<Message>> entry : endStatus.getResultMessages().entrySet()) {
-            entry.getValue().stream().forEach(backendManager::sendMessage);
-            log.info("Sent " + entry.getValue().size() + " rules to switch " + entry.getKey());
+    private ExecutionFlowStatus executeMultiFlow(ExecutionFlowStatus status, ExecutionFlowStatus[] clonedStatuses, Stream<ExecutionFlowNode> nodes, IShimManager shimManager, IBackendManager backendManager) {
+        List<ExecutionFlowNode> collectedNodes = nodes.collect(Collectors.toList());
+        List<ExecutionFlowStatus> resultStatuses = new ArrayList<>();
+        for (ExecutionFlowStatus efs : clonedStatuses) {
+            resultStatuses.add(this.executeFlow(efs, collectedNodes.stream(), shimManager, backendManager));
         }
+        // merge all into existing status
+        Map<Long, List<Message>> multiFlowMessagesByDatapath = resultStatuses.stream().flatMap(efs -> efs.getResultMessages().values().stream().flatMap(Collection::stream)).collect(Collectors.toSet()).stream().collect(Collectors.groupingBy(m -> m.getHeader().getDatapathId()));
+
+        for (Long datapathId : multiFlowMessagesByDatapath.keySet()) {
+            if (!status.getResultMessages().containsKey(datapathId)) {
+                // no existing rules for that switch -> accept all new ones and continue
+                status.getResultMessages().put(datapathId, multiFlowMessagesByDatapath.get(datapathId));
+                log.info("Adding new rule for unused switch '" + datapathId + "': " + multiFlowMessagesByDatapath.get(datapathId).toString());
+                continue;
+            }
+            // resolve per switch
+            Message[] newMessages = multiFlowMessagesByDatapath.get(datapathId).stream().toArray(Message[]::new);
+            IConflictResolver resolver = ConflictResolvers.getMatchingResolver(newMessages);
+            log.info("Using resolver " + resolver.getClass().getName());
+            // first resolve within the set (use AUTO for now)
+            // TODO make configurable
+            ResolutionResult rr = resolver.resolve(newMessages, ResolutionPolicy.AUTO, null);
+            // merge set into existing status
+            rr = resolver.resolve(status.getResultMessages().get(datapathId).stream().toArray(Message[]::new), rr.getResultingMessagesToSend(), true);
+            // TODO setting for preferExisting
+            status.getResultMessages().put(datapathId, Arrays.asList(rr.getResultingMessagesToSend()));
+        }
+        log.info("Collected " + status.getResultMessages().size() + " messages from multiflow.");
+        return status;
     }
 }

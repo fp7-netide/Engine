@@ -49,7 +49,7 @@ public class ExecutionFlowStatus {
     /**
      * Sets the current message.
      *
-     * @param currentMessages The new set of current messages, reflecting the state of execution up to this point.
+     * @param currentMessage The new set of current messages, reflecting the state of execution up to this point.
      */
     public void setCurrentMessage(Message currentMessage) {
         this.currentMessage = currentMessage;
@@ -87,5 +87,15 @@ public class ExecutionFlowStatus {
             lst.add(message);
             resultMessages.put(datapathId, lst);
         }
+    }
+
+    public ExecutionFlowStatus clone(Message originalMessage) {
+        ExecutionFlowStatus clonedStatus = new ExecutionFlowStatus(originalMessage);
+        Map<Long, List<Message>> clonedMap = new HashMap<>();
+        for (Long dpid : this.getResultMessages().keySet()) {
+            clonedMap.put(dpid, (List<Message>) ((ArrayList<Message>) this.getResultMessages().get(dpid)).clone());
+        }
+        clonedStatus.setResultMessages(clonedMap);
+        return clonedStatus;
     }
 }

@@ -134,7 +134,6 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
         RequestResult r = results.get(id);
         Semaphore lock = locks.get(id);
-        logger.info("Result null? " + (r == null) + ", Lock null? " + (lock == null));
         if (r != null && lock != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
             // Message belongs to former request
             if (message instanceof ManagementMessage) {
@@ -161,15 +160,17 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                 logger.info("DEMO: Received HELLO from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'. Module '" + demoMappings.get(message.getHeader().getModuleId()) + "' now marked as available.");
                 // TODO handle message appropriately
             } else if (message instanceof ManagementMessage) {
-                logger.info("Received unrequested ManagementMessage: " + message.toString());
-                // TODO handle appropriately
+                logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
+                connector.SendData(message.toByteRepresentation(), "shim"); // TODO make shim name a constant
             } else {
-                logger.info("Received unrequested Message: " + message.toString());
+                logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
                 try {
                     listenerLock.acquire();
+                    // Notify listeners and send to shim
                     for (IBackendMessageListener listener : backendMessageListeners) {
                         pool.submit(() -> listener.OnBackendMessage(message, backendId));
                     }
+                    connector.SendData(message.toByteRepresentation(), "shim"); // TODO make shim name a constant
                 } catch (InterruptedException e) {
                     logger.error("", e);
                 } finally {

@@ -5,6 +5,7 @@ import eu.netide.lib.netip.Message;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Class representing the results of a backend request.
@@ -44,8 +45,8 @@ public class RequestResult {
      *
      * @return An enumeration of result messages.
      */
-    public Iterable<Message> getResultMessages() {
-        return this.resultMessages;
+    public Stream<Message> getResultMessages() {
+        return this.resultMessages.stream();
     }
 
     /**

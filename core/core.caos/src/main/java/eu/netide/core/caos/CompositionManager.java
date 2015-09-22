@@ -12,6 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -102,7 +104,13 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             if (correctlyConfigured) {
                 ExecutionFlowStatus status = new ExecutionFlowStatus(message);
 
-                FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), backendManager);
+                status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), shimManager, backendManager);
+
+                // Send results
+                for (Map.Entry<Long, List<Message>> entry : status.getResultMessages().entrySet()) {
+                    entry.getValue().stream().forEach(shimManager::sendMessage);
+                    logger.info("Sent " + entry.getValue().size() + " rules to switch " + entry.getKey());
+                }
 
                 logger.info("Flow execution finished.");
             } else {
