@@ -1,5 +1,4 @@
 import eu.netide.lib.netip.*;
-import org.javatuples.Pair;
 import org.json.JSONObject;
 import org.onlab.packet.Ethernet;
 import org.onlab.packet.IPv4;
@@ -110,7 +109,7 @@ public class Demo implements Runnable {
         Thread thread = new Thread(this);
         thread.start();
         while (true) {
-            System.out.println("Enter command: (packetIn, composition, hello, flowmod, requestend, exit)");
+            System.out.println("Enter command: (packetIn (p), composition (c), announcement (a), acknowledge (ack), flowmod (f), requestend (r), exit)");
             System.out.print("> ");
             String command = br.readLine();
             if (command.equals("exit")) {
@@ -171,27 +170,49 @@ public class Demo implements Runnable {
                 zMsg.send(msocket);
                 msocket.close();
                 System.out.println("Sent.");
-            } else if (command.equals("hello") || command.equals("h")) {
+            } else if (command.equals("announcement") || command.equals("a")) {
+                System.out.print("Which moduleName? (default=fw)\r\n> ");
+                String moduleName = br.readLine();
+                if (moduleName.isEmpty()) moduleName = "fw";
+
+                ModuleAnnouncementMessage announcementMessage = new ModuleAnnouncementMessage();
+                announcementMessage.setModuleName(moduleName);
+                announcementMessage.setHeader(NetIPUtils.StubHeaderFromPayload(announcementMessage.getPayload()));
+                announcementMessage.getHeader().setMessageType(MessageType.MODULE_ANNOUNCEMENT);
+
+                ZMsg zMsg = new ZMsg();
+                zMsg.add(id);
+                zMsg.add("");
+                zMsg.add(announcementMessage.toByteRepresentation());
+                ZMQ.Socket socket = context.socket(ZMQ.PUSH);
+                socket.connect(CONTROL_ADDRESS);
+                zMsg.send(socket);
+                socket.close();
+                System.out.println("Sent MODULE_ANNOUNCEMENT message with moduleName '" + moduleName + "'.");
+            } else if (command.equals("acknowledge") || command.equals("ack")) {
+                System.out.print("Which moduleName? (default=fw)\r\n> ");
+                String moduleName = br.readLine();
+                if (moduleName.isEmpty()) moduleName = "fw";
                 System.out.print("Which moduleId? (default=1)\r\n> ");
                 String moduleIdString = br.readLine();
                 if (moduleIdString.isEmpty()) moduleIdString = "1";
                 int moduleId = Integer.parseInt(moduleIdString);
 
-                HelloMessage helloMessage = new HelloMessage();
-                helloMessage.getSupportedProtocols().add(new Pair<>(Protocol.OPENFLOW, ProtocolVersions.OPENFLOW_1_0));
-                helloMessage.setHeader(NetIPUtils.StubHeaderFromPayload(helloMessage.getPayload()));
-                helloMessage.getHeader().setMessageType(MessageType.HELLO);
-                helloMessage.getHeader().setModuleId(moduleId);
+                ModuleAcknowledgeMessage acknowledgeMessage = new ModuleAcknowledgeMessage();
+                acknowledgeMessage.setModuleName(moduleName);
+                acknowledgeMessage.setHeader(NetIPUtils.StubHeaderFromPayload(acknowledgeMessage.getPayload()));
+                acknowledgeMessage.getHeader().setMessageType(MessageType.MODULE_ACKNOWLEDGE);
+                acknowledgeMessage.getHeader().setModuleId(moduleId);
 
                 ZMsg zMsg = new ZMsg();
                 zMsg.add(id);
                 zMsg.add("");
-                zMsg.add(helloMessage.toByteRepresentation());
+                zMsg.add(acknowledgeMessage.toByteRepresentation());
                 ZMQ.Socket socket = context.socket(ZMQ.PUSH);
                 socket.connect(CONTROL_ADDRESS);
                 zMsg.send(socket);
                 socket.close();
-                System.out.println("Sent HELLO message with moduleId '" + moduleIdString + "'.");
+                System.out.println("Sent MODULE_ACKNOWLEDGE message with moduleName '" + moduleName + "' and id '" + moduleIdString + "'.");
             } else if (command.equals("flowmod") || command.equals("f")) {
                 System.out.print("Which moduleId? (default=1)\r\n> ");
                 String moduleIdString = br.readLine();
