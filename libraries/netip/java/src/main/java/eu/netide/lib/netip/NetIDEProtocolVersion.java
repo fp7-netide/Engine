@@ -5,13 +5,17 @@ package eu.netide.lib.netip;
  */
 public enum NetIDEProtocolVersion {
     /**
-     * The VERSION_1_0.
+     * The Version 1.0
      */
     VERSION_1_0((byte) 0x01),
     /**
-     * The VERSION_1_1.
+     * The Version 1.1
      */
-    VERSION_1_1((byte) 0x02);
+    VERSION_1_1((byte) 0x02),
+    /**
+     * The Version 1.2
+     */
+    VERSION_1_2((byte) 0x03);
 
     private byte value;
 
