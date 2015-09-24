@@ -17,6 +17,18 @@ public enum MessageType {
      */
     MANAGEMENT((byte) 0x03),
     /**
+     * The MODULE_ANNOUNCEMENT.
+     */
+    MODULE_ANNOUNCEMENT((byte) 0x04),
+    /**
+     * The MODULE_ACKNOWLEDGE.
+     */
+    MODULE_ACKNOWLEDGE((byte) 0x05),
+    /**
+     * The TOPOLOGY_UPDATE.
+     */
+    TOPOLOGY_UPDATE((byte) 0x06),
+    /**
      * The OPENFLOW type.
      */
     OPENFLOW(Protocol.OPENFLOW.getValue()),
