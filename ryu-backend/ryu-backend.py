@@ -18,8 +18,8 @@ import random
 import binascii
 import time
 import ryu
-import asyncore
 import socket
+from eventlet.green import zmq
 from ryu.base import app_manager
 from ryu.exception import RyuException
 from ryu.controller import mac_to_port
@@ -46,119 +46,10 @@ from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
-from ryu.netide.netip import *
-
+from netip import *
 
 
 NETIDE_CORE_PORT = 41414
-
-class BackendChannel(asyncore.dispatcher):
-    """Handles the data channel to the server
-    """
-    def __init__(self, host, port, controller):
-        self.channel_lock = threading.Lock()
-        self.client_info = {'negotiated_protocols':{}, 'datapaths':{}}
-        asyncore.dispatcher.__init__(self)
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((host, port))
-        self.of_datapath = None
-        self.ofproto = None
-        self.ofproto_parser = None
-        self.controller = controller
-        self.controller_channel = ControllerChannel('127.0.0.1', 7733)
-        return
-
-    def handle_connect(self):
-        #Initiate handshake with the server
-        proto_data = NetIDEOps.netIDE_encode_handshake(NetIDEOps.NetIDE_supported_protocols)
-        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
-        print msg.encode("hex")
-        self.send(msg)
-
-
-
-    def handle_read(self):
-        header = self.recv(NetIDE_Header_Size)
-        decoded_header = NetIDEOps.netIDE_decode_header(header)
-        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
-        message_data = self.recv(message_length)
-
-        message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
-        #If new client is connecting, add the protocols that were negotiated with the server
-        if 'connected' not in self.client_info:
-            with self.channel_lock:
-                count = 0
-                while count < message_length:
-                    protocol = message_data[count]
-                    version = message_data[count + 1]
-
-                    if protocol not in self.client_info['negotiated_protocols']:
-                        self.client_info['negotiated_protocols'][protocol] = {version}
-                    else:
-                        self.client_info['negotiated_protocols'][protocol].add(version)
-
-                    count += 2
-
-                self.client_info['connected'] = True
-
-                #TO DO: For Multiple versions that the switch might support!
-                #Create OpenFlow backend that communicates with the controller (simulates the switch)
-                #If the switch supported OpenFlow
-                if 0x11 in self.client_info['negotiated_protocols']:
-                    ofp_version = list(self.client_info['negotiated_protocols'][0x11])[0]
-                    if ofp_version == 0x01:
-                        self.ofproto = ofproto_v1_0
-                        self.ofproto_parser = ofproto_v1_0_parser
-                    elif ofp_version == 0x03:
-                        self.ofproto = ofproto_v1_3
-                        self.ofproto_parser = ofproto_v1_3_parser
-                    elif ofp_version == 0x04:
-                        self.ofproto = ofproto_v1_4
-                        self.ofproto_parser = ofproto_v1_4_parser
-                    else:
-                        print "OF Protocol not supported"
-                        self.close()
-
-                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
-                self.of_datapath.of_hello_handler()
-
-        #If client has been previously connected and handshake has been made
-        #Make sure to select the correct datapath to send the message to!
-        else:
-            if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
-                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
-                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
-                self.of_datapath.of_hello_handler()
-            else:
-                self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
-                #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
-
-            with self.channel_lock:
-                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, decoded_header[NetIDEOps.NetIDE_header['TYPE']])
-                if message_type == 'NETIDE_OPENFLOW':
-                    #print decoded_header
-                    self.of_datapath.handle_event(message_data)
-
-
-#Forwards the decapsulated messages to the controller and handles gets the response.
-class ControllerChannel(asyncore.dispatcher):
-    def __init__(self, host, port):
-        asyncore.dispatcher.__init__(self)
-        self.host = host
-        self.port = port
-
-    def switch_connet(self):
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect((self.host, self.port))
-
-    def send_data(self, msg):
-        self.send(msg)
-
-    def receive_data(self):
-        return self.recv(4096)
-
-
 
 
 class BackendDatapath(controller.Datapath):
@@ -212,7 +103,7 @@ class BackendDatapath(controller.Datapath):
             self.set_xid(msg)
         msg.serialize()
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, msg.datapath.id, str(msg.buf))
-        self.channel.send(msg_to_send)
+        self.channel.socket.send(msg_to_send)
         # LOG.debug('send_msg %s', msg)
         #print msg.buf
         #self.send(msg.buf)
@@ -238,10 +129,115 @@ class BackendDatapath(controller.Datapath):
                 handler(ev)
                 #print "Datapath ", self.id, " current state : ", self.state, " message type: ", msg.msg_type
 
-#Starts the asyncore client as a threaded process so the application can continue running
-class asyncore_loop(threading.Thread):
-        def run(self):
-            asyncore.loop()
+# Connection with the core
+class CoreConnection(threading.Thread):
+    def __init__(self, backend, id, host, port):
+        threading.Thread.__init__(self)
+        self.id = id
+        self.host = host
+        self.port = port
+        self.client_info = {'negotiated_protocols':{}, 'datapaths':{}}
+        self.of_datapath = None
+        self.ofproto = None
+        self.ofproto_parser = None
+        self.backend = backend
+
+    def run(self):
+        print "Thread core connection: ", threading.current_thread()
+        context = zmq.Context()
+        self.socket = context.socket(zmq.DEALER)
+        self.socket.setsockopt(zmq.IDENTITY, self.id)
+        print('Connecting to Core on %s:%s...' % (self.host,self.port))
+        self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
+
+        proto_data = NetIDEOps.netIDE_encode_handshake(self.backend.supported_protocols)
+        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
+        print msg.encode("hex")
+        self.socket.send(msg)
+
+        message = self.socket.recv_multipart()
+        if self.handle_hello(message[0]) is False:
+            print "Handshake error!!! Exiting..."
+            return
+
+        #self.socket.send(b"First Hello from " + self.id)
+        while True:
+            #message = self.socket.recv()
+            message = self.socket.recv_multipart()
+            print("Received message from Core: \n")
+            print (':'.join(x.encode('hex') for x in message[0]))
+            self.handle_read(message[0])
+
+        self.socket.close()
+        context.term()
+
+    def handle_hello(self,msg):
+        decoded_header = NetIDEOps.netIDE_decode_header(msg)
+        print "header: ", decoded_header
+        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+        message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
+
+        if message_type is NetIDEOps.NetIDE_type['NETIDE_HELLO']:
+            message_data = NetIDEOps.netIDE_decode_handshake(msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length],message_length)
+            if 'connected' not in self.client_info:
+                count = 0
+                openflow_version = 0
+                supported_protocol_count = 0
+                negotiated_protocols = self.client_info['negotiated_protocols']
+                while count < message_length:
+                    protocol = message_data[count]
+                    version = message_data[count + 1]
+                    count += 2
+
+                    if version in self.backend.supported_protocols[protocol]:
+                        supported_protocol_count += 1
+                        if protocol in negotiated_protocols:
+                            negotiated_protocols[protocol].append(version)
+                        else:
+                            negotiated_protocols.update({protocol:[version]})
+                    print "negotiated protocols: ", negotiated_protocols
+                    if protocol == NetIDEOps.NetIDE_type['NETIDE_OPENFLOW'] and version > openflow_version:
+                        openflow_version = version
+                        if openflow_version == 0x01:
+                            self.ofproto = ofproto_v1_0
+                            self.ofproto_parser = ofproto_v1_0_parser
+                        if openflow_version == 0x03:
+                            self.ofproto = ofproto_v1_2
+                            self.ofproto_parser = ofproto_v1_2_parser
+                        if openflow_version == 0x04:
+                            self.ofproto = ofproto_v1_3
+                            self.ofproto_parser = ofproto_v1_3_parser
+                        if openflow_version == 0x05:
+                            self.ofproto = ofproto_v1_4
+                            self.ofproto_parser = ofproto_v1_4_parser
+                        if openflow_version == 0x06:
+                            self.ofproto = ofproto_v1_5
+                            self.ofproto_parser = ofproto_v1_5_parser
+                if supported_protocol_count == 0:
+                    return False
+                else:
+                    self.client_info['connected'] = True
+            return True
+        else:
+            return False
+
+    def handle_read(self,msg):
+        decoded_header = NetIDEOps.netIDE_decode_header(msg)
+        print "header: ", decoded_header
+        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+        message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
+        #print (':'.join(x.encode('hex') for x in message_data))
+        message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
+        if message_type is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
+            if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
+                self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
+                self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
+                self.of_datapath.of_hello_handler()
+            else:
+                self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
+                #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
+
+            self.of_datapath.handle_event(message_data)
 
 
 
@@ -251,18 +247,25 @@ class RYUClient(app_manager.RyuApp):
         super(RYUClient, self).__init__(*args, **kwargs)
 
         #Various Variables that can be edited
-        __SERVER_IP__ = '127.0.0.1'
-        __SERVER_PORT__ = RYU_BACKEND_PORT #Default Port 41414
+        __CORE_IP__ = '127.0.0.1'
+        __CORE_PORT__ = NETIDE_CORE_PORT
 
         #Ryu Controller listen IP and port
         __CONTROLLER_IP__ = '127.0.0.1'
         __CONTROLLER_PORT__ = 7733
 
-        #Start the asyncore loop (Server) to listen to incomming connections
+        self.supported_protocols = {}
+        self.supported_protocols[OPENFLOW_PROTO] = [OPENFLOW_10,OPENFLOW_12,OPENFLOW_13]
+        self.supported_protocols[NETCONF_PROTO] = []
+        print "backend supported protocols: ", self.supported_protocols
+
+
         print('RYU Client initiated')
-        self.backend_channel = BackendChannel(__SERVER_IP__, __SERVER_PORT__, self)
-        self.al = asyncore_loop()
-        self.al.start()
+
+        #Start the zeromq loop to listen to incoming messages
+        self.CoreConnection = CoreConnection(self,b"backend", __CORE_IP__,__CORE_PORT__)
+        self.CoreConnection.setDaemon(True)
+        self.CoreConnection.start()
 
 
 

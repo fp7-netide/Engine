@@ -20,6 +20,17 @@ import struct
 NETIDE_VERSION = 0x02
 NetIDE_Header_Format = '!BBHIIQ'
 
+OPENFLOW_PROTO = 0x11
+NETCONF_PROTO = 0x12
+OPFLEX_PROTO = 0x13
+OPENFLOW_10 = 0x01
+OPENFLOW_11 = 0x02
+OPENFLOW_12 = 0x03
+OPENFLOW_13 = 0x04
+OPENFLOW_14 = 0x05
+OPENFLOW_15 = 0x06
+NETCONF_10 = 0x01
+OPFLEX = 0x00
 
 class NetIDEOps:
     NetIDE_version = NETIDE_VERSION
@@ -39,21 +50,9 @@ class NetIDEOps:
         'NETIDE_HELLO'      : 0x01,
         'NETIDE_ERROR'      : 0x02,
         'NETIDE_MGMT'       : 0x03,
-        'NETIDE_OPENFLOW'   : 0x11,
-        'NETIDE_NETCONF'    : 0x12,
-        'NETIDE_OPFLEX'     : 0x13
-    }
-
-    #Define the supported switch control protocols we support and versios
-    #Should be determined by underlying network/switches??
-    #Protocol:
-    #0x10 = OpenFlow: versions - 0x01 = 1.0; 0x02 = 1.1; 0x03 = 1.2; 0x04 = 1.3; 0x05 = 1.4
-    #0x11 = NetConf: versions - 0x01 = RFC6241 of NetConf
-    #0x12 = OpFlex: versions - 0x00 = Version in development
-    NetIDE_supported_protocols = {
-        0x11    : {0x01, 0x02, 0x03, 0x04, 0x5},
-        0x12    : {0x01},
-        0x13    : {0x00}
+        'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
+        'NETIDE_NETCONF'    : NETCONF_PROTO,
+        'NETIDE_OPFLEX'     : OPFLEX_PROTO
     }
 
  #Encode a message in the NetIDE protocol format
@@ -77,7 +76,7 @@ class NetIDEOps:
     @staticmethod
     def netIDE_decode_header(raw_data):
         unpacker = struct.Struct(NetIDE_Header_Format)
-        return unpacker.unpack(raw_data)
+        return unpacker.unpack_from(raw_data,0)
 
     #Decode NetIDE messages received in binary format. Iput: Raw data and length of the encapsulated message
     #Length can be retrieve by decoding the header first
@@ -87,20 +86,20 @@ class NetIDEOps:
         unpacker = struct.Struct(NetIDE_Header_Format+str(length)+'s')
         return unpacker.unpack(raw_data)
 
-    #Encode the hello handshake message
+    #Encode the hello handshake message. protocols is a dictionary such as: {OPENFLOW_PROTO: [1,3], NETCONF_PROTO: []}
     @staticmethod
     def netIDE_encode_handshake(protocols):
-
         #Get count for number of supported protocols and versions
         count = 0
         values = []
-        for protocol in protocols.items():
-            for version in protocol[1]:
-                count += 1
-                values.append(protocol[0])
-                values.append(version)
+        for protocol in protocols:
+            for version in protocols[protocol]:
+                values.append(protocol)    #protocol
+                values.append(version)    #version
+                count+=2
 
-        packer = struct.Struct('!'+str(count*2)+'B')
+        packer = struct.Struct('!'+str(count)+'B')
+        packed = packer.pack(*values)
         return packer.pack(*values)
 
     #Decode the hello handshake message and return tuple
