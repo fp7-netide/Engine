@@ -53,7 +53,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.openflow.common.action.rev1
 
 public class FlowModInputMessageFactoryTest {
 	private FlowModInputMessageFactory flowFactory;
-
     /**
      * Initializes deserializer registry and lookups correct deserializer
      */
@@ -76,7 +75,6 @@ public class FlowModInputMessageFactoryTest {
     	// TODO: Skipping first 4 bytes due to the way deserializer is implemented 
     	// Skipping version, type and length from OF header
     	originalBuffer.skipBytes(4);
-    	
     	FlowModInput deserializedMessage = BufferHelper.deserialize(flowFactory, originalBuffer);
     	Assert.assertEquals("Wrong version", expectedMessage.getVersion(), deserializedMessage.getVersion());
     	Assert.assertEquals("Wrong XId", expectedMessage.getXid(), deserializedMessage.getXid());
