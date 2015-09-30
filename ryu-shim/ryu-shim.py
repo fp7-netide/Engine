@@ -56,7 +56,7 @@ class CoreConnection(threading.Thread):
         self.host = host
         self.port = port
         self.controller = controller
-        self.client_info = {'id':None, 'negotiated_protocols':{}}
+        #TODO: improve the management of multiple clients
 
     def run(self):
         context = zmq.Context()
@@ -89,14 +89,13 @@ class CoreConnection(threading.Thread):
         else:
             #If new client is connecting
             if decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_HELLO']:
-                #clean the previous data if the client has already connected before
-                self.client_info['negotiated_protocols'] = {}
+
                 if message_length is 0:
                     print ("Client does not support any protocol")
                     return
 
                 message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
-                negotiated_protocols = self.client_info['negotiated_protocols']
+                negotiated_protocols = {}
                 #Find the common protocols that client and server support
                 count = 0
                 while count < message_length:
@@ -110,26 +109,19 @@ class CoreConnection(threading.Thread):
                         else:
                             negotiated_protocols.update({protocol:[version]})
 
-                if self.client_info['negotiated_protocols']:
-                    self.client_info['connected'] = True
-                else:
-                    self.client_info['connected'] = False
-                    return
-
                 #After protocols have been negotiated, send back message to client to notify for common protocols
-                proto_data = NetIDEOps.netIDE_encode_handshake(self.client_info['negotiated_protocols'])
+                proto_data = NetIDEOps.netIDE_encode_handshake(negotiated_protocols)
                 msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
                 self.socket.send(msg)
 
                 #Resend request for features for the new client
                 self.controller.send_features_request()
 
-            #If client has already performed handshake with the server
             else:
                 if message_length is 0:
                     print ("Empty message!!!")
                     return
-                #If datapath id is not 0, broadcast?
+
                 if decoded_header[NetIDEOps.NetIDE_header['DPID']] is not 0:
                     self.datapath = self.controller.switches[int(decoded_header[NetIDEOps.NetIDE_header['DPID']])]
                     self.datapath.send(message_data)
