@@ -1,7 +1,5 @@
 package org.opendaylight.openflowjava.protocol.impl.deserialization.factories;
 
-
-import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
