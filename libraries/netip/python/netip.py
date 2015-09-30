@@ -47,9 +47,12 @@ class NetIDEOps:
     }
     
     NetIDE_type = {
-        'NETIDE_HELLO'      : 0x01,
-        'NETIDE_ERROR'      : 0x02,
-        'NETIDE_MGMT'       : 0x03,
+        'NETIDE_HELLO'          : 0x01,
+        'NETIDE_ERROR'          : 0x02,
+        'NETIDE_MGMT'           : 0x03,
+        'MODULE_ANNOUNCEMENT'   : 0x04,
+        'MODULE_ACKNOWLEDGE'    : 0x05,
+        'TOPOLOGY_UPDATE'       : 0x06,
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
         'NETIDE_OPFLEX'     : OPFLEX_PROTO
