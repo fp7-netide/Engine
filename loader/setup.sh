@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sudo apt-get update
+sudo apt-get install --yes python3-pip git
+sudo pip3 install -r requirements.txt

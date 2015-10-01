@@ -1,0 +1,17 @@
+{
+   "controller": "ryu",
+   "param": "ryu.app.rest_firewall",
+   "requirements": {
+      "Hardware": {
+         "cpufreq":  800,
+         "memory":   2048
+      },
+      "Software": {
+         "Controllers": [ {"name": "ryu", "version": "3.2[0-9]"} ],
+         "Languages": [ {"name": "python", "version": "3.4"} ]
+      },
+      "Network": {
+         "ofversion": "1.3"
+      }
+   }
+}
