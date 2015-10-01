@@ -10,6 +10,7 @@
 # CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.                        #
 ################################################################################
 
+import os
 import logging
 import struct
 import threading
@@ -19,6 +20,7 @@ import binascii
 import time
 import ryu
 import socket
+import inspect
 from eventlet.green import zmq
 from ryu.base import app_manager
 from ryu.exception import RyuException
@@ -49,7 +51,7 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN
 from netip import *
 
 
-NETIDE_CORE_PORT = 41414
+NETIDE_CORE_PORT = 51515
 
 
 class BackendDatapath(controller.Datapath):
@@ -99,6 +101,7 @@ class BackendDatapath(controller.Datapath):
     #Sends the reply from the switch back to the shim
     def send_msg(self, msg):
         assert isinstance(msg, self.ofproto_parser.MsgBase)
+        print "controller send_msg", inspect.currentframe().f_back.f_locals['self']
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
@@ -119,45 +122,46 @@ class BackendDatapath(controller.Datapath):
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             self.ofp_brick.send_event_to_observers(ev, self.state)
-
+            print "Brick: ", self.ofp_brick
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
+            print "Dispatchers: ", dispatchers
             handlers = [handler for handler in
                         self.ofp_brick.get_handlers(ev) if
                         self.state in dispatchers(handler)]
-            #print "handlers: ", self.ofp_brick.get_handlers(ev)
+            print "Handlers: ", self.ofp_brick.get_handlers(ev)
+
             for handler in handlers:
                 handler(ev)
                 #print "Datapath ", self.id, " current state : ", self.state, " message type: ", msg.msg_type
 
 # Connection with the core
 class CoreConnection(threading.Thread):
-    def __init__(self, backend, id, host, port):
+    def __init__(self, backend, host, port):
         threading.Thread.__init__(self)
-        self.id = id
         self.host = host
         self.port = port
         self.client_info = {'negotiated_protocols':{}, 'datapaths':{}}
+        self.running_modules = {}
         self.of_datapath = None
         self.ofproto = None
         self.ofproto_parser = None
         self.backend = backend
+        self.id = self.backend.backend_id
 
     def run(self):
-        print "Thread core connection: ", threading.current_thread()
         context = zmq.Context()
         self.socket = context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self.id)
         print('Connecting to Core on %s:%s...' % (self.host,self.port))
         self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
 
-        proto_data = NetIDEOps.netIDE_encode_handshake(self.backend.supported_protocols)
-        msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
-        print msg.encode("hex")
-        self.socket.send(msg)
-
-        message = self.socket.recv_multipart()
-        if self.handle_hello(message[0]) is False:
+        # Performing the initial handshake with the shim
+        if self.handle_handshake() is False:
             print "Handshake error!!! Exiting..."
+            return
+
+        if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
+            print "No module ids received from the core!!! Exiting..."
             return
 
         #self.socket.send(b"First Hello from " + self.id)
@@ -171,7 +175,39 @@ class CoreConnection(threading.Thread):
         self.socket.close()
         context.term()
 
-    def handle_hello(self,msg):
+    def module_announcement(self, bricks):
+        print "bricks: ", bricks
+        for key,value in bricks.iteritems():
+            module_name = key
+            if key is not "ofp_event" and key is not self.backend.name: #we take only the control applications
+                print "Module name: ", module_name
+                print "Module name: ",':'.join(x.encode('hex') for x in module_name)
+                xid = random.randint(0, 1000000)
+                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', xid, None, None, module_name)
+                self.socket.send(ann_message)
+                ack = False
+                while ack is False:
+                    ack_message = self.socket.recv_multipart()
+                    msg = ack_message[0]
+                    decoded_header = NetIDEOps.netIDE_decode_header(msg)
+                    print "module announcement answer: ", decoded_header
+                    message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
+                    if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and decoded_header[NetIDEOps.NetIDE_header['XID']] == xid:
+                        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                        message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
+                        self.running_modules[module_name] = int(message_data)
+                        print "running modules: ", self.running_modules
+                        ack = True
+
+
+
+    def handle_handshake(self):
+        proto_data = NetIDEOps.netIDE_encode_handshake(self.backend.supported_protocols)
+        message = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
+        self.socket.send(message)
+
+        message = self.socket.recv_multipart()
+        msg = message[0]
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         print "header: ", decoded_header
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
@@ -254,16 +290,16 @@ class RYUClient(app_manager.RyuApp):
         __CONTROLLER_IP__ = '127.0.0.1'
         __CONTROLLER_PORT__ = 7733
 
+        self.backend_id = b"backend-ryu-" + str(os.getpid())
         self.supported_protocols = {}
         self.supported_protocols[OPENFLOW_PROTO] = [OPENFLOW_10,OPENFLOW_12,OPENFLOW_13]
         self.supported_protocols[NETCONF_PROTO] = []
         print "backend supported protocols: ", self.supported_protocols
 
-
         print('RYU Client initiated')
 
         #Start the zeromq loop to listen to incoming messages
-        self.CoreConnection = CoreConnection(self,b"backend", __CORE_IP__,__CORE_PORT__)
+        self.CoreConnection = CoreConnection(self, __CORE_IP__,__CORE_PORT__)
         self.CoreConnection.setDaemon(True)
         self.CoreConnection.start()
 

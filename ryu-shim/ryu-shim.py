@@ -16,6 +16,7 @@
 # http://www.eclipse.org/legal/epl-v10.html                      	           #
 ################################################################################
 
+import os
 import logging
 import struct
 import threading
@@ -43,6 +44,7 @@ from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from netip import *
+
 #from ryu.netide.netip import *
 #from time import sleep
 
@@ -141,6 +143,8 @@ class RYUShim(app_manager.RyuApp):
 
         # Internal variables
         self.switches = {}
+        #self.shim_id = b"shim-ryu-" + str(os.getpid())
+        self.shim_id = b"shim"
         self.supported_protocols = {}
         self.supported_protocols[OPENFLOW_PROTO] = []
         self.supported_protocols[NETCONF_PROTO] = []
@@ -148,7 +152,7 @@ class RYUShim(app_manager.RyuApp):
 
         # Start the connection to the core
         print('RYU Shim initiated')
-        self.CoreConnection = CoreConnection(self, b"shim", __CORE_IP__,__CORE_PORT__)
+        self.CoreConnection = CoreConnection(self, self.shim_id, __CORE_IP__,__CORE_PORT__)
         self.CoreConnection.setDaemon(True)
         self.CoreConnection.start()
 
