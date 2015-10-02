@@ -42,10 +42,8 @@ def main():
                 connected_backends.append(identity)
 
             if decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['MODULE_ANNOUNCEMENT']:
-                print "xid", decoded_header[NetIDEOps.NetIDE_header['XID']]
                 ack_message = NetIDEOps.netIDE_encode('MODULE_ACKNOWLEDGE', decoded_header[NetIDEOps.NetIDE_header['XID']], None, None, str(module_id))
                 running_modules[message_data] = module_id
-                print "running modules: ", running_modules
                 module_id += 1
                 backend.send_multipart([identity,ack_message])
             else:
@@ -61,7 +59,7 @@ def main():
             message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
             message_data = message[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
             print "Message body: ",':'.join(x.encode('hex') for x in message_data)
-            # Forwarding the message to the shim
+            # Forwarding the message to all the backends
             for backendname in connected_backends:
                 print "Sending to backend: ", backendname
                 backend.send_multipart([backendname,message])

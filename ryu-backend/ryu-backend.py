@@ -101,11 +101,22 @@ class BackendDatapath(controller.Datapath):
     #Sends the reply from the switch back to the shim
     def send_msg(self, msg):
         assert isinstance(msg, self.ofproto_parser.MsgBase)
-        print "controller send_msg", inspect.currentframe().f_back.f_locals['self']
+        module_id = None
+        frame = inspect.currentframe()
+        try:
+            calling_object = str(frame.f_back.f_locals['self'])
+            for key, value in self.channel.running_modules.iteritems():
+                if calling_object.find(key) >= 0:
+                    module_id = value
+                    break
+
+        finally:
+            del frame
+
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, msg.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, msg.datapath.id, str(msg.buf))
         self.channel.socket.send(msg_to_send)
         # LOG.debug('send_msg %s', msg)
         #print msg.buf
@@ -176,12 +187,9 @@ class CoreConnection(threading.Thread):
         context.term()
 
     def module_announcement(self, bricks):
-        print "bricks: ", bricks
         for key,value in bricks.iteritems():
             module_name = key
             if key is not "ofp_event" and key is not self.backend.name: #we take only the control applications
-                print "Module name: ", module_name
-                print "Module name: ",':'.join(x.encode('hex') for x in module_name)
                 xid = random.randint(0, 1000000)
                 ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', xid, None, None, module_name)
                 self.socket.send(ann_message)
@@ -190,13 +198,11 @@ class CoreConnection(threading.Thread):
                     ack_message = self.socket.recv_multipart()
                     msg = ack_message[0]
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
-                    print "module announcement answer: ", decoded_header
                     message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
                     if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and decoded_header[NetIDEOps.NetIDE_header['XID']] == xid:
                         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
                         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
                         self.running_modules[module_name] = int(message_data)
-                        print "running modules: ", self.running_modules
                         ack = True
 
 
@@ -209,7 +215,6 @@ class CoreConnection(threading.Thread):
         message = self.socket.recv_multipart()
         msg = message[0]
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
-        print "header: ", decoded_header
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
 
@@ -231,7 +236,6 @@ class CoreConnection(threading.Thread):
                             negotiated_protocols[protocol].append(version)
                         else:
                             negotiated_protocols.update({protocol:[version]})
-                    print "negotiated protocols: ", negotiated_protocols
                     if protocol == NetIDEOps.NetIDE_type['NETIDE_OPENFLOW'] and version > openflow_version:
                         openflow_version = version
                         if openflow_version == 0x01:
