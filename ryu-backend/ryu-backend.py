@@ -133,13 +133,10 @@ class BackendDatapath(controller.Datapath):
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             self.ofp_brick.send_event_to_observers(ev, self.state)
-            print "Brick: ", self.ofp_brick
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
-            print "Dispatchers: ", dispatchers
             handlers = [handler for handler in
                         self.ofp_brick.get_handlers(ev) if
                         self.state in dispatchers(handler)]
-            print "Handlers: ", self.ofp_brick.get_handlers(ev)
 
             for handler in handlers:
                 handler(ev)

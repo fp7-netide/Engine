@@ -1,17 +1,36 @@
 import zmq
+import sys
+import getopt
 from netip import *
 
-shim_port = 41414
-backend_port = 51515
+
 shimname = "shim"
 
-def main():
+def main(argv):
+
+    shim_port = '41414'
+    backend_port = '51515'
+
+    try:
+        opts, args = getopt.getopt(argv,"hs:b:",["sport=","bport="])
+    except getopt.GetoptError:
+        print 'AdvancedCoreProxy.py -s <shim_port> -b <backends_port>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            print 'AdvancedCoreProxy.py -s <shim_port> -b <backends_port>'
+            sys.exit()
+        elif opt in ("-s", "--sport"):
+            shim_port = arg
+        elif opt in ("-b", "--bport"):
+            backend_port = arg
+
     context = zmq.Context.instance()
     shim = context.socket(zmq.ROUTER)
-    shim.bind("tcp://*:" + '41414')
+    shim.bind("tcp://*:" + shim_port)
     print "Bound port ", shim_port, " for the server controller"
     backend = context.socket(zmq.ROUTER)
-    backend.bind("tcp://*:" + '51515')
+    backend.bind("tcp://*:" + backend_port)
     print "Bound port ", backend_port, " for the client controllers"
 
     # Initialize main loop state
@@ -70,4 +89,4 @@ def main():
     context.term()
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
