@@ -23,16 +23,18 @@ Within the  ```ryu-backend``` folder, run the following command to use the Ryu b
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
 
-The Ryu backend will try to connect to a running shim layer which must be already running and listening on the TCP port 41414.
+The Ryu backend will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 41414.
 The ```--ofp-tcp-listen-port 7733``` is used to avoid possible conflicts that may happen when two different controller platforms are running on the same machine. In our case we could have Ryu hosting the backend and, e.g., ONOS with the shim layer. By default they both bind the TCP port 6633 to accept connections from the network elements.
 
 Finally, ```simple_switch``` is a simple L2 learning switch application provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
 
 ## Testing
 
-To test the Ryu backend it is necessary to run one of the shim layers provided in this github repository that supports the NetIDE Intermediate protocol v1.0.
-For instance, it can be tested with the Ryu shim by using the following command:
+To test the Ryu backend it is necessary to run one of the shim layers provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
+In the ```tests``` folder, a minimal implementation of the Core is provided.
+For instance, to use this backend with the Ryu shim run following sequence of commands:
 ```
+python AdvancedProxyCore.py
 ryu-manager ryu-shim.py
 ```
 
@@ -42,7 +44,7 @@ sudo mn --topo linear,4 --controller=remote,ip=IP_ADDRESS,port=6633
 ```
 Where IP_ADDRESS is the IP address of the machine where the Ryu and the shim layer are running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
 
-Once the Ryu shim is running and listening on TCP port 41414, the backend can be started with:
+Once both Core and Ryu shim are running, the backend can be started with:
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
 
@@ -53,6 +55,11 @@ Within the Mininet CLI, a successful ```pingall``` demonstrates that the hosts a
 See the LICENSE file.
 
 ## ChangeLog
+
+ryu-backend: 2015-10-01 Thu Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Replaced sockets with zeromq networking library
+  * Added support to the NetIDE Intermediate protocol specification v1.2
 
 ryu-backend: 2015-09-01 Tue Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
