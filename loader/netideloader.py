@@ -141,12 +141,21 @@ def load_package(args):
                 json.dump(playbook, ah, indent=2)
             util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
 
-            # XXX: [ ] Enable
-            #      [ ] Use NetIDE message format
-            if False:
-                with zmq.Context() as ctx, ctx.socket(zmq.REQ) as s:
-                    s.connect("tcp://localhost:5555")
-                    s.send(json.dumps({"command": "update_composition", "parameters": {"composition": pkg.get_composition()}}).encode())
+            # Make netip python library available. This has been installed here by installer.do_server_install()
+            p = ["~", "Core", "libraries", "netip", "python"]
+            sys.path.append(os.path.expanduser(os.path.join(*p)))
+            from netip import NetIDEOps
+
+            m = NetIDEOps.netIDE_encode(
+                    NetIDEOps.NetIDE_type["NETIDE_MGMT"],
+                    None,
+                    None,
+                    None,
+                    json.dumps({"command": "update_composition", "parameters": {"composition": pkg.get_composition()}}).encode())
+
+            with zmq.Context() as ctx, ctx.socket(zmq.REQ) as s:
+                s.connect("tcp://localhost:5555")
+                s.send(m)
     return 0
 
 def list_controllers(args):
