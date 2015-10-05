@@ -85,7 +85,7 @@ class BackendDatapath(controller.Datapath):
         ev.state = state
         self.ofp_brick.send_event_to_observers(ev, state)
 
-    def of_hello_handler(self):
+    def of_hello_handler(self, netide_header):
         version = self.ofproto.OFP_VERSION
         msg_type = self.ofproto.OFPT_HELLO
         msg_len = self.ofproto.OFP_HEADER_SIZE
@@ -95,7 +95,7 @@ class BackendDatapath(controller.Datapath):
         fmt = self.ofproto.OFP_HEADER_PACK_STR
         buf = struct.pack(fmt, version, msg_type, msg_len, xid) + data
         #print hello.type
-        self.handle_event(buf)
+        self.handle_event(netide_header, buf)
         self.set_state(CONFIG_DISPATCHER)
 
     #Sends the reply from the switch back to the shim
@@ -109,7 +109,6 @@ class BackendDatapath(controller.Datapath):
                 if calling_object.find(key) >= 0:
                     module_id = value
                     break
-
         finally:
             del frame
 
@@ -125,14 +124,24 @@ class BackendDatapath(controller.Datapath):
 
 
     #Handles the events and sends them to the listening RYU Applications
-    def handle_event(self, msg):
+    def handle_event(self, header, msg):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
+
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
-            self.ofp_brick.send_event_to_observers(ev, self.state)
+            module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
+            if module_id  == 0: # to all observers
+                self.ofp_brick.send_event_to_observers(ev, self.state)
+            else: # to a specific observer
+                for key, value in self.channel.running_modules.iteritems():
+                    if value == module_id:
+                        module_name = key
+                        break
+                self.ofp_brick.send_event(module_name,ev, self.state)
+
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
                         self.ofp_brick.get_handlers(ev) if
@@ -140,7 +149,6 @@ class BackendDatapath(controller.Datapath):
 
             for handler in handlers:
                 handler(ev)
-                #print "Datapath ", self.id, " current state : ", self.state, " message type: ", msg.msg_type
 
 # Connection with the core
 class CoreConnection(threading.Thread):
@@ -260,7 +268,6 @@ class CoreConnection(threading.Thread):
 
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
-        print "header: ", decoded_header
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
         #print (':'.join(x.encode('hex') for x in message_data))
@@ -269,12 +276,12 @@ class CoreConnection(threading.Thread):
             if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
                 self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
                 self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]] = self.of_datapath
-                self.of_datapath.of_hello_handler()
+                self.of_datapath.of_hello_handler(decoded_header)
             else:
                 self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
                 #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
 
-            self.of_datapath.handle_event(message_data)
+            self.of_datapath.handle_event(decoded_header, message_data)
 
 
 
