@@ -1,0 +1,15 @@
+{
+   "server": {
+      "type": "odl",
+      "host": "fgcn-of-26"
+   },
+   "clients": {
+      "vagrant-ubuntu-trusty-64": {
+         "apps": ["l2switch", "fw"],
+         "user": "vagrant",
+         "host": "127.0.0.1",
+         "port": 2200,
+         "identity": "~/testvm-bare/.vagrant/machines/default/virtualbox/private_key"
+      }
+   }
+}
