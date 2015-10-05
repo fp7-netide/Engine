@@ -1,7 +1,7 @@
 import zmq
 import sys
 import getopt
-from netip import *
+from ryu.netide.netip import *
 
 
 shimname = "shim"

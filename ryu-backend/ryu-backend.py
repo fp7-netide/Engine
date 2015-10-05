@@ -48,7 +48,7 @@ from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
-from netip import *
+from ryu.netide.netip import *
 
 
 NETIDE_CORE_PORT = 51515
@@ -184,8 +184,7 @@ class CoreConnection(threading.Thread):
         while True:
             #message = self.socket.recv()
             message = self.socket.recv_multipart()
-            print("Received message from Core: \n")
-            print (':'.join(x.encode('hex') for x in message[0]))
+            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[0])
             self.handle_read(message[0])
 
         self.socket.close()

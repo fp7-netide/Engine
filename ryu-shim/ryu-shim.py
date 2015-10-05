@@ -43,7 +43,7 @@ from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
-from netip import *
+from ryu.netide.netip import *
 
 #from ryu.netide.netip import *
 #from time import sleep
@@ -212,6 +212,6 @@ class RYUShim(app_manager.RyuApp):
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, self.datapath.id, str(msg.buf))
         #Forward the message to all the connected NetIDE clients
 
-        print (':'.join(x.encode('hex') for x in msg_to_send))
+        print "Message to Core: ", ':'.join(x.encode('hex') for x in msg_to_send)
         self.CoreConnection.socket.send(msg_to_send)
 
