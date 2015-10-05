@@ -35,7 +35,7 @@ R.java
 Thumbs.db
 
 # ignore intellij build files
-*.iml
+*.iws
 .idea
 # ignore files build by Visual Studio
 *.obj
