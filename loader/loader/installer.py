@@ -84,14 +84,15 @@ def do_server_install(pkg):
             "name": "Downloading Karaf",
             "unarchive": {
                 "copy": "no",
-                "creates": "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0",
+                "creates": "{{ansible_user_dir}}/karaf/apache-karaf-3.0.4",
                 "dest": "{{ansible_user_dir}}/karaf",
-                "src": "http://apache.lauf-forum.at/karaf/4.0.0/apache-karaf-4.0.0-src.tar.gz"}})
+                # "src": "http://apache.lauf-forum.at/karaf/4.0.0/apache-karaf-4.0.0-src.tar.gz"}})
+                "src": "http://mirror.softaculous.com/apache/karaf/3.0.4/apache-karaf-3.0.4-src.tar.gz"}})
         tasks.append({
             "name": "Building and installing Karaf",
-            "shell": "mvn -Pfastinstall",
+            "shell": "mvn clean install -DskipTests",
             "args": {
-                "chdir": "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0",
+                "chdir": "{{ansible_user_dir}}/karaf/apache-karaf-3.0.4",
                 "creates": "{{netide_karaf_assembly}}/bin"}})
         # This avoids conflicts with ODL's Karaf instance
         tasks.append({
@@ -110,8 +111,8 @@ def do_server_install(pkg):
         tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/start", "mode": "ugo+rx"}})
         tasks.append({ "file": {"path": "{{netide_karaf_assembly}}/bin/client", "mode": "ugo+rx"}})
         tasks.append({
-            "name": "Checking of Karaf is running",
-            "shell": "bash ./client -r 2 logout",
+            "name": "Checking if Karaf is running",
+            "shell": "echo logout | ./client -r 2",
             "args": {"chdir": "{{netide_karaf_assembly}}/bin"},
             "ignore_errors": True,
             "register": "karaf_running"})
@@ -122,11 +123,11 @@ def do_server_install(pkg):
             "args": { "chdir": "{{netide_karaf_assembly}}/bin" }})
         tasks.append({
             "name": "Adding NetIDE Maven Repo to Karaf",
-            "shell": 'bash ./client -r 10 "feature:repo-add mvn:eu.netide.core/core/1.0.0.0/xml/features"',
+            "shell": 'echo "feature:repo-add mvn:eu.netide.core/core/1.0.0.0/xml/features" | ./client -r 2',
             "args": { "chdir": "{{netide_karaf_assembly}}/bin" }})
         tasks.append({
             "name": "Installing NetIDE Core Karaf feature",
-            "shell": 'bash ./client -r 10 "feature:install netide-core"',
+            "shell": 'echo "feature:install netide-core" | ./client -r 2',
             "args": { "chdir": "{{netide_karaf_assembly}}/bin"}})
 
         tasks.append({
@@ -145,7 +146,7 @@ def do_server_install(pkg):
                 "tasks": tasks,
                 "vars": {
                     "netide_karaf_assembly":
-                        "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0/assemblies/apache-karaf/target/assembly",
+                        "{{ansible_user_dir}}/karaf/apache-karaf-3.0.4/assemblies/apache-karaf/target/assembly",
                     "netide_scripts": "{{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts" }}], fh)
         util.write_ansible_hosts([], os.path.join(t, "a-hosts"))
         util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "a-hosts"), os.path.join(t, "a-playbook.yml")])
