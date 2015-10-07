@@ -51,7 +51,6 @@ class Package(object):
         p = os.path.join(self.path, "_apps")
         for d in os.listdir(p):
             nodes = []
-            print(self.config.get("clients", {}))
             for node, v in self.config.get("clients", {}).items():
                 if d in v.get("apps", []):
                     nodes.append(node)
