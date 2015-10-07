@@ -150,7 +150,8 @@ def do_server_install(pkg):
                         "{{ansible_user_dir}}/karaf/apache-karaf-3.0.4/assemblies/apache-karaf/target/assembly",
                     "netide_scripts": "{{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts" }}], fh)
         util.write_ansible_hosts([], os.path.join(t, "a-hosts"))
-        util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "a-hosts"), os.path.join(t, "a-playbook.yml")])
+        if util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "a-hosts"), os.path.join(t, "a-playbook.yml")]) != 0:
+            raise InstallException("Something went wrong")
 
 
 def do_client_installs(pkgpath, dataroot):
@@ -262,4 +263,5 @@ def do_client_installs(pkgpath, dataroot):
         # A valid JSON-document is also valid YAML, so we can take a small shortcut here
         with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
             json.dump(playbook, ah, indent=2)
-        util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
+        if util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")]) != 0:
+            raise InstallException("Something went wrong")
