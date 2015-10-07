@@ -64,8 +64,7 @@ def do_server_install(pkg):
             "name": "Clone NetIDE IDE",
             "git": {
                 "repo": "https://github.com/fp7-netide/IDE.git",
-                "dest": "{{ansible_user_dir}}/IDE",
-                "version": "development"}})
+                "dest": "{{ansible_user_dir}}/IDE"}})
 
         tasks.append({
             "name": "Build NetIDE netip library (java)",
@@ -194,8 +193,7 @@ def do_client_installs(pkgpath, dataroot):
             "name": "Clone IDE repository",
             "git": {
                 "repo": "http://github.com/fp7-netide/IDE.git",
-                "dest": "{{ansible_user_dir}}/IDE",
-                "version": "development"}})
+                "dest": "{{ansible_user_dir}}/IDE"}})
 
         tasks.append({
             "name": "Install Engine",
