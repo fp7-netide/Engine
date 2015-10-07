@@ -145,6 +145,7 @@ def do_server_install(pkg):
                 "hosts": "localhost",
                 "tasks": tasks,
                 "vars": {
+                    "ansible_user_dir": "{{ansible_env[\"HOME\"]}}",
                     "netide_karaf_assembly":
                         "{{ansible_user_dir}}/karaf/apache-karaf-3.0.4/assemblies/apache-karaf/target/assembly",
                     "netide_scripts": "{{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts" }}], fh)
