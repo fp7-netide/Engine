@@ -138,7 +138,7 @@ def do_server_install(pkg):
             raise InstallException("Don't know how to do a server controller installation for controller {}!".format(conf["type"]))
         tasks.append({
             "name": "Installing {}".format(conf["type"]),
-            "shell": "bash {{netide_scripts}}/install_{}.sh".format(conf["type"])})
+            "shell": "bash {{{{netide_scripts}}}}/install_{}.sh".format(conf["type"])})
 
         with open(os.path.join(t, "a-playbook.yml"), "w") as fh:
             json.dump([{
