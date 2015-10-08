@@ -61,7 +61,7 @@ def main(argv):
                 connected_backends.append(identity)
 
             if decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['MODULE_ANNOUNCEMENT']:
-                ack_message = NetIDEOps.netIDE_encode('MODULE_ACKNOWLEDGE', decoded_header[NetIDEOps.NetIDE_header['XID']], None, None, str(module_id))
+                ack_message = NetIDEOps.netIDE_encode('MODULE_ACKNOWLEDGE', decoded_header[NetIDEOps.NetIDE_header['XID']], module_id, None, message_data)
                 running_modules[message_data] = module_id
                 module_id += 1
                 backend.send_multipart([identity,ack_message])
