@@ -172,10 +172,12 @@ class CoreConnection(threading.Thread):
         self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
 
         # Performing the initial handshake with the shim
-        if self.handle_handshake() is False:
-            print "Handshake error!!! Exiting..."
-            return
-
+        # TODO: I comment the handshake for now since the Core only supports OF1.0. If we want to keep it, it should be moved after the module announcement
+        #if self.handle_handshake() is False:
+        #    print "Handshake error!!! Exiting..."
+        #    return
+        time.sleep(2) #TODO: we need to wait until the app_manager has detected all the running apps. Replace the sleep with something more elegant.
+        app_manager.AppManager.report_bricks()
         if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
             print "No module ids received from the core!!! Exiting..."
             return
