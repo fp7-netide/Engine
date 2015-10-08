@@ -78,14 +78,19 @@ class NetIDEOps:
     #Decode NetIDE header of a message (first 16 Bytes of the read message
     @staticmethod
     def netIDE_decode_header(raw_data):
+        if len(raw_data) < NetIDEOps.NetIDE_Header_Size:
+            print "Error: Message header requires a buffer of at least 20 bytes. Given: ", len(raw_data)
+            return False
         unpacker = struct.Struct(NetIDE_Header_Format)
         return unpacker.unpack_from(raw_data,0)
 
-    #Decode NetIDE messages received in binary format. Iput: Raw data and length of the encapsulated message
+    #Decode NetIDE messages received in binary format. Input: Raw data and length of the encapsulated message
     #Length can be retrieve by decoding the header first
-    #NEEDS TO BE CHANGED MAYBE?
     @staticmethod
     def netIDE_decode(raw_data, length):
+        if len(raw_data) != length:
+            print "Error: Message size should be ", length, " bytes. Given: ", len(raw_data)
+            return False
         unpacker = struct.Struct(NetIDE_Header_Format+str(length)+'s')
         return unpacker.unpack(raw_data)
 

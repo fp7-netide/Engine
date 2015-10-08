@@ -202,12 +202,20 @@ class CoreConnection(threading.Thread):
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
                     msg = ack_message[0]
+                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[0])
+                    print "Received ack from Core:" , ack_message
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
+                    if decoded_header is False:
+                        return False
                     message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
-                    if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and decoded_header[NetIDEOps.NetIDE_header['XID']] == xid:
-                        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                    message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                    if message_length is 0:
+                        return False
+                    else:
                         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-                        self.running_modules[module_name] = int(message_data)
+                    if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == module_name:
+                        module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
+                        self.running_modules[module_name] = module_id
                         ack = True
 
 
