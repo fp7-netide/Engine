@@ -1,9 +1,7 @@
 package eu.netide.core.connectivity;
 
-import eu.netide.core.api.IConnectorListener;
-import eu.netide.core.api.IShimConnector;
-import eu.netide.core.api.IShimManager;
-import eu.netide.core.api.IShimMessageListener;
+import eu.netide.core.api.*;
+import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
 import org.slf4j.Logger;
@@ -27,6 +25,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
     private List<IShimMessageListener> shimMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
     private ExecutorService pool = Executors.newCachedThreadPool();
+    private IBackendManager backendManager;
 
     public void Start() {
         logger.info("ShimManager started.");
@@ -49,6 +48,10 @@ public class ShimManager implements IShimManager, IConnectorListener {
         } catch (Exception ex) {
             logger.error("Unable to parse received data from '" + originId + "' (" + Arrays.toString(data) + ").", ex);
             return;
+        }
+        if (message instanceof HelloMessage) {
+            // relay back to the correct backend
+            backendManager.sendMessage(message);
         }
         try {
             listenerLock.acquire();
@@ -79,5 +82,24 @@ public class ShimManager implements IShimManager, IConnectorListener {
         listenerLock.acquire();
         this.shimMessageListeners = shimMessageListeners == null ? new ArrayList<>() : shimMessageListeners;
         listenerLock.release();
+    }
+
+    /**
+     * Sets the backend manager.
+     *
+     * @param manager the manager
+     */
+    public void setBackendManager(IBackendManager manager) {
+        backendManager = manager;
+        logger.info("BackendManager set.");
+    }
+
+    /**
+     * Gets the backend manager.
+     *
+     * @return the backend manager
+     */
+    public IBackendManager getBackendManager() {
+        return backendManager;
     }
 }

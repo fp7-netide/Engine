@@ -15,6 +15,7 @@
           destroy-method="Stop">
         <property name="connector" ref="connector"/>
         <property name="shimMessageListeners" ref="shimListeners"/>
+        <property name="backendManager" ref="BackendManager"/>
     </bean>
 
     <bean id="BackendManager"

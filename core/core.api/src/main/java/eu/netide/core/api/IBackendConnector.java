@@ -10,10 +10,10 @@ public interface IBackendConnector {
      * Sends the given byte array to the specified backend.
      *
      * @param data      The data to be sent.
-     * @param backendId The id of the target backend.
-     * @return True, if transmission was succesful, false otherwise.
+     * @param destinationId The id of the target destination.
+     * @return True, if transmission was successful, false otherwise.
      */
-    boolean SendData(byte[] data, String backendId);
+    boolean SendData(byte[] data, String destinationId);
 
     /**
      * Registers the given backend listener.
