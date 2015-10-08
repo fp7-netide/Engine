@@ -177,7 +177,6 @@ class CoreConnection(threading.Thread):
         #    print "Handshake error!!! Exiting..."
         #    return
         time.sleep(2) #TODO: we need to wait until the app_manager has detected all the running apps. Replace the sleep with something more elegant.
-        app_manager.AppManager.report_bricks()
         if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
             print "No module ids received from the core!!! Exiting..."
             return
