@@ -71,7 +71,6 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
     public boolean SendData(byte[] data, String destinationId) {
         ZMsg msg = new ZMsg();
         msg.add(destinationId);
-        msg.add("");
         msg.add(data);
         logger.info("Sending to via relay to '" + destinationId + "'.");
         // relayed via control socket to prevent threading issues
