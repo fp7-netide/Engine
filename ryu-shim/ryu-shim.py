@@ -95,7 +95,7 @@ class CoreConnection(threading.Thread):
                 if message_length is 0:
                     print ("Client does not support any protocol")
                     return
-
+                backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                 message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
                 negotiated_protocols = {}
                 #Find the common protocols that client and server support
@@ -113,7 +113,7 @@ class CoreConnection(threading.Thread):
 
                 #After protocols have been negotiated, send back message to client to notify for common protocols
                 proto_data = NetIDEOps.netIDE_encode_handshake(negotiated_protocols)
-                msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
+                msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, backend_id, None, proto_data)
                 self.socket.send(msg)
 
                 #Resend request for features for the new client
