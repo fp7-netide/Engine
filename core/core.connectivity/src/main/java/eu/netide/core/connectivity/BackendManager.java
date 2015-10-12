@@ -101,7 +101,10 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public String getBackend(Integer moduleId) {
-        return moduleToBackendMappings.get(moduleId);
+        if (moduleToBackendMappings.containsKey(moduleId))
+            return moduleToBackendMappings.get(moduleId);
+        else
+            throw new UnsupportedOperationException("No backend mapping known for moduleId '" + moduleId + "'.");
     }
 
     public int getModuleId(String moduleName) {
