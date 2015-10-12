@@ -71,6 +71,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
     public boolean SendData(byte[] data, String destinationId) {
         ZMsg msg = new ZMsg();
         msg.add(destinationId);
+        msg.add("");
         msg.add(data);
         logger.info("Sending to via relay to '" + destinationId + "'.");
         // relayed via control socket to prevent threading issues
@@ -86,6 +87,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
     public void run() {
         logger.info("ZeroMQBasedConnector started.");
         ZMQ.Socket socket = context.socket(ZMQ.ROUTER);
+        socket.setIdentity("core".getBytes(ZMQ.CHARSET));
         socket.bind("tcp://*:" + port);
         logger.info("Listening on port " + port);
 
