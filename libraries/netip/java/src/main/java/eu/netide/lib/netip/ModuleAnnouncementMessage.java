@@ -38,4 +38,9 @@ public class ModuleAnnouncementMessage extends Message {
     public byte[] getPayload() {
         return this.moduleName.getBytes();
     }
+
+    @Override
+    public String toString() {
+        return "ModuleAnnouncementMessage [Header=" + header.toString() + ",ModuleName=" + moduleName + "]";
+    }
 }
