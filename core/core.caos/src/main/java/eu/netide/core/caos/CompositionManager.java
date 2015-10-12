@@ -30,6 +30,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     private static String previousCompositionSpecificationXml = "";
     private String compositionSpecificationXml = "";
     private int maxModuleWaitSeconds = 60;
+    private boolean bypassUnsupportedMessages = true;
 
     // Fields
     private IShimManager shimManager;
@@ -117,11 +118,15 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
                 logger.error("Could not handle incoming message due to configuration error.", message);
             }
         } catch (UnsupportedOperationException e) {
-            logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
-            try {
-                backendManager.sendMessage(message);
-            } catch (Throwable ex) {
-                logger.error("Could not relay unsupported message.", ex);
+            if (bypassUnsupportedMessages) {
+                logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
+                try {
+                    backendManager.sendMessage(message);
+                } catch (Throwable ex) {
+                    logger.error("Could not relay unsupported message.", ex);
+                }
+            } else {
+                logger.error("Received unsupported message for composition, bypass is not activated.", e);
             }
         } catch (Throwable e) {
             logger.error("An exception occurred while handling shim message.", e);
@@ -231,5 +236,24 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
      */
     public void setMaxModuleWaitSeconds(int value) {
         this.maxModuleWaitSeconds = value;
+    }
+
+    /**
+     * Gets relay unsupported messages.
+     *
+     * @return the relay unsupported messages
+     */
+    public boolean getBypassUnsupportedMessages() {
+        return this.bypassUnsupportedMessages;
+    }
+
+    /**
+     * Sets relay unsupported messages.
+     *
+     * @param bypassUnsupportedMessages the relay unsupported messages
+     */
+    public void setBypassUnsupportedMessages(boolean bypassUnsupportedMessages) {
+        this.bypassUnsupportedMessages = bypassUnsupportedMessages;
+        logger.info("Unsupported message bypass " + (bypassUnsupportedMessages ? "activated." : "deactivated."));
     }
 }

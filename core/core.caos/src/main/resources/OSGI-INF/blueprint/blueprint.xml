@@ -7,6 +7,7 @@
         <cm:default-properties>
             <cm:property name="compositionSpecification" value=""/>
             <cm:property name="maxModuleWaitSeconds" value="60"/>
+            <cm:property name="bypassUnsupportedMessages" value="true"/>
         </cm:default-properties>
     </cm:property-placeholder>
 
@@ -31,6 +32,7 @@
         <property name="backendManager" ref="backendmanager"/>
         <property name="compositionSpecificationXml" value="${compositionSpecification}"/>
         <property name="maxModuleWaitSeconds" value="${maxModuleWaitSeconds}"/>
+        <property name="bypassUnsupportedMessages" value="${bypassUnsupportedMessages}"/>
     </bean>
 
     <service ref="compositionManager"
