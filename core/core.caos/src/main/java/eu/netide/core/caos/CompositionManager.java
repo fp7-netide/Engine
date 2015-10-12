@@ -116,6 +116,13 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             } else {
                 logger.error("Could not handle incoming message due to configuration error.", message);
             }
+        } catch (UnsupportedOperationException e) {
+            logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
+            try {
+                backendManager.sendMessage(message);
+            } catch (Throwable ex) {
+                logger.error("Could not relay unsupported message.", ex);
+            }
         } catch (Throwable e) {
             logger.error("An exception occurred while handling shim message.", e);
         } finally {
