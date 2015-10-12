@@ -127,7 +127,6 @@ class BackendDatapath(controller.Datapath):
     def handle_event(self, header, msg):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
-
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
         if msg:
@@ -139,8 +138,8 @@ class BackendDatapath(controller.Datapath):
                 for key, value in self.channel.running_modules.iteritems():
                     if value == module_id:
                         module_name = key
+                        self.ofp_brick.send_event(module_name,ev, self.state)
                         break
-                self.ofp_brick.send_event(module_name,ev, self.state)
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -198,8 +197,8 @@ class CoreConnection(threading.Thread):
         while True:
             #message = self.socket.recv()
             message = self.socket.recv_multipart()
-            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[1])
-            self.handle_read(message[1])
+            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[0])
+            self.handle_read(message[0])
 
         self.socket.close()
         context.term()
@@ -210,8 +209,8 @@ class CoreConnection(threading.Thread):
         ack = False
         while ack is False:
             ack_message = self.socket.recv_multipart()
-            msg = ack_message[1]
-            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[1])
+            msg = ack_message[0]
+            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[0])
             print "Received ack from Core:" , ack_message
             decoded_header = NetIDEOps.netIDE_decode_header(msg)
             if decoded_header is False:
@@ -237,8 +236,8 @@ class CoreConnection(threading.Thread):
                 ack = False
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
-                    msg = ack_message[1]
-                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[1])
+                    msg = ack_message[0]
+                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[0])
                     print "Received ack from Core:" , ack_message
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
                     if decoded_header is False:
@@ -260,8 +259,8 @@ class CoreConnection(threading.Thread):
         self.socket.send(message)
 
         message = self.socket.recv_multipart()
-        msg = message[1]
-        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in message[1])
+        msg = message[0]
+        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in message[0])
         #print "Received hello from Core:" , message
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         if decoded_header is False:
@@ -318,7 +317,6 @@ class CoreConnection(threading.Thread):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-        #print (':'.join(x.encode('hex') for x in message_data))
         message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
         if message_type is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
             if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
@@ -327,7 +325,6 @@ class CoreConnection(threading.Thread):
                 self.of_datapath.of_hello_handler(decoded_header)
             else:
                 self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
-                #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
 
             self.of_datapath.handle_event(decoded_header, message_data)
 

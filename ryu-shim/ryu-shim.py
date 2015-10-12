@@ -43,12 +43,34 @@ from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
 from ryu.lib.packet import packet, ethernet, lldp
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
+from ryu.ofproto import ofproto_common
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
+from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
+from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
+from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
+from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.netide.netip import *
 
 #from ryu.netide.netip import *
 #from time import sleep
 
 NETIDE_CORE_PORT = 41414
+
+async_messages = frozenset([ofproto_v1_5.OFPT_PACKET_IN,
+                            ofproto_v1_5.OFPT_FLOW_REMOVED,
+                            ofproto_v1_5.OFPT_PORT_STATUS,
+                            ofproto_v1_5.OFPT_ROLE_STATUS,
+                            ofproto_v1_5.OFPT_TABLE_STATUS,
+                            ofproto_v1_5.OFPT_REQUESTFORWARD,
+                            ofproto_v1_5.OFPT_CONTROLLER_STATUS])
+
+def set_xid(of_array, xid):
+    of_array[4]=(xid >>24) & 0xff;
+    of_array[5]=(xid >>16) & 0xff;
+    of_array[6]=(xid >>8) & 0xff;
+    of_array[7]=xid & 0xff;
+    return of_array
 
 # Connection with the core
 class CoreConnection(threading.Thread):
@@ -80,10 +102,12 @@ class CoreConnection(threading.Thread):
 
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
-        print "header: ", decoded_header
+        if decoded_header is False:
+            return False
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-        print (':'.join(x.encode('hex') for x in message_data))
+        print "Received message: ", ':'.join(x.encode('hex') for x in msg)
+        print "Message data: ", ':'.join(x.encode('hex') for x in message_data)
 
         if decoded_header[NetIDEOps.NetIDE_header['VERSION']] is not NetIDEOps.NetIDE_version:
             print ("Attempt to connect from unsupported client")
@@ -117,15 +141,22 @@ class CoreConnection(threading.Thread):
                 self.socket.send(msg)
 
                 #Resend request for features for the new client
-                self.controller.send_features_request()
+                self.controller.send_features_request(backend_id)
 
-            else:
+            elif decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
                 if message_length is 0:
                     print ("Empty message!!!")
                     return
 
                 if decoded_header[NetIDEOps.NetIDE_header['DPID']] is not 0:
                     self.datapath = self.controller.switches[int(decoded_header[NetIDEOps.NetIDE_header['DPID']])]
+
+                    # Here we set xid=mod_id so that the synchromous messages can be forwarded to the correct client by the core
+                    backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
+                    if backend_id is not None:
+                        ret = bytearray(message_data)
+                        set_xid(ret,backend_id)
+                        message_data = str(ret)
                     self.datapath.send(message_data)
                 else:
                     self.datapath = None
@@ -161,10 +192,11 @@ class RYUShim(app_manager.RyuApp):
 
     #Explicitly sends a feature request to all the switches
     #OF Only? To check for other protocols!
-    def send_features_request(self):
+    def send_features_request(self,backend_id):
         for datapath_id, datapath in self.switches.iteritems():
             ofp_parser = datapath.ofproto_parser
             req = ofp_parser.OFPFeaturesRequest(datapath)
+            req.xid = backend_id
             datapath.send_msg(req)
 
 
@@ -197,11 +229,17 @@ class RYUShim(app_manager.RyuApp):
             handlers = self.get_handlers(ev, state)
             for handler in handlers:
                 handler(ev)
-            #Send the message to connected backend clients
-            self.send_to_clients(ev)
+            #Send the message to connected backend clients. module_id is set only for synchronous messages
+            msg = ev.msg
+            type = msg.msg_type
+            if type in async_messages:
+                module_id = None
+            else:
+                module_id = msg.xid
+            self.send_to_clients(ev,module_id)
 
     #Sends the message to the connected NetIDE clients
-    def send_to_clients(self, ev):
+    def send_to_clients(self, ev,module_id):
         msg = ev.msg
         self.datapath = ev.msg.datapath
         #Add all the switches connected datapath.id and the connection information to the local variable
@@ -209,7 +247,7 @@ class RYUShim(app_manager.RyuApp):
             self.switches[self.datapath.id] = self.datapath
 
         #Encapsulate the feature request and send to connected client
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, None, self.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, self.datapath.id, str(msg.buf))
         #Forward the message to all the connected NetIDE clients
 
         print "Message to Core: ", ':'.join(x.encode('hex') for x in msg_to_send)
