@@ -122,11 +122,12 @@ class CoreConnection(threading.Thread):
         else:
             #If new client is connecting
             if decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_HELLO']:
-
+                
                 if message_length is 0:
                     print ("Client does not support any protocol")
                     return
                 backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
+                print "Received HELLO message from backend: ", backend_id
                 message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
                 negotiated_protocols = {}
                 #Find the common protocols that client and server support
@@ -253,7 +254,11 @@ class RYUShim(app_manager.RyuApp):
         #Encapsulate the feature request and send to connected client
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, self.datapath.id, str(msg.buf))
         #Forward the message to all the connected NetIDE clients
-
-        print "Message to Core: ", ':'.join(x.encode('hex') for x in msg_to_send)
+        decoded_header = NetIDEOps.netIDE_decode_header(msg_to_send)
+        print "Message header: ", decoded_header
+        print "Message type: ", NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
+        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+        message_data = msg_to_send[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
+        print "Message body: ",':'.join(x.encode('hex') for x in message_data)
         self.CoreConnection.socket.send(msg_to_send)
 
