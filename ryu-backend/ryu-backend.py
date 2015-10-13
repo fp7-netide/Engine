@@ -117,6 +117,12 @@ class BackendDatapath(controller.Datapath):
         msg.serialize()
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, msg.datapath.id, str(msg.buf))
         self.channel.socket.send(msg_to_send)
+        
+        #TODO: temporary patch in order to let the core know that the application has finished processing the packet_in. Only for packet_outs and flow_mods
+        if msg.msg_type is self.ofproto.OFPT_PACKET_OUT or msg.msg_type is self.ofproto.OFPT_FLOW_MOD:
+            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', 0, module_id, 0, "")
+            self.channel.socket.send(msg_to_send)
+        
         # LOG.debug('send_msg %s', msg)
         #print msg.buf
         #self.send(msg.buf)
