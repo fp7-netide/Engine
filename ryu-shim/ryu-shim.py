@@ -94,8 +94,8 @@ class CoreConnection(threading.Thread):
         while True:
             message = self.socket.recv_multipart()
             print("Received message from Core: ")
-            print (':'.join(x.encode('hex') for x in message[0]))
-            self.handle_read(message[0])
+            print (':'.join(x.encode('hex') for x in message[1]))
+            self.handle_read(message[1])
 
         self.socket.close()
         context.term()

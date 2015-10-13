@@ -203,8 +203,8 @@ class CoreConnection(threading.Thread):
         while True:
             #message = self.socket.recv()
             message = self.socket.recv_multipart()
-            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[0])
-            self.handle_read(message[0])
+            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[1])
+            self.handle_read(message[1])
 
         self.socket.close()
         context.term()
@@ -215,8 +215,8 @@ class CoreConnection(threading.Thread):
         ack = False
         while ack is False:
             ack_message = self.socket.recv_multipart()
-            msg = ack_message[0]
-            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[0])
+            msg = ack_message[1]
+            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[1])
             print "Received ack from Core:" , ack_message
             decoded_header = NetIDEOps.netIDE_decode_header(msg)
             if decoded_header is False:
@@ -242,8 +242,8 @@ class CoreConnection(threading.Thread):
                 ack = False
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
-                    msg = ack_message[0]
-                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[0])
+                    msg = ack_message[1]
+                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[1])
                     print "Received ack from Core:" , ack_message
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
                     if decoded_header is False:
@@ -265,8 +265,8 @@ class CoreConnection(threading.Thread):
         self.socket.send(message)
 
         message = self.socket.recv_multipart()
-        msg = message[0]
-        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in message[0])
+        msg = message[1]
+        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in message[1])
         #print "Received hello from Core:" , message
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         if decoded_header is False:
