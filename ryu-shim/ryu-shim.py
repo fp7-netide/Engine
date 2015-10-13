@@ -247,6 +247,9 @@ class RYUShim(app_manager.RyuApp):
     def send_to_clients(self, ev,module_id):
         msg = ev.msg
         self.datapath = ev.msg.datapath
+        if msg.msg_type is self.datapath.ofproto.OFPT_HELLO:
+            return
+        
         #Add all the switches connected datapath.id and the connection information to the local variable
         if self.datapath.id not in self.switches:
             self.switches[self.datapath.id] = self.datapath
