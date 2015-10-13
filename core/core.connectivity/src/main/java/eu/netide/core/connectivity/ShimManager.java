@@ -51,7 +51,9 @@ public class ShimManager implements IShimManager, IConnectorListener {
         }
         if (message instanceof HelloMessage) {
             // relay back to the correct backend
+            logger.info("Received HelloMessage, relaying to backend '" + backendManager.getBackend(message.getHeader().getModuleId()) + "'.");
             backendManager.sendMessage(message);
+            return;
         }
         try {
             listenerLock.acquire();

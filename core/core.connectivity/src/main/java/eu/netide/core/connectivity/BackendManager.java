@@ -143,7 +143,9 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             // Random message from backend
             if (message instanceof HelloMessage) {
                 // just relay it to the shim
+                logger.info("Received HelloMessage from backend, relaying to shim...");
                 connector.SendData(message.toByteRepresentation(), "shim"); // TODO add shim constant
+                return;
             } else if (message instanceof ModuleAnnouncementMessage) {
                 // remember backend
                 if (!backendIds.stream().anyMatch(a -> a.equals(backendId))) {
