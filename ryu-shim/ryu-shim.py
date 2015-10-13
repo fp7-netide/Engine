@@ -93,12 +93,19 @@ class CoreConnection(threading.Thread):
         #self.socket.send(b"First Hello from " + self.id)
         while True:
             message = self.socket.recv_multipart()
+            msg = self.get_multipart_message(message)
             print("Received message from Core: ")
-            print (':'.join(x.encode('hex') for x in message[1]))
-            self.handle_read(message[1])
+            print (':'.join(x.encode('hex') for x in msg))
+            self.handle_read(msg)
 
         self.socket.close()
         context.term()
+    
+    
+    def get_multipart_message(self,msg):
+        for part in msg:
+            if len(part) > 0:
+                return part
 
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
@@ -185,9 +192,6 @@ class RYUShim(app_manager.RyuApp):
         print('RYU Shim initiated')
         self.CoreConnection = CoreConnection(self, self.shim_id, __CORE_IP__,__CORE_PORT__)
         self.CoreConnection.setDaemon(True)
-        self.CoreConnection.start()
-
-    def start_thread(self):
         self.CoreConnection.start()
 
     #Explicitly sends a feature request to all the switches

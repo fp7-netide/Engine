@@ -203,11 +203,17 @@ class CoreConnection(threading.Thread):
         while True:
             #message = self.socket.recv()
             message = self.socket.recv_multipart()
-            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[1])
-            self.handle_read(message[1])
+            msg = self.get_multipart_message(message)
+            print "Received message from Core:" ,':'.join(x.encode('hex') for x in msg)
+            self.handle_read(msg)
 
         self.socket.close()
         context.term()
+
+    def get_multipart_message(self,msg):
+        for part in msg:
+            if len(part) > 0:
+                return part
 
     def backend_announcement(self, backend):
         ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', None, None, None, backend.backend_name)
@@ -215,8 +221,8 @@ class CoreConnection(threading.Thread):
         ack = False
         while ack is False:
             ack_message = self.socket.recv_multipart()
-            msg = ack_message[1]
-            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[1])
+            msg = self.get_multipart_message(ack_message)
+            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in msg)
             print "Received ack from Core:" , ack_message
             decoded_header = NetIDEOps.netIDE_decode_header(msg)
             if decoded_header is False:
@@ -242,8 +248,8 @@ class CoreConnection(threading.Thread):
                 ack = False
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
-                    msg = ack_message[1]
-                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in ack_message[1])
+                    msg = self.get_multipart_message(ack_message)
+                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in msg)
                     print "Received ack from Core:" , ack_message
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
                     if decoded_header is False:
@@ -265,8 +271,8 @@ class CoreConnection(threading.Thread):
         self.socket.send(message)
 
         message = self.socket.recv_multipart()
-        msg = message[1]
-        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in message[1])
+        msg = self.get_multipart_message(message)
+        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in msg)
         #print "Received hello from Core:" , message
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         if decoded_header is False:
