@@ -78,8 +78,8 @@
         <processorPath useClasspath="true" />
       </profile>
       <profile default="false" name="Annotation profile for emulator" enabled="true">
-        <sourceOutputDir name="target\generated-sources\annotations" />
-        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
         <module name="emulator" />
@@ -174,13 +174,10 @@
       <module fileurl="file://$PROJECT_DIR$/core.globalfib/core.globalfib.iml" filepath="$PROJECT_DIR$/core.globalfib/core.globalfib.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.logpub/core.logpub.iml" filepath="$PROJECT_DIR$/core.logpub/core.logpub.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.management/core.management.iml" filepath="$PROJECT_DIR$/core.management/core.management.iml" />
-
       <module fileurl="file://$PROJECT_DIR$/core.topology/core.topology.iml" filepath="$PROJECT_DIR$/core.topology/core.topology.iml" />
       <module fileurl="file://$PROJECT_DIR$/demo/demo.iml" filepath="$PROJECT_DIR$/demo/demo.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" filepath="$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" />
-
       <module fileurl="file://$PROJECT_DIR$/tools/emulator/emulator.iml" filepath="$PROJECT_DIR$/tools/emulator/emulator.iml" />
-
+      <module fileurl="file://$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" filepath="$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" />
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
