@@ -76,7 +76,13 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
-        <module name="demo" />
+      </profile>
+      <profile default="false" name="Annotation profile for emulator" enabled="true">
+        <sourceOutputDir name="target\generated-sources\annotations" />
+        <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="emulator" />
       </profile>
       <profile default="false" name="Annotation profile for core.globalfib" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -106,6 +112,7 @@
       <module name="core.topology" target="1.8" />
       <module name="demo" target="1.8" />
       <module name="demo-shim" target="1.8" />
+      <module name="emulator" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="CopyrightManager" default="" />
@@ -135,8 +142,8 @@
         <option value="$PROJECT_DIR$/core.caos/pom.xml" />
         <option value="$PROJECT_DIR$/core.shimconnectivity/pom.xml" />
         <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/demo/pom.xml" />
         <option value="$PROJECT_DIR$/core.globalfib/pom.xml" />
+        <option value="$PROJECT_DIR$/tools/emulator/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
@@ -167,9 +174,13 @@
       <module fileurl="file://$PROJECT_DIR$/core.globalfib/core.globalfib.iml" filepath="$PROJECT_DIR$/core.globalfib/core.globalfib.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.logpub/core.logpub.iml" filepath="$PROJECT_DIR$/core.logpub/core.logpub.iml" />
       <module fileurl="file://$PROJECT_DIR$/core.management/core.management.iml" filepath="$PROJECT_DIR$/core.management/core.management.iml" />
+
       <module fileurl="file://$PROJECT_DIR$/core.topology/core.topology.iml" filepath="$PROJECT_DIR$/core.topology/core.topology.iml" />
       <module fileurl="file://$PROJECT_DIR$/demo/demo.iml" filepath="$PROJECT_DIR$/demo/demo.iml" />
       <module fileurl="file://$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" filepath="$PROJECT_DIR$/../libraries/netip/java/eu.netide.lib.netip.iml" />
+
+      <module fileurl="file://$PROJECT_DIR$/tools/emulator/emulator.iml" filepath="$PROJECT_DIR$/tools/emulator/emulator.iml" />
+
     </modules>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_1_8" default="false" assert-keyword="true" jdk-15="true" project-jdk-name="1.8" project-jdk-type="JavaSDK">
@@ -493,6 +504,17 @@
         <root url="jar://$MAVEN_REPOSITORY$/org/beanshell/bsh/2.0b4/bsh-2.0b4-sources.jar!/" />
       </SOURCES>
     </library>
+    <library name="Maven: org.hamcrest:hamcrest-core:1.1">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/hamcrest/hamcrest-core/1.1/hamcrest-core-1.1-sources.jar!/" />
+      </SOURCES>
+    </library>
     <library name="Maven: org.javatuples:javatuples:1.2">
       <CLASSES>
         <root url="jar://$MAVEN_REPOSITORY$/org/javatuples/javatuples/1.2/javatuples-1.2.jar!/" />
@@ -513,6 +535,17 @@
       </JAVADOC>
       <SOURCES>
         <root url="jar://$MAVEN_REPOSITORY$/org/json/json/20141113/json-20141113-sources.jar!/" />
+      </SOURCES>
+    </library>
+    <library name="Maven: org.mockito:mockito-core:2.0.2-beta">
+      <CLASSES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-core/2.0.2-beta/mockito-core-2.0.2-beta.jar!/" />
+      </CLASSES>
+      <JAVADOC>
+        <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-core/2.0.2-beta/mockito-core-2.0.2-beta-javadoc.jar!/" />
+      </JAVADOC>
+      <SOURCES>
+        <root url="jar://$MAVEN_REPOSITORY$/org/mockito/mockito-core/2.0.2-beta/mockito-core-2.0.2-beta-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="Maven: org.objenesis:objenesis:2.1">

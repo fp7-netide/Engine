@@ -43,7 +43,7 @@ public class DefaultOFConflictResolver implements IConflictResolver {
     @Override
     public ResolutionResult resolve(Message[] existingMessages, Message[] newMessages, boolean preferExisting) {
         PriorityInfo priorities = new PriorityInfo(0);
-        for (Message message : existingMessages)
+        for (Message message : preferExisting ? existingMessages : newMessages)
             priorities.addInfo(message.getHeader().getModuleId(), 1);
         return resolvePriority(Stream.concat(Arrays.stream(existingMessages), Arrays.stream(newMessages)).toArray(Message[]::new), priorities);
     }
@@ -206,6 +206,8 @@ public class DefaultOFConflictResolver implements IConflictResolver {
      */
     private ResolutionResult resolvePriority(Message[] messages, PriorityInfo priorities) {
         Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
+        for (Message m : messages)
+            actions.put(m, ResolutionAction.NONE);
         while (containsConflict(messages)) {
             for (int i = 0; i < messages.length; i++) {
                 for (int j = i + 1; j < messages.length; j++) {
@@ -241,6 +243,8 @@ public class DefaultOFConflictResolver implements IConflictResolver {
      */
     private ResolutionResult resolveIgnore(Message[] messages) {
         Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
+        for (Message m : messages)
+            actions.put(m, ResolutionAction.NONE);
         while (containsConflict(messages)) {
             for (int i = 0; i < messages.length; i++) {
                 for (int j = i + 1; j < messages.length; j++) {

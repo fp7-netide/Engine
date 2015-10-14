@@ -43,6 +43,8 @@ public class ConditionEvaluator {
 
         if (!condition.getEvents().isEmpty() && !condition.getEvents().stream().anyMatch(ce -> ce == event))
             return false;
+        if (!condition.getDatapathIds().isEmpty() && !condition.getDatapathIds().stream().anyMatch(ce -> ce == status.getOriginalMessage().getHeader().getDatapathId()))
+            return false;
 
         OpenFlowMessage currentMessage = (OpenFlowMessage) status.getCurrentMessage();
         OFPacketIn packetIn = (OFPacketIn) currentMessage.getOfMessage();

@@ -66,7 +66,6 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
         } finally {
             listenerLock.release();
         }
-        // TODO handle configuration changes properly
         try {
             JSONObject mm = new JSONObject(new String(message.getPayload()));
 

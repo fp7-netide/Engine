@@ -11,7 +11,7 @@ public interface IShimConnector {
      * Sends the given byte array to the shim
      *
      * @param data The data to send.
-     * @return True, if transmission was succesful, false otherwise.
+     * @return True, if transmission was successful, false otherwise.
      */
     boolean SendData(byte[] data);
 

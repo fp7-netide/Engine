@@ -45,6 +45,12 @@ public abstract class NetIPUtils {
                     return toOpFlexMessage(message);
                 case MANAGEMENT:
                     return toManagementMessage(message);
+                case MODULE_ANNOUNCEMENT:
+                    return toModuleAnnouncementMessage(message);
+                case MODULE_ACKNOWLEDGE:
+                    return toModuleAcknowledgeMessage(message);
+                case TOPOLOGY_UPDATE:
+                    return toTopologyUpdateMessage(message);
                 default:
                     throw new IllegalArgumentException("Unknown message type.");
             }
@@ -154,5 +160,50 @@ public abstract class NetIPUtils {
         ofm.setHeader(message.getHeader());
         ofm.setPayloadString(new String(message.getPayload()));
         return ofm;
+    }
+
+    /**
+     * To ModuleAnnouncementMessage.
+     *
+     * @param message the message
+     * @return the ModuleAnnouncement message
+     */
+    private static ModuleAnnouncementMessage toModuleAnnouncementMessage(Message message) {
+        if (message.getHeader().getMessageType() != MessageType.MODULE_ANNOUNCEMENT)
+            throw new IllegalArgumentException("Can only convert MODULE_ANNOUNCEMENT messages");
+        ModuleAnnouncementMessage mam = new ModuleAnnouncementMessage();
+        mam.setHeader(message.header);
+        mam.setModuleName(new String(message.getPayload()));
+        return mam;
+    }
+
+    /**
+     * To ModuleAcknowledgeMessage.
+     *
+     * @param message the message
+     * @return the ModuleAcknowledge message
+     */
+    private static ModuleAcknowledgeMessage toModuleAcknowledgeMessage(Message message) {
+        if (message.getHeader().getMessageType() != MessageType.MODULE_ACKNOWLEDGE)
+            throw new IllegalArgumentException("Can only convert MODULE_ACKNOWLEDGE messages");
+        ModuleAcknowledgeMessage mam = new ModuleAcknowledgeMessage();
+        mam.setHeader(message.header);
+        mam.setModuleName(new String(message.getPayload()));
+        return mam;
+    }
+
+    /**
+     * To TopologyUpdateMessage.
+     *
+     * @param message the message
+     * @return the TopologyUpdate message
+     */
+    private static TopologyUpdateMessage toTopologyUpdateMessage(Message message) {
+        if (message.getHeader().getMessageType() != MessageType.TOPOLOGY_UPDATE)
+            throw new IllegalArgumentException("Can only convert TOPOLOGY_UPDATE messages");
+        TopologyUpdateMessage tum = new TopologyUpdateMessage();
+        tum.setHeader(message.header);
+        tum.setTopology(new String(message.getPayload()));
+        return tum;
     }
 }

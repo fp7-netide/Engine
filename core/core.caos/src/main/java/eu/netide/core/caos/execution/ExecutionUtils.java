@@ -1,6 +1,12 @@
 package eu.netide.core.caos.execution;
 
+import eu.netide.core.caos.composition.ExecutionFlowStatus;
+import eu.netide.core.caos.resolution.ConflictResolvers;
+import eu.netide.core.caos.resolution.IConflictResolver;
+import eu.netide.core.caos.resolution.ResolutionResult;
 import eu.netide.core.caos.resolution.ResolutionUtils;
+import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.OpenFlowMessage;
 import org.onlab.packet.*;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
@@ -14,10 +20,8 @@ import org.projectfloodlight.openflow.types.MacAddress;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Class containing utility methods for executors.
@@ -27,6 +31,30 @@ import java.util.Optional;
 public class ExecutionUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecutionUtils.class);
+
+    public static ExecutionFlowStatus mergeMessagesIntoStatus(ExecutionFlowStatus status, Message[] newMessages) {
+        Map<Long, List<Message>> newMessagesByDatapath = Arrays.stream(newMessages).collect(Collectors.groupingBy(message -> message.getHeader().getDatapathId()));
+
+        for (Long datapathId : newMessagesByDatapath.keySet()) {
+            if (!status.getResultMessages().containsKey(datapathId)) {
+                // no existing rules for that switch -> accept all new ones and continue
+                status.getResultMessages().put(datapathId, newMessagesByDatapath.get(datapathId));
+                continue;
+            }
+            // resolve per switch
+            Message[] newMessagesOnDatapath = newMessagesByDatapath.get(datapathId).stream().toArray(Message[]::new);
+            IConflictResolver resolver = ConflictResolvers.getMatchingResolver(newMessagesOnDatapath);
+            ResolutionResult rr = resolver.resolve(status.getResultMessages().get(datapathId).stream().toArray(Message[]::new), newMessagesOnDatapath, true);
+            // TODO setting for preferExisting
+            status.getResultMessages().put(datapathId, Arrays.asList(rr.getResultingMessagesToSend()));
+        }
+        return status;
+    }
+
+    public static Ethernet[] emulateNetworkBehaviour(Map<Long, List<Message>> messages, Ethernet original, OFPacketIn wrapperMessage) {
+        // TODO emulate correctly
+        return new Ethernet[]{applyFlowMods(messages.values().stream().flatMap(Collection::stream).map(m -> ((OFFlowMod) ((OpenFlowMessage) m).getOfMessage())).collect(Collectors.toList()), original, wrapperMessage)};
+    }
 
     /**
      * Applies all applicable FlowMods from a list of given FlowMods to the given Ethernet packet. The wrapperMessage is necessary for FlowMods that match on the InPort.

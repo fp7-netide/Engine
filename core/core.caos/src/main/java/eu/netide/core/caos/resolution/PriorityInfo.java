@@ -1,5 +1,6 @@
 package eu.netide.core.caos.resolution;
 
+import eu.netide.core.api.IBackendManager;
 import eu.netide.core.caos.composition.ModuleCall;
 
 import java.util.Dictionary;
@@ -29,10 +30,10 @@ public class PriorityInfo {
         return priorities.get(moduleId) == null ? this.defaultPriority : priorities.get(moduleId);
     }
 
-    public static PriorityInfo fromModuleCalls(Iterable<ModuleCall> moduleCalls) {
+    public static PriorityInfo fromModuleCalls(Iterable<ModuleCall> moduleCalls, IBackendManager backendManager) {
         PriorityInfo pi = new PriorityInfo(0);
         for (ModuleCall mc : moduleCalls) {
-            pi.addInfo(mc.getModule().getId().length(), mc.getPriority()); // TODO how to get id from module name
+            pi.addInfo(backendManager.getModuleId(mc.getModule().getId()), mc.getPriority());
         }
         return pi;
     }

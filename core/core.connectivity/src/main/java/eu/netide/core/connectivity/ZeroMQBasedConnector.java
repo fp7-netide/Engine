@@ -87,6 +87,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
     public void run() {
         logger.info("ZeroMQBasedConnector started.");
         ZMQ.Socket socket = context.socket(ZMQ.ROUTER);
+        socket.setIdentity("core".getBytes(ZMQ.CHARSET));
         socket.bind("tcp://*:" + port);
         logger.info("Listening on port " + port);
 

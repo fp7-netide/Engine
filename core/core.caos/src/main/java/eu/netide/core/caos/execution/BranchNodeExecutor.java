@@ -1,7 +1,11 @@
 package eu.netide.core.caos.execution;
 
 import eu.netide.core.api.IBackendManager;
-import eu.netide.core.caos.composition.*;
+import eu.netide.core.api.IShimManager;
+import eu.netide.core.caos.composition.Branch;
+import eu.netide.core.caos.composition.ExecutionFlowNode;
+import eu.netide.core.caos.composition.ExecutionFlowStatus;
+import eu.netide.core.caos.composition.ParallelCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,13 +24,12 @@ public class BranchNodeExecutor implements IFlowNodeExecutor {
     }
 
     @Override
-    public ExecutionResult execute(ExecutionFlowNode node, ExecutionFlowStatus status, IBackendManager backendManager) {
+    public ExecutionFlowStatus execute(ExecutionFlowNode node, ExecutionFlowStatus status, IShimManager shimManager, IBackendManager backendManager) {
         if (!canExecute(node)) throw new UnsupportedOperationException("Cannot execute this type of node!");
 
         Branch br = (Branch) node;
-        ExecutionResult executionResult = new ExecutionResult();
-        ExecutionFlowStatus s = FlowExecutors.SEQUENTIAL.executeFlow(status, ConditionEvaluator.evaluate(br.getCondition(), status) ? br.getIf().getFlowNodes() : br.getElse().getFlowNodes(), backendManager);
-        s.getResultMessages().forEach(executionResult::addMessageToSend);
-        return executionResult;
+        boolean ifBranch = ConditionEvaluator.evaluate(br.getCondition(), status);
+        logger.info("Taking " + (ifBranch ? "IF" : "ELSE") + " path of branch.");
+        return FlowExecutors.SEQUENTIAL.executeFlow(status, ifBranch ? br.getIf().getFlowNodes().stream() : br.getElse().getFlowNodes().stream(), shimManager, backendManager);
     }
 }

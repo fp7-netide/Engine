@@ -166,9 +166,7 @@ public class ResolutionUtils {
         OFFlowModCommand c1 = offm1.getCommand();
         OFFlowModCommand c2 = offm2.getCommand();
         if (c1 != DELETE && c1 != DELETE_STRICT && c2 != DELETE && c2 != DELETE_STRICT) {
-
-            // TODO check for flowmod actions
-            return offm1.getActions().stream().anyMatch(a -> offm2.getActions().stream().anyMatch(b -> a == b));
+            return offm1.getActions().stream().anyMatch(a -> offm2.getActions().stream().anyMatch(a::equals));
         }
         return false;
     }

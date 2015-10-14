@@ -1,10 +1,7 @@
 package eu.netide.core.connectivity;
 
 import eu.netide.core.api.*;
-import eu.netide.lib.netip.HelloMessage;
-import eu.netide.lib.netip.ManagementMessage;
-import eu.netide.lib.netip.Message;
-import eu.netide.lib.netip.NetIPConverter;
+import eu.netide.lib.netip.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,28 +25,20 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private List<IBackendMessageListener> backendMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
     private List<String> backendIds = new ArrayList<>();
-    private Dictionary<Integer, String> moduleToBackendMappings = new Hashtable<>();
-    private Dictionary<Integer, String> moduleToNameMappings = new Hashtable<>();
+    private Map<Integer, String> moduleToBackendMappings = new HashMap<>();
+    private Map<Integer, String> moduleToNameMappings = new HashMap<>();
 
     private final ExecutorService pool = Executors.newCachedThreadPool();
     private final Dictionary<Integer, RequestResult> results = new Hashtable<>();
     private final Dictionary<Integer, Semaphore> locks = new Hashtable<>();
 
-    // DEMO ONLY
-    private final Dictionary<Integer, String> demoMappings = new Hashtable<>();
+    private Random random = new Random();
 
     /**
      * Called by Apache Aries on startup (configured in blueprint.xml)
      */
     public void Start() {
         logger.debug("BackendManager started.");
-        // TODO populate dictionary with correct values
-        // ONLY FOR DEMO PURPOSES
-        demoMappings.put(1, "fw");
-        demoMappings.put(2, "lb");
-        demoMappings.put(3, "appA");
-        demoMappings.put(4, "appB");
-        demoMappings.put(5, "log");
     }
 
     /**
@@ -102,21 +91,24 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public Stream<Integer> getModuleIds() {
-        return Collections.list(moduleToBackendMappings.keys()).stream();
+        return moduleToBackendMappings.keySet().stream();
     }
 
     @Override
     public Stream<String> getModules() {
-        return Collections.list(moduleToNameMappings.elements()).stream();
+        return moduleToNameMappings.values().stream();
     }
 
     @Override
     public String getBackend(Integer moduleId) {
-        return moduleToBackendMappings.get(moduleId);
+        if (moduleToBackendMappings.containsKey(moduleId))
+            return moduleToBackendMappings.get(moduleId);
+        else
+            throw new UnsupportedOperationException("No backend mapping known for moduleId '" + moduleId + "'.");
     }
 
     public int getModuleId(String moduleName) {
-        return Collections.list(moduleToNameMappings.keys()).stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
+        return moduleToNameMappings.keySet().stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
     }
 
     @Override
@@ -134,7 +126,6 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
         RequestResult r = results.get(id);
         Semaphore lock = locks.get(id);
-        logger.info("Result null? " + (r == null) + ", Lock null? " + (lock == null));
         if (r != null && lock != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
             // Message belongs to former request
             if (message instanceof ManagementMessage) {
@@ -151,25 +142,44 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         } else {
             // Random message from backend
             if (message instanceof HelloMessage) {
-                // remember backend and mapping
+                // just relay it to the shim
+                logger.info("Received HelloMessage from backend, relaying to shim...");
+                connector.SendData(message.toByteRepresentation(), "shim"); // TODO add shim constant
+                return;
+            } else if (message instanceof ModuleAnnouncementMessage) {
+                // remember backend
                 if (!backendIds.stream().anyMatch(a -> a.equals(backendId))) {
                     backendIds.add(backendId);
                 }
-                moduleToBackendMappings.put(message.getHeader().getModuleId(), backendId);
-                // DEMO ONLY -> hello message signals that id is available
-                moduleToNameMappings.put(message.getHeader().getModuleId(), demoMappings.get(message.getHeader().getModuleId()));
-                logger.info("DEMO: Received HELLO from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'. Module '" + demoMappings.get(message.getHeader().getModuleId()) + "' now marked as available.");
-                // TODO handle message appropriately
+                // get new module ID
+                ModuleAnnouncementMessage mam = (ModuleAnnouncementMessage) message;
+                logger.info("Received ModuleAnnouncement for module '" + mam.getModuleName() + "' from backend '" + backendId + "'. Calculating ID...");
+                int moduleId = random.nextInt(1000); // for easier typing in the emulator, restrict to smaller numbers
+                while (moduleToNameMappings.keySet().contains(moduleId) || moduleId < 1) {
+                    moduleId = random.nextInt(1000);
+                }
+                moduleToNameMappings.put(moduleId, mam.getModuleName());
+                moduleToBackendMappings.put(moduleId, backendId);
+                // send acknowledge back
+                ModuleAcknowledgeMessage ack = new ModuleAcknowledgeMessage();
+                ack.setModuleName(mam.getModuleName());
+                ack.setHeader(NetIPUtils.StubHeaderFromPayload(ack.getPayload()));
+                ack.getHeader().setMessageType(MessageType.MODULE_ACKNOWLEDGE);
+                ack.getHeader().setModuleId(moduleId);
+                connector.SendData(ack.toByteRepresentation(), backendId);
+                logger.info("Mapped module '" + mam.getModuleName() + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
             } else if (message instanceof ManagementMessage) {
-                logger.info("Received unrequested ManagementMessage: " + message.toString());
-                // TODO handle appropriately
+                logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
+                connector.SendData(message.toByteRepresentation(), "shim"); // TODO make shim name a constant
             } else {
-                logger.info("Received unrequested Message: " + message.toString());
+                logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
                 try {
                     listenerLock.acquire();
+                    // Notify listeners and send to shim
                     for (IBackendMessageListener listener : backendMessageListeners) {
                         pool.submit(() -> listener.OnBackendMessage(message, backendId));
                     }
+                    connector.SendData(message.toByteRepresentation(), "shim"); // TODO make shim name a constant
                 } catch (InterruptedException e) {
                     logger.error("", e);
                 } finally {
