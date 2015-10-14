@@ -10,15 +10,15 @@
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.topology Bundle" />
-          <property key="Bundle-ClassPath" value=".,jeromq-0.3.4.jar" />
-          <property key="Include-Resource" value="jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar" />
-          <property key="Embedded-Artifacts" value="jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;" />
+          <property key="Bundle-ClassPath" value=".,logback-classic-1.0.13.jar,guava-17.0.jar,netty-3.9.0.Final.jar,annotations-2.0.2.jar,jeromq-0.3.4.jar,openflowj-0.4.0.onos.jar,slf4j-api-1.7.12.jar,logback-core-1.0.13.jar" />
+          <property key="Include-Resource" value="logback-classic-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-classic/1.0.13/logback-classic-1.0.13.jar,guava-17.0.jar=$MAVEN_REPOSITORY$/com/google/guava/guava/17.0/guava-17.0.jar,netty-3.9.0.Final.jar=$MAVEN_REPOSITORY$/io/netty/netty/3.9.0.Final/netty-3.9.0.Final.jar,annotations-2.0.2.jar=$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.2/annotations-2.0.2.jar,jeromq-0.3.4.jar=$MAVEN_REPOSITORY$/org/zeromq/jeromq/0.3.4/jeromq-0.3.4.jar,openflowj-0.4.0.onos.jar=$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos.jar,slf4j-api-1.7.12.jar=$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar,logback-core-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-core/1.0.13/logback-core-1.0.13.jar" />
+          <property key="Embedded-Artifacts" value="logback-classic-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-classic&quot;;v=&quot;1.0.13&quot;,guava-17.0.jar;g=&quot;com.google.guava&quot;;a=&quot;guava&quot;;v=&quot;17.0&quot;,netty-3.9.0.Final.jar;g=&quot;io.netty&quot;;a=&quot;netty&quot;;v=&quot;3.9.0.Final&quot;,annotations-2.0.2.jar;g=&quot;com.google.code.findbugs&quot;;a=&quot;annotations&quot;;v=&quot;2.0.2&quot;,jeromq-0.3.4.jar;g=&quot;org.zeromq&quot;;a=&quot;jeromq&quot;;v=&quot;0.3.4&quot;,openflowj-0.4.0.onos.jar;g=&quot;org.onosproject&quot;;a=&quot;openflowj&quot;;v=&quot;0.4.0.onos&quot;,slf4j-api-1.7.12.jar;g=&quot;org.slf4j&quot;;a=&quot;slf4j-api&quot;;v=&quot;1.7.12&quot;,logback-core-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-core&quot;;v=&quot;1.0.13&quot;" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
     </facet>
   </component>
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="true">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/target/classes" />
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
@@ -30,11 +30,16 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:4.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf:org.apache.karaf.util:4.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.felix:org.apache.felix.utils:1.8.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.jaas:org.apache.karaf.jaas.boot:4.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
     <orderEntry type="library" name="Maven: org.onosproject:openflowj:0.4.0.onos" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:17.0" level="project" />
+    <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
+    <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
   </component>
 </module>
