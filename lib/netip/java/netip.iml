@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="Osmorc" name="OSGi">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="netip-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="" bundleSymbolicName="netip" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
+        <additionalProperties>
+          <property key="Bundle-Description" value="Java Library for handling the NetIDE intermediate protocol." />
+          <property key="Export-Package" value="eu.netide.lib.netip;version=1.0.0.0" />
+          <property key="Import-Package" value="org.osgi.framework" />
+          <property key="Embed-Dependency" value="*;scope=compile|runtime" />
+          <property key="Embed-Transitive" value="true" />
+          <property key="Bundle-Name" value="netip Bundle" />
+          <property key="Bundle-ClassPath" value=".,annotations-2.0.2.jar,logback-classic-1.0.13.jar,openflowj-0.4.0.onos.jar,slf4j-api-1.7.5.jar,guava-17.0.jar,logback-core-1.0.13.jar,netty-3.9.0.Final.jar,javatuples-1.2.jar" />
+          <property key="Include-Resource" value="annotations-2.0.2.jar=$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.2/annotations-2.0.2.jar,logback-classic-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-classic/1.0.13/logback-classic-1.0.13.jar,openflowj-0.4.0.onos.jar=$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos.jar,slf4j-api-1.7.5.jar=$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.5/slf4j-api-1.7.5.jar,guava-17.0.jar=$MAVEN_REPOSITORY$/com/google/guava/guava/17.0/guava-17.0.jar,logback-core-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-core/1.0.13/logback-core-1.0.13.jar,netty-3.9.0.Final.jar=$MAVEN_REPOSITORY$/io/netty/netty/3.9.0.Final/netty-3.9.0.Final.jar,javatuples-1.2.jar=$MAVEN_REPOSITORY$/org/javatuples/javatuples/1.2/javatuples-1.2.jar" />
+          <property key="Embedded-Artifacts" value="annotations-2.0.2.jar;g=&quot;com.google.code.findbugs&quot;;a=&quot;annotations&quot;;v=&quot;2.0.2&quot;,logback-classic-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-classic&quot;;v=&quot;1.0.13&quot;,openflowj-0.4.0.onos.jar;g=&quot;org.onosproject&quot;;a=&quot;openflowj&quot;;v=&quot;0.4.0.onos&quot;,slf4j-api-1.7.5.jar;g=&quot;org.slf4j&quot;;a=&quot;slf4j-api&quot;;v=&quot;1.7.5&quot;,guava-17.0.jar;g=&quot;com.google.guava&quot;;a=&quot;guava&quot;;v=&quot;17.0&quot;,logback-core-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-core&quot;;v=&quot;1.0.13&quot;,netty-3.9.0.Final.jar;g=&quot;io.netty&quot;;a=&quot;netty&quot;;v=&quot;3.9.0.Final&quot;,javatuples-1.2.jar;g=&quot;org.javatuples&quot;;a=&quot;javatuples&quot;;v=&quot;1.2&quot;" />
+        </additionalProperties>
+        <additionalJARContents />
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8" inherit-compiler-output="false">
+    <output url="file://$MODULE_DIR$/target/classes" />
+    <output-test url="file://$MODULE_DIR$/target/test-classes" />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src/main/java" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />
+    <orderEntry type="library" name="Maven: org.onosproject:openflowj:0.4.0.onos" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty:3.9.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:17.0" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
+    <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
+    <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
+    <orderEntry type="library" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+  </component>
+</module>
