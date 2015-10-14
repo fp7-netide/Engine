@@ -4,6 +4,7 @@
     <facet type="Osmorc" name="OSGi">
       <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.api-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.api.Activator" bundleSymbolicName="core.api" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
+          <property key="Bundle-Description" value="core.api OSGi bundle project." />
           <property key="Export-Package" value="eu.netide.core.api;version=1.0.0.0" />
           <property key="Import-Package" value="org.osgi.framework,eu.netide.lib.netip" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
@@ -27,6 +28,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="eu.netide.lib.netip" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />
@@ -40,6 +42,5 @@
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-core:1.0.13" level="project" />
     <orderEntry type="library" name="Maven: ch.qos.logback:logback-classic:1.0.13" level="project" />
-    <orderEntry type="module" module-name="eu.netide.lib.netip" />
   </component>
 </module>

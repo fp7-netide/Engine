@@ -29,6 +29,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
+    <orderEntry type="library" name="Maven: org.javatuples:javatuples:1.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
     <orderEntry type="module" module-name="core.topology" scope="PROVIDED" />

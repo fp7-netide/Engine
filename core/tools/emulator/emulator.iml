@@ -9,6 +9,7 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module" module-name="eu.netide.lib.netip" />
     <orderEntry type="module" module-name="core.api" />
     <orderEntry type="library" name="Maven: org.onosproject:openflowj:0.4.0.onos" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />
@@ -35,6 +36,5 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.4.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.4.2" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:18.0" level="project" />
-    <orderEntry type="module" module-name="eu.netide.lib.netip" />
   </component>
 </module>

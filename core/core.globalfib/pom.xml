@@ -5,15 +5,16 @@
     <modelVersion>4.0.0</modelVersion>
 
 
-    <parent>
+<!--    <parent>
         <groupId>eu.netide.core</groupId>
         <artifactId>core</artifactId>
         <version>1.0.0.0</version>
         <relativePath>../pom.xml</relativePath>
-    </parent>
+    </parent> -->
 
     <artifactId>core.globalfib</artifactId>
     <version>1.0.0.0</version>
+    <groupId>eu.netide.core</groupId>
 
     <name>core.globalfib Bundle</name>
     <description>core.globalfib OSGi bundle project.</description>
