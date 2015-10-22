@@ -55,15 +55,10 @@ from ryu.netide.netip import *
 #from ryu.netide.netip import *
 #from time import sleep
 
-NETIDE_CORE_PORT = 41414
+NETIDE_CORE_PORT = 5555
 
-async_messages = frozenset([ofproto_v1_5.OFPT_PACKET_IN,
-                            ofproto_v1_5.OFPT_FLOW_REMOVED,
-                            ofproto_v1_5.OFPT_PORT_STATUS,
-                            ofproto_v1_5.OFPT_ROLE_STATUS,
-                            ofproto_v1_5.OFPT_TABLE_STATUS,
-                            ofproto_v1_5.OFPT_REQUESTFORWARD,
-                            ofproto_v1_5.OFPT_CONTROLLER_STATUS])
+logger = logging.getLogger('ryu-shim')
+logger.setLevel(logging.DEBUG)
 
 def set_xid(of_array, xid):
     of_array[4]=(xid >>24) & 0xff;
@@ -86,16 +81,13 @@ class CoreConnection(threading.Thread):
         context = zmq.Context()
         self.socket = context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self.id)
-        print('Connecting to Core on %s:%s...' % (self.host,self.port))
+        logger.debug('Connecting to Core on %s:%s...', self.host, self.port)
         self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
 
-        print('Connected to Core.')
         #self.socket.send(b"First Hello from " + self.id)
         while True:
             message = self.socket.recv_multipart()
             msg = self.get_multipart_message(message)
-            print("Received message from Core: ")
-            print (':'.join(x.encode('hex') for x in msg))
             self.handle_read(msg)
 
         self.socket.close()
@@ -111,10 +103,10 @@ class CoreConnection(threading.Thread):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         if decoded_header is False:
             return False
+        logger.debug("Received from Core: Message header: %s", decoded_header)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-        print "Received message: ", ':'.join(x.encode('hex') for x in msg)
-        print "Message data: ", ':'.join(x.encode('hex') for x in message_data)
+        logger.debug("Received from Core: Message body: %s",':'.join(x.encode('hex') for x in message_data))
 
         if decoded_header[NetIDEOps.NetIDE_header['VERSION']] is not NetIDEOps.NetIDE_version:
             print ("Attempt to connect from unsupported client")
@@ -127,7 +119,7 @@ class CoreConnection(threading.Thread):
                     print ("Client does not support any protocol")
                     return
                 backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
-                print "Received HELLO message from backend: ", backend_id
+                logger.debug( "Received HELLO message from backend: ,%s", backend_id)
                 message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
                 negotiated_protocols = {}
                 #Find the common protocols that client and server support
@@ -190,7 +182,6 @@ class RYUShim(app_manager.RyuApp):
         self.ofp_version = None
 
         # Start the connection to the core
-        print('RYU Shim initiated')
         self.CoreConnection = CoreConnection(self, self.shim_id, __CORE_IP__,__CORE_PORT__)
         self.CoreConnection.setDaemon(True)
         self.CoreConnection.start()
@@ -247,6 +238,8 @@ class RYUShim(app_manager.RyuApp):
     def send_to_clients(self, ev,module_id):
         msg = ev.msg
         self.datapath = ev.msg.datapath
+        
+        #Hello messages are not sent to the core
         if msg.msg_type is self.datapath.ofproto.OFPT_HELLO:
             return
         
@@ -258,10 +251,9 @@ class RYUShim(app_manager.RyuApp):
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, self.datapath.id, str(msg.buf))
         #Forward the message to all the connected NetIDE clients
         decoded_header = NetIDEOps.netIDE_decode_header(msg_to_send)
-        print "Message header: ", decoded_header
-        print "Message type: ", NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
+        logger.debug("Sending to Core: Message header: %s", decoded_header)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg_to_send[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-        print "Message body: ",':'.join(x.encode('hex') for x in message_data)
+        logger.debug("Sending to Core: Message body: %s",':'.join(x.encode('hex') for x in message_data))
         self.CoreConnection.socket.send(msg_to_send)
 

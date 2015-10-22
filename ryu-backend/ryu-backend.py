@@ -42,6 +42,7 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
@@ -51,7 +52,10 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN
 from ryu.netide.netip import *
 
 
-NETIDE_CORE_PORT = 51515
+NETIDE_CORE_PORT = 5555
+
+logger = logging.getLogger('ryu-backend')
+logger.setLevel(logging.NOTSET)
 
 
 class BackendDatapath(controller.Datapath):
@@ -138,14 +142,11 @@ class BackendDatapath(controller.Datapath):
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
-            if module_id  == 0: # to all observers
-                self.ofp_brick.send_event_to_observers(ev, self.state)
-            else: # to a specific observer
-                for key, value in self.channel.running_modules.iteritems():
-                    if value == module_id:
-                        module_name = key
-                        self.ofp_brick.send_event(module_name,ev, self.state)
-                        break
+            for key, value in self.channel.running_modules.iteritems():
+                if value == module_id:
+                    module_name = key
+                    self.ofp_brick.send_event(module_name,ev, self.state)
+                    break
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -172,7 +173,7 @@ class CoreConnection(threading.Thread):
         context = zmq.Context()
         self.socket = context.socket(zmq.DEALER)
         self.socket.setsockopt(zmq.IDENTITY, self.backend.backend_name)
-        print('Connecting to Core on %s:%s...' % (self.host,self.port))
+        logger.debug('Connecting to Core on %s:%s...', self.host, self.port)
         self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
 
 
@@ -188,14 +189,14 @@ class CoreConnection(threading.Thread):
             return
 
         # Performing the initial handshake with the shim
-        print "Starting the handshake process..."
+        logger.debug( "Starting the handshake process...")
         handshake = False
         while handshake is False:
-            print "Waiting for the Handshake to be completed..."
+            logger.debug("Waiting for the Handshake to be completed...")
             timeout = time.time()+ 10
             while time.time() < timeout:
                 if self.handle_handshake(self.backend) is True:
-                    print "Handshake done!!!"
+                    logger.debug("Handshake done!!!")
                     handshake = True
                     break
 
@@ -204,7 +205,7 @@ class CoreConnection(threading.Thread):
             #message = self.socket.recv()
             message = self.socket.recv_multipart()
             msg = self.get_multipart_message(message)
-            print "Received message from Core:" ,':'.join(x.encode('hex') for x in msg)
+            #print "Received message from Core:" ,':'.join(x.encode('hex') for x in msg)
             self.handle_read(msg)
 
         self.socket.close()
@@ -222,8 +223,7 @@ class CoreConnection(threading.Thread):
         while ack is False:
             ack_message = self.socket.recv_multipart()
             msg = self.get_multipart_message(ack_message)
-            print "Received ack from Core:" ,':'.join(x.encode('hex') for x in msg)
-            print "Received ack from Core:" , ack_message
+            logger.debug( "Received ack from Core: %s" , ack_message)
             decoded_header = NetIDEOps.netIDE_decode_header(msg)
             if decoded_header is False:
                 return False
@@ -249,8 +249,7 @@ class CoreConnection(threading.Thread):
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
                     msg = self.get_multipart_message(ack_message)
-                    print "Received ack from Core:" ,':'.join(x.encode('hex') for x in msg)
-                    print "Received ack from Core:" , ack_message
+                    logger.debug( "Received ack from Core: %s" , ack_message)
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
                     if decoded_header is False:
                         return False
@@ -327,9 +326,12 @@ class CoreConnection(threading.Thread):
 
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
+        logger.debug("Message header: %s", decoded_header)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
+        logger.debug("Message body: %s",':'.join(x.encode('hex') for x in message_data))
         message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
+        
         if message_type is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
             if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
                 self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
@@ -361,9 +363,8 @@ class RYUClient(app_manager.RyuApp):
         #TODO: to implement an automatic mechanism that discovers the OF version used by the apps
         self.supported_protocols[OPENFLOW_PROTO] = [OPENFLOW_10,OPENFLOW_12,OPENFLOW_13]
         self.supported_protocols[NETCONF_PROTO] = []
-        print "backend supported protocols: ", self.supported_protocols
-
-        print('RYU Client initiated')
+        logger.debug( "Backend supported protocols: %s" , self.supported_protocols)
+        logger.debug('RYU Client initiated')
 
         #Start the zeromq loop to listen to incoming messages
         self.CoreConnection = CoreConnection(self, __CORE_IP__,__CORE_PORT__)
