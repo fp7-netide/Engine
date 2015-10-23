@@ -16,6 +16,7 @@
 # http://www.eclipse.org/legal/epl-v10.html                                    #
 ################################################################################
 import struct
+from ryu.ofproto import ofproto_v1_5
 
 NETIDE_VERSION = 0x02
 NetIDE_Header_Format = '!BBHIIQ'
@@ -31,6 +32,15 @@ OPENFLOW_14 = 0x05
 OPENFLOW_15 = 0x06
 NETCONF_10 = 0x01
 OPFLEX = 0x00
+
+async_messages = frozenset([ofproto_v1_5.OFPT_PACKET_IN,
+                            ofproto_v1_5.OFPT_FLOW_REMOVED,
+                            ofproto_v1_5.OFPT_PORT_STATUS,
+                            ofproto_v1_5.OFPT_ROLE_STATUS,
+                            ofproto_v1_5.OFPT_TABLE_STATUS,
+                            ofproto_v1_5.OFPT_REQUESTFORWARD,
+                            ofproto_v1_5.OFPT_CONTROLLER_STATUS])
+
 
 class NetIDEOps:
     NetIDE_version = NETIDE_VERSION
@@ -87,11 +97,8 @@ class NetIDEOps:
     #Decode NetIDE messages received in binary format. Input: Raw data and length of the encapsulated message
     #Length can be retrieve by decoding the header first
     @staticmethod
-    def netIDE_decode(raw_data, length):
-        if len(raw_data) != length:
-            print "Error: Message size should be ", length, " bytes. Given: ", len(raw_data)
-            return False
-        unpacker = struct.Struct(NetIDE_Header_Format+str(length)+'s')
+    def netIDE_decode(raw_data):
+        unpacker = struct.Struct(NetIDE_Header_Format+str(len(raw_data)-NetIDEOps.NetIDE_Header_Size)+'s')
         return unpacker.unpack(raw_data)
 
     #Encode the hello handshake message. protocols is a dictionary such as: {OPENFLOW_PROTO: [1,3], NETCONF_PROTO: []}
@@ -116,6 +123,11 @@ class NetIDEOps:
         packer = struct.Struct('!'+str(length)+'B')
         unpacked = packer.unpack(raw_data)
         return unpacked
+    
+    @staticmethod
+    def netIDE_set_module_id(raw_data, new_mod_id):
+        (version, msg_type, length, xid, mod_id, dpid, msg) = NetIDEOps.netIDE_decode(raw_data)     
+        return NetIDEOps.netIDE_encode(NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, msg_type), xid, new_mod_id, dpid, msg)
 
     #Return the key name from a value in a dictionary
     @staticmethod
