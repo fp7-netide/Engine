@@ -42,6 +42,7 @@ from ryu.lib.packet import ethernet
 from ryu.lib.packet import ipv4
 from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
@@ -51,7 +52,10 @@ from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN
 from ryu.netide.netip import *
 
 
-NETIDE_CORE_PORT = 51515
+NETIDE_CORE_PORT = 5555
+
+logger = logging.getLogger('ryu-backend')
+logger.setLevel(logging.NOTSET)
 
 
 class BackendDatapath(controller.Datapath):
@@ -117,6 +121,12 @@ class BackendDatapath(controller.Datapath):
         msg.serialize()
         msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, msg.datapath.id, str(msg.buf))
         self.channel.socket.send(msg_to_send)
+        
+        #TODO: temporary patch in order to let the core know that the application has finished processing the packet_in. Only for packet_outs and flow_mods
+        if msg.msg_type is self.ofproto.OFPT_PACKET_OUT or msg.msg_type is self.ofproto.OFPT_FLOW_MOD:
+            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', 0, module_id, 0, "")
+            self.channel.socket.send(msg_to_send)
+        
         # LOG.debug('send_msg %s', msg)
         #print msg.buf
         #self.send(msg.buf)
@@ -127,20 +137,16 @@ class BackendDatapath(controller.Datapath):
     def handle_event(self, header, msg):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
-
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
-            if module_id  == 0: # to all observers
-                self.ofp_brick.send_event_to_observers(ev, self.state)
-            else: # to a specific observer
-                for key, value in self.channel.running_modules.iteritems():
-                    if value == module_id:
-                        module_name = key
-                        break
-                self.ofp_brick.send_event(module_name,ev, self.state)
+            for key, value in self.channel.running_modules.iteritems():
+                if value == module_id:
+                    module_name = key
+                    self.ofp_brick.send_event(module_name,ev, self.state)
+                    break
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -162,33 +168,75 @@ class CoreConnection(threading.Thread):
         self.ofproto = None
         self.ofproto_parser = None
         self.backend = backend
-        self.id = self.backend.backend_id
 
     def run(self):
         context = zmq.Context()
         self.socket = context.socket(zmq.DEALER)
-        self.socket.setsockopt(zmq.IDENTITY, self.id)
-        print('Connecting to Core on %s:%s...' % (self.host,self.port))
+        self.socket.setsockopt(zmq.IDENTITY, self.backend.backend_name)
+        logger.debug('Connecting to Core on %s:%s...', self.host, self.port)
         self.socket.connect("tcp://" +str(self.host) + ":" + str(self.port))
 
-        # Performing the initial handshake with the shim
-        if self.handle_handshake() is False:
-            print "Handshake error!!! Exiting..."
+
+        #time.sleep(2) #TODO: we need to wait until the app_manager has detected all the running apps. Replace the sleep with something more elegant.
+        # Announcing the client controller to the core
+        if self.backend_announcement(self.backend) is False:
+            print "No backend id received from the core!!! Exiting..."
             return
 
+        # Announcing the modules to the core
         if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
             print "No module ids received from the core!!! Exiting..."
             return
+
+        # Performing the initial handshake with the shim
+        logger.debug( "Starting the handshake process...")
+        handshake = False
+        while handshake is False:
+            logger.debug("Waiting for the Handshake to be completed...")
+            timeout = time.time()+ 10
+            while time.time() < timeout:
+                if self.handle_handshake(self.backend) is True:
+                    logger.debug("Handshake done!!!")
+                    handshake = True
+                    break
 
         #self.socket.send(b"First Hello from " + self.id)
         while True:
             #message = self.socket.recv()
             message = self.socket.recv_multipart()
-            print "Received message from Core:" ,':'.join(x.encode('hex') for x in message[0])
-            self.handle_read(message[0])
+            msg = self.get_multipart_message(message)
+            #print "Received message from Core:" ,':'.join(x.encode('hex') for x in msg)
+            self.handle_read(msg)
 
         self.socket.close()
         context.term()
+
+    def get_multipart_message(self,msg):
+        for part in msg:
+            if len(part) > 0:
+                return part
+
+    def backend_announcement(self, backend):
+        ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', None, None, None, backend.backend_name)
+        self.socket.send(ann_message)
+        ack = False
+        while ack is False:
+            ack_message = self.socket.recv_multipart()
+            msg = self.get_multipart_message(ack_message)
+            logger.debug( "Received ack from Core: %s" , ack_message)
+            decoded_header = NetIDEOps.netIDE_decode_header(msg)
+            if decoded_header is False:
+                return False
+            message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
+            message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+            if message_length is 0:
+                return False
+            else:
+                message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
+            if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == backend.backend_name:
+                backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
+                backend.backend_id = backend_id
+                ack = True
 
     def module_announcement(self, bricks):
         for key,value in bricks.iteritems():
@@ -200,26 +248,37 @@ class CoreConnection(threading.Thread):
                 ack = False
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
-                    msg = ack_message[0]
+                    msg = self.get_multipart_message(ack_message)
+                    logger.debug( "Received ack from Core: %s" , ack_message)
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
+                    if decoded_header is False:
+                        return False
                     message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
-                    if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and decoded_header[NetIDEOps.NetIDE_header['XID']] == xid:
-                        message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                    message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                    if message_length is 0:
+                        return False
+                    else:
                         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-                        self.running_modules[module_name] = int(message_data)
+                    if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == module_name:
+                        module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
+                        self.running_modules[module_name] = module_id
                         ack = True
 
-
-
-    def handle_handshake(self):
+    def handle_handshake(self,backend):
         proto_data = NetIDEOps.netIDE_encode_handshake(self.backend.supported_protocols)
-        message = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, None, None, proto_data)
+        message = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, backend.backend_id, None, proto_data)
         self.socket.send(message)
 
         message = self.socket.recv_multipart()
-        msg = message[0]
+        msg = self.get_multipart_message(message)
+        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in msg)
+        #print "Received hello from Core:" , message
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
+        if decoded_header is False:
+            return False
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+        if message_length is 0:
+            return False
         message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
 
         if message_type is NetIDEOps.NetIDE_type['NETIDE_HELLO']:
@@ -267,10 +326,12 @@ class CoreConnection(threading.Thread):
 
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
+        logger.debug("Message header: %s", decoded_header)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-        #print (':'.join(x.encode('hex') for x in message_data))
+        logger.debug("Message body: %s",':'.join(x.encode('hex') for x in message_data))
         message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
+        
         if message_type is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
             if decoded_header[NetIDEOps.NetIDE_header['DPID']] not in self.client_info['datapaths']:
                 self.of_datapath = BackendDatapath(decoded_header[NetIDEOps.NetIDE_header['DPID']], self, self.ofproto, self.ofproto_parser)
@@ -278,7 +339,6 @@ class CoreConnection(threading.Thread):
                 self.of_datapath.of_hello_handler(decoded_header)
             else:
                 self.of_datapath = self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
-                #print self.client_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
 
             self.of_datapath.handle_event(decoded_header, message_data)
 
@@ -297,13 +357,14 @@ class RYUClient(app_manager.RyuApp):
         __CONTROLLER_IP__ = '127.0.0.1'
         __CONTROLLER_PORT__ = 7733
 
-        self.backend_id = b"backend-ryu-" + str(os.getpid())
+        self.backend_name = b"backend-ryu-" + str(os.getpid())
+        self.backend_id = 0
         self.supported_protocols = {}
+        #TODO: to implement an automatic mechanism that discovers the OF version used by the apps
         self.supported_protocols[OPENFLOW_PROTO] = [OPENFLOW_10,OPENFLOW_12,OPENFLOW_13]
         self.supported_protocols[NETCONF_PROTO] = []
-        print "backend supported protocols: ", self.supported_protocols
-
-        print('RYU Client initiated')
+        logger.debug( "Backend supported protocols: %s" , self.supported_protocols)
+        logger.debug('RYU Client initiated')
 
         #Start the zeromq loop to listen to incoming messages
         self.CoreConnection = CoreConnection(self, __CORE_IP__,__CORE_PORT__)
