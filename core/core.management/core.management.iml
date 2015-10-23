@@ -2,10 +2,10 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.management-1.0.0.0.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.management" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.management-1.0.0.0-SNAPSHOT.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.management" bundleVersion="1.0.0.0-SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.management OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core.management;version=1.0.0.0" />
+          <property key="Export-Package" value="eu.netide.core.management;version=1.0.0.0-SNAPSHOT" />
           <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip,org.slf4j" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
@@ -40,8 +40,7 @@
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.karaf.config:org.apache.karaf.config.core:3.0.3" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.apache.felix:org.apache.felix.utils:1.6.0" level="project" />
     <orderEntry type="library" name="Maven: org.zeromq:jeromq:0.3.4" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.json:json:20141113" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
   </component>

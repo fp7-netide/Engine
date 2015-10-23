@@ -2,10 +2,10 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.caos-1.0.0.0.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.caos" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.caos-1.0.0.0-SNAPSHOT.jar" outputPathType="OsgiOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.caos.Activator" bundleSymbolicName="core.caos" bundleVersion="1.0.0.0-SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="true" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.caos OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0,eu.netide.core.caos.composition;version=1.0.0.0" />
+          <property key="Export-Package" value="eu.netide.core.caos;version=1.0.0.0-SNAPSHOT,eu.netide.core.caos.composition;version=1.0.0.0-SNAPSHOT" />
           <property key="Import-Package" value="eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip,org.slf4j,org.projectfloodlight.openflow,org.projectfloodlight.openflow.annotations,org.projectfloodlight.openflow.exceptions,org.projectfloodlight.openflow.protocol,org.projectfloodlight.openflow.types,org.projectfloodlight.openflow.util,org.projectfloodlight.openflow.protocol.match,org.projectfloodlight.openflow.protocol.action,org.projectfloodlight.openflow.protocol.actionid" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
@@ -43,8 +43,7 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.mockito:mockito-core:2.0.2-beta" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
     <orderEntry type="library" name="Maven: org.objenesis:objenesis:2.1" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.slf4j:slf4j-api:1.7.12" level="project" />
     <orderEntry type="library" name="Maven: org.onosproject:onlab-misc:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: io.netty:netty:3.9.0.Final" level="project" />

@@ -2,17 +2,17 @@
 <module org.jetbrains.idea.maven.project.MavenProjectsManager.isMavenModule="true" type="JAVA_MODULE" version="4">
   <component name="FacetManager">
     <facet type="Osmorc" name="OSGi">
-      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.api-1.0.0.0.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.api.Activator" bundleSymbolicName="core.api" bundleVersion="1.0.0.0" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
+      <configuration manifestGenerationMode="OsmorcControlled" manifestLocation="" jarfileLocation="core.api-1.0.0.0-SNAPSHOT.jar" outputPathType="CompilerOutputPath" bndFileLocation="" bundlorFileLocation="" bundleActivator="eu.netide.core.api.Activator" bundleSymbolicName="core.api" bundleVersion="1.0.0.0-SNAPSHOT" ignoreFilePattern="" useProjectDefaultManifestFileLocation="true" alwaysRebuildBundleJAR="false" doNotSynchronizeWithMaven="false">
         <additionalProperties>
           <property key="Bundle-Description" value="core.api OSGi bundle project." />
-          <property key="Export-Package" value="eu.netide.core.api;version=1.0.0.0" />
+          <property key="Export-Package" value="eu.netide.core.api;version=1.0.0.0-SNAPSHOT" />
           <property key="Import-Package" value="org.osgi.framework,eu.netide.lib.netip" />
           <property key="Embed-Dependency" value="*;scope=compile|runtime" />
           <property key="Embed-Transitive" value="true" />
           <property key="Bundle-Name" value="core.api Bundle" />
-          <property key="Bundle-ClassPath" value=".,logback-classic-1.0.13.jar,guava-17.0.jar,netty-3.9.0.Final.jar,annotations-2.0.2.jar,openflowj-0.4.0.onos.jar,slf4j-api-1.7.5.jar,logback-core-1.0.13.jar" />
-          <property key="Include-Resource" value="logback-classic-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-classic/1.0.13/logback-classic-1.0.13.jar,guava-17.0.jar=$MAVEN_REPOSITORY$/com/google/guava/guava/17.0/guava-17.0.jar,netty-3.9.0.Final.jar=$MAVEN_REPOSITORY$/io/netty/netty/3.9.0.Final/netty-3.9.0.Final.jar,annotations-2.0.2.jar=$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.2/annotations-2.0.2.jar,openflowj-0.4.0.onos.jar=$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos.jar,slf4j-api-1.7.5.jar=$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.5/slf4j-api-1.7.5.jar,logback-core-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-core/1.0.13/logback-core-1.0.13.jar" />
-          <property key="Embedded-Artifacts" value="logback-classic-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-classic&quot;;v=&quot;1.0.13&quot;,guava-17.0.jar;g=&quot;com.google.guava&quot;;a=&quot;guava&quot;;v=&quot;17.0&quot;,netty-3.9.0.Final.jar;g=&quot;io.netty&quot;;a=&quot;netty&quot;;v=&quot;3.9.0.Final&quot;,annotations-2.0.2.jar;g=&quot;com.google.code.findbugs&quot;;a=&quot;annotations&quot;;v=&quot;2.0.2&quot;,openflowj-0.4.0.onos.jar;g=&quot;org.onosproject&quot;;a=&quot;openflowj&quot;;v=&quot;0.4.0.onos&quot;,slf4j-api-1.7.5.jar;g=&quot;org.slf4j&quot;;a=&quot;slf4j-api&quot;;v=&quot;1.7.5&quot;,logback-core-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-core&quot;;v=&quot;1.0.13&quot;" />
+          <property key="Bundle-ClassPath" value=".,annotations-2.0.2.jar,logback-classic-1.0.13.jar,openflowj-0.4.0.onos.jar,slf4j-api-1.7.5.jar,guava-17.0.jar,logback-core-1.0.13.jar,netty-3.9.0.Final.jar" />
+          <property key="Include-Resource" value="annotations-2.0.2.jar=$MAVEN_REPOSITORY$/com/google/code/findbugs/annotations/2.0.2/annotations-2.0.2.jar,logback-classic-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-classic/1.0.13/logback-classic-1.0.13.jar,openflowj-0.4.0.onos.jar=$MAVEN_REPOSITORY$/org/onosproject/openflowj/0.4.0.onos/openflowj-0.4.0.onos.jar,slf4j-api-1.7.5.jar=$MAVEN_REPOSITORY$/org/slf4j/slf4j-api/1.7.5/slf4j-api-1.7.5.jar,guava-17.0.jar=$MAVEN_REPOSITORY$/com/google/guava/guava/17.0/guava-17.0.jar,logback-core-1.0.13.jar=$MAVEN_REPOSITORY$/ch/qos/logback/logback-core/1.0.13/logback-core-1.0.13.jar,netty-3.9.0.Final.jar=$MAVEN_REPOSITORY$/io/netty/netty/3.9.0.Final/netty-3.9.0.Final.jar" />
+          <property key="Embedded-Artifacts" value="annotations-2.0.2.jar;g=&quot;com.google.code.findbugs&quot;;a=&quot;annotations&quot;;v=&quot;2.0.2&quot;,logback-classic-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-classic&quot;;v=&quot;1.0.13&quot;,openflowj-0.4.0.onos.jar;g=&quot;org.onosproject&quot;;a=&quot;openflowj&quot;;v=&quot;0.4.0.onos&quot;,slf4j-api-1.7.5.jar;g=&quot;org.slf4j&quot;;a=&quot;slf4j-api&quot;;v=&quot;1.7.5&quot;,guava-17.0.jar;g=&quot;com.google.guava&quot;;a=&quot;guava&quot;;v=&quot;17.0&quot;,logback-core-1.0.13.jar;g=&quot;ch.qos.logback&quot;;a=&quot;logback-core&quot;;v=&quot;1.0.13&quot;,netty-3.9.0.Final.jar;g=&quot;io.netty&quot;;a=&quot;netty&quot;;v=&quot;3.9.0.Final&quot;" />
         </additionalProperties>
         <additionalJARContents />
       </configuration>
@@ -30,8 +30,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="eu.netide.lib.netip" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.osgi:org.osgi.core:5.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.javatuples:javatuples:1.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: eu.netide.lib:netip:1.0.0.0-SNAPSHOT" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.testng:testng:6.9.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.beanshell:bsh:2.0b4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.beust:jcommander:1.48" level="project" />

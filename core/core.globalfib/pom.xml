@@ -8,12 +8,12 @@
 <!--    <parent>
         <groupId>eu.netide.core</groupId>
         <artifactId>core</artifactId>
-        <version>1.0.0.0</version>
+        <version>1.0.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent> -->
 
     <artifactId>core.globalfib</artifactId>
-    <version>1.0.0.0</version>
+    <version>1.0.0.0-SNAPSHOT</version>
     <groupId>eu.netide.core</groupId>
 
     <name>core.globalfib Bundle</name>
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
-            <version>1.0.0.0</version>
+            <version>1.0.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -34,13 +34,13 @@
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>1.0.0.0</version>
+            <version>1.0.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.topology</artifactId>
-            <version>1.0.0.0</version>
+            <version>1.0.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
