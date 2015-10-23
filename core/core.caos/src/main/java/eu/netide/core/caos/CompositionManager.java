@@ -120,8 +120,14 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         } catch (UnsupportedOperationException e) {
             if (bypassUnsupportedMessages) {
                 logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
+
                 try {
-                    backendManager.sendMessage(message);
+                    if (message.getHeader().getModuleId()==0) {
+                        backendManager.sendMessageAllBackends(message);
+                        logger.warn("Message ID is 0 relaying to ALL backends");
+                    } else {
+                        backendManager.sendMessage(message);
+                    }
                 } catch (Throwable ex) {
                     logger.error("Could not relay unsupported message.", ex);
                 }
