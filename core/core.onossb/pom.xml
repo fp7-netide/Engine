@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>eu.netide.core</groupId>
+    <artifactId>core.onossb</artifactId>
+    <version>1.0.0.0</version>
+    <packaging>bundle</packaging>
+
+    <name>core.onossb Bundle</name>
+    <description>core.onossb OSGi bundle project.</description>
+
+
+    <properties>
+        <onos.version>1.3.1-SNAPSHOT</onos.version>
+        <onos.app.name>org.onos.byon</onos.app.name>
+        <onos.app.origin>Apps-R-Us LLC, Inc. GmbH</onos.app.origin>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>eu.netide.core</groupId>
+            <artifactId>core.api</artifactId>
+            <version>1.0.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.karaf.config</groupId>
+            <artifactId>org.apache.karaf.config.core</artifactId>
+            <version>3.0.3</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>0.3.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>eu.netide.lib</groupId>
+            <artifactId>netip</artifactId>
+            <version>1.0.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20141113</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.5.4</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Export-Package>
+                            eu.netide.core.onossb;version=${project.version}
+                        </Export-Package>
+                        <Import-Package>
+                            eu.netide.core.api,org.osgi.framework,org.apache.karaf.config.core,javax.management,javax.management.remote,eu.netide.lib.netip,org.slf4j
+                        </Import-Package>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
+                    </instructions>
+                </configuration>
+
+            </plugin>
+            <plugin>
+                <groupId>org.onosproject</groupId>
+                <artifactId>onos-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>cfg</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>cfg</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>app</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>app</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
