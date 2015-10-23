@@ -58,7 +58,7 @@ The external tools (like the Logger) will subscribe to that queue.
 2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
 3. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html). (we use v3.0.3 since both ODL and ONOS use that same version)
 4. Start Karaf by going into the downloaded folder and running `bin/karaf`.
-5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core/1.0.0.0/xml/features` and then running `feature:install netide-core`.
+5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core/1.0.0.0-SNAPSHOT/xml/features` and then running `feature:install netide-core`.
 	- The output shold indicate that the core is waiting for the shim to connect.
 
 If you need to refresh the modules in karaf use `bundle:watch *` (This works only if the module versions have a -SNAPSHOT suffix)
