@@ -63,6 +63,7 @@ The external tools (like the Logger) will subscribe to that queue.
 	
 ### Core Deployment + Composition Specification
 If we want to include some composition specification, then we have to follow some intermediate steps:
+
 1. Clone the *CoreImplementation* branch of the repository to your machine.
 2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
 3. Go to the *tools/emulator* inside the *core* directory and execute `mvn package`. Then, back to *core* and run `mvn clean install` again. This will create the emulator package, which lets the user introduce a composition specification file defined in *.xml.
