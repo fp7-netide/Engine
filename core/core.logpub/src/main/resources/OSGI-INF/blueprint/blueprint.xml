@@ -4,14 +4,16 @@
 
     <cm:property-placeholder persistent-id="eu.netide.core.logpub" update-strategy="reload">
         <cm:default-properties>
-            <cm:property name="port" value="5557"/>
+            <cm:property name="pub_port" value="5557"/>
+            <cm:property name="sub_port" value="5558"/>
         </cm:default-properties>
     </cm:property-placeholder>
 
     <bean id="logpub" class="eu.netide.core.logpub.LogPub"
           init-method="Start"
           destroy-method="Stop">
-        <property name="port" value="${port}"/>
+        <property name="pub_port" value="${pub_port}"/>
+        <property name="sub_port" value="${sub_port}"/>
     </bean>
 
     <service ref="logpub"
