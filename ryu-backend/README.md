@@ -26,7 +26,7 @@ Within the  ```ryu-backend``` folder, run the following command to use the Ryu b
 The Ryu backend will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 41414.
 The ```--ofp-tcp-listen-port 7733``` is used to avoid possible conflicts that may happen when two different controller platforms are running on the same machine. In our case we could have Ryu hosting the backend and, e.g., ONOS with the shim layer. By default they both bind the TCP port 6633 to accept connections from the network elements.
 
-Finally, ```simple_switch``` is a simple L2 learning switch application provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
+Finally, ```simple_switch``` is a simple L2 learning switch application and ```firewall.py``` is a simple firewall application, both provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
 
 ## Testing
 
@@ -34,27 +34,56 @@ To test the Ryu backend it is necessary to run one of the shim layers provided i
 In the ```tests``` folder, a minimal implementation of the Core is provided.
 For instance, to use this backend with the Ryu shim run following sequence of commands:
 ```
-python AdvancedProxyCore.py
+python AdvancedProxyCore.py -c tests/CompositionSpecification.xml
 ryu-manager ryu-shim.py
 ```
+```AdvancedProxyCore.py``` has many option (such as the composition specification file to load) that can be discovered by running ```AdvancedProxyCore.py -h```.
 
-A network emulator such as Mininet can be used to test the software:
+A network emulator such as Mininet can be used to test the software. In the ```test``` folder a script that automatically configures Mininet with a 4 switches and 4 hosts topology.
 ```
-sudo mn --topo linear,4 --controller=remote,ip=IP_ADDRESS,port=6633
+sudo python netide-topo.py
 ```
-Where IP_ADDRESS is the IP address of the machine where the Ryu and the shim layer are running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
+This script configures the following topology:
 
-Once both Core and Ryu shim are running, the backend can be started with:
+```
+alice alice-eth0:s22-eth1
+bob bob-eth0:s22-eth2
+charlie charlie-eth0:s11-eth1
+www www-eth0:s23-eth1
+s11 lo:  s11-eth1:charlie-eth0 s11-eth2:s21-eth1
+s21 lo:  s21-eth1:s11-eth2 s21-eth2:s22-eth3 s21-eth3:s23-eth2
+s22 lo:  s22-eth1:alice-eth0 s22-eth2:bob-eth0 s22-eth3:s21-eth2
+s23 lo:  s23-eth1:www-eth0 s23-eth2:s21-eth3
+```
 
-``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
+Where ```alice```, ```bob``` and ```www``` belong to a hypothetical LAN protected by a firewall (switch ```s11```), while ```charlie``` is outside the LAN.
 
-Within the Mininet CLI, a successful ```pingall``` demonstrates that the hosts are able to comminicate with each others.
+Once both Core and Ryu shim are running, the backend  and the network applications can be started with:
+
+``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
+
+The composition configuration defined in ```CompositionSpecification.xml``` loaded by the ```AdvancedProxyCore.py``` assigns switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
+
+As an alternative, one may want to test different applications running on different instances of the client controller. In this case, just open two terminals and run the following commands (one for each terminal):
+
+```
+ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py
+ryu-manager --ofp-tcp-listen-port 7734 ryu-backend.py tests/firewall.py
+```
+
+Within the Mininet CLI, a ```pingall``` command demonstrates what traffic is allowed and what is not, depending on the rules installed by the firewall application.
 
 ## License
 
 See the LICENSE file.
 
 ## ChangeLog
+
+ryu-backend: 2015-10-30 Fri Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Improved AdvancedProxyCore with support to heartbeat
+  * Added the ```NETIDE_HEARTBEAT``` message type to the ```netip``` library
+  * Improved ```ryu-backend``` and bug fixing.
 
 ryu-backend: 2015-10-01 Thu Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
