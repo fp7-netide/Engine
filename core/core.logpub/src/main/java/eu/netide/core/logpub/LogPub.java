@@ -1,8 +1,6 @@
 package eu.netide.core.logpub;
 
-import eu.netide.core.api.IBackendMessageListener;
-import eu.netide.core.api.IManagementMessageListener;
-import eu.netide.core.api.IShimMessageListener;
+import eu.netide.core.api.*;
 import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
 import org.slf4j.Logger;
@@ -17,7 +15,9 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
     private static final Logger log = LoggerFactory.getLogger(LogPub.class);
 
-    private int port;
+    private int pub_port;
+    private int sub_port;
+
     private ZMQ.Context context;
     private Thread thread;
 
@@ -53,22 +53,40 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     public void run() {
         log.info("LogPub started.");
         ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
-        pubSocket.bind("tcp://*:" + port);
-        log.info("Listening PUB queue on port " + port);
+        pubSocket.bind("tcp://*:" + pub_port);
+        log.info("Listening PUB queue on port " + pub_port);
+
+        ZMQ.Socket subSocket = context.socket(ZMQ.ROUTER);
+        subSocket.setIdentity("logpub".getBytes(ZMQ.CHARSET));
+        subSocket.bind("tcp://*:" + sub_port);
+        log.info("Listening SUB queue on port " + sub_port);
 
         ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
         log.info("Control queue on address: " + CONTROL_ADDRESS);
 
         // Register the queues in the poller
-        ZMQ.Poller poller = new ZMQ.Poller(1);
+        ZMQ.Poller poller = new ZMQ.Poller(2);
+        poller.register(subSocket, ZMQ.Poller.POLLIN);
         poller.register(controlSocket, ZMQ.Poller.POLLIN);
 
         while (!Thread.currentThread().isInterrupted()) {
             poller.poll(10);
             if (poller.pollin(0)) {
+                ZMsg message = ZMsg.recvMsg(subSocket);
+                String senderId = message.getFirst().toString();
+                byte[] data = message.getLast().getData();
+                log.info("Data received from SUB queue to'" + senderId + "'.");
+                if (senderId.equals("1_")) {
+                    // send all messages to shim
+                } else if (senderId.equals("0_")) {
+                    // send all messages to backend
+                } else{
+                    log.debug("Got unknown message in SUB queue:" + message.toString());
+                }
+            }
+            if (poller.pollin(1)) {
                 ZMsg message = ZMsg.recvMsg(controlSocket);
-
                 if (message.getFirst().toString().equals(STOP_COMMAND)) {
                    log.info("Received STOP command.\nExiting...");
                    break;
@@ -81,12 +99,18 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
         controlSocket.close();
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void setPubPort(int pub_port) {
+        this.pub_port = pub_port;
     }
-
-    public int getPort() {
-        return port;
+    public int getPubPort() {
+        return pub_port;
+    }
+    public void setSubPort(int sub_port) {
+        this.sub_port = sub_port;
+    }
+    public int getSubPort()
+    {
+        return sub_port;
     }
 
     @Override
