@@ -63,6 +63,7 @@ class NetIDEOps:
         'MODULE_ANNOUNCEMENT'   : 0x04,
         'MODULE_ACKNOWLEDGE'    : 0x05,
         'TOPOLOGY_UPDATE'       : 0x06,
+        'NETIDE_HEARTBEAT'      : 0x07,
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
         'NETIDE_OPFLEX'     : OPFLEX_PROTO
@@ -71,17 +72,25 @@ class NetIDEOps:
  #Encode a message in the NetIDE protocol format
     @staticmethod
     def netIDE_encode(type, xid, module_id, datapath_id, msg):
-        length = len(msg)
         type_code = NetIDEOps.NetIDE_type[type]
-        #if no transaction id is given, generate a random one.
+        if msg is None:
+            length = 0
+        else:
+            length = len(msg)
+            
         if xid is None:
             xid = 0
         if module_id is None:
             module_id = 0
         if datapath_id is None:
             datapath_id = 0
-        values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id, msg)
-        packer = struct.Struct(NetIDE_Header_Format+str(length)+'s')
+        if length is 0:
+            packer = struct.Struct(NetIDE_Header_Format)
+            values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id)
+        else:
+            packer = struct.Struct(NetIDE_Header_Format+str(length)+'s')
+            values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id, msg)
+        
         packed_msg = packer.pack(*values)
         return packed_msg
 

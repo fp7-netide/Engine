@@ -223,20 +223,21 @@ class CoreConnection(threading.Thread):
         while ack is False:
             ack_message = self.socket.recv_multipart()
             msg = self.get_multipart_message(ack_message)
-            logger.debug( "Received ack from Core: %s" , ack_message)
             decoded_header = NetIDEOps.netIDE_decode_header(msg)
             if decoded_header is False:
-                return False
+                continue
             message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
             message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
             if message_length is 0:
-                return False
+                continue
             else:
                 message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
             if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == backend.backend_name:
+                logger.debug( "Received ack from Core: %s" , ack_message)
                 backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                 backend.backend_id = backend_id
                 ack = True
+        return True
 
     def module_announcement(self, bricks):
         for key,value in bricks.iteritems():
@@ -249,20 +250,21 @@ class CoreConnection(threading.Thread):
                 while ack is False:
                     ack_message = self.socket.recv_multipart()
                     msg = self.get_multipart_message(ack_message)
-                    logger.debug( "Received ack from Core: %s" , ack_message)
                     decoded_header = NetIDEOps.netIDE_decode_header(msg)
                     if decoded_header is False:
-                        return False
+                        continue
                     message_type = decoded_header[NetIDEOps.NetIDE_header['TYPE']]
                     message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
                     if message_length is 0:
-                        return False
+                        continue
                     else:
                         message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
                     if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == module_name:
+                        logger.debug( "Received ack from Core: %s" , ack_message)
                         module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                         self.running_modules[module_name] = module_id
                         ack = True
+        return True
 
     def handle_handshake(self,backend):
         proto_data = NetIDEOps.netIDE_encode_handshake(self.backend.supported_protocols)
@@ -271,8 +273,6 @@ class CoreConnection(threading.Thread):
 
         message = self.socket.recv_multipart()
         msg = self.get_multipart_message(message)
-        #print "Received hello from Core:" ,':'.join(x.encode('hex') for x in msg)
-        #print "Received hello from Core:" , message
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         if decoded_header is False:
             return False
@@ -342,7 +342,10 @@ class CoreConnection(threading.Thread):
 
             self.of_datapath.handle_event(decoded_header, message_data)
 
-
+        elif message_type is NetIDEOps.NetIDE_type['NETIDE_HEARTBEAT']:
+            logger.debug("Heartbeat message received")
+            hb_message = NetIDEOps.netIDE_encode('NETIDE_HEARTBEAT', None, self.backend.backend_id, None, None)
+            self.socket.send(hb_message)
 
 class RYUClient(app_manager.RyuApp):
 
@@ -364,7 +367,7 @@ class RYUClient(app_manager.RyuApp):
         self.supported_protocols[OPENFLOW_PROTO] = [OPENFLOW_10,OPENFLOW_12,OPENFLOW_13]
         self.supported_protocols[NETCONF_PROTO] = []
         logger.debug( "Backend supported protocols: %s" , self.supported_protocols)
-        logger.debug('RYU Client initiated')
+        logger.debug('RYU Backend initiated: %s', self.backend_name)
 
         #Start the zeromq loop to listen to incoming messages
         self.CoreConnection = CoreConnection(self, __CORE_IP__,__CORE_PORT__)
