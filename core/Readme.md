@@ -60,6 +60,8 @@ The external tools (like the Logger) will subscribe to that queue.
 4. Start Karaf by going into the downloaded folder and running `bin/karaf`.
 5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core/1.0.0.0/xml/features` and then running `feature:install netide-core`.
 	- The output shold indicate that the core is waiting for the shim to connect.
+
+If you need to refresh the modules in karaf use `bundle:watch *` (This works only if the module versions have a -SNAPSHOT suffix)
 	
 ### Core Deployment + Composition Specification
 If we want to include some composition specification, then we have to follow some intermediate steps:
