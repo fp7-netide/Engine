@@ -1,6 +1,7 @@
 package eu.netide.lib.netip;
 
 import java.util.Arrays;
+import java.util.IllegalFormatException;
 
 /**
  * Class representing a simple NetIP message. This also is the base class for concrete message classes.
@@ -63,8 +64,12 @@ public class Message {
         byte[] payload = getPayload();
 
         byte[] bytes = new byte[MessageHeader.HEADER_BYTES + payload.length];
+        header.setPayloadLength((short) payload.length);
         System.arraycopy(header.toByteRepresentation(), 0, bytes, 0, MessageHeader.HEADER_BYTES);
         System.arraycopy(payload, 0, bytes, MessageHeader.HEADER_BYTES, payload.length);
+        if (header.getMessageType() == MessageType.OPENFLOW && payload.length < 8 )
+            throw  new InvalidNetIdeMessage("OpenFlow messages need to be at least 8 bytes long");
+
         return bytes;
     }
 

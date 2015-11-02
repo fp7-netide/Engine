@@ -123,8 +123,8 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
 
                 try {
                     if (message.getHeader().getModuleId()==0) {
-                        backendManager.sendMessageAllBackends(message);
                         logger.warn("Message ID is 0 relaying to ALL backends");
+                        backendManager.sendMessageAllBackends(message);
                     } else {
                         backendManager.sendMessage(message);
                     }
