@@ -28,7 +28,6 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="eu.netide.lib.netip" />
     <orderEntry type="module" module-name="core.api" scope="PROVIDED" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.onosproject:openflowj:0.4.0.onos" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: com.google.code.findbugs:annotations:2.0.2" level="project" />

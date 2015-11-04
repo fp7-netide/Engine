@@ -3,8 +3,8 @@ Bundle-Activator: eu.netide.core.topology.Activator
 Bundle-ClassPath: .,jeromq-0.3.4.jar
 Bundle-Description: core.topoloy OSGi bundle project.
 Bundle-ManifestVersion: 2
-Bundle-Name: core.topoloy Bundle
-Bundle-SymbolicName: core.topoloy
+Bundle-Name: core.topology Bundle
+Bundle-SymbolicName: core.topology
 Bundle-Version: 1.0.0.0-SNAPSHOT
 Created-By: 1.8.0_45 (Oracle Corporation)
 Export-Package: eu.netide.core.topology;version="1.0.0.0-SNAPSHOT";uses:="eu.netide.core.api,org.osgi.framework"

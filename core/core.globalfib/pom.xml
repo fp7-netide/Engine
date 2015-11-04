@@ -12,9 +12,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent> -->
 
+    <groupId>eu.netide.core</groupId>
     <artifactId>core.globalfib</artifactId>
     <version>1.0.0.0-SNAPSHOT</version>
-    <groupId>eu.netide.core</groupId>
 
     <name>core.globalfib Bundle</name>
     <description>core.globalfib OSGi bundle project.</description>

@@ -2,12 +2,13 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
 
+    <!--
     <bean id="Topology"
-          class="eu.netide.core.topology.Activator"
+          class="eu.netide.core.topology.Topology"
           scope="singleton"
           init-method="Start"
           destroy-method="Stop">
     </bean>
-
+    -->
 
 </blueprint>

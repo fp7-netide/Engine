@@ -3,14 +3,17 @@
            xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
 
     <bean id="GlobalFIB"
-          class="eu.netide.core.globalifb.FIBManager"
-          scope="singleton"
+          class="eu.netide.core.globalfib.FIBManager"
+          scope="singleton">
+        <!--
           init-method="Start"
           destroy-method="Stop">
         <property name="connector" ref="shimConnector"/>
         <property name="shimMessageListeners" ref="listeners"/>
+        -->
     </bean>
 
+    <!--
     <bean id="shimConnector" class="eu.netide.core.globalfib.ShimListener"
           init-method="Start"
           destroy-method="Stop">
@@ -20,6 +23,10 @@
     <service ref="ShimManager"
              activation="eager"
              interface="eu.netide.core.api.IShimManager"/>
+                    -->
+
+    <service ref="GlobalFIB"
+             interface="eu.netide.core.api.IShimMessageListener"/>
 
     <reference-list id="listeners" interface="eu.netide.core.api.IShimMessageListener" activation="eager"
                     availability="optional" member-type="service-object"/>
