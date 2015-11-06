@@ -29,7 +29,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     // Settings
     private static String previousCompositionSpecificationXml = "";
     private String compositionSpecificationXml = "";
-    private int maxModuleWaitSeconds = 60;
+    private int maxModuleWaitSeconds = 600;
     private boolean bypassUnsupportedMessages = true;
 
     // Fields
