@@ -139,7 +139,9 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
         RequestResult r = results.get(id);
         Semaphore lock = locks.get(id);
-        if (r != null && lock != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
+        // TODO: XID checking here is dubious
+        if (r != null && lock != null && (r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId() ||
+               message.getHeader().getTransactionId()==0 )) {
             // Message belongs to former request
             if (message instanceof ManagementMessage) {
                 // check for finished execution
