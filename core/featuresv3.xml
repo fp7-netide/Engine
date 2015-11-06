@@ -17,10 +17,10 @@
         <bundle>mvn:eu.netide.core/core.logpub/1.0.0.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netide-core-topology">
-        <bundle>mvn:eu.netide.core/core.topology/1.0.0.0</bundle>
+        <bundle>mvn:eu.netide.core/core.topology/1.0.0.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netide-core-globalfib">
-        <bundle>mvn:eu.netide.core/core.globalfib/1.0.0.0</bundle>
+        <bundle>mvn:eu.netide.core/core.globalfib/1.0.0.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netide-core">
         <feature>netide-core-api</feature>
