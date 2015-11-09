@@ -38,6 +38,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>eu.netide.core</groupId>
+            <artifactId>core.connectivity</artifactId>
+            <version>1.0.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>6.9.4</version>
@@ -74,7 +80,7 @@
                             eu.netide.core.logpub;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip,org.slf4j
+                            org.osgi.framework,eu.netide.core.api,eu.netide.core.connectivity,eu.netide.lib.netip,org.slf4j
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

@@ -1,8 +1,12 @@
 package eu.netide.core.logpub;
 
 import eu.netide.core.api.*;
+import eu.netide.core.connectivity.BackendManager;
+import eu.netide.core.connectivity.ShimManager;
 import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.MessageHeader;
+import eu.netide.lib.netip.MessageType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
@@ -20,6 +24,9 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
     private ZMQ.Context context;
     private Thread thread;
+
+    private ShimManager shim_manager = new ShimManager();
+    private BackendManager be_manager = new BackendManager();
 
     public LogPub() {
         log.info("LogPub Constructor.");
@@ -79,8 +86,14 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
                 log.info("Data received from SUB queue to'" + senderId + "'.");
                 if (senderId.equals("1_")) {
                     // send all messages to shim
+                    Message shim_message = new Message(new MessageHeader(),data);
+                    shim_message.getHeader().setMessageType(MessageType.OPENFLOW);
+                    shim_manager.sendMessage(shim_message);
                 } else if (senderId.equals("0_")) {
                     // send all messages to backend
+                    Message be_message = new Message(new MessageHeader(),data);
+                    be_message.getHeader().setMessageType(MessageType.OPENFLOW);
+                    be_manager.sendMessage(be_message);
                 } else{
                     log.debug("Got unknown message in SUB queue:" + message.toString());
                 }
@@ -91,7 +104,9 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
                    log.info("Received STOP command.\nExiting...");
                    break;
                 } else {
-                   message.send(pubSocket);
+                    log.debug("Sending message to PUB queue");
+                    message.send(pubSocket);
+
                 }
             }
         }
@@ -140,7 +155,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     @Override
     public void OnManagementMessage(ManagementMessage message) {
         ZMsg zmq_message = new ZMsg();
-        zmq_message.add(message.toByteRepresentation());
+        zmq_message.add(message.getPayloadString());
         log.debug("Received message form management:" + zmq_message.toString());
         ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
         sendSocket.connect(CONTROL_ADDRESS);
