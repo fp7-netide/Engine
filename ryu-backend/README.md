@@ -79,6 +79,11 @@ See the LICENSE file.
 
 ## ChangeLog
 
+ryu-backend: 2015-11-09 Mon Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Improved heartbeat management
+  * Several fixes in both ryu-backend and AdvancedProxyCore
+
 ryu-backend: 2015-10-30 Fri Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
   * Improved AdvancedProxyCore with support to heartbeat

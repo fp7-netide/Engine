@@ -60,6 +60,10 @@ See the LICENSE file.
 
 ## ChangeLog
 
+ryu-backend: 2015-11-09 Mon Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Added management of OpenFlow synchromous messages
+
 ryu-shim: 2015-10-01 Thu Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
   * Replaced sockets with zeromq networking library
