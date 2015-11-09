@@ -18,7 +18,7 @@ import java.util.concurrent.*;
 
 /**
  * Implementation of ICompositionManager
- *
+ * <p>
  * Created by timvi on 25.06.2015.
  */
 public class CompositionManager implements ICompositionManager, IShimMessageListener {
@@ -29,7 +29,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     // Settings
     private static String previousCompositionSpecificationXml = "";
     private String compositionSpecificationXml = "";
-    private int maxModuleWaitSeconds = 60;
+    private int maxModuleWaitSeconds = 600;
     private boolean bypassUnsupportedMessages = true;
 
     // Fields
@@ -101,6 +101,12 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     public void OnShimMessage(Message message, String originId) {
         logger.info("CompositionManager received message from shim: " + message.toString());
         try {
+            int compQueueLen = csLock.getQueueLength();
+            if (compQueueLen > 10)
+                logger.warn(String.format("%d outstanding compositions", compQueueLen));
+            else
+                logger.debug(String.format("%d outstanding compositions", compQueueLen));
+
             csLock.acquire(); // can only handle when not reconfiguring
             if (correctlyConfigured) {
                 ExecutionFlowStatus status = new ExecutionFlowStatus(message);
@@ -120,8 +126,14 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         } catch (UnsupportedOperationException e) {
             if (bypassUnsupportedMessages) {
                 logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
+
                 try {
-                    backendManager.sendMessage(message);
+                    if (message.getHeader().getModuleId() == 0) {
+                        logger.warn("Message ID is 0 relaying to ALL backends");
+                        backendManager.sendMessageAllBackends(message);
+                    } else {
+                        backendManager.sendMessage(message);
+                    }
                 } catch (Throwable ex) {
                     logger.error("Could not relay unsupported message.", ex);
                 }

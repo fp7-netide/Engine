@@ -39,7 +39,7 @@ Thumbs.db
 
 # ignore intellij build files
 *.iws
-.idea
+*.iml
 
 # ignore files build by Visual Studio
 *.obj

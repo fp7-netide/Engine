@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-Activator: eu.netide.core.connectivity.Activator
+Bundle-Activator: eu.netide.core.globalfib.Activator
 Bundle-ClassPath: .,jeromq-0.3.4.jar
 Bundle-Description: core.shimconnectivity OSGi bundle project.
 Bundle-ManifestVersion: 2
@@ -7,9 +7,8 @@ Bundle-Name: core.shimconnectivity Bundle
 Bundle-SymbolicName: core.shimconnectivity
 Bundle-Version: 1.0.0.0-SNAPSHOT
 Created-By: 1.8.0_45 (Oracle Corporation)
-Embed-Dependency: *;scope=compile|runtime
-Embed-Transitive: true
-Embedded-Artifacts: jeromq-0.3.4.jar;g="org.zeromq";a="jeromq";v="0.3.4"
-Export-Package: eu.netide.core.connectivity;version="1.0.0.0-SNAPSHOT";uses:="eu.netide.core.api,org.osgi.framework"
-Import-Package: eu.netide.core.api,org.osgi.framework
+Export-Package: eu.netide.core.globalfib;version="1.0.0.0-SNAPSHOT";uses:="eu.netide.core.api,org.osgi.framework"
+Import-Package: eu.netide.core.api,org.osgi.framework,eu.netide.core.topology;
+ org.jboss.netty.buffer,
+ org.onlab.packet
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.6))"

@@ -5,17 +5,22 @@
 
     <groupId>eu.netide.core</groupId>
     <artifactId>core.caos</artifactId>
-    <version>1.0.0.0</version>
+    <version>1.0.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>core.caos Bundle</name>
     <description>core.caos OSGi bundle project.</description>
 
+<!--    <parent>
+        <artifactId>core</artifactId>
+        <version>1.0.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent> -->
     <dependencies>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>1.0.0.0</version>
+            <version>1.0.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -39,7 +44,7 @@
         <dependency>
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
-            <version>1.0.0.0</version>
+            <version>1.0.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

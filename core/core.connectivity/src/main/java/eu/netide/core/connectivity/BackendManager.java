@@ -54,6 +54,19 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return connector.SendData(message.toByteRepresentation(), getBackend(message.getHeader().getModuleId()));
     }
 
+
+    @Override
+    public boolean sendMessageAllBackends(Message message)
+    {
+        boolean success =true;
+        logger.info("Sending message '" + message.toString() + "' to  all backends ");
+        for (String backendId: backendIds)
+            success = connector.SendData(message.toByteRepresentation(), backendId) && success;
+
+        return success;
+    }
+
+
     @Override
     public RequestResult sendRequest(Message message) {
         Integer id = message.getHeader().getModuleId();
@@ -104,7 +117,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         if (moduleToBackendMappings.containsKey(moduleId))
             return moduleToBackendMappings.get(moduleId);
         else
-            throw new UnsupportedOperationException("No backend mapping known for moduleId '" + moduleId + "'.");
+            throw new UnsupportedOperationException("Backend mapping unknown for moduleId '" + moduleId + "'.");
     }
 
     public int getModuleId(String moduleName) {
@@ -126,7 +139,9 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
         RequestResult r = results.get(id);
         Semaphore lock = locks.get(id);
-        if (r != null && lock != null && r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId()) {
+        // TODO: XID checking here is dubious
+        if (r != null && lock != null && (r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId() ||
+               message.getHeader().getTransactionId()==0 )) {
             // Message belongs to former request
             if (message instanceof ManagementMessage) {
                 // check for finished execution

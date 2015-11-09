@@ -18,6 +18,8 @@ import org.slf4j.LoggerFactory;
 public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
 
     private final Logger logger = LoggerFactory.getLogger(ModuleCallNodeExecutor.class);
+    static int xid = (int) (Math.random() * 3000);
+
 
     @Override
     public boolean canExecute(ExecutionFlowNode node) {
@@ -40,6 +42,9 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
         header.setMessageType(MessageType.OPENFLOW);
         header.setTransactionId(status.getCurrentMessage().getHeader().getTransactionId());
         header.setDatapathId(status.getCurrentMessage().getHeader().getDatapathId());
+
+        if (header.getTransactionId()==0)
+            header.setTransactionId(++xid);
         int moduleId = backendManager.getModuleId(mc.getModule().getId());
         header.setModuleId(moduleId);
 
