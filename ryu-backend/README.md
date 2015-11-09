@@ -13,10 +13,8 @@ Finally, install the Ryu controller by entering the ```ryu``` folder and by runn
 ```python ./setup.py install```
 
 Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed:
-* ```apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev python-zmq```
-* ```pip install ecdsa```
-* ```pip install stevedore```
-* ```pip install greenlet```
+* ```sudo apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev python-zmq```
+* ```sudo pip install ecdsa stevedore greenlet oslo.config eventlet WebOb Routes```
 
 ## Running
 Within the  ```ryu-backend``` folder, run the following command to use the Ryu backend with the, e.g., ```simple_switch ``` application on top of it:
