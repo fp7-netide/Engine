@@ -224,18 +224,6 @@ class CoreConnection(threading.Thread):
             msg = self.get_multipart_message(message) #patch to support the java-core message format
             self.handle_read(msg)
 
-            # sending heartbeat to the core
-            if time.time() > self.heartbeat_time + HEARTBEAT_TIMEOUT:
-                # sending heartbeat
-                self.heartbeat_time = time.time()
-                hb_message = NetIDEOps.netIDE_encode('NETIDE_HEARTBEAT', None, self.backend.backend_id, None, None)
-                self.socket.send(hb_message)
-
-                #sending again hello messages if we have't got any reply yet
-                if self.backend_info['connected'] == False:
-                    logger.debug("Waiting for the Handshake to be completed...")
-                    self.send_handshake(self.backend)
-
         self.socket.close()
         context.term()
 
