@@ -6,7 +6,6 @@ import threading
 import logging
 from lxml import etree
 from ryu.netide.netip import *
-from IPython.kernel.zmq.heartbeat import Heartbeat
 
 
 shimname = "shim"
@@ -58,6 +57,24 @@ class MessageDispatcher(threading.Thread):
         self.port = port
         self.heartbeat_timeout = timeout
         self.heartbeat_time = time.time()
+        self.connected_backends = {}
+        self.running_modules = {}
+
+    def check_heartbeat(self):
+        # checking the status of the previously sent messages
+        if time.time() > self.heartbeat_time + self.heartbeat_timeout:
+            self.heartbeat_time = time.time()
+            for backendname, prop in self.connected_backends.items():
+                # backends that not appeared for twice the self.heartbeat_timeout are deleted
+                if time.time() > prop['hb_time'] + self.heartbeat_timeout*2:
+                    del self.connected_backends[backendname]
+                    for modulename, modprop in self.running_modules.items():
+                        if modprop['backend'] == backendname:
+                            del self.running_modules[modulename]
+
+            logger.debug("Connected Backends: %s", self.connected_backends)
+            logger.debug("Running Modules: %s", self.running_modules)
+
 
     def run(self):
         context = zmq.Context()
@@ -69,56 +86,48 @@ class MessageDispatcher(threading.Thread):
         poller = zmq.Poller()
         # Only poll for requests from backend until workers are available
         poller.register(socket, zmq.POLLIN)
-    
-        connected_backends = {}
-        running_modules = {}
         module_id = 1
     
         while not self.kill_received:
             sockets = dict(poller.poll(self.heartbeat_timeout*1000))
+            self.check_heartbeat()
+
             if socket in sockets:
                 (identity, message) = socket.recv_multipart()
+                logger.debug("\n-----------Message from ID %s", identity)
+                decoded_header = NetIDEOps.netIDE_decode_header(message)
+                logger.debug("Message header: %s", decoded_header)
+                message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
+                logger.debug("Message type: %s", message_type)
+                message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
+                message_data = message[NetIDEOps.NetIDE_Header_Size:]
+                logger.debug("Message body: %s",':'.join(x.encode('hex') for x in message_data))
+
                 if "backend" in identity:
-                    logger.debug("\nMessage from client controller ID %s", identity)
-                    decoded_header = NetIDEOps.netIDE_decode_header(message)
-                    logger.debug("Message header: %s", decoded_header)
-                    logger.debug("Message type: %s", NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']]))
-                    message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
-                    message_data = message[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-                    logger.debug("Message body: %s",':'.join(x.encode('hex') for x in message_data))
-                    
                     # Recording the new backend
-                    if identity not in connected_backends:
-                        connected_backends[identity] = {'id': -1, 'heartbeat' : 1, 'hello' : -1}
-        
+                    if identity not in self.connected_backends:
+                        self.connected_backends[identity] = {'id': -1, 'hello' : -1, 'hb_time' : time.time()}
+
+                    # any message received from a backend updates the heartbeat time
+                    backend = self.connected_backends[identity]
+                    backend['hb_time'] = time.time()
+
+                    if message_type is 'NETIDE_HEARTBEAT':
+                        # heartbeat time already updated, go back to the while
+                        continue
                     # Handling the message
-                    if decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['MODULE_ANNOUNCEMENT']:
+                    elif message_type is 'MODULE_ANNOUNCEMENT':
                         ack_message = NetIDEOps.netIDE_encode('MODULE_ACKNOWLEDGE', decoded_header[NetIDEOps.NetIDE_header['XID']], module_id, None, message_data)
-                        running_modules[message_data] = {'module_id':module_id, 'backend':identity }
-                        backend = connected_backends.get(message_data)
+                        self.running_modules[message_data] = {'module_id': module_id, 'backend': identity}
+                        backend = self.connected_backends.get(message_data)
                         if backend is not None:
                             backend['id'] = module_id
                         module_id += 1
                         socket.send_multipart([identity,ack_message])
-                    elif decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_HEARTBEAT']:
-                        msg_module_id =  decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
-                        for backendname, prop in connected_backends.iteritems():
-                            if prop['id'] is msg_module_id:
-                                prop['heartbeat'] += 1
-                                break
                     else:
                         socket.send_multipart([shimname,message])
         
                 elif "shim" in identity:
-                    # Get next client request, route to last-used worker
-                    logger.debug("\n-----------Message from server controller ID %s", identity)
-                    decoded_header = NetIDEOps.netIDE_decode_header(message)
-                    logger.debug("Message header: %s", decoded_header)
-                    message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
-                    logger.debug("Message type: %s", message_type)
-                    message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
-                    message_data = message[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-                    logger.debug("Message body: %s",':'.join(x.encode('hex') for x in message_data))
                     # Forwarding the message to all the backends
                     datapath_id = decoded_header[NetIDEOps.NetIDE_header['DPID']]
                     
@@ -127,44 +136,25 @@ class MessageDispatcher(threading.Thread):
                         #these are the modules that can handle the event
                         modules = self.composition.check_event_conditions(hex(datapath_id), message_data)    
                         for module in modules:
-                            running_module = running_modules.get(module,None)
+                            running_module = self.running_modules.get(module,None)
                             if running_module is not None:
                                 backend_identity = running_module.get('backend',None)
                                 module_id = running_module.get('module_id',0)
                                 if backend_identity is not None:
-                                    socket.send_multipart([backend_identity,NetIDEOps.netIDE_set_module_id(message, module_id)])
+                                    backend = self.connected_backends.get(backend_identity,None)
+                                    if backend['hello'] > 0: #hello completed between shim and backend. We can start sending messages to this backend
+                                        socket.send_multipart([backend_identity,NetIDEOps.netIDE_set_module_id(message, module_id)])
+                    # handling management messages (no control messages here)
                     else:
                         module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
-                        if module_id == 0:
-                            for backendname in connected_backends:
-                                socket.send_multipart([backendname,message])
-                        else:
-                            for backendname, prop in connected_backends.items():
-                                if prop['id'] is module_id:
+                        for backendname, prop in self.connected_backends.items():
+                            if prop['id'] is module_id:
+                                if decoded_header[NetIDEOps.NetIDE_header['TYPE']] == NetIDEOps.NetIDE_type['NETIDE_HELLO'] and message_length > 0:
                                     socket.send_multipart([backendname,message])
-                                    prop['hello'] = 1  #hello completed between shim and backend. We can start the heartbeat with this backend
-                                    break
-                            
-            
-            # sending the heartbeat message to the backends. 
-            # checking the status of the previously sent messages
-            if self.heartbeat_time + self.heartbeat_timeout < time.time():
-                self.heartbeat_time = time.time()
-                for backendname, prop in connected_backends.items():
-                    # heartbeat only for those backends that have already completed the handshake with the shim
-                    if prop['hello'] == 1:
-                        if prop['heartbeat'] is 0:
-                            del connected_backends[backendname]
-                            for modulename, modprop in running_modules.items():
-                                if modprop['backend'] == backendname:
-                                    del running_modules[modulename]
-                        else:
-                            prop['heartbeat'] = 0
-                            message = NetIDEOps.netIDE_encode('NETIDE_HEARTBEAT', None, None, None, None)
-                            socket.send_multipart([backendname,message])
-                
-                logger.debug("Connected Backends: %s", connected_backends) 
-                logger.debug("Running Modules: %s", running_modules) 
+                                    prop['hello'] = 1
+                                elif prop['hello'] > 0: #hello completed between shim and backend. We can start sending messages to this backend
+                                    socket.send_multipart([backendname,message])
+                                break
         
         # Clean up
         socket.close()

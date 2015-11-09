@@ -25,6 +25,7 @@ import random
 import binascii
 import time
 import socket
+import zlib
 from eventlet.green import zmq
 from ryu.base import app_manager
 from ryu.exception import RyuException
@@ -52,13 +53,13 @@ from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.netide.netip import *
 
-#from ryu.netide.netip import *
-#from time import sleep
-
 NETIDE_CORE_PORT = 5555
+XID_CRC_INDEX = 0
+XID_DB = {}
+
 
 logger = logging.getLogger('ryu-shim')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.NOTSET)
 
 def set_xid(of_array, xid):
     of_array[4]=(xid >>24) & 0xff;
@@ -66,6 +67,28 @@ def set_xid(of_array, xid):
     of_array[6]=(xid >>8) & 0xff;
     of_array[7]=xid & 0xff;
     return of_array
+
+def store_xid(xid, backend_id):
+    ret = True
+    global XID_CRC_INDEX
+    global XID_DB
+    while ret is not False:
+        new_xid = zlib.crc32(str(xid)+str(backend_id),XID_CRC_INDEX)
+        new_xid = new_xid & 0xffffffff
+        ret = XID_DB.get(new_xid,False)
+        XID_CRC_INDEX += 1
+
+    XID_DB[new_xid] = {'old_xid' : xid, 'backend_id' : backend_id}
+    return new_xid
+
+def get_xid(xid):
+    global XID_DB
+    old_values = XID_DB.get(xid,None)
+    if old_values is None:
+        return None
+    else:
+        del XID_DB[xid]
+        return old_values
 
 # Connection with the core
 class CoreConnection(threading.Thread):
@@ -116,8 +139,13 @@ class CoreConnection(threading.Thread):
             if decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_HELLO']:
                 
                 if message_length is 0:
-                    print ("Client does not support any protocol")
+                    print ("WARNING: Client does not support any protocol")
                     return
+
+                if self.controller.connection_up is False:
+                    print ("WARNING: It seems that the server controller is not connected to the switches/Mininet")
+                    return
+
                 backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                 logger.debug( "Received HELLO message from backend: ,%s", backend_id)
                 message_data = NetIDEOps.netIDE_decode_handshake(message_data, message_length)
@@ -152,21 +180,24 @@ class CoreConnection(threading.Thread):
                     self.datapath = self.controller.switches[int(decoded_header[NetIDEOps.NetIDE_header['DPID']])]
 
                     # Here we set xid=mod_id so that the synchromous messages can be forwarded to the correct client by the core
+                    (version, msg_type, msg_len, xid) = ofproto_parser.header(message_data)
                     backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
-                    if backend_id is not None:
+                    if backend_id is not None and msg_type in request_messages:
+                        new_xid = store_xid(xid,backend_id)
                         ret = bytearray(message_data)
-                        set_xid(ret,backend_id)
+                        set_xid(ret,new_xid)
                         message_data = str(ret)
+
                     self.datapath.send(message_data)
                 else:
                     self.datapath = None
 
     
     
-class RYUShim(app_manager.RyuApp):
+class RyuShim(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         self.__class__.name = "RYUShim"
-        super(RYUShim, self).__init__(*args, **kwargs)
+        super(RyuShim, self).__init__(*args, **kwargs)
 
         # Various Variables that can be edited
         __CORE_IP__ = 'localhost'
@@ -176,6 +207,7 @@ class RYUShim(app_manager.RyuApp):
         self.switches = {}
         #self.shim_id = b"shim-ryu-" + str(os.getpid())
         self.shim_id = b"shim"
+        self.connection_up = False
         self.supported_protocols = {}
         self.supported_protocols[OPENFLOW_PROTO] = []
         self.supported_protocols[NETCONF_PROTO] = []
@@ -192,7 +224,7 @@ class RYUShim(app_manager.RyuApp):
         for datapath_id, datapath in self.switches.iteritems():
             ofp_parser = datapath.ofproto_parser
             req = ofp_parser.OFPFeaturesRequest(datapath)
-            req.xid = backend_id
+            req.xid = store_xid(backend_id,backend_id)
             datapath.send_msg(req)
 
 
@@ -200,6 +232,7 @@ class RYUShim(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def _handle_ConnectionUp(self, ev):
         self.observe_event(ofp_event.EventOFPPacketIn)
+        self.connection_up = True
         msg = ev.msg
         datapath = msg.datapath
         self.ofp_version = msg.version
@@ -228,27 +261,33 @@ class RYUShim(app_manager.RyuApp):
             #Send the message to connected backend clients. module_id is set only for synchronous messages
             msg = ev.msg
             type = msg.msg_type
-            if type in async_messages:
-                module_id = None
+            datapath = ev.msg.datapath
+
+            if type in reply_messages:
+                old_values = get_xid(msg.xid)
+                if old_values is not None:
+                    module_id = old_values['backend_id']
+                    buf = bytearray(msg.buf)
+                    set_xid(buf,old_values['old_xid'])
+                else:
+                    module_id = None
             else:
-                module_id = msg.xid
-            self.send_to_clients(ev,module_id)
+                buf = bytearray(ev.msg.buf)
+                module_id = None
+
+            #Hello messages are not sent to the core
+            if type is not datapath.ofproto.OFPT_HELLO:
+                self.send_to_clients(datapath, str(buf),module_id)
 
     #Sends the message to the connected NetIDE clients
-    def send_to_clients(self, ev,module_id):
-        msg = ev.msg
-        self.datapath = ev.msg.datapath
-        
-        #Hello messages are not sent to the core
-        if msg.msg_type is self.datapath.ofproto.OFPT_HELLO:
-            return
-        
+    def send_to_clients(self, datapath, msg_buf, module_id):
+
         #Add all the switches connected datapath.id and the connection information to the local variable
-        if self.datapath.id not in self.switches:
-            self.switches[self.datapath.id] = self.datapath
+        if datapath.id not in self.switches:
+            self.switches[datapath.id] = datapath
 
         #Encapsulate the feature request and send to connected client
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, self.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, datapath.id, str(msg_buf))
         #Forward the message to all the connected NetIDE clients
         decoded_header = NetIDEOps.netIDE_decode_header(msg_to_send)
         logger.debug("Sending to Core: Message header: %s", decoded_header)
