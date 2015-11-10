@@ -10,5 +10,4 @@ import eu.netide.lib.netip.ManagementMessage;
 public interface IManagementMessageListener {
     void OnManagementMessage(ManagementMessage message);
 
-    void OnManagementMessage(ManagementMessage message);
 }

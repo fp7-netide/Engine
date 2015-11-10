@@ -20,6 +20,9 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     private int pub_port;
     private int sub_port;
 
+    private IShimManager shimManager;
+    private IBackendManager backendManager;
+
     private ZMQ.Context context;
     private Thread thread;
 
@@ -83,12 +86,12 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
                     // send all messages to shim
                     Message shim_message = new Message(new MessageHeader(),data);
                     shim_message.getHeader().setMessageType(MessageType.OPENFLOW);
-
+                    shimManager.sendMessage(shim_message);
                 } else if (senderId.equals("0_")) {
                     // send all messages to backend
                     Message be_message = new Message(new MessageHeader(),data);
                     be_message.getHeader().setMessageType(MessageType.OPENFLOW);
-
+                    backendManager.sendMessage(be_message);
                 } else{
                     log.debug("Got unknown message in SUB queue:" + message.toString());
                 }
@@ -148,7 +151,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
         sendSocket.close();
     }
 
-
     @Override
     public void OnManagementMessage(ManagementMessage message) {
         ZMsg zmq_message = new ZMsg();
@@ -158,5 +160,42 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
         sendSocket.connect(CONTROL_ADDRESS);
         zmq_message.send(sendSocket);
         sendSocket.close();
+    }
+    /**
+     * Sets the shim manager.
+     *
+     * @param manager the manager
+     */
+    public void setShimManager(IShimManager manager) {
+        shimManager = manager;
+        log.info("ShimManager set.");
+    }
+
+    /**
+     * Gets the shim manager.
+     *
+     * @return the shim manager
+     */
+    public IShimManager getShimManager() {
+        return shimManager;
+    }
+
+    /**
+     * Sets the backend manager.
+     *
+     * @param manager the manager
+     */
+    public void setBackendManager(IBackendManager manager) {
+        backendManager = manager;
+        log.info("BackendManager set.");
+    }
+
+    /**
+     * Gets the backend manager.
+     *
+     * @return the backend manager
+     */
+    public IBackendManager getBackendManager() {
+        return backendManager;
     }
 }
