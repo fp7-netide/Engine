@@ -39,10 +39,12 @@ ryu-manager ryu-shim.py
 ```
 ```AdvancedProxyCore.py``` has many option (such as the composition specification file to load) that can be discovered by running ```AdvancedProxyCore.py -h```.
 
-A network emulator such as Mininet can be used to test the software. In the ```test``` folder a script that automatically configures Mininet with a 4 switches and 4 hosts topology.
+A network emulator such as Mininet can be used to test the software. In the ```test``` folder a script (```netide-topo.py```) that automatically configures Mininet with a 4 switches and 4 hosts topology.
 ```
-sudo python netide-topo.py
+sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=IP_ADDRESS,port=6633
 ```
+Where IP_ADDRESS is the IP address of the machine where the Ryu shim layer is running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
+
 This script configures the following topology:
 
 ```
