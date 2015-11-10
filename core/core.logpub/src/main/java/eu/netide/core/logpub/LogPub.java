@@ -1,8 +1,6 @@
 package eu.netide.core.logpub;
 
 import eu.netide.core.api.*;
-import eu.netide.core.connectivity.BackendManager;
-import eu.netide.core.connectivity.ShimManager;
 import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageHeader;
@@ -24,9 +22,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
     private ZMQ.Context context;
     private Thread thread;
-
-    private ShimManager shim_manager = new ShimManager();
-    private BackendManager be_manager = new BackendManager();
 
     public LogPub() {
         log.info("LogPub Constructor.");
@@ -88,12 +83,12 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
                     // send all messages to shim
                     Message shim_message = new Message(new MessageHeader(),data);
                     shim_message.getHeader().setMessageType(MessageType.OPENFLOW);
-                    shim_manager.sendMessage(shim_message);
+
                 } else if (senderId.equals("0_")) {
                     // send all messages to backend
                     Message be_message = new Message(new MessageHeader(),data);
                     be_message.getHeader().setMessageType(MessageType.OPENFLOW);
-                    be_manager.sendMessage(be_message);
+
                 } else{
                     log.debug("Got unknown message in SUB queue:" + message.toString());
                 }
@@ -128,6 +123,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
         return sub_port;
     }
 
+
     @Override
     public void OnBackendMessage(Message message, String originId) {
         ZMsg zmq_message = new ZMsg();
@@ -151,6 +147,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
         zmq_message.send(sendSocket);
         sendSocket.close();
     }
+
 
     @Override
     public void OnManagementMessage(ManagementMessage message) {
