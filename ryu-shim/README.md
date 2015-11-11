@@ -44,6 +44,8 @@ A network emulator such as Mininet can be used to test the software. In the ```t
 sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=IP_ADDRESS,port=6633
 ```
 Where IP_ADDRESS is the IP address of the machine where the Ryu shim layer is running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
+Add options ```--switch ovs,protocols=OpenFlow13``` if you want to use the OpenFlow-1.3 protocol and test applications.
+
 
 This script configures the following topology:
 
@@ -60,9 +62,15 @@ s23 lo:  s23-eth1:www-eth0 s23-eth2:s21-eth3
 
 Where ```alice```, ```bob``` and ```www``` belong to a hypothetical LAN protected by a firewall (switch ```s11```), while ```charlie``` is outside the LAN.
 
-Once both Core and Ryu shim are running, the backend  and the network applications can be started with:
+Once both Core and Ryu shim are running, the backend and OpenFlow 1.0 network applications can be started with:
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
+
+or
+
+``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch_13.py tests/firewall_13.py```
+
+if you want to test the OpenFlow 1.3 applications.
 
 The composition configuration defined in ```CompositionSpecification.xml``` loaded by the ```AdvancedProxyCore.py``` assigns switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
 
@@ -80,6 +88,10 @@ Within the Mininet CLI, a ```pingall``` command demonstrates what traffic is all
 See the LICENSE file.
 
 ## ChangeLog
+
+ryu-backend: 2015-11-11 Wed Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Added OpenFlow 1.3 test applications
 
 ryu-backend: 2015-11-09 Mon Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
