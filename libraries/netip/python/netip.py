@@ -17,7 +17,7 @@
 ################################################################################
 import struct
 
-NETIDE_VERSION = 0x02
+NETIDE_VERSION = 0x03
 NetIDE_Header_Format = '!BBHIIQ'
 
 OPENFLOW_PROTO = 0x11

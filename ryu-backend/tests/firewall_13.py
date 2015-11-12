@@ -1,17 +1,20 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+################################################################################
+# Simple Firewall for Ryu - OpenFlow 1.3 implementation                        #
+# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
+# author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
+################################################################################
+# Copyright (c) 2014, NetIDE Consortium (Create-Net (CN), Telefonica           #
+# Investigacion Y Desarrollo SA (TID), Fujitsu Technology Solutions GmbH (FTS),#
+# Thales Communications & Security SAS (THALES), Fundacion Imdea Networks      #
+# (IMDEA), Universitaet Paderborn (UPB), Intel Research & Innovation Ireland   #
+# Ltd (IRIIL), Fraunhofer-Institut fur Produktionstechnologie (IPT), Telcaria  #
+# Ideas SL (TELCA)                                                             #
+#                                                                              #
+# All rights reserved. This program and the accompanying materials             #
+# are made available under the terms of the Eclipse Public License v1.0        #
+# which accompanies this distribution, and is available at                     #
+# http://www.eclipse.org/legal/epl-v10.html                                    #
+################################################################################
 
 from ryu.base import app_manager
 from ryu.controller import ofp_event
