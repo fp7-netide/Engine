@@ -1,13 +1,19 @@
 ################################################################################
-# Ryu backend for the shim client                                              #
+# Backend for the Ryu Controller platform                                      #
 # NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
 # author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
 ################################################################################
-# Eclipse Public License - v 1.0                                               #
+# Copyright (c) 2014, NetIDE Consortium (Create-Net (CN), Telefonica           #
+# Investigacion Y Desarrollo SA (TID), Fujitsu Technology Solutions GmbH (FTS),#
+# Thales Communications & Security SAS (THALES), Fundacion Imdea Networks      #
+# (IMDEA), Universitaet Paderborn (UPB), Intel Research & Innovation Ireland   #
+# Ltd (IRIIL), Fraunhofer-Institut fur Produktionstechnologie (IPT), Telcaria  #
+# Ideas SL (TELCA)                                                             #
 #                                                                              #
-# THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC  #
-# LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM  #
-# CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.                        #
+# All rights reserved. This program and the accompanying materials             #
+# are made available under the terms of the Eclipse Public License v1.0        #
+# which accompanies this distribution, and is available at                     #
+# http://www.eclipse.org/legal/epl-v10.html                                    #
 ################################################################################
 
 import os
