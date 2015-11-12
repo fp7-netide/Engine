@@ -21,7 +21,7 @@ Within the  ```ryu-backend``` folder, run the following command to use the Ryu b
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 
-The Ryu backend will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 41414.
+The Ryu backend will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 5555.
 The ```--ofp-tcp-listen-port 7733``` is used to avoid possible conflicts that may happen when two different controller platforms are running on the same machine. In our case we could have Ryu hosting the backend and, e.g., ONOS with the shim layer. By default they both bind the TCP port 6633 to accept connections from the network elements.
 
 Finally, ```simple_switch``` is a simple L2 learning switch application and ```firewall.py``` is a simple firewall application, both provided for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
@@ -32,7 +32,7 @@ To test the Ryu backend it is necessary to run one of the shim layers provided i
 In the ```tests``` folder, a minimal implementation of the Core is provided.
 For instance, to use this backend with the Ryu shim run following sequence of commands:
 ```
-python AdvancedProxyCore.py -c tests/CompositionSpecification.xml
+python AdvancedProxyCore.py -c CompositionSpecification.xml
 ryu-manager ryu-shim.py
 ```
 ```AdvancedProxyCore.py``` has many option (such as the composition specification file to load) that can be discovered by running ```AdvancedProxyCore.py -h```.

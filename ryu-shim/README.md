@@ -19,7 +19,7 @@ The shim layer is a client for the NetIDE Core. Therefore, first start the Core,
 ryu-manager ryu-shim.py
 ```
 
-This command will start the shim layer along with the rest of the Ryu platform. The Ryu shim will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 41414.
+This command will start the shim layer along with the rest of the Ryu platform. The Ryu shim will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 5555.
 
 **Note:** The Ryu controller platform listens for connections from the switches on the port 6633. Therefore, when using Mininet for testing purposes, start mininet by specifying the controller information as follows:
 ```
@@ -34,7 +34,7 @@ To test the Ryu shim it is necessary to run one of the backends provided in this
 In the ```tests``` folder, a minimal implementation of the Core is provided.
 For instance, to use this shim with the Ryu backend run following sequence of commands:
 ```
-python AdvancedProxyCore.py -c tests/CompositionSpecification.xml
+python AdvancedProxyCore.py -c CompositionSpecification.xml
 ryu-manager ryu-shim.py
 ```
 ```AdvancedProxyCore.py``` has many option (such as the composition specification file to load) that can be discovered by running ```AdvancedProxyCore.py -h```.
