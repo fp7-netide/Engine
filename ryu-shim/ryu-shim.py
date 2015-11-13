@@ -59,7 +59,7 @@ XID_DB = {}
 
 
 logger = logging.getLogger('ryu-shim')
-logger.setLevel(logging.NOTSET)
+logger.setLevel(logging.DEBUG)
 
 def set_xid(of_array, xid):
     of_array[4]=(xid >>24) & 0xff;
@@ -165,15 +165,17 @@ class CoreConnection(threading.Thread):
 
                 #After protocols have been negotiated, send back message to client to notify for common protocols
                 proto_data = NetIDEOps.netIDE_encode_handshake(negotiated_protocols)
-                msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, backend_id, None, proto_data)
-                self.socket.send(msg)
-
-                #Resend request for features for the new client
-                self.controller.send_features_request(backend_id)
+                if len(proto_data) == 0:
+                    msg = NetIDEOps.netIDE_encode('NETIDE_ERROR', None, backend_id, None, None)
+                    self.socket.send(msg)
+                else:
+                    msg = NetIDEOps.netIDE_encode('NETIDE_HELLO', None, backend_id, None, proto_data)
+                    self.socket.send(msg)
+                    #Resend request for features for the new client
+                    self.controller.send_features_request(backend_id)
 
             elif decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
                 if message_length is 0:
-                    print ("Empty message!!!")
                     return
 
                 if decoded_header[NetIDEOps.NetIDE_header['DPID']] is not 0:

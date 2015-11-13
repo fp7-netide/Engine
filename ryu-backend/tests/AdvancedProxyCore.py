@@ -170,6 +170,8 @@ class MessageDispatcher(threading.Thread):
                                 if decoded_header[NetIDEOps.NetIDE_header['TYPE']] == NetIDEOps.NetIDE_type['NETIDE_HELLO'] and message_length > 0:
                                     socket.send_multipart([backendname,message])
                                     prop['hello'] = 1
+                                elif decoded_header[NetIDEOps.NetIDE_header['TYPE']] == NetIDEOps.NetIDE_type['NETIDE_ERROR']:
+                                    socket.send_multipart([backendname,message])
                                 elif prop['hello'] > 0: #hello completed between shim and backend. We can start sending messages to this backend
                                     socket.send_multipart([backendname,message])
                                 break

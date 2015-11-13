@@ -314,7 +314,6 @@ class CoreConnection(threading.Thread):
             self.of_datapath.handle_event(decoded_header, message_data)
 
         elif message_type is 'NETIDE_HELLO':
-
             if decoded_header is False:
                 return False
             if message_length is 0:
@@ -357,6 +356,9 @@ class CoreConnection(threading.Thread):
                 if supported_protocol_count > 0:
                     self.backend_info['connected'] = True
                     logger.debug("Handshake completed!!!")
+
+        elif message_type is 'NETIDE_ERROR':
+            return False
 
 
 class RyuBackend(app_manager.RyuApp):
