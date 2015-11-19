@@ -65,10 +65,6 @@ public class GlobalFIB {
 
     private ITopology topogloy;
 
-
-
-
-
     public void addFlow(long datapathId, OFFlowMod ofFlowAdd) {
         if (!individualSwitchFlowMap.containsKey(datapathId)) {
             individualSwitchFlowMap.put(datapathId, new Vector<>());

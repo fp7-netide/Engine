@@ -57,8 +57,23 @@
         </dependency>
         <dependency>
             <groupId>org.onosproject</groupId>
+            <artifactId>onos-api</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>onos-core-net</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.onosproject</groupId>
             <artifactId>onlab-misc</artifactId>
             <version>1.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+            <version>1.9.6</version>
         </dependency>
     </dependencies>
 
@@ -72,28 +87,46 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>2.5.4</version>
                 <extensions>true</extensions>
+                <inherited>true</inherited>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}
-                        </Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Bundle-Activator>eu.netide.core.globalfib.Activator
-                        </Bundle-Activator>
                         <Export-Package>
-                            eu.netide.core.globalfib;version=${project.version}
+                            ${project.artifactId};version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,org.osgi.framework,eu.netide.core.topology,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip
+                            !${project.artifactId},
+                            *
                         </Import-Package>
-                        <Embed-Dependency>*;scope=compile|runtime
-                        </Embed-Dependency>
-                        <Embed-Transitive>true</Embed-Transitive>
+                        <Service-Component>*</Service-Component>
                     </instructions>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <version>1.20.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-scr-srcdescriptor</id>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>bundle</supportedProjectType>
+                        <supportedProjectType>war</supportedProjectType>
+                    </supportedProjectTypes>
                 </configuration>
             </plugin>
         </plugins>

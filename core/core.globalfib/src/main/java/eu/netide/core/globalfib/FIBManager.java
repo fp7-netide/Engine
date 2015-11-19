@@ -3,8 +3,13 @@ package eu.netide.core.globalfib;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.Service;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
+import org.onosproject.net.topology.TopologyService;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFlowAdd;
@@ -12,9 +17,14 @@ import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFMessageReader;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 
+@Component(immediate=true)
+@Service
 public class FIBManager implements IShimMessageListener{
     private final OFMessageReader<OFMessage> reader;
     private final GlobalFIB gfib;
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private TopologyService topologyService;
 
     public FIBManager()
     {
@@ -50,5 +60,4 @@ public class FIBManager implements IShimMessageListener{
 
         }
     }
-
 }
