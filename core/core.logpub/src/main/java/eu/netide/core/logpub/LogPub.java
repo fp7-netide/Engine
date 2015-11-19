@@ -82,12 +82,12 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
                 String senderId = message.getFirst().toString();
                 byte[] data = message.getLast().getData();
                 log.info("Data received from SUB queue to'" + senderId + "'.");
-                if (senderId.equals("1_")) {
+                if (senderId.startsWith("1_")) {
                     // send all messages to shim
                     Message shim_message = new Message(new MessageHeader(),data);
                     shim_message.getHeader().setMessageType(MessageType.OPENFLOW);
                     shimManager.sendMessage(shim_message);
-                } else if (senderId.equals("0_")) {
+                } else if (senderId.startsWith("0_")) {
                     // send all messages to backend
                     Message be_message = new Message(new MessageHeader(),data);
                     be_message.getHeader().setMessageType(MessageType.OPENFLOW);
