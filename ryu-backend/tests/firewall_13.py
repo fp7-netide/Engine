@@ -1,20 +1,17 @@
-################################################################################
-# Simple Firewall for Ryu - OpenFlow 1.3 implementation                        #
-# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
-# author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
-################################################################################
-# Copyright (c) 2014, NetIDE Consortium (Create-Net (CN), Telefonica           #
-# Investigacion Y Desarrollo SA (TID), Fujitsu Technology Solutions GmbH (FTS),#
-# Thales Communications & Security SAS (THALES), Fundacion Imdea Networks      #
-# (IMDEA), Universitaet Paderborn (UPB), Intel Research & Innovation Ireland   #
-# Ltd (IRIIL), Fraunhofer-Institut fur Produktionstechnologie (IPT), Telcaria  #
-# Ideas SL (TELCA)                                                             #
-#                                                                              #
-# All rights reserved. This program and the accompanying materials             #
-# are made available under the terms of the Eclipse Public License v1.0        #
-# which accompanies this distribution, and is available at                     #
-# http://www.eclipse.org/legal/epl-v10.html                                    #
-################################################################################
+# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from ryu.base import app_manager
 from ryu.controller import ofp_event
@@ -71,7 +68,6 @@ class Firewall(app_manager.RyuApp):
             self.Configure_stateless_FW(datapath)
             self.stateless_FW_configured = True
 
-
     def add_flow(self, datapath, priority, match, actions, idle_to=0, hard_to=0, buffer_id=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -120,11 +116,13 @@ class Firewall(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         datapath = msg.datapath
         parser = datapath.ofproto_parser
+        ofproto = datapath.ofproto
         in_port = msg.match['in_port']
 
         eth = pkt.get_protocols(ethernet.ethernet)[0]
         hwdst = eth.dst
         hwsrc = eth.src
+        global COUNTER
 
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
@@ -145,7 +143,6 @@ class Firewall(app_manager.RyuApp):
             match = parser.OFPMatch(in_port=FW_OUTPORT, eth_type = ETH_IP, eth_src=hwdst, eth_dst=hwsrc)
             actions = [parser.OFPActionOutput(FW_INPORT)]
             self.add_flow(datapath, 1, match, actions, 5, 0)
-
 
             # forward the packet
             self.forwardPacket(msg, FW_OUTPORT)

@@ -1,21 +1,3 @@
-################################################################################
-# Simple Firewall for Ryu - OpenFlow 1.0 implementation                        #
-# NetIDE FP7 Project: www.netide.eu, github.com/fp7-netide                     #
-# author: Roberto Doriguzzi Corin (roberto.doriguzzi@create-net.org)           #
-################################################################################
-# Copyright (c) 2014, NetIDE Consortium (Create-Net (CN), Telefonica           #
-# Investigacion Y Desarrollo SA (TID), Fujitsu Technology Solutions GmbH (FTS),#
-# Thales Communications & Security SAS (THALES), Fundacion Imdea Networks      #
-# (IMDEA), Universitaet Paderborn (UPB), Intel Research & Innovation Ireland   #
-# Ltd (IRIIL), Fraunhofer-Institut fur Produktionstechnologie (IPT), Telcaria  #
-# Ideas SL (TELCA)                                                             #
-#                                                                              #
-# All rights reserved. This program and the accompanying materials             #
-# are made available under the terms of the Eclipse Public License v1.0        #
-# which accompanies this distribution, and is available at                     #
-# http://www.eclipse.org/legal/epl-v10.html                                    #
-################################################################################
-
 import logging
 import struct
 
@@ -25,6 +7,8 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
+from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0
 from ryu.ofproto import ofproto_v1_0_parser
 from ryu.lib.mac import haddr_to_bin
@@ -41,7 +25,6 @@ PORT_WEB = 80
 
 HOST_WEB = "10.0.0.10"
 
-FW_DPID = 0xA
 FW_OUTPORT = 1
 FW_INPORT = 2
 
@@ -54,6 +37,7 @@ class Firewall(app_manager.RyuApp):
         self.knownMACs = {}
         self.ofproto = ofproto_v1_0
         self.ofproto_parser = ofproto_v1_0_parser
+        self.stateless_FW_configured = False
         
     def ipv4_to_int(self, ip):
         o = map(int, ip.split('.'))
@@ -113,31 +97,33 @@ class Firewall(app_manager.RyuApp):
             match = datapath.ofproto_parser.OFPMatch(in_port=FW_OUTPORT, dl_type = ETH_IP, dl_src=haddr_to_bin(hwdst), dl_dst=haddr_to_bin(hwsrc))
             actions = [datapath.ofproto_parser.OFPActionOutput(FW_INPORT)]
             self.add_flow(datapath, match, actions, 5, 0)
+
             
             # forward the packet
             self.forwardPacket(msg, 1)  
 
     # Feature reply handler: used to install proactive actions
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, MAIN_DISPATCHER)
     def _switch_features_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
         
-        print "FW: features reply"
-        
-        if datapath.id == FW_DPID:
+        if datapath.id == FW_DPID and self.stateless_FW_configured == False:
             self.Configure_stateless_FW(datapath)
+            self.stateless_FW_configured = True
     
     # PacketIn handler for reactive actions
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
-        
-        if datapath.id == FW_DPID:
-            print "FIREWALL packet in from dpid: ",datapath.id," msg:",  msg
-            pkt = packet.Packet(msg.data)
-            self.Configure_stateful_FW(msg)
+
+        print "FIREWALL packet in from dpid: ",datapath.id," msg:",  msg
+        pkt = packet.Packet(msg.data)
+        self.Configure_stateful_FW(msg)
+
+
+
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):

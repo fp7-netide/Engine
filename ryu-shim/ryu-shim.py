@@ -28,32 +28,16 @@ import socket
 import zlib
 from eventlet.green import zmq
 from ryu.base import app_manager
-from ryu.exception import RyuException
-from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller import dpset
 from ryu.controller.handler import MAIN_DISPATCHER, set_ev_handler, set_ev_cls
-from ryu.controller.handler import HANDSHAKE_DISPATCHER
 from ryu.controller.handler import CONFIG_DISPATCHER
 from ryu.controller.handler import set_ev_cls
-from ryu.controller.ofp_handler import OFPHandler
-from ryu.ofproto import ofproto_v1_0, ether, ofproto_v1_0_parser, nx_match
-from ryu.lib.mac import haddr_to_bin, DONTCARE_STR
-from ryu.lib.dpid import dpid_to_str, str_to_dpid
-from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
-from ryu.lib.packet import packet, ethernet, lldp
-from ryu.lib.packet import ethernet
-from ryu.lib.packet import ipv4
-from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_parser
-from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
-from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
-from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
-from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
-from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
 from ryu.netide.netip import *
 
 NETIDE_CORE_PORT = 5555
+XID_TIMEOUT = 5 # xid are removed from the database after 5 seconds
 XID_CRC_INDEX = 0
 XID_DB = {}
 
@@ -78,7 +62,7 @@ def store_xid(xid, backend_id):
         ret = XID_DB.get(new_xid,False)
         XID_CRC_INDEX += 1
 
-    XID_DB[new_xid] = {'old_xid' : xid, 'backend_id' : backend_id}
+    XID_DB[new_xid] = {'old_xid' : xid, 'backend_id' : backend_id, 'time' : time.time()}
     return new_xid
 
 def get_xid(xid):
@@ -89,6 +73,14 @@ def get_xid(xid):
     else:
         del XID_DB[xid]
         return old_values
+
+def purge_xid():
+    global XID_DB
+    global XID_TIMEOUT
+    current_time = time.time()
+    for xid, prop in XID_DB.items():
+        if current_time>  prop['time'] + XID_TIMEOUT:
+            del XID_DB[xid]
 
 # Connection with the core
 class CoreConnection(threading.Thread):
@@ -175,17 +167,19 @@ class CoreConnection(threading.Thread):
                     self.controller.send_features_request(backend_id)
 
             elif decoded_header[NetIDEOps.NetIDE_header['TYPE']] is NetIDEOps.NetIDE_type['NETIDE_OPENFLOW']:
+                purge_xid() # removes the old entries from the xid database
+
                 if message_length is 0:
                     return
 
                 if decoded_header[NetIDEOps.NetIDE_header['DPID']] is not 0:
                     self.datapath = self.controller.switches[int(decoded_header[NetIDEOps.NetIDE_header['DPID']])]
 
-                    # Here we set xid=mod_id so that the synchromous messages can be forwarded to the correct client by the core
+                    # Here we set a ""fake" xid so that the replies to request messages can be forwarded to the correct module by the core
                     (version, msg_type, msg_len, xid) = ofproto_parser.header(message_data)
-                    backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
-                    if backend_id is not None and msg_type in request_messages:
-                        new_xid = store_xid(xid,backend_id)
+                    module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
+                    if module_id is not None:
+                        new_xid = store_xid(xid,module_id)
                         ret = bytearray(message_data)
                         set_xid(ret,new_xid)
                         message_data = str(ret)
@@ -260,22 +254,19 @@ class RyuShim(app_manager.RyuApp):
             handlers = self.get_handlers(ev, state)
             for handler in handlers:
                 handler(ev)
-            #Send the message to connected backend clients. module_id is set only for synchronous messages
+            #Send the message to connected backend clients. We try to restore the old xid and module_id in case of reply messages
             msg = ev.msg
             type = msg.msg_type
             datapath = ev.msg.datapath
+            buf = bytearray(msg.buf)
+            module_id = None
 
-            if type in reply_messages:
+            if type not in async_messages:
                 old_values = get_xid(msg.xid)
                 if old_values is not None:
                     module_id = old_values['backend_id']
-                    buf = bytearray(msg.buf)
                     set_xid(buf,old_values['old_xid'])
-                else:
-                    module_id = None
-            else:
-                buf = bytearray(ev.msg.buf)
-                module_id = None
+
 
             #Hello messages are not sent to the core
             if type is not datapath.ofproto.OFPT_HELLO:

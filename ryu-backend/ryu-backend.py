@@ -30,24 +30,9 @@ from eventlet.green import zmq
 from eventlet.green import select
 from eventlet.green import threading
 from ryu.base import app_manager
-from ryu.exception import RyuException
-from ryu.controller import mac_to_port
 from ryu.controller import ofp_event
 from ryu.controller import dpset
 from ryu.controller import controller
-from ryu.controller.handler import MAIN_DISPATCHER
-from ryu.controller.handler import HANDSHAKE_DISPATCHER
-from ryu.controller.handler import CONFIG_DISPATCHER
-from ryu.controller.handler import set_ev_cls
-from ryu.lib import hub
-from ryu.ofproto import ofproto_v1_0, ether, ofproto_v1_0_parser, nx_match
-from ryu.lib.mac import haddr_to_bin, DONTCARE_STR
-from ryu.lib.dpid import dpid_to_str, str_to_dpid
-from ryu.lib.ip import ipv4_to_bin, ipv4_to_str
-from ryu.lib.packet import packet, ethernet, lldp
-from ryu.lib.packet import ethernet
-from ryu.lib.packet import ipv4
-from ryu.ofproto import ofproto_protocol
 from ryu.ofproto import ofproto_parser
 from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
@@ -79,7 +64,6 @@ class BackendDatapath(controller.Datapath):
         self.xid = 0
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
-        self.flow_format = ofproto_v1_0.NXFF_OPENFLOW10
         self.is_active = True
 
     def handle_write(self):
