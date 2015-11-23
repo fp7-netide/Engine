@@ -4,7 +4,7 @@ import org.testng.annotations.Test;
 import org.zeromq.ZMQ;
 
 /**
- * Created by K�vinPhemius on 18.08.2015.
+ * Created by KévinPhemius on 18.08.2015.
  */
 public class TestLogPub {
 
