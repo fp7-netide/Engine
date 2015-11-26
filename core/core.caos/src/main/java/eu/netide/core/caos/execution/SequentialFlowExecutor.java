@@ -35,10 +35,13 @@ public class SequentialFlowExecutor implements IFlowExecutor {
         if (status.getOriginalMessage().getHeader().getMessageType() != MessageType.OPENFLOW) {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow message.");
         }
+
         OpenFlowMessage originalMessage = (OpenFlowMessage) NetIPUtils.ConcretizeMessage(status.getOriginalMessage());
+
         if (originalMessage.getOfMessage().getType() != OFType.PACKET_IN) {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow PacketIn message.");
         }
+
         OFPacketIn originalPacketIn = (OFPacketIn) originalMessage.getOfMessage();
         List<ExecutionFlowNode> collectedNodes = nodes.collect(Collectors.toList());
         ExecutionFlowNode executionFlowNode = collectedNodes.get(0);
