@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.*;
 
 
 /**
- * <p>Java-Klasse für anonymous complex type.
+ * <p>Java-Klasse fï¿½r anonymous complex type.
  * <p>
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
  * <p>
@@ -34,6 +34,8 @@ public class Module {
 
     protected String loaderIdentification;
 
+    protected boolean fenceSupport;
+
     @XmlElement(name = "CallCondition", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
     public Condition getCallCondition() {
         return callCondition;
@@ -60,6 +62,17 @@ public class Module {
 
     public void setLoaderIdentification(String value) {
         this.loaderIdentification = value;
+    }
+
+    @XmlAttribute(name = "noFenceSupport", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
+    public boolean getFenceSupport()
+    {
+        return fenceSupport;
+    }
+
+    public void setFenceSupport(boolean value)
+    {
+        fenceSupport = ! value;
     }
 
     @Override

@@ -39,6 +39,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     private final Semaphore csLock = new Semaphore(1);
     private volatile boolean correctlyConfigured = false;
     private Future<?> reconfigurationFuture;
+    private static ExecutionFlowStatus lastStatus=null;
 
 
     /**
@@ -106,6 +107,8 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
                 logger.warn(String.format("%d outstanding compositions", compQueueLen));
             else
                 logger.debug(String.format("%d outstanding compositions", compQueueLen));
+
+
 
             csLock.acquire(); // can only handle when not reconfiguring
             if (correctlyConfigured) {
