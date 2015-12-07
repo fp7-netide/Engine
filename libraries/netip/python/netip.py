@@ -16,9 +16,8 @@
 # http://www.eclipse.org/legal/epl-v10.html                                    #
 ################################################################################
 import struct
-from ryu.ofproto import ofproto_v1_5
 
-NETIDE_VERSION = 0x02
+NETIDE_VERSION = 0x03
 NetIDE_Header_Format = '!BBHIIQ'
 
 OPENFLOW_PROTO = 0x11
@@ -33,13 +32,26 @@ OPENFLOW_15 = 0x06
 NETCONF_10 = 0x01
 OPFLEX = 0x00
 
-async_messages = frozenset([ofproto_v1_5.OFPT_PACKET_IN,
-                            ofproto_v1_5.OFPT_FLOW_REMOVED,
-                            ofproto_v1_5.OFPT_PORT_STATUS,
-                            ofproto_v1_5.OFPT_ROLE_STATUS,
-                            ofproto_v1_5.OFPT_TABLE_STATUS,
-                            ofproto_v1_5.OFPT_REQUESTFORWARD,
-                            ofproto_v1_5.OFPT_CONTROLLER_STATUS])
+# Asynchronous messages.
+OFPT_PACKET_IN = 10             # Async message
+OFPT_FLOW_REMOVED = 11          # Async message
+OFPT_PORT_STATUS = 12           # Async message
+# Controller role change event messages.
+OFPT_ROLE_STATUS = 30           # Async message
+# Asynchronous messages.
+OFPT_TABLE_STATUS = 31          # Async message
+# Request forwarding by the switch.
+OFPT_REQUESTFORWARD = 32        # Async message
+# Controller Status async message.
+OFPT_CONTROLLER_STATUS = 35     # Async message
+
+async_messages = frozenset([OFPT_PACKET_IN,
+                            OFPT_FLOW_REMOVED,
+                            OFPT_PORT_STATUS,
+                            OFPT_ROLE_STATUS,
+                            OFPT_TABLE_STATUS,
+                            OFPT_REQUESTFORWARD,
+                            OFPT_CONTROLLER_STATUS])
 
 
 class NetIDEOps:
@@ -62,7 +74,8 @@ class NetIDEOps:
         'NETIDE_MGMT'           : 0x03,
         'MODULE_ANNOUNCEMENT'   : 0x04,
         'MODULE_ACKNOWLEDGE'    : 0x05,
-        'TOPOLOGY_UPDATE'       : 0x06,
+        'NETIDE_HEARTBEAT'      : 0x06,
+        'TOPOLOGY_UPDATE'       : 0x07,
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
         'NETIDE_OPFLEX'     : OPFLEX_PROTO
@@ -71,17 +84,25 @@ class NetIDEOps:
  #Encode a message in the NetIDE protocol format
     @staticmethod
     def netIDE_encode(type, xid, module_id, datapath_id, msg):
-        length = len(msg)
         type_code = NetIDEOps.NetIDE_type[type]
-        #if no transaction id is given, generate a random one.
+        if msg is None:
+            length = 0
+        else:
+            length = len(msg)
+            
         if xid is None:
             xid = 0
         if module_id is None:
             module_id = 0
         if datapath_id is None:
             datapath_id = 0
-        values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id, msg)
-        packer = struct.Struct(NetIDE_Header_Format+str(length)+'s')
+        if length is 0:
+            packer = struct.Struct(NetIDE_Header_Format)
+            values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id)
+        else:
+            packer = struct.Struct(NetIDE_Header_Format+str(length)+'s')
+            values = (NetIDEOps.NetIDE_version, type_code, length, xid, module_id, datapath_id, msg)
+        
         packed_msg = packer.pack(*values)
         return packed_msg
 
