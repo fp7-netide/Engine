@@ -3,11 +3,19 @@ package eu.netide.core.caos;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
+import eu.netide.core.api.RequestResult;
 import eu.netide.core.caos.composition.CompositionSpecification;
 import eu.netide.core.caos.composition.CompositionSpecificationLoader;
 import eu.netide.core.caos.composition.ExecutionFlowStatus;
+import eu.netide.core.caos.composition.Module;
 import eu.netide.core.caos.execution.FlowExecutors;
 import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.OpenFlowMessage;
+import org.projectfloodlight.openflow.protocol.OFEchoReply;
+import org.projectfloodlight.openflow.protocol.OFEchoRequest;
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFFeaturesRequest;
+import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +47,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     private final Semaphore csLock = new Semaphore(1);
     private volatile boolean correctlyConfigured = false;
     private Future<?> reconfigurationFuture;
-    private static ExecutionFlowStatus lastStatus=null;
+    private static ExecutionFlowStatus lastStatus = null;
 
 
     /**
@@ -103,23 +111,32 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         logger.info("CompositionManager received message from shim: " + message.toString());
         try {
             int compQueueLen = csLock.getQueueLength();
-            if (compQueueLen > 10)
+            if (compQueueLen > 10) {
                 logger.warn(String.format("%d outstanding compositions", compQueueLen));
-            else
+            } else {
                 logger.debug(String.format("%d outstanding compositions", compQueueLen));
+            }
 
+            ExecutionFlowStatus status = new ExecutionFlowStatus(message);
 
-
+            if (compQueueLen >= 1) {
+                for (Module module : compositionSpecification.getModules()) {
+                    if (!module.getFenceSupport()) {
+                        int mId = getBackendManager().getModuleId(module.getId());
+                        getBackendManager().markModuleAsFinished(mId);
+                    }
+                }
+            }
             csLock.acquire(); // can only handle when not reconfiguring
             if (correctlyConfigured) {
-                ExecutionFlowStatus status = new ExecutionFlowStatus(message);
-
                 status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), shimManager, backendManager);
 
                 // Send results
                 for (Map.Entry<Long, List<Message>> entry : status.getResultMessages().entrySet()) {
+                    entry.getValue().stream().forEach((Message x) -> logger.warn("Sending composition result message {} to shim.", x));
                     entry.getValue().stream().forEach(shimManager::sendMessage);
-                    logger.info("Sent " + entry.getValue().size() + " rules to switch " + entry.getKey());
+
+                    logger.warn("Sent " + entry.getValue().size() + " rules to switch " + entry.getKey());
                 }
 
                 logger.info("Flow execution finished.");
@@ -128,11 +145,23 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             }
         } catch (UnsupportedOperationException e) {
             if (bypassUnsupportedMessages) {
-                logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
+                boolean warn=true;
+                if (message instanceof OpenFlowMessage) {
+                    OFMessage openFlowMessage = ((OpenFlowMessage) message).getOfMessage();
+                    if (openFlowMessage instanceof OFEchoRequest ||
+                            openFlowMessage instanceof OFEchoReply)
+                        warn = false;
+                    else if (openFlowMessage instanceof OFFeaturesReply ||
+                            openFlowMessage instanceof OFFeaturesRequest)
+                        warn =false;
+                }
+
+                if (warn)
+                    logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
 
                 try {
                     if (message.getHeader().getModuleId() == 0) {
-                        logger.warn("Message ID is 0 relaying to ALL backends");
+                        logger.info("Message ID is 0 relaying to ALL backends");
                         backendManager.sendMessageAllBackends(message);
                     } else {
                         backendManager.sendMessage(message);
@@ -225,8 +254,9 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             }
             logger.warn("Reusing previous specification '" + previousCompositionSpecificationXml + "'.");
             this.compositionSpecificationXml = previousCompositionSpecificationXml;
-            if (reconfigurationFuture == null)
+            if (reconfigurationFuture == null) {
                 correctlyConfigured = true;
+            }
         } catch (TimeoutException ex) {
             logger.error("TimeoutException occurred.", ex);
         } finally {

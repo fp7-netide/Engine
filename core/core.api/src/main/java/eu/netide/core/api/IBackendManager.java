@@ -84,4 +84,7 @@ public interface IBackendManager {
      * @return The module id.
      */
     int getModuleId(String moduleName) throws NoSuchElementException;
+
+    //! This methods marks a module as finished even though no fence message has been received
+    void markModuleAsFinished(int moduleId);
 }

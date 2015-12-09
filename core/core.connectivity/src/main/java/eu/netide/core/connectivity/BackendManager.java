@@ -124,6 +124,21 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return moduleToNameMappings.keySet().stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
     }
 
+    //! This methods marks a module as finished even though no fence message has been received
+    @Override
+    public void markModuleAsFinished(int moduleId)
+    {
+        RequestResult r = results.get(moduleId);
+        Semaphore lock = locks.get(moduleId);
+        if (r !=null )
+        {
+            ManagementMessage fakeDoneMessage = new ManagementMessage();
+            fakeDoneMessage.setPayloadString("NO FENCE SUPPORT FAKE MSG");
+            r.signalIsDone(fakeDoneMessage);
+            lock.release();
+        }
+    }
+
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message;
