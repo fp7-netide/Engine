@@ -7,6 +7,8 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import eu.netide.lib.netip.HelloMessage;
+import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
 import eu.netide.lib.netip.OpenFlowMessage;
 import io.netty.buffer.Unpooled;
@@ -19,7 +21,7 @@ import org.zeromq.ZMsg;
  * @author giuseppex.petralia@intel.com
  *
  */
-public class ZeroMQBaseConnector implements Runnable{
+public class ZeroMQBaseConnector implements Runnable {
     private static final String STOP_COMMAND = "Control.STOP";
     private static final String CONTROL_ADDRESS = "inproc://ShimControllerQueue";
 
@@ -57,7 +59,7 @@ public class ZeroMQBaseConnector implements Runnable{
         }
     }
 
-    public void RegisterCoreListener(ICoreListener listener) {
+    public void RegisterCoreListener(CoreListener listener) {
         this.coreListener = listener;
     }
 
@@ -103,10 +105,10 @@ public class ZeroMQBaseConnector implements Runnable{
                         coreListener.onOpenFlowCoreMessage(msg.getHeader().getDatapathId(),
                                 Unpooled.wrappedBuffer(payload), msg.getHeader().getModuleId());
                     } else {
-                        
+
                     }
                 }
-            }c
+            }
             if (poller.pollin(1)) {
                 ZMsg message = ZMsg.recvMsg(controlSocket);
                 if (message.getFirst().toString().equals(STOP_COMMAND)) {
