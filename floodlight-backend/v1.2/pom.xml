@@ -21,16 +21,23 @@
             <version>3.2.6.Final</version>
         </dependency>
         <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>0.3.4</version>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.8.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>eu.netide.lib</groupId>
-            <artifactId>netip</artifactId>
-            <version>1.0.0.0</version>
-        </dependency>
+         
 	</dependencies>
     
 	<build>
@@ -48,5 +55,5 @@
 	    </plugin>
 	  </plugins>
 	</build>
-  
+
 </project>
