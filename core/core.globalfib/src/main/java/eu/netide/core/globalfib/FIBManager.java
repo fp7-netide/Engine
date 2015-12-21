@@ -3,25 +3,23 @@ package eu.netide.core.globalfib;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Reference;
-import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.apache.felix.scr.annotations.Service;
+import eu.netide.lib.netip.OpenFlowMessage;
+import org.apache.felix.scr.annotations.*;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.onosproject.net.topology.TopologyService;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
-import org.projectfloodlight.openflow.protocol.OFFactories;
-import org.projectfloodlight.openflow.protocol.OFFlowAdd;
-import org.projectfloodlight.openflow.protocol.OFMessage;
-import org.projectfloodlight.openflow.protocol.OFMessageReader;
-import org.projectfloodlight.openflow.protocol.OFPacketIn;
+import org.projectfloodlight.openflow.protocol.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component(immediate=true)
 @Service
 public class FIBManager implements IShimMessageListener{
     private final OFMessageReader<OFMessage> reader;
     private final GlobalFIB gfib;
+
+    private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private TopologyService topologyService;
@@ -33,10 +31,26 @@ public class FIBManager implements IShimMessageListener{
 
     }
 
+    @Activate
+    protected void start()
+    {
+        log.info("FIBManager started.");
+    }
+
+    @Deactivate
+    protected void stop()
+    {
+        log.info("FIBManager stopped.");
+    }
+
     @Override
     public void OnShimMessage(Message message, String originId) {
-        System.out.println("FIBManager received message from shim: " + new String(message.getPayload()));
+        log.info("FIBManager received message from shim: " + message.getHeader().toString());
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
+            OpenFlowMessage ofMessage = (OpenFlowMessage) message;
+            if (ofMessage.getOfMessage().getType() == OFType.ECHO_REQUEST) {
+                return;
+            }
             // OpenFlow Message
 
             // Our API is broken
