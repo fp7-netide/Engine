@@ -7,6 +7,8 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
 /**
@@ -14,5 +16,9 @@ import org.jboss.netty.channel.SimpleChannelHandler;
  *
  */
 public class SwitchChannelHandler extends SimpleChannelHandler {
+
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+    }
 
 }

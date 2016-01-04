@@ -8,7 +8,6 @@
 package net.floodlightcontroller.interceptor;
 
 import eu.netide.lib.netip.Message;
-import eu.netide.lib.netip.OpenFlowMessage;
 
 /**
  * @author giuseppex.petralia@intel.com
@@ -18,6 +17,6 @@ public interface MessageRelay {
 
     void sendToCore(Message msg);
 
-    void sendToSwitch(OpenFlowMessage msg);
+    // void sendToSwitch(OpenFlowMessage msg);
 
 }
