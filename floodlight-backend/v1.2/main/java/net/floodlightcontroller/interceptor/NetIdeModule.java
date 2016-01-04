@@ -229,7 +229,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         coreConnector.Start();
         HelloMessage hello = new HelloMessage();
-        coreConnector.SendData(hello.getPayload());
+        coreConnector.SendData(hello.toByteRepresentation());
     }
 
     /*
