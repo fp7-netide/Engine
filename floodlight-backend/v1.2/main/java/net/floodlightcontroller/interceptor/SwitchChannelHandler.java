@@ -17,8 +17,14 @@ import org.jboss.netty.channel.SimpleChannelHandler;
  */
 public class SwitchChannelHandler extends SimpleChannelHandler {
 
+    private DummySwitch dummySwitch;
+
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+    }
+
+    public void setDummySwitch(DummySwitch _dummySwitch) {
+        dummySwitch = _dummySwitch;
     }
 
 }

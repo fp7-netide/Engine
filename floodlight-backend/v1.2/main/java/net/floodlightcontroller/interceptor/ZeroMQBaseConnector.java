@@ -11,7 +11,6 @@ import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
 import eu.netide.lib.netip.OpenFlowMessage;
-import io.netty.buffer.Unpooled;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
@@ -101,9 +100,8 @@ public class ZeroMQBaseConnector implements Runnable {
                                 ((HelloMessage) msg).getHeader().getModuleId());
                     } else if (msg instanceof OpenFlowMessage) {
 
-                        byte[] payload = msg.getPayload();
                         coreListener.onOpenFlowCoreMessage(msg.getHeader().getDatapathId(),
-                                Unpooled.wrappedBuffer(payload), msg.getHeader().getModuleId());
+                                ((OpenFlowMessage) msg).getOfMessage(), msg.getHeader().getModuleId());
                     } else {
 
                     }

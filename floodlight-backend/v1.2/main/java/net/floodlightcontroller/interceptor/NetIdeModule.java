@@ -10,11 +10,13 @@ package net.floodlightcontroller.interceptor;
 import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.Protocol;
 import eu.netide.lib.netip.ProtocolVersions;
-import io.netty.buffer.ByteBuf;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
@@ -26,6 +28,15 @@ import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
 import org.javatuples.Pair;
+import org.jboss.netty.bootstrap.ClientBootstrap;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFType;
@@ -42,6 +53,8 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     protected IFloodlightProviderService floodlightProvider;
     protected static Logger logger;
     protected ZeroMQBaseConnector coreConnector;
+
+    private Map<Long, ChannelFuture> managedSwitches = new HashMap<Long, ChannelFuture>();
 
     /*
      * (non-Javadoc)
@@ -227,9 +240,41 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      * java.lang.Long, io.netty.buffer.ByteBuf, int)
      */
     @Override
-    public void onOpenFlowCoreMessage(Long datapathId, ByteBuf msg, int moduleId) {
-        // TODO Auto-generated method stub
+    public void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId) {
+        if (msg.getType().equals(OFType.FEATURES_REPLY)) {
+            DummySwitch dummySwitch = new DummySwitch(datapathId);
+            addNewSwitch(dummySwitch);
+        }
+        sendMessageToController(datapathId, msg);
+    }
 
+    private void sendMessageToController(long switchId, OFMessage message) {
+        // USE THE CORRECT CHANNEL TO SEND MESSAGE
+        ChannelFuture future = managedSwitches.get(switchId);
+        ChannelBuffer dcb = ChannelBuffers.dynamicBuffer();
+        message.writeTo(dcb);
+        future.getChannel().write(dcb);
+    }
+
+    private void addNewSwitch(DummySwitch dummySwitch) {
+        final SwitchChannelHandler switchHandler = new SwitchChannelHandler();
+        switchHandler.setDummySwitch(dummySwitch); // CONTAINS ALL THE INFO
+                                                   // ABOUT THIS SWITCH
+
+        ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
+                Executors.newCachedThreadPool());
+        ClientBootstrap bootstrap = new ClientBootstrap(factory);
+        bootstrap.setOption("tcpNoDelay", true);
+        bootstrap.setOption("keepAlive", true);
+        bootstrap.setPipelineFactory(new ChannelPipelineFactory() {
+            @Override
+            public ChannelPipeline getPipeline() {
+                return Channels.pipeline(switchHandler);
+            }
+        });
+        // CONNECT AND ADD TO HASHMAP OF MANAGED SWITCHES
+        ChannelFuture future = bootstrap.connect(new InetSocketAddress("localhost", 6634));
+        managedSwitches.put(dummySwitch.getDatapathId(), future);
     }
 
     /*
@@ -241,8 +286,6 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void onHelloCoreMessage(List<Pair<Protocol, ProtocolVersions>> requiredVersion, int moduleId) {
-        // TODO Auto-generated method stub
-
     }
 
 }

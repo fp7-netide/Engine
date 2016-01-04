@@ -9,16 +9,16 @@ package net.floodlightcontroller.interceptor;
 
 import eu.netide.lib.netip.Protocol;
 import eu.netide.lib.netip.ProtocolVersions;
-import io.netty.buffer.ByteBuf;
 import java.util.List;
 import org.javatuples.Pair;
+import org.projectfloodlight.openflow.protocol.OFMessage;
 
 /**
  * @author giuseppex.petralia@intel.com
  *
  */
 public interface CoreListener {
-    void onOpenFlowCoreMessage(Long datapathId, ByteBuf msg, int moduleId);
+    void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId);
 
     void onHelloCoreMessage(List<Pair<Protocol, ProtocolVersions>> requiredVersion, int moduleId);
 

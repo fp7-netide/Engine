@@ -17,6 +17,4 @@ public interface MessageRelay {
 
     void sendToCore(Message msg);
 
-    // void sendToSwitch(OpenFlowMessage msg);
-
 }

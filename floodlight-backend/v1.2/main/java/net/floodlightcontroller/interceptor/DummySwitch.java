@@ -43,10 +43,21 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFMessageWriter#write(org.
      * projectfloodlight.openflow.protocol.OFMessage)
      */
+
+    private long datapathId;
+
+    public DummySwitch(long _datapathId) {
+        datapathId = _datapathId;
+    }
+
+    public long getDatapathId() {
+        return datapathId;
+    }
+
     @Override
     public void write(OFMessage m) {
         // TODO Auto-generated method stub
@@ -55,7 +66,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFMessageWriter#write(java.lang.Iterable)
      */
@@ -67,7 +78,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFMessageWriter#writeRequest(org.
      * projectfloodlight.openflow.protocol.OFRequest)
      */
@@ -79,7 +90,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFMessageWriter#writeStatsRequest(org.
      * projectfloodlight.openflow.protocol.OFStatsRequest)
@@ -92,7 +103,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getStatus()
      */
     @Override
@@ -103,7 +114,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getBuffers()
      */
     @Override
@@ -114,7 +125,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#disconnect()
      */
     @Override
@@ -125,7 +136,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getActions()
      */
     @Override
@@ -136,7 +147,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getCapabilities()
      */
     @Override
@@ -147,7 +158,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getTables()
      */
     @Override
@@ -158,7 +169,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getSwitchDescription()
      */
     @Override
@@ -169,7 +180,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getInetAddress()
      */
     @Override
@@ -180,7 +191,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getEnabledPorts()
      */
     @Override
@@ -191,7 +202,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getEnabledPortNumbers()
      */
     @Override
@@ -202,7 +213,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#getPort(org.projectfloodlight.
      * openflow.types.OFPort)
@@ -215,7 +226,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getPort(java.lang.String)
      */
     @Override
@@ -226,7 +237,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getPorts()
      */
     @Override
@@ -237,7 +248,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getSortedPorts()
      */
     @Override
@@ -248,7 +259,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#portEnabled(org.projectfloodlight
      * .openflow.types.OFPort)
@@ -261,7 +272,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#portEnabled(java.lang.String)
      */
@@ -273,7 +284,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#isConnected()
      */
     @Override
@@ -284,7 +295,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getConnectedSince()
      */
     @Override
@@ -295,7 +306,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getId()
      */
     @Override
@@ -306,7 +317,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getAttributes()
      */
     @Override
@@ -317,7 +328,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#isActive()
      */
     @Override
@@ -328,7 +339,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getControllerRole()
      */
     @Override
@@ -339,7 +350,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#hasAttribute(java.lang.String)
      */
@@ -351,7 +362,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#getAttribute(java.lang.String)
      */
@@ -363,7 +374,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#attributeEquals(java.lang.String,
      * java.lang.Object)
@@ -376,7 +387,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#setAttribute(java.lang.String,
      * java.lang.Object)
@@ -389,7 +400,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see
      * net.floodlightcontroller.core.IOFSwitch#removeAttribute(java.lang.String)
      */
@@ -401,7 +412,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getOFFactory()
      */
     @Override
@@ -412,7 +423,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#flush()
      */
     @Override
@@ -423,7 +434,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getConnections()
      */
     @Override
@@ -434,7 +445,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#write(org.projectfloodlight.
      * openflow.protocol.OFMessage,
      * net.floodlightcontroller.core.LogicalOFMessageCategory)
@@ -447,7 +458,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#write(java.lang.Iterable,
      * net.floodlightcontroller.core.LogicalOFMessageCategory)
      */
@@ -459,7 +470,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getConnectionByCategory(net.
      * floodlightcontroller.core.LogicalOFMessageCategory)
      */
@@ -471,7 +482,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#writeStatsRequest(org.
      * projectfloodlight.openflow.protocol.OFStatsRequest,
      * net.floodlightcontroller.core.LogicalOFMessageCategory)
@@ -485,7 +496,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#writeRequest(org.
      * projectfloodlight.openflow.protocol.OFRequest,
      * net.floodlightcontroller.core.LogicalOFMessageCategory)
@@ -499,7 +510,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getTableFeatures(org.
      * projectfloodlight.openflow.types.TableId)
      */
@@ -511,7 +522,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getNumTables()
      */
     @Override
@@ -522,7 +533,7 @@ public class DummySwitch implements IOFSwitch {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see net.floodlightcontroller.core.IOFSwitch#getLatency()
      */
     @Override
