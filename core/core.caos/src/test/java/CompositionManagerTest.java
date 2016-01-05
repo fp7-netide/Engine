@@ -1,3 +1,4 @@
+import eu.netide.core.api.Constants;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.RequestResult;
 import eu.netide.core.caos.CompositionManager;
@@ -83,7 +84,7 @@ public class CompositionManagerTest {
         manager.setCompositionSpecificationXml(SingleCallXml);
         Thread.sleep(1000); // wait for reconfiguration
 
-        manager.OnShimMessage(newMessage, "shim");
+        manager.OnShimMessage(newMessage, Constants.SHIM);
     }
 
     private static OpenFlowMessage messageFromFlowMod(OFFlowMod flowMod) {

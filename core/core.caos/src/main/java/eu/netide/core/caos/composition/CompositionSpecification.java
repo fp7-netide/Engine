@@ -17,6 +17,7 @@ public class CompositionSpecification {
         this.composition = new ArrayList<>();
     }
 
+
     @XmlElementWrapper(name = "Modules", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
     @XmlElement(name = "Module", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = true)
     public List<Module> getModules() {

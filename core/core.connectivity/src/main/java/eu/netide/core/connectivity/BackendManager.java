@@ -124,6 +124,21 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return moduleToNameMappings.keySet().stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
     }
 
+    //! This methods marks a module as finished even though no fence message has been received
+    @Override
+    public void markModuleAsFinished(int moduleId)
+    {
+        RequestResult r = results.get(moduleId);
+        Semaphore lock = locks.get(moduleId);
+        if (r !=null )
+        {
+            ManagementMessage fakeDoneMessage = new ManagementMessage();
+            fakeDoneMessage.setPayloadString("NO FENCE SUPPORT FAKE MSG");
+            r.signalIsDone(fakeDoneMessage);
+            lock.release();
+        }
+    }
+
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message;
@@ -139,6 +154,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
         RequestResult r = results.get(id);
         Semaphore lock = locks.get(id);
+
         // TODO: XID checking here is dubious
         if (r != null && lock != null && (r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId() ||
                message.getHeader().getTransactionId()==0 )) {
@@ -159,7 +175,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             if (message instanceof HelloMessage) {
                 // just relay it to the shim
                 logger.info("Received HelloMessage from backend, relaying to shim...");
-                connector.SendData(message.toByteRepresentation(), "shim"); // TODO add shim constant
+                connector.SendData(message.toByteRepresentation(), Constants.SHIM);
                 return;
             } else if (message instanceof ModuleAnnouncementMessage) {
                 // remember backend
@@ -185,7 +201,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                 logger.info("Mapped module '" + mam.getModuleName() + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
             } else if (message instanceof ManagementMessage) {
                 logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
-                connector.SendData(message.toByteRepresentation(), "shim"); // TODO make shim name a constant
+                connector.SendData(message.toByteRepresentation(), Constants.SHIM);
             } else {
                 logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
                 try {
@@ -194,7 +210,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     for (IBackendMessageListener listener : backendMessageListeners) {
                         pool.submit(() -> listener.OnBackendMessage(message, backendId));
                     }
-                    connector.SendData(message.toByteRepresentation(), "shim"); // TODO make shim name a constant
+                    connector.SendData(message.toByteRepresentation(), Constants.SHIM); // TODO make shim name a constant
                 } catch (InterruptedException e) {
                     logger.error("", e);
                 } finally {

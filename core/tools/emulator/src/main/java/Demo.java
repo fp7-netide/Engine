@@ -1,3 +1,4 @@
+import eu.netide.core.api.Constants;
 import eu.netide.lib.netip.*;
 import org.json.JSONObject;
 import org.onlab.packet.Ethernet;
@@ -88,7 +89,7 @@ public class Demo implements Runnable {
 
         System.out.print("How do you want to identify? (shim, backendX; default=shim)\r\n> ");
         id = br.readLine();
-        if (id.isEmpty()) id = "shim";
+        if (id.isEmpty()) id =  Constants.SHIM;
         System.out.print("To which port do you want to connect? (default=5555)\r\n> ");
         String portString = br.readLine();
         if (portString.isEmpty()) portString = "5555";
