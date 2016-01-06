@@ -5,11 +5,13 @@
 	<version>1.2.0-SNAPSHOT</version>
 
 	<dependencies>
-	    <dependency>
-	        <groupId>org.projectfloodlight</groupId>
+        <dependency>
+            <groupId>org.projectfloodlight</groupId>
             <artifactId>floodlight</artifactId>
-            <version>1.2-SNAPSHOT</version>
-	    </dependency>
+            <version>1.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/floodlight.jar</systemPath>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -24,12 +26,22 @@
             <groupId>org.javatuples</groupId>
             <artifactId>javatuples</artifactId>
             <version>1.2</version>
-            <scope>compile</scope>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/javatuples-1.2.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
             <version>0.3.4</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/jeromq-0.3.4.jar</systemPath>
+        </dependency>
+         <dependency>
+            <groupId>eu.netide.lib</groupId>
+            <artifactId>netip</artifactId>
+            <version>1.0.0.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/netip-1.0.0.0.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

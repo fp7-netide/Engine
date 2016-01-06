@@ -20,11 +20,11 @@ import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.LogicalOFMessageCategory;
 import net.floodlightcontroller.core.OFConnection;
 import net.floodlightcontroller.core.SwitchDescription;
-import net.floodlightcontroller.core.internal.TableFeatures;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFControllerRole;
 import org.projectfloodlight.openflow.protocol.OFFactory;
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFRequest;
@@ -32,8 +32,6 @@ import org.projectfloodlight.openflow.protocol.OFStatsReply;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.types.DatapathId;
 import org.projectfloodlight.openflow.types.OFPort;
-import org.projectfloodlight.openflow.types.TableId;
-import org.projectfloodlight.openflow.types.U64;
 
 /**
  * @author giuseppex.petralia@intel.com
@@ -49,9 +47,15 @@ public class DummySwitch implements IOFSwitch {
      */
 
     private long datapathId;
+    private OFFeaturesReply features;
 
-    public DummySwitch(long _datapathId) {
+    public DummySwitch(long _datapathId, OFFeaturesReply features) {
         datapathId = _datapathId;
+        this.features = features;
+    }
+
+    public OFFeaturesReply getFeatures() {
+        return features;
     }
 
     public long getDatapathId() {
@@ -161,11 +165,6 @@ public class DummySwitch implements IOFSwitch {
      *
      * @see net.floodlightcontroller.core.IOFSwitch#getTables()
      */
-    @Override
-    public Collection<TableId> getTables() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     /*
      * (non-Javadoc)
@@ -511,35 +510,12 @@ public class DummySwitch implements IOFSwitch {
     /*
      * (non-Javadoc)
      *
-     * @see net.floodlightcontroller.core.IOFSwitch#getTableFeatures(org.
-     * projectfloodlight.openflow.types.TableId)
+     * @see net.floodlightcontroller.core.IOFSwitch#getTables()
      */
     @Override
-    public TableFeatures getTableFeatures(TableId table) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see net.floodlightcontroller.core.IOFSwitch#getNumTables()
-     */
-    @Override
-    public short getNumTables() {
+    public short getTables() {
         // TODO Auto-generated method stub
         return 0;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see net.floodlightcontroller.core.IOFSwitch#getLatency()
-     */
-    @Override
-    public U64 getLatency() {
-        // TODO Auto-generated method stub
-        return null;
     }
 
 }

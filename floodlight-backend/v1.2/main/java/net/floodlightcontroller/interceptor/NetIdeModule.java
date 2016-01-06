@@ -7,7 +7,6 @@
  */
 package net.floodlightcontroller.interceptor;
 
-import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.Protocol;
 import eu.netide.lib.netip.ProtocolVersions;
 import java.net.InetSocketAddress;
@@ -37,9 +36,11 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFType;
+import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.types.DatapathId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +49,16 @@ import org.slf4j.LoggerFactory;
  * @author giuseppex.petralia@intel.com
  *
  */
-public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMessageListener, CoreListener {
+public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMessageListener, ICoreListener {
 
     protected IFloodlightProviderService floodlightProvider;
     protected static Logger logger;
     protected ZeroMQBaseConnector coreConnector;
+    private OFVersion aggreedVersion;
+    private List<Pair<Protocol, ProtocolVersions>> supportedProtocols;
 
     private Map<Long, ChannelFuture> managedSwitches = new HashMap<Long, ChannelFuture>();
+    private Map<Long, ClientBootstrap> managedBootstraps = new HashMap<Long, ClientBootstrap>();
 
     /*
      * (non-Javadoc)
@@ -128,8 +132,8 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void switchRemoved(DatapathId switchId) {
-        // TODO Auto-generated method stub
-
+        managedSwitches.remove(switchId.getLong());
+        managedBootstraps.remove(switchId.getLong());
     }
 
     /*
@@ -211,9 +215,12 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void init(FloodlightModuleContext context) throws FloodlightModuleException {
+        supportedProtocols = new ArrayList<>();
+        supportedProtocols.add(new Pair<Protocol, ProtocolVersions>(Protocol.OPENFLOW, ProtocolVersions.OPENFLOW_1_0));
+        supportedProtocols.add(new Pair<Protocol, ProtocolVersions>(Protocol.OPENFLOW, ProtocolVersions.OPENFLOW_1_3));
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(NetIdeModule.class);
-        coreConnector = new ZeroMQBaseConnector();
+        coreConnector = new ZeroMQBaseConnector(supportedProtocols);
         coreConnector.setAddress("127.0.0.1");
         coreConnector.setPort(5555);
         coreConnector.RegisterCoreListener(this);
@@ -228,8 +235,6 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
         coreConnector.Start();
-        HelloMessage hello = new HelloMessage();
-        coreConnector.SendData(hello.toByteRepresentation());
     }
 
     /*
@@ -241,23 +246,36 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId) {
-        if (msg.getType().equals(OFType.FEATURES_REPLY)) {
-            DummySwitch dummySwitch = new DummySwitch(datapathId);
+        if (!(managedSwitches.containsKey(datapathId)) || msg.getType().equals(OFType.FEATURES_REPLY)) {
+            OFFeaturesReply features = null;
+            if (msg.getType().equals(OFType.FEATURES_REPLY)) {
+                features = (OFFeaturesReply) msg;
+            }
+            aggreedVersion = msg.getVersion();
+            DummySwitch dummySwitch = new DummySwitch(datapathId, features);
             addNewSwitch(dummySwitch);
+
+        } else {
+            logger.debug("Sending OF Message to Controller " + msg.getType().toString());
+            sendMessageToController(datapathId, msg);
         }
-        sendMessageToController(datapathId, msg);
     }
 
-    private void sendMessageToController(long switchId, OFMessage message) {
+    private void sendMessageToController(final long switchId, OFMessage message) {
         // USE THE CORRECT CHANNEL TO SEND MESSAGE
         ChannelFuture future = managedSwitches.get(switchId);
         ChannelBuffer dcb = ChannelBuffers.dynamicBuffer();
-        message.writeTo(dcb);
-        future.getChannel().write(dcb);
+        try {
+            message.writeTo(dcb);
+            future.getChannel().write(dcb);
+        } catch (Exception e) {
+            managedSwitches.remove(switchId);
+            managedBootstraps.remove(switchId);
+        }
     }
 
     private void addNewSwitch(DummySwitch dummySwitch) {
-        final SwitchChannelHandler switchHandler = new SwitchChannelHandler();
+        final SwitchChannelHandler switchHandler = new SwitchChannelHandler(coreConnector, aggreedVersion);
         switchHandler.setDummySwitch(dummySwitch); // CONTAINS ALL THE INFO
                                                    // ABOUT THIS SWITCH
 
@@ -272,9 +290,12 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
                 return Channels.pipeline(switchHandler);
             }
         });
+
         // CONNECT AND ADD TO HASHMAP OF MANAGED SWITCHES
-        ChannelFuture future = bootstrap.connect(new InetSocketAddress("localhost", 6634));
+        ChannelFuture future = bootstrap.connect(new InetSocketAddress("localhost", 7753));
         managedSwitches.put(dummySwitch.getDatapathId(), future);
+        managedBootstraps.put(dummySwitch.getDatapathId(), bootstrap);
+        switchHandler.registerSwitchConnection(future, bootstrap);
     }
 
     /*
