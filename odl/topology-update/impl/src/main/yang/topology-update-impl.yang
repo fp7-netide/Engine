@@ -23,6 +23,70 @@ module topology-update-impl {
     augment "/config:modules/config:module/config:configuration" {
         case topology-update {
             when "/config:modules/config:module/config:type = 'topology-update'";
+            
+            leaf rabbit-host {
+                description "RabbitMQ server hostname";
+                type string;
+                mandatory true;
+            }
+            
+            leaf rabbit-port {
+                description "RabbitMQ server port";
+                type uint16;
+                mandatory true;
+            }
+            
+            leaf rabbit-user {
+                description "RabbitMQ username";
+                type string;
+                mandatory true;
+            }
+            
+            leaf rabbit-password {
+                description "RabbitMQ password";
+                type string;
+                mandatory true;
+            }
+            
+            leaf rabbit-virtual-host {
+                description "RabbitMQ virtual host";
+                type string;
+                mandatory true;
+            }
+            
+            leaf exchange-name {
+                description "AMQP exchange name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf base-topic-name {
+                description "Base AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf node-topic-name {
+                description "Node AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf node-connector-topic-name {
+                description "Node Connector AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf link-topic-name {
+                description "Link AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            
+            
+            
             container broker {
                 uses config:service-ref {
                     refine type {

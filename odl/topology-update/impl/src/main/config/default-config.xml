@@ -19,7 +19,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:topology-update:impl">prefix:topology-update</type>
           <name>topology-update-impl</name>
-           <broker>
+          <rabbit-host>127.0.0.1</rabbit-host>
+          <rabbit-port>5672</rabbit-port>
+          <rabbit-user>opendaylight</rabbit-user>
+          <rabbit-password>opendaylight</rabbit-password>
+          <rabbit-virtual-host>/opendaylight</rabbit-virtual-host>
+          <exchange-name>topology-update</exchange-name>
+          <base-topic-name>topology</base-topic-name>
+          <node-topic-name>node</node-topic-name>
+          <node-connector-topic-name>node_connector</node-connector-topic-name>
+          <link-topic-name>link</link-topic-name>
+          <broker>
             <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-broker-osgi-registry</type>
             <name>binding-osgi-broker</name>
           </broker>

@@ -20,7 +20,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bundle>mvn:eu.netide.util/topology-update-api/${project.version}</bundle>
   </feature>
   <feature name='odl-topology-update' version='${project.version}' description='OpenDaylight :: topology-update'>
-    <!-- <feature version='${mdsal.version}'>odl-mdsal-broker</feature> -->
     <feature version='${openflowplugin.version}'>odl-openflowplugin-nsf-model</feature>
     <feature version='${project.version}'>odl-topology-update-api</feature>
     <feature version='${netconf.version}'>odl-message-bus</feature>

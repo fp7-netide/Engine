@@ -34,31 +34,47 @@ public class NotificationProducer
     private static final Logger LOG = LoggerFactory.getLogger(NotificationProducer.class);
 
     Channel channel;
+    boolean init = false;
+
     String exchangeName = "topology-update";
     String baseTopicName = "topology";
     String nodeTopicName = "node";
     String nodeConnectorTopicName = "node_connector";
     String linkTopicName = "link";
+
     Connection connection;
 
     public NotificationProducer() {
-        LOG.info("NOTIFICATION PROVIDER:Constructor");
+        init = false;
+    }
+
+    public void init(String rabbitHost, int rabbitPort, String rabbitUser, String rabbitPassword,
+            String rabbitVirtualHost, String exchangeName, String baseTopicName, String nodeTopicName,
+            String nodeConnectorTopicName, String linkTopicName) {
+
+        this.exchangeName = exchangeName;
+        this.baseTopicName = baseTopicName;
+        this.nodeTopicName = nodeTopicName;
+        this.nodeConnectorTopicName = nodeConnectorTopicName;
+        this.linkTopicName = linkTopicName;
+
         ConnectionFactory factory = new ConnectionFactory();
-        factory.setUsername("opendaylight");
-        factory.setPassword("opendaylight");
-        factory.setVirtualHost("/opendaylight");
-        factory.setHost("127.0.0.1");
-        factory.setPort(5672);
+        factory.setUsername(rabbitUser);
+        factory.setPassword(rabbitPassword);
+        factory.setVirtualHost(rabbitVirtualHost);
+        factory.setHost(rabbitHost);
+        factory.setPort(rabbitPort);
         factory.setAutomaticRecoveryEnabled(true);
 
         try {
             connection = factory.newConnection();
             channel = connection.createChannel();
             channel.exchangeDeclare(exchangeName, "topic", true);
+            init = true;
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         } catch (TimeoutException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         }
     }
 
@@ -70,101 +86,81 @@ public class NotificationProducer
 
     @Override
     public void onNodeConnectorRemoved(NodeConnectorRemoved arg0) {
-        LOG.info("NotificationProducer: onNodeConnectorRemoved {}", arg0.getNodeConnectorRef().getValue());
-        String message = "Node connector removed. Node connector reference: " + arg0.getNodeConnectorRef().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("NodeConnector"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Node connector removed. Node connector reference: "
+                    + arg0.getNodeConnectorRef().getValue();
+            publishMessage(message, getTopicName("NodeConnector"));
         }
+
     }
 
     @Override
     public void onNodeConnectorUpdated(NodeConnectorUpdated arg0) {
-        LOG.info("NotificationProducer: onNodeConnectorUpdated, {}", arg0.getNodeConnectorRef().getValue());
-        String message = "Node connector updated. Node connector reference: " + arg0.getNodeConnectorRef().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("NodeConnector"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Node connector updated. Node connector reference: "
+                    + arg0.getNodeConnectorRef().getValue();
+            publishMessage(message, getTopicName("NodeConnector"));
         }
+
     }
 
     @Override
     public void onNodeRemoved(NodeRemoved arg0) {
-        LOG.info("NotificationProducer: onNodeRemoved, {}", arg0.getNodeRef().getValue());
-        String message = "Node removed. Node reference: " + arg0.getNodeRef().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("Node"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Node removed. Node reference: " + arg0.getNodeRef().getValue();
+            publishMessage(message, getTopicName("Node"));
         }
     }
 
     @Override
     public void onNodeUpdated(NodeUpdated arg0) {
-        LOG.info("NotificationProducer: onNodeUpdated, {}", arg0.getNodeRef().getValue());
-        String message = "Node updated. Node reference: " + arg0.getNodeRef().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("Node"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Node updated. Node reference: " + arg0.getNodeRef().getValue();
+            publishMessage(message, getTopicName("Node"));
         }
     }
 
     @Override
     public void onLinkDiscovered(LinkDiscovered notification) {
-        LOG.info("NotificationProducer: onLinkDiscovered, Source: {}, Destination: {}, ", notification.getSource(),
-                notification.getDestination());
-
-        String message = "Link discovered. Source node connector: " + notification.getSource().getValue()
-                + " Destination node connector: " + notification.getDestination().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("Link"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Link discovered. Source node connector: " + notification.getSource().getValue()
+                    + " Destination node connector: " + notification.getDestination().getValue();
+            publishMessage(message, getTopicName("Link"));
         }
     }
 
     @Override
     public void onLinkOverutilized(LinkOverutilized notification) {
-        LOG.info("NotificationProducer: onLinkOverutilized, Source: {}, Destination: {}, ", notification.getSource(),
-                notification.getDestination());
-
-        String message = "Link overutilized. Source node connector: " + notification.getSource().getValue()
-                + " Destination node connector: " + notification.getDestination().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("Link"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Link overutilized. Source node connector: " + notification.getSource().getValue()
+                    + " Destination node connector: " + notification.getDestination().getValue();
+            publishMessage(message, getTopicName("Link"));
         }
     }
 
     @Override
     public void onLinkRemoved(LinkRemoved notification) {
-        LOG.info("NotificationProducer: onLinkRemoved, Source: {}, Destination: {}, ", notification.getSource(),
-                notification.getDestination());
-
-        String message = "Link removed. Source node connector: " + notification.getSource().getValue()
-                + " Destination node connector: " + notification.getDestination().getValue();
-        try {
-            channel.basicPublish(exchangeName, getTopicName("Link"), null, message.getBytes());
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (init) {
+            String message = "Link removed. Source node connector: " + notification.getSource().getValue()
+                    + " Destination node connector: " + notification.getDestination().getValue();
+            publishMessage(message, getTopicName("Link"));
         }
     }
 
     @Override
     public void onLinkUtilizationNormal(LinkUtilizationNormal notification) {
-        LOG.info("NotificationProducer: onLinkUtilizationNormal, Source: {}, Destination: {}, ",
-                notification.getSource(), notification.getDestination());
+        if (init) {
+            String message = "Link utilization normal. Source node connector: " + notification.getSource().getValue()
+                    + " Destination node connector: " + notification.getDestination().getValue();
+            publishMessage(message, getTopicName("Link"));
+        }
+    }
 
-        String message = "Link utilization normal. Source node connector: " + notification.getSource().getValue()
-                + " Destination node connector: " + notification.getDestination().getValue();
+    private void publishMessage(String message, String topic) {
         try {
-            channel.basicPublish(exchangeName, getTopicName("Link"), null, message.getBytes());
+            channel.basicPublish(exchangeName, topic, null, message.getBytes());
         } catch (IOException e) {
-            e.printStackTrace();
+            LOG.error(e.getMessage());
         }
     }
 

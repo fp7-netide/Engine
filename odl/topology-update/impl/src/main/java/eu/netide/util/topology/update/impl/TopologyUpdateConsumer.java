@@ -43,4 +43,12 @@ public class TopologyUpdateConsumer implements BindingAwareConsumer, AutoCloseab
         notificationService.registerNotificationListener(producer);
     }
 
+    public void configureNotificationProducer(String rabbitHost, int rabbitPort, String rabbitUser,
+            String rabbitPassword, String rabbitVirtualHost, String exchangeName, String baseTopicName,
+            String nodeTopicName, String nodeConnectorTopicName, String linkTopicName) {
+
+        producer.init(rabbitHost, rabbitPort, rabbitUser, rabbitPassword, rabbitVirtualHost, exchangeName,
+                baseTopicName, nodeTopicName, nodeConnectorTopicName, linkTopicName);
+    }
+
 }
