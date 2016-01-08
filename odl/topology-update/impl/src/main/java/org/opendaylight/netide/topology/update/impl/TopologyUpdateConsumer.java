@@ -13,14 +13,14 @@ import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TopologyUpdateProvider implements BindingAwareConsumer, AutoCloseable {
+public class TopologyUpdateConsumer implements BindingAwareConsumer, AutoCloseable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(TopologyUpdateProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TopologyUpdateConsumer.class);
 
     NotificationProducer producer;
     NotificationProviderService notificationService;
 
-    public TopologyUpdateProvider(NotificationProviderService _notificationService) {
+    public TopologyUpdateConsumer(NotificationProviderService _notificationService) {
         notificationService = _notificationService;
     }
 
