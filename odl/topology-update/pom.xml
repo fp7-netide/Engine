@@ -13,7 +13,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <version>1.6.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>org.opendaylight.netide</groupId>
+  <groupId>eu.netide.util</groupId>
   <artifactId>topology-update-aggregator</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <name>topology-update</name>

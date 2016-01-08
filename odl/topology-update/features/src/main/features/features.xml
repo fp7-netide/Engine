@@ -17,7 +17,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
   <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/${openflowplugin.version}/xml/features</repository>
   <feature name='odl-topology-update-api' version='${project.version}' description='OpenDaylight :: topology-update :: api'>
     <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
-    <bundle>mvn:org.opendaylight.netide/topology-update-api/${project.version}</bundle>
+    <bundle>mvn:eu.netide.util/topology-update-api/${project.version}</bundle>
   </feature>
   <feature name='odl-topology-update' version='${project.version}' description='OpenDaylight :: topology-update'>
     <!-- <feature version='${mdsal.version}'>odl-mdsal-broker</feature> -->
@@ -25,8 +25,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <feature version='${project.version}'>odl-topology-update-api</feature>
     <feature version='${netconf.version}'>odl-message-bus</feature>
     <feature version='${netconf.version}'>odl-netconf-connector-all</feature>
-    <bundle>mvn:org.opendaylight.netide/topology-update-impl/${project.version}</bundle>
-    <configfile finalname="${configfile.directory}/topology-update.xml">mvn:org.opendaylight.netide/topology-update-impl/${project.version}/xml/config</configfile>
+    <bundle>mvn:eu.netide.util/topology-update-impl/${project.version}</bundle>
+    <configfile finalname="${configfile.directory}/topology-update.xml">mvn:eu.netide.util/topology-update-impl/${project.version}/xml/config</configfile>
   </feature>
   <feature name='odl-topology-update-rest' version='${project.version}' description='OpenDaylight :: topology-update :: REST'>
     <feature version="${project.version}">odl-topology-update</feature>

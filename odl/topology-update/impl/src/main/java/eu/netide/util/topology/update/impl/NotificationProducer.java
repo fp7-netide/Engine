@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.netide.topology.update.impl;
+package eu.netide.util.topology.update.impl;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
