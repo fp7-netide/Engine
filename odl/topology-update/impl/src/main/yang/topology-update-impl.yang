@@ -6,6 +6,7 @@ module topology-update-impl {
     import config { prefix config; revision-date 2013-04-05; }
     import opendaylight-md-sal-dom {prefix dom; revision-date 2013-10-28;}
     import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import opendaylight-sal-binding-broker-impl { prefix sal-broker; revision-date 2013-10-28;}
 
     description
         "Service definition for topology-update project";
@@ -95,11 +96,21 @@ module topology-update-impl {
                     }
                 }
             }
+            
             container notification-service {
                 uses config:service-ref {
                     refine type {
                         mandatory true;
                         config:required-identity md-sal-binding:binding-notification-service;
+                    }
+                }
+            }
+
+            container notification-adapter {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity sal-broker:binding-new-notification-service;
                     }
                 }
             }
