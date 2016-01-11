@@ -22,6 +22,7 @@ public class TopologyUpdateConsumer implements BindingAwareConsumer, AutoCloseab
 
     public TopologyUpdateConsumer(NotificationProviderService _notificationService) {
         notificationService = _notificationService;
+        producer = new NotificationProducer();
     }
 
     @Override
@@ -39,7 +40,6 @@ public class TopologyUpdateConsumer implements BindingAwareConsumer, AutoCloseab
     @Override
     public void onSessionInitialized(ConsumerContext context) {
         LOG.info("TopologyUpdateProvider onSessionInitiated");
-        producer = new NotificationProducer();
         notificationService.registerNotificationListener(producer);
     }
 
