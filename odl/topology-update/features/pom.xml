@@ -12,14 +12,45 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <version>1.6.0-SNAPSHOT</version>
     <relativePath/>
   </parent>
+  <modelVersion>4.0.0</modelVersion>
+  
   <groupId>eu.netide.util</groupId>
   <artifactId>topology-update-features</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <name>${project.artifactId}</name>
-  <modelVersion>4.0.0</modelVersion>
+  <name>Netide Topology Updater Features project</name>
+  <description>Allows to query the network topology</description>
+  <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+  <licenses>
+    <license>
+      <name>The Eclipse Public License v1.0 </name>
+      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Alec Leckey</name>
+      <email>alexander.j.leckey@intel.com</email>
+      <organization>Intel</organization>
+      <organizationUrl>http://www.intel.eu/labs</organizationUrl>
+    </developer>
+    <developer>
+      <name>Giuseppe Petralia</name>
+      <email>giuseppex.petralia@intel.com</email>
+      <organization>Intel</organization>
+      <organizationUrl>http://www.intel.eu/labs</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:ssh://github.com/fp7-netide/Engine.git</connection>
+    <developerConnection>scm:git:ssh://github.com/fp7-netide/Engine.git</developerConnection>
+    <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+    <tag>HEAD</tag>
+  </scm>
+  
   <prerequisites>
     <maven>3.1.1</maven>
   </prerequisites>
+  
   <properties>
     <controller.mdsal.version>1.3.0-SNAPSHOT</controller.mdsal.version>
     <mdsal.version>2.0.0-SNAPSHOT</mdsal.version>
@@ -32,6 +63,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
     <dlux.version>0.3.0-SNAPSHOT</dlux.version>
     <configfile.directory>etc/opendaylight/karaf</configfile.directory>
   </properties>
+  
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  
   <dependencyManagement>
     <dependencies>
       <!-- project specific dependencies -->
@@ -51,6 +94,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       </dependency>
     </dependencies>
   </dependencyManagement>
+  
   <dependencies>
     <dependency>
       <groupId>org.opendaylight.controller.model</groupId>
@@ -58,20 +102,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <version>1.3.0-SNAPSHOT</version>
     </dependency>   
     <dependency>
-            <groupId>org.opendaylight.openflowplugin.model</groupId>
-            <artifactId>model-flow-base</artifactId>
-            <version>0.2.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.openflowplugin.model</groupId>
-            <artifactId>model-flow-service</artifactId>
-            <version>0.2.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.openflowplugin.model</groupId>
-            <artifactId>model-flow-statistics</artifactId>
-            <version>0.2.0-SNAPSHOT</version>
-        </dependency>
+      <groupId>org.opendaylight.openflowplugin.model</groupId>
+      <artifactId>model-flow-base</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.openflowplugin.model</groupId>
+      <artifactId>model-flow-service</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.openflowplugin.model</groupId>
+      <artifactId>model-flow-statistics</artifactId>
+      <version>0.2.0-SNAPSHOT</version>
+    </dependency>
     <dependency>
       <groupId>org.opendaylight.yangtools</groupId>
       <artifactId>features-yangtools</artifactId>
@@ -162,11 +206,71 @@ and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL
       <scope>runtime</scope>
     </dependency>
     <dependency>
-            <groupId>org.opendaylight.dlux</groupId>
-            <artifactId>features-dlux</artifactId>
-            <version>${dlux.version}</version>
-            <classifier>features</classifier>
-            <type>xml</type>
-        </dependency>
+      <groupId>org.opendaylight.dlux</groupId>
+      <artifactId>features-dlux</artifactId>
+      <version>${dlux.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+    </dependency>
   </dependencies>
+  
+  <build>
+    <plugins>
+      <!-- Source plugin to attached code sources -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Javadoc plugin for docs -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- GPG plugin for signing -->
+      <plugin>
+      	<groupId>org.apache.maven.plugins</groupId>
+      	<artifactId>maven-gpg-plugin</artifactId>
+      	<version>1.5</version>
+      	<executions>
+	      <execution>
+          	<id>sign-artifacts</id>
+          	<phase>verify</phase>
+          	<goals>
+	          <goal>sign</goal>
+          	</goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Nexus Staging Maven plugin for deploying snapshots -->
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+      	<artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.3</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
