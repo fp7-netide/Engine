@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CompositionSpecification xmlns="http://netide.eu/schemas/compositionspecification/v1">
+  <Modules>
+    <Module id="fw" loaderIdentification="ryu-fw.py"/>
+    <Module id="appA" loaderIdentification="appA.py"/>
+    <Module id="appB" loaderIdentification="appB.py"/>
+    <Module id="lb" loaderIdentification="loadbalancer.jar">
+      <CallCondition events="packetIn" datapaths="0 42 43 45"/>
+    </Module>
+    <Module id="log" loaderIdentification="logger.py"/>
+  </Modules>
+  <Composition>
+    <ModuleCall module="fw" allowVetoResult="true"/>
+    <ParallelCall resolutionPolicy="priority">
+      <ModuleCall module="appA" priority="1"/>
+      <ModuleCall module="appB" priority="2"/>
+    </ParallelCall>
+    <Branch>
+      <BranchCondition events="flowMod"/>
+      <If>
+        <ModuleCall module="log"/>
+      </If>
+      <Else>
+        <ModuleCall module="lb"/>
+      </Else>
+    </Branch>
+  </Composition>
+</CompositionSpecification>

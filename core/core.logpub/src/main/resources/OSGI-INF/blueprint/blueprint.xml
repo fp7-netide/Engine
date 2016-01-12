@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+
+    <cm:property-placeholder persistent-id="eu.netide.core.logpub" update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="port" value="5557"/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <bean id="logpub" class="eu.netide.core.logpub.LogPub"
+          init-method="Start"
+          destroy-method="Stop">
+        <property name="port" value="${port}"/>
+    </bean>
+
+    <service ref="logpub"
+             interface="eu.netide.core.api.IShimMessageListener"/>
+    <service ref="logpub"
+             interface="eu.netide.core.api.IBackendMessageListener"/>
+</blueprint>

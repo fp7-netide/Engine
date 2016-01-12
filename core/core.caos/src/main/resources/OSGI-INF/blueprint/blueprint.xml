@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+    <cm:property-placeholder persistent-id="eu.netide.core.caos"
+                             update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="compositionSpecification" value=""/>
+            <cm:property name="maxModuleWaitSeconds" value="60"/>
+            <cm:property name="bypassUnsupportedMessages" value="true"/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <reference id="shimmanager"
+               interface="eu.netide.core.api.IShimManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
+    <reference id="backendmanager"
+               interface="eu.netide.core.api.IBackendManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
+    <bean id="compositionManager"
+          class="eu.netide.core.caos.CompositionManager"
+          activation="eager"
+          init-method="Start"
+          destroy-method="Stop">
+        <property name="shimManager" ref="shimmanager"/>
+        <property name="backendManager" ref="backendmanager"/>
+        <property name="compositionSpecificationXml"
+                  value="${compositionSpecification}"/>
+        <property name="maxModuleWaitSeconds" value="${maxModuleWaitSeconds}"/>
+        <property name="bypassUnsupportedMessages"
+                  value="${bypassUnsupportedMessages}"/>
+    </bean>
+
+    <service ref="compositionManager"
+             interface="eu.netide.core.api.IShimMessageListener"/>
+</blueprint>
