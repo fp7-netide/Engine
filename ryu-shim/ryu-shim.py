@@ -180,11 +180,10 @@ class CoreConnection(threading.Thread):
                     module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                     if module_id is not None:
                         new_xid = store_xid(xid,module_id)
-                        ret = bytearray(message_data)
-                        set_xid(ret,new_xid)
-                        message_data = str(ret)
+                        message_data = bytearray(message_data)
+                        set_xid(message_data,new_xid)
 
-                    self.datapath.send(message_data)
+                    self.datapath.send(bytearray(message_data))
                 else:
                     self.datapath = None
 
