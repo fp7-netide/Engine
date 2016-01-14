@@ -65,6 +65,8 @@ class BackendDatapath(controller.Datapath):
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
         self.is_active = True
+        # maps from OF xid to NetIDE xid
+        self.xid_db = dict()
 
     def handle_write(self):
         pass
@@ -111,14 +113,18 @@ class BackendDatapath(controller.Datapath):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, msg.datapath.id, str(msg.buf))
+
+        netide_xid = None
+        if msg.xid in self.xid_db:
+            netide_xid = self.xid_db[msg.xid]
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', netide_xid, module_id, msg.datapath.id, str(msg.buf))
         logger.debug("Sent Message header: %s", NetIDEOps.netIDE_decode_header(msg_to_send))
         logger.debug("Sent Message body: %s",':'.join(x.encode('hex') for x in msg_to_send[NetIDEOps.NetIDE_Header_Size:]))
         self.channel.socket.send(msg_to_send)
         
         #TODO: temporary patch in order to let the core know that the application has finished processing the packet_in. Only for packet_outs and flow_mods
         if msg.msg_type is self.ofproto.OFPT_PACKET_OUT or msg.msg_type is self.ofproto.OFPT_FLOW_MOD:
-            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', 0, module_id, 0, "")
+            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', netide_xid, module_id, 0, "")
             self.channel.socket.send(msg_to_send)
         
         # LOG.debug('send_msg %s', msg)
@@ -136,6 +142,7 @@ class BackendDatapath(controller.Datapath):
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
+            self.xid_db[xid] = header[NetIDEOps.NetIDE_header['XID']]
             for key, value in self.channel.running_modules.iteritems():
                 if value == module_id:
                     module_name = key
