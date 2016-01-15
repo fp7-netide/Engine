@@ -11,7 +11,7 @@ public class TestShimConnector {
         ZeroMQBasedConnector c = new ZeroMQBasedConnector();
         c.Start();
         try {
-            Thread.sleep(2500);
+            Thread.sleep(1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {

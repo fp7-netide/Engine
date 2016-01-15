@@ -82,7 +82,7 @@ public class CompositionManagerTest {
         Mockito.when(backendManager.sendRequest(Mockito.any(Message.class))).thenReturn(result);
         manager.setBackendManager(backendManager);
         manager.setCompositionSpecificationXml(SingleCallXml);
-        Thread.sleep(1000); // wait for reconfiguration
+        Thread.sleep(300); // wait for reconfiguration
 
         manager.OnShimMessage(newMessage, Constants.SHIM);
     }

@@ -69,26 +69,26 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public RequestResult sendRequest(Message message) {
-        Integer id = message.getHeader().getModuleId();
-        if (results.get(id) != null) {
+        Integer moduleId = message.getHeader().getModuleId();
+        if (results.get(moduleId) != null) {
             throw new IllegalStateException("Still waiting for former request to finish.");
         }
         RequestResult result = new RequestResult(message);
-        Semaphore lock = new Semaphore(0);
-        results.put(id, result);
-        locks.put(id, lock);
+        Semaphore moduleLock = new Semaphore(0);
+        results.put(moduleId, result);
+        locks.put(moduleId, moduleLock);
         sendMessage(message);
 
         while (!result.isDone()) {
-            logger.info("Waiting for request with id '" + id + "' to complete...");
+            logger.info("Waiting for request with id '" + moduleId + "' to complete...");
             try {
-                lock.acquire();
+                moduleLock.acquire();
             } catch (InterruptedException e) {
                 logger.error("InterruptedException occurred while waiting for results", e);
             }
         }
-        results.remove(id);
-        locks.remove(id);
+        results.remove(moduleId);
+        locks.remove(moduleId);
         return result;
     }
 
@@ -167,7 +167,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                 logger.info("Data completes request (" + message.toString() + ").");
             } else {
                 // add to result
-                r.addResultMessage(message);
+                try {
+                    r.addResultMessage(message);
+                } catch (IllegalStateException ise) {
+                    logger.error("FIXME", ise);
+                }
                 logger.info("Message adds to running request (" + message.toString() + ").");
             }
         } else {
