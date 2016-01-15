@@ -22,6 +22,7 @@ import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
 import net.floodlightcontroller.core.IOFSwitchListener;
 import net.floodlightcontroller.core.PortChangeType;
+import net.floodlightcontroller.core.internal.IOFSwitchService;
 import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
@@ -52,6 +53,7 @@ import org.slf4j.LoggerFactory;
 public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMessageListener, ICoreListener {
 
     protected IFloodlightProviderService floodlightProvider;
+    protected IOFSwitchService switchProvider;
     protected static Logger logger;
     protected ZeroMQBaseConnector coreConnector;
     private OFVersion aggreedVersion;
@@ -219,6 +221,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         supportedProtocols.add(new Pair<Protocol, ProtocolVersions>(Protocol.OPENFLOW, ProtocolVersions.OPENFLOW_1_0));
         supportedProtocols.add(new Pair<Protocol, ProtocolVersions>(Protocol.OPENFLOW, ProtocolVersions.OPENFLOW_1_3));
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
+        switchProvider = context.getServiceImpl(IOFSwitchService.class);
         logger = LoggerFactory.getLogger(NetIdeModule.class);
         coreConnector = new ZeroMQBaseConnector(supportedProtocols);
         coreConnector.setAddress("127.0.0.1");
@@ -257,10 +260,15 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 
         } else {
             logger.debug("Sending OF Message to Controller " + msg.getType().toString());
-            sendMessageToController(datapathId, msg);
+            //sendMessageToController(datapathId, msg);
+            //TODO: We need a method to get the module ID from the moduleRegistry in ModuleHandlerImpl.java
+            // If no module or moduleId = -1 then return an empty String
+            String moduleIdString = "";
+            sendMessageToControllerPipeline(datapathId, msg, moduleIdString);
         }
     }
-
+    // OLD METHOD TO SEND MESSAGES TO CONTROLLER.
+    /*
     private void sendMessageToController(final long switchId, OFMessage message) {
         // USE THE CORRECT CHANNEL TO SEND MESSAGE
         ChannelFuture future = managedSwitches.get(switchId);
@@ -271,6 +279,34 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         } catch (Exception e) {
             managedSwitches.remove(switchId);
             managedBootstraps.remove(switchId);
+        }
+    }
+    */
+
+    // NEW METHOD TO SEND MESSAGES TO CONTROLLER.
+    // Instead of sending the message to a channel we send it to the dispatcher directly
+    private void sendMessageToControllerPipeline(final long switchId, OFMessage message, String moduleId){
+        // SEND PACKETS DIRECTLY TO THE PIPELINE
+        IOFSwitch sw = switchProvider.getSwitch(DatapathId.of(switchId));
+        FloodlightContext context = new FloodlightContext();
+        if(moduleId.isEmpty()){
+            // send to all modules
+            context=null;
+            floodlightProvider.handleMessage(sw,message,context);
+        }else{
+            // NetIDE composition, send to a specific module
+            List<IOFMessageListener> listeners = null;
+            Map<OFType,List<IOFMessageListener>> messageListeners = floodlightProvider.getListeners();
+            if (messageListeners.containsKey(message.getType())) {
+                listeners = messageListeners.get(message.getType());
+            }
+            for (IOFMessageListener listener : listeners) {
+                if (moduleId.equals(listener.getName())) {
+                    listener.receive(sw, message, context);
+                } else {
+                    // TODO : the backend asked for an unknown application. Send an error?
+                }
+            }
         }
     }
 
