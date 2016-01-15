@@ -71,7 +71,7 @@ public class ScenariosTest {
 
 
         // Force finish of module call
-        backendManager.markModuleAsFinished(swModId);
+        backendManager.markModuleAllOutstandingRequestsAsFinished(swModId);
 
         ExecutionFlowStatus statusResult = statusFuture.get(1000, TimeUnit.MILLISECONDS);
         Assert.assertTrue(statusResult.getResultMessages().size() >= 1);
@@ -97,7 +97,8 @@ public class ScenariosTest {
     }
 
     @Test
-    public void testMultipleFlowMods() throws InterruptedException {
+    public void testMultipleFlowMods() throws InterruptedException, JAXBException {
+        setupComposition();
         int swModId = backendManager.getModuleId(SW_ID);
         int fwModId = backendManager.getModuleId(FW_ID);
 
@@ -106,7 +107,7 @@ public class ScenariosTest {
             @Override
             public void accept(String s) {
                 int id = backendManager.getModuleId(s);
-                backendManager.markModuleAsFinished(id);
+                backendManager.markModuleAllOutstandingRequestsAsFinished(id);
             }
         });
         sendPacketIn(3, 785);
@@ -121,8 +122,28 @@ public class ScenariosTest {
         backendManager.OnDataReceived(getFlowModMsg(xid, 3, fwModId).toByteRepresentation(), SW_BE_ID);
 
         sendPacketIn(3, 780);
-        backendManager.markModuleAsFinished(swModId);
+        backendManager.markModuleAllOutstandingRequestsAsFinished(swModId);
         sendPacketIn(2, 780);
+
+    }
+
+    @Test
+    public void signalisDoneMultipleTimes() throws JAXBException, InterruptedException {
+        setupComposition();
+
+        sendPacketIn(2, 782);
+
+        for (int i=0;i<20;i++) {
+            backendManager.getModules().forEach(new Consumer<String>() {
+                @Override
+                public void accept(String s) {
+                    int id = backendManager.getModuleId(s);
+                    backendManager.markModuleAllOutstandingRequestsAsFinished(id);
+                }
+            });
+            if (i==11)
+                Thread.sleep(50);
+        }
 
     }
 
