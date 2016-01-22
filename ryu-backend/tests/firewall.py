@@ -120,6 +120,8 @@ class Firewall(app_manager.RyuApp):
         pkt = packet.Packet(msg.data)
         self.Configure_stateful_FW(msg)
 
+        datapath.send_mgmt_msg(self.__class__.__name__, msg.xid)
+
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
         msg = ev.msg

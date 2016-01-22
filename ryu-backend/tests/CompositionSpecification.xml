@@ -1,12 +1,12 @@
-<?xml version="1.0" ?> 
-<CompositionSpecification>
+<?xml version="1.0" encoding="utf-8"?>
+<CompositionSpecification  xmlns="http://netide.eu/schemas/compositionspecification/v1">
   <Modules>
     <Module id="SimpleSwitch" loaderIdentification="simple_switch.py">
-			<CallCondition events="packetIn" datapaths="0x1 0x2 0x3"/>
-	</Module>
+			<CallCondition events="packetIn" datapaths="1 2 3"/>
+    </Module>
     <Module id="Firewall" loaderIdentification="simple_firewall.py">
-			<CallCondition events="packetIn" datapaths="0xA"/>
-	</Module>
+			<CallCondition events="packetIn" datapaths="10"/>
+    </Module>
   </Modules>
   <Composition>
     <ModuleCall module="Firewall" allowVetoResult="true"/>

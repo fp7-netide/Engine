@@ -18,34 +18,28 @@
 
 import os
 import logging
-import struct
-import sys
 import socket
 import random
-import binascii
 import time
 import ryu
 import inspect
 from eventlet.green import zmq
-from eventlet.green import select
 from eventlet.green import threading
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller import dpset
 from ryu.controller import controller
 from ryu.ofproto import ofproto_parser
-from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
-from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
+from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER
 from ryu.netide.netip import *
 
 
 NETIDE_CORE_PORT = 5555
-HEARTBEAT_TIMEOUT = 5 #5 seconds
+HEARTBEAT_TIMEOUT = 5  # in seconds
 
 logger = logging.getLogger('ryu-backend')
 logger.setLevel(logging.DEBUG)
@@ -121,21 +115,22 @@ class BackendDatapath(controller.Datapath):
         logger.debug("Sent Message header: %s", NetIDEOps.netIDE_decode_header(msg_to_send))
         logger.debug("Sent Message body: %s",':'.join(x.encode('hex') for x in msg_to_send[NetIDEOps.NetIDE_Header_Size:]))
         self.channel.socket.send(msg_to_send)
-        
-        #TODO: temporary patch in order to let the core know that the application has finished processing the packet_in. Only for packet_outs and flow_mods
-        if msg.msg_type is self.ofproto.OFPT_PACKET_OUT or msg.msg_type is self.ofproto.OFPT_FLOW_MOD:
-            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', netide_xid, module_id, 0, "")
-            self.channel.socket.send(msg_to_send)
-        
-        # LOG.debug('send_msg %s', msg)
-        #print msg.buf
-        #self.send(msg.buf)
 
+    # TODO: temporary patch in order to let the core know that the application has finished processing the packet_in.
+    #       has to be called manually be the handling application.
+    def send_mgmt_msg(self, module_name, xid):
+        netide_xid = self.xid_db[xid]
+        module_id = 0
+        for key, value in self.channel.running_modules.iteritems():
+            if key == module_name:
+                module_id = value
+                break
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', netide_xid, module_id, 0, "")
+        self.channel.socket.send(msg_to_send)
 
-
-    #Handles the events and sends them to the listening RYU Applications
+    # Handles the events and sends them to the listening RYU Applications
     def handle_event(self, header, msg):
-        #required_len = self.ofp.OFP_HEADER_SIZE
+        # required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)

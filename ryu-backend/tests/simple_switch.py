@@ -92,6 +92,8 @@ class SimpleSwitch(app_manager.RyuApp):
         out.set_xid(msg.xid)
         datapath.send_msg(out)
 
+        datapath.send_mgmt_msg(self.__class__.__name__, msg.xid)
+
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):
         msg = ev.msg
