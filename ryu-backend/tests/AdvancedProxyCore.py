@@ -142,6 +142,9 @@ class MessageDispatcher(threading.Thread):
                             backend['id'] = module_id
                         module_id += 1
                         socket.send_multipart([identity,ack_message])
+                    elif message_type is 'NETIDE_FENCE':
+                        print "NETIDE_FENCE"
+                        continue
                     else:
                         socket.send_multipart([shimname,message])
         

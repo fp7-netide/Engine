@@ -76,6 +76,7 @@ class NetIDEOps:
         'MODULE_ACKNOWLEDGE'    : 0x05,
         'NETIDE_HEARTBEAT'      : 0x06,
         'TOPOLOGY_UPDATE'       : 0x07,
+        'NETIDE_FENCE'          : 0x08,
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
         'NETIDE_OPFLEX'     : OPFLEX_PROTO
