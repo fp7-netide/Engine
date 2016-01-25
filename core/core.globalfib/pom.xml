@@ -99,7 +99,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>
-                            ${project.artifactId};version=${project.version}
+                            eu.netide.core.globalfib;version=${project.version}
                         </Export-Package>
                         <Import-Package>
                             !${project.artifactId},

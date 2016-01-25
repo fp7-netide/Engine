@@ -22,6 +22,12 @@
                activation="eager"
                timeout="1500"/>
 
+    <reference  id="fibmanager"
+                interface="eu.netide.core.api.IFIBManager"
+                availability="mandatory"
+                activation="eager"
+                timeout="1500"/>
+
     <bean id="compositionManager"
           class="eu.netide.core.caos.CompositionManager"
           activation="eager"
@@ -29,6 +35,7 @@
           destroy-method="Stop">
         <property name="shimManager" ref="shimmanager"/>
         <property name="backendManager" ref="backendmanager"/>
+        <property name="fibManager" ref="fibmanager"/>
         <property name="compositionSpecificationXml"
                   value="${compositionSpecification}"/>
         <property name="maxModuleWaitSeconds" value="${maxModuleWaitSeconds}"/>

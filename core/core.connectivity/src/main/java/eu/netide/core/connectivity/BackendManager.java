@@ -135,7 +135,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         }
         int id = message.getHeader().getModuleId();
 
-            logger.info("Data received from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'.");
+        logger.info("Data received from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'.");
 
         RequestResult r = results.get(id);
         Semaphore lock = locks.get(id);

@@ -1,6 +1,7 @@
 package eu.netide.core.caos;
 
 import eu.netide.core.api.IBackendManager;
+import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.caos.composition.CompositionSpecification;
@@ -35,6 +36,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     // Fields
     private IShimManager shimManager;
     private IBackendManager backendManager;
+    private IFIBManager fibManager;
     private CompositionSpecification compositionSpecification = new CompositionSpecification();
     private final Semaphore csLock = new Semaphore(1);
     private volatile boolean correctlyConfigured = false;
@@ -109,8 +111,8 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
 
                 // Send results
                 for (Map.Entry<Long, List<Message>> entry : status.getResultMessages().entrySet()) {
-                    entry.getValue().stream().forEach(shimManager::sendMessage);
-                    logger.info("Sent " + entry.getValue().size() + " rules to switch " + entry.getKey());
+                    entry.getValue().stream().forEach(fibManager::handleMessage);
+                    logger.info("Sent " + entry.getValue().size() + " rules for switch " + entry.getKey() + " to FIBManager.");
                 }
 
                 logger.info("Flow execution finished.");
@@ -139,6 +141,10 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         } finally {
             csLock.release();
         }
+    }
+
+    public void setFibManager(IFIBManager fibManager) {
+        this.fibManager = fibManager;
     }
 
     /**

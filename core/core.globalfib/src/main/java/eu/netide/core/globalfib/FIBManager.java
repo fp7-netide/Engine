@@ -1,5 +1,7 @@
 package eu.netide.core.globalfib;
 
+import eu.netide.core.api.IFIBManager;
+import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
@@ -15,11 +17,14 @@ import org.slf4j.LoggerFactory;
 
 @Component(immediate=true)
 @Service
-public class FIBManager implements IShimMessageListener{
+public class FIBManager implements IFIBManager, IShimMessageListener{
     private final OFMessageReader<OFMessage> reader;
     private final GlobalFIB gfib;
 
     private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
+
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private IShimManager shimManager;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private TopologyService topologyService;
@@ -73,5 +78,11 @@ public class FIBManager implements IShimMessageListener{
             }
 
         }
+    }
+
+    @Override
+    public void handleMessage(Message message) {
+        log.info("Relaying message to shim.");
+        shimManager.sendMessage(message);
     }
 }
