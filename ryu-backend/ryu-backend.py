@@ -62,6 +62,7 @@ class BackendDatapath(controller.Datapath):
         self.ofpp = ofpp
         self.id = id
         self.xid = 0
+        self.netide_xid = 0
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
         self.is_active = True
@@ -111,7 +112,7 @@ class BackendDatapath(controller.Datapath):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, msg.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', self.netide_xid, module_id, msg.datapath.id, str(msg.buf))
         logger.debug("Sent Message header: %s", NetIDEOps.netIDE_decode_header(msg_to_send))
         logger.debug("Sent Message body: %s",':'.join(x.encode('hex') for x in msg_to_send[NetIDEOps.NetIDE_Header_Size:]))
         self.channel.socket.send(msg_to_send)
@@ -129,7 +130,7 @@ class BackendDatapath(controller.Datapath):
             ev = ofp_event.ofp_msg_to_ev(msg)
             event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
-            xid = header[NetIDEOps.NetIDE_header['XID']]
+            self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
             for key, value in self.channel.running_modules.iteritems():
                 if value == module_id and key in event_observers:
                     module_brick = ryu.base.app_manager.lookup_service_brick(key)
@@ -138,10 +139,13 @@ class BackendDatapath(controller.Datapath):
                         print "START calling the handler from backend", ev
                         handler(ev)
                         print "END calling the handler from backend"
-                        # Sending the FENCE message to the Core
-                        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', xid, module_id, 0, "")
-                        self.channel.socket.send(msg_to_send)
                     break
+
+            # Sending the FENCE message to the Core
+            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
+            self.channel.socket.send(msg_to_send)
+            # Resetting netide_xid to zero
+            self.netide_xid = 0
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
