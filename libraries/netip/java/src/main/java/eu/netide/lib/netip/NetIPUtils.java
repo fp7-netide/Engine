@@ -51,6 +51,8 @@ public abstract class NetIPUtils {
                     return toModuleAcknowledgeMessage(message);
                 case TOPOLOGY_UPDATE:
                     return toTopologyUpdateMessage(message);
+                case FENCE:
+                    return toFenceMessage(message);
                 default:
                     throw new IllegalArgumentException("Unknown message type.");
             }
@@ -159,6 +161,22 @@ public abstract class NetIPUtils {
         ManagementMessage ofm = new ManagementMessage();
         ofm.setHeader(message.getHeader());
         ofm.setPayloadString(new String(message.getPayload()));
+        return ofm;
+    }
+
+    /**
+     * To ManagementMessage.
+     *
+     * @param message the message
+     * @return the management message
+     */
+    private static FenceMessage toFenceMessage(Message message) {
+        if (message.getHeader().getMessageType() != MessageType.FENCE)
+            throw new IllegalArgumentException("Can only convert FENCE messages");
+        if (message instanceof FenceMessage) return (FenceMessage) message;
+        FenceMessage ofm = new FenceMessage();
+        ofm.setHeader(message.getHeader());
+        ofm.setPayload(message.getPayload());
         return ofm;
     }
 

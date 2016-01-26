@@ -1,3 +1,5 @@
+package eu.netide.core.caos.test;
+
 import eu.netide.core.api.IConnectorListener;
 import eu.netide.core.caos.composition.CompositionSpecification;
 import eu.netide.core.caos.composition.CompositionSpecificationLoader;

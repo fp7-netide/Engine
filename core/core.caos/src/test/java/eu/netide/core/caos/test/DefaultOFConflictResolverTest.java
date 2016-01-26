@@ -1,3 +1,5 @@
+package eu.netide.core.caos.test;
+
 import eu.netide.core.caos.composition.ResolutionPolicy;
 import eu.netide.core.caos.resolution.DefaultOFConflictResolver;
 import eu.netide.core.caos.resolution.PriorityInfo;

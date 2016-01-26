@@ -1,3 +1,5 @@
+package eu.netide.core.caos.test;
+
 import eu.netide.core.api.Constants;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.RequestResult;
@@ -78,7 +80,7 @@ public class CompositionManagerTest {
         Mockito.when(backendManager.getModules()).thenReturn(Stream.of("fw"));
         RequestResult result = new RequestResult(ofm1);
         result.addResultMessage(ofm1);
-        result.signalIsDone(new ManagementMessage());
+        result.signalIsDone(new FenceMessage());
         Mockito.when(backendManager.sendRequest(Mockito.any(Message.class))).thenReturn(result);
         manager.setBackendManager(backendManager);
         manager.setCompositionSpecificationXml(SingleCallXml);

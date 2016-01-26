@@ -1,6 +1,6 @@
 package eu.netide.core.api;
 
-import eu.netide.lib.netip.ManagementMessage;
+import eu.netide.lib.netip.FenceMessage;
 import eu.netide.lib.netip.Message;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public class RequestResult {
     private boolean isDone = false;
     private Message requestMessage;
     private List<Message> resultMessages = new ArrayList<>();
-    private ManagementMessage finishMessage;
+    private FenceMessage finishMessage;
 
     /**
      * Creates a new instance of the RequestResult class.
@@ -63,7 +63,7 @@ public class RequestResult {
      *
      * @return The finishing ManagementMessage.
      */
-    public ManagementMessage getFinishMessage() {
+    public FenceMessage getFinishMessage() {
         return this.finishMessage;
     }
 
@@ -81,7 +81,7 @@ public class RequestResult {
      *
      * @param finishMessage The ManagementMessage that caused this result to be marked as finished.
      */
-    public void signalIsDone(ManagementMessage finishMessage) {
+    public void signalIsDone(FenceMessage finishMessage) {
         if (isDone) {
             throw new IllegalStateException("Cannot set finished state more than once.");
         }

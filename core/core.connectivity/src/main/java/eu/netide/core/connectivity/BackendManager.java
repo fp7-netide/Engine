@@ -151,9 +151,9 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         synchronized (requests) {
             for (Map.Entry<Pair<Integer, Integer>, PendingRequest> item : requests.entrySet()) {
                 if (item.getKey().getValue0() == moduleId && !item.getValue().result.isDone()) {
-                    ManagementMessage fakeDoneMessage = new ManagementMessage();
-                    fakeDoneMessage.setPayloadString("NO FENCE SUPPORT FAKE MSG");
-                    item.getValue().result.signalIsDone(fakeDoneMessage);
+                    FenceMessage fakeFenceMessage = new FenceMessage();
+                    fakeFenceMessage.setPayload("NO FENCE SUPPORT FAKE MSG".getBytes());
+                    item.getValue().result.signalIsDone(fakeFenceMessage);
                     item.getValue().lock.release();
                 }
             }
@@ -180,10 +180,10 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
             if (rh != null) {
                 // Message belongs to former request
-                if (message instanceof ManagementMessage) {
+                if (message instanceof FenceMessage) {
                     // check for finished execution
                     // TODO real check
-                    rh.result.signalIsDone((ManagementMessage) message);
+                    rh.result.signalIsDone((FenceMessage) message);
                     rh.lock.release();
                     logger.info("Data completes request (" + message.toString() + ").");
                 } else {
