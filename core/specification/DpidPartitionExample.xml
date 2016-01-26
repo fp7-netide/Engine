@@ -1,17 +1,20 @@
-<?xml version="1.0" ?> 
-<CompositionSpecification xmlns="http://netide.eu/schemas/compositionspecification/v1">
-  <Modules>
-    <Module id="SimpleSwitch" loaderIdentification="simple_switch.py" noFenceSupport="true">
-			<CallCondition events="packetIn" datapaths="1 2 4"/>
-	</Module>
-    <Module id="Firewall" loaderIdentification="simple_firewall.py" noFenceSupport="true">
-			<CallCondition events="packetIn" datapaths="3"/>
-	</Module>
-  </Modules>
-  <Composition>
-    <ParallelCall resolutionPolicy="priority">
-      <ModuleCall module="Firewall" priority="1"/>
-      <ModuleCall module="SimpleSwitch" priority="2"/>
-    </ParallelCall>
-  </Composition>
+<?xml version="1.0" ?>
+<CompositionSpecification
+        xmlns="http://netide.eu/schemas/compositionspecification/v1">
+    <Modules>
+        <Module id="SimpleSwitch" loaderIdentification="simple_switch.py"
+                noFenceSupport="true">
+            <CallCondition events="packetIn" datapaths="1 2 4"/>
+        </Module>
+        <Module id="Firewall" loaderIdentification="simple_firewall.py"
+                noFenceSupport="true">
+            <CallCondition events="packetIn" datapaths="3"/>
+        </Module>
+    </Modules>
+    <Composition>
+        <ParallelCall resolutionPolicy="priority">
+            <ModuleCall module="Firewall" priority="1"/>
+            <ModuleCall module="SimpleSwitch" priority="2"/>
+        </ParallelCall>
+    </Composition>
 </CompositionSpecification>

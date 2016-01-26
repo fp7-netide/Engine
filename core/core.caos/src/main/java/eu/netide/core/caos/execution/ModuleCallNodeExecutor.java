@@ -50,8 +50,7 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
 
         logger.info("Sending Request to module '" + moduleId + "'...");
         Message message = new Message(header, status.getCurrentMessage().getPayload());
-        RequestResult requestResult = backendManager.sendRequest(message);
-        RequestResult result = requestResult;
+        RequestResult result = backendManager.sendRequest(message);
         logger.info("Request returned from module '" + moduleId + "'.");
         return ExecutionUtils.mergeMessagesIntoStatus(status, result.getResultMessages().toArray(Message[]::new));
     }
