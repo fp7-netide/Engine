@@ -144,8 +144,6 @@ class BackendDatapath(controller.Datapath):
             # Sending the FENCE message to the Core
             msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
             self.channel.socket.send(msg_to_send)
-            # Resetting netide_xid to zero
-            self.netide_xid = 0
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -154,6 +152,9 @@ class BackendDatapath(controller.Datapath):
 
             for handler in handlers:
                 handler(ev)
+
+            # Resetting netide_xid to zero
+            self.netide_xid = 0
 
 # Heartbeat thread
 class HeatbeatThread(threading.Thread):
@@ -285,11 +286,13 @@ class CoreConnection(threading.Thread):
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         logger.debug("Received Message header: %s", decoded_header)
+        message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
+        logger.debug("Message type: %s", message_type)
+        message_xid = decoded_header[NetIDEOps.NetIDE_header['XID']]
+        logger.debug("Message xid: %s", message_xid)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:]
         logger.debug("Received Message body: %s",':'.join(x.encode('hex') for x in message_data))
-        message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
-        logger.debug("Message type: %s", message_type)
 
         # control messages are processed only if the handshake has been successfully completeds
         if message_type is 'NETIDE_OPENFLOW' and self.backend_info['connected'] == True:

@@ -99,6 +99,9 @@ class MessageDispatcher(threading.Thread):
         socket = context.socket(zmq.ROUTER)
         socket.bind("tcp://*:" + self.port)
         logger.debug("Bound port %s", self.port)
+
+        # temporary xid number used to test the FENCE mechanism.
+        fake_xid = 1
         
         # Initialize main loop state
         poller = zmq.Poller()
@@ -117,6 +120,8 @@ class MessageDispatcher(threading.Thread):
                 logger.debug("Message header: %s", decoded_header)
                 message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
                 logger.debug("Message type: %s", message_type)
+                message_xid = decoded_header[NetIDEOps.NetIDE_header['XID']]
+                logger.debug("Message xid: %s", message_xid)
                 message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
                 message_data = message[NetIDEOps.NetIDE_Header_Size:]
                 logger.debug("Message body: %s",':'.join(x.encode('hex') for x in message_data))
@@ -143,7 +148,6 @@ class MessageDispatcher(threading.Thread):
                         module_id += 1
                         socket.send_multipart([identity,ack_message])
                     elif message_type is 'NETIDE_FENCE':
-                        print "NETIDE_FENCE"
                         continue
                     else:
                         socket.send_multipart([shimname,message])
@@ -164,7 +168,9 @@ class MessageDispatcher(threading.Thread):
                                 if backend_identity is not None:
                                     backend = self.connected_backends.get(backend_identity,None)
                                     if backend['hello'] > 0: #hello completed between shim and backend. We can start sending messages to this backend
-                                        socket.send_multipart([backend_identity,NetIDEOps.netIDE_set_module_id(message, module_id)])
+                                        new_message = NetIDEOps.netIDE_set_xid(NetIDEOps.netIDE_set_module_id(message, module_id), fake_xid)
+                                        fake_xid = fake_xid+1
+                                        socket.send_multipart([backend_identity,new_message])
                     # handling management messages (no control messages here)
                     else:
                         module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
