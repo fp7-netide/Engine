@@ -1,59 +1,63 @@
-# The NetIDE Network Engine
+# OpenDaylight Shim Layer
 
-The **Network Engine** follows the layered SDN controller approach proposed by the Open Networking Foundation. It comprises a client controller layer that executes the modules network applications are composed of and a server SDN controller layer that drives the underlying infrastructure.
-
-The challenge is to integrate client and server controllers. A first idea is to connect a client’s South-bound Interface (SBI) to a server’s North-bound Interface (NBI). But as these interfaces do not match, adaptation is necessary. This adaptation has to cater for the idiosyncrasies of the controller frameworks and has to be implemented for each single one.
-For maximal reuse, we use separate adaptors for the clients’SBI – the Backend – and the server’s NBI – the Shim. This separation necessitates a protocol between them, the NetIDE
-Intermediate Protocol.
-While such a shim/backend structure connected by an intermediate protocol is feasible, it would still leave substantial adaptation logic in these modules. To overcome this shortcoming, we introduce a further intermediate layer, the Core: it hosts all logic and data structures that
-are independent of the particular controller frameworks and communicates with both shim and backend using the same NetIDE intermediate protocol. The core makes both shim and backend light-weight and easier to implement for new controllers. Moreover, it provides a convenient place to connect additional run-time tools using a standardized interface. The core introduces some overhead but makes the architecture much more flexible; for production, faster, tightly integrated implementations are easily conceivable.
+The OpenDaylight shim layer is one of the components of the NetIDE Network Engine and is implemented as a component of the OpenDaylight controller by using the OpenFlow libraries included in the OpenDaylight's source code.
+Differently from previous versions of the Network Engine implementation which leveraged on the protocol used between the Pyretic backend and the OpenFlow client, the current modules (such as shim layer and backend) use the NetIDE Intermediate protocol v1.X to communicate with each other (see a short description in the Network Engine introduction).
 
 ![Alt text](/NetIDE-architecture.png?raw=true " ")
 
-## The NetIDE Intermediate protocol v1.0
+## Installation
+
+The procedure is tested on an Ubuntu 14.04 machine
+
+Install Java Openjdk 1.7
+```sudo apt-get install openjdk-7-jdk```
+
+Install Maven 3.1.x or later. Download packages from [http://maven.apache.org/download.cgi]
+```tar -zxf apache-maven-3.x.x-bin.tar.gz```
+```sudo cp -R apache-maven-3.x.x /usr/local```
+```sudo ln -s /usr/local/apache-maven-3.x.x/bin/mvn /usr/bin/mvn```
+
+Verify Maven installation
+```mvn --version```
+
+Edit your ~/.m2/settings.xml
+```mkdir -p ~/.m2```
+```wget -q -O - https://raw.githubusercontent.com/opendaylight/odlparent/master/settings.xml > ~/.m2/settings.xml```
+
+Increase the amount of RAM maven can use
+```export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'```
+
+Build Odl Shim
+```cd odl-shim```
+```mvn clean install```
 
 
-The intermediate protocol serves several needs. It has to
-(i) carry control messages between the modules of the Network Engine (such as shim and backend), e.g., to start up/take down a particular module, providing
-unique identifiers for modules, (ii) carry event and action
-messages between shim and backend, properly demultiplexing such messages to the right module based on identifiers, (iii) encapsulate messages specific to a particular SBI
-protocol version (e.g., OF 1.X, NETCONF, etc.) towards the
-client controllers with proper information to recognize these
-messages as such.
+## Running
+Start karaf and install the the ODL Shim
+```cd odl-shim/karaf/target/assembly/bin```
+```./karaf```
+```feature:install odl-netide-rest```
+Wait until the following command give an input
+```log:display | grep "NetideProvider Session Initiated"```
 
-In the first prototypes of the Network Engine, we lever-
-aged the protocol between [Pyretic’s](http://www.cs.princeton.edu/~jrex/papers/pyretic13.pdf) runtime system and
-the underlying OpenFlow client. Although this “Pyretic protocol” was sufficient to accomplish our preliminary proofs of
-concept, its current version limits the network applications
-running on top of the Network Engine to only use a subset
-of OF v1.0 messages and its definition does not provide the
-necessary functions required by the composition mechanism
-running in the core layer. Especially considering the latter limitation, we defined a new intermediate protocol fromscratch that ensures the delivery of control messages and that
-supports different SBI protocols. The protocol uses TCP as
-a transport and encapsulates the payload with the following
-header:
-```
- 0                   1                   2                   3
- 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|   netide_ver  |     type      |            length             |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                              xid                              |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                           module_id                           |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               |
-+                          datapath_id                          |
-|                                                               |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-```
-Where ```netide_ver``` is the version of the NetIDE protocol,
-```length``` is the total length of the payload in bytes and ```type```
-indicates the type of the message (e.g ```NETIDE_HELLO```,
-```NETIDE_OPENFLOW```, etc.). ```datapath_id``` is a 64-bits
-field that uniquely identifies the network elements.
-```module_id``` is a 32-bits field that uniquely identifies the
-application modules running on top of each client controller.
-The composition mechanism in the core leverages on this
-field to implement the correct execution flow of these modules. Finally, ```xid``` is the transaction identifier associated to
-the each message. Replies must use the same value to facilitate the pairing.
+# Testing
+To test the ODL shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
+In the ```ryu-backend/tests``` folder, a minimal implementation of the Core is provided.
+For instance, to use this shim with the Ryu backend run following sequence of commands:
+
+Run mininet and create the topology
+```cd ryu-backend/tests```
+```sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6644```
+
+Run the core
+```cd ryu-backend/tests```
+```python AdvancedProxyCore.py -c CompositionSpecification.xml```
+
+Run Ryu-backend (with OF1.0 apps). Follow the instructions at [https://github.com/fp7-netide/Engine/tree/master/ryu-backend] to install Ryu-Backend.
+
+```cd Engine/ryu-backend```
+```ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
+
+To test the demo from mininet console execute ```pingall```. The Results should be 8% dropped (11/12 received)
+
+
