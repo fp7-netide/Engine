@@ -3,8 +3,6 @@
 The OpenDaylight shim layer is one of the components of the NetIDE Network Engine and is implemented as a component of the OpenDaylight controller by using the OpenFlow libraries included in the OpenDaylight's source code.
 Differently from previous versions of the Network Engine implementation which leveraged on the protocol used between the Pyretic backend and the OpenFlow client, the current modules (such as shim layer and backend) use the NetIDE Intermediate protocol v1.X to communicate with each other (see a short description in the Network Engine introduction).
 
-![Alt text](/NetIDE-architecture.png?raw=true " ")
-
 ## Installation
 
 The procedure is tested on an Ubuntu 14.04 machine
