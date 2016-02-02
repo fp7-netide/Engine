@@ -7,18 +7,8 @@ import eu.netide.core.caos.composition.ExecutionFlowStatus;
 import eu.netide.core.caos.execution.FlowExecutors;
 import eu.netide.core.connectivity.BackendManager;
 import eu.netide.core.connectivity.ShimManager;
-import eu.netide.lib.netip.Message;
-import eu.netide.lib.netip.MessageHeader;
-import eu.netide.lib.netip.MessageType;
-import eu.netide.lib.netip.ModuleAcknowledgeMessage;
-import eu.netide.lib.netip.ModuleAnnouncementMessage;
-import eu.netide.lib.netip.NetIPConverter;
-import eu.netide.lib.netip.OpenFlowMessage;
-import org.onlab.packet.Data;
-import org.onlab.packet.Ethernet;
-import org.onlab.packet.IPv4;
-import org.onlab.packet.MacAddress;
-import org.onlab.packet.TCP;
+import eu.netide.lib.netip.*;
+import org.onlab.packet.*;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFPacketInReason;
@@ -30,13 +20,7 @@ import org.testng.internal.collections.Pair;
 import javax.xml.bind.JAXBException;
 import java.util.LinkedList;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
+import java.util.concurrent.*;
 
 /**
  * Created by arne on 14.01.16.
@@ -105,12 +89,9 @@ public class ScenariosTest {
         int fwModId = backendManager.getModuleId(FW_ID);
 
         sendPacketIn(2, 780);
-        backendManager.getModules().forEach(new Consumer<String>() {
-            @Override
-            public void accept(String s) {
-                int id = backendManager.getModuleId(s);
-                backendManager.markModuleAllOutstandingRequestsAsFinished(id);
-            }
+        backendManager.getModules().forEach(s -> {
+            int id = backendManager.getModuleId(s);
+            backendManager.markModuleAllOutstandingRequestsAsFinished(id);
         });
         sendPacketIn(3, 785);
 
@@ -136,12 +117,9 @@ public class ScenariosTest {
         sendPacketIn(2, 782);
 
         for (int i=0;i<20;i++) {
-            backendManager.getModules().forEach(new Consumer<String>() {
-                @Override
-                public void accept(String s) {
-                    int id = backendManager.getModuleId(s);
-                    backendManager.markModuleAllOutstandingRequestsAsFinished(id);
-                }
+            backendManager.getModules().forEach(s -> {
+                int id = backendManager.getModuleId(s);
+                backendManager.markModuleAllOutstandingRequestsAsFinished(id);
             });
             if (i==11)
                 Thread.sleep(50);
