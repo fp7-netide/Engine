@@ -146,4 +146,9 @@ public class MessageHeader {
         System.arraycopy(ByteBuffer.allocate(8).putLong(datapathId).array(), 0, bytes, 12, 8);
         return bytes;
     }
+
+    @Override
+    public String toString() {
+        return "MessageHeader [Version=" + netIDEProtocolVersion.name() + ",Type=" + messageType.name() + ",Length=" + payloadLength + ",ModuleId=" + moduleId + ",TransactionId=" + transactionId + ",DatapathId=" + datapathId + "]";
+    }
 }

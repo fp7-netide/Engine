@@ -58,7 +58,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     protected ZeroMQBaseConnector coreConnector;
     private OFVersion aggreedVersion;
     private List<Pair<Protocol, ProtocolVersions>> supportedProtocols;
-
+    private IModuleHandler moduleHandler;
     private Map<Long, ChannelFuture> managedSwitches = new HashMap<Long, ChannelFuture>();
     private Map<Long, ClientBootstrap> managedBootstraps = new HashMap<Long, ClientBootstrap>();
 
@@ -227,6 +227,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         coreConnector.setAddress("127.0.0.1");
         coreConnector.setPort(5555);
         coreConnector.RegisterCoreListener(this);
+        moduleHandler = new ModuleHandlerImpl(coreConnector);
     }
 
     /*
@@ -332,6 +333,8 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         managedSwitches.put(dummySwitch.getDatapathId(), future);
         managedBootstraps.put(dummySwitch.getDatapathId(), bootstrap);
         switchHandler.registerSwitchConnection(future, bootstrap);
+        switchHandler.setModuleHandler(moduleHandler);
+
     }
 
     /*

@@ -38,4 +38,9 @@ public class ModuleAcknowledgeMessage extends Message {
     public byte[] getPayload() {
         return this.moduleName.getBytes();
     }
+
+    @Override
+    public String toString() {
+        return "ModuleAcknowledgeMessage [Header=" + header.toString() + ",ModuleName=" + moduleName + "]";
+    }
 }

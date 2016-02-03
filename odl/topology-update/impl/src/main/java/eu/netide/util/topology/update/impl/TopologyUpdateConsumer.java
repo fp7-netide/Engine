@@ -7,9 +7,9 @@
  */
 package eu.netide.util.topology.update.impl;
 
+import org.opendaylight.controller.md.sal.binding.api.NotificationService;
 import org.opendaylight.controller.sal.binding.api.BindingAwareBroker.ConsumerContext;
 import org.opendaylight.controller.sal.binding.api.BindingAwareConsumer;
-import org.opendaylight.controller.sal.binding.api.NotificationProviderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +18,9 @@ public class TopologyUpdateConsumer implements BindingAwareConsumer, AutoCloseab
     private static final Logger LOG = LoggerFactory.getLogger(TopologyUpdateConsumer.class);
 
     NotificationProducer producer;
-    NotificationProviderService notificationService;
+    NotificationService notificationService;
 
-    public TopologyUpdateConsumer(NotificationProviderService _notificationService) {
+    public TopologyUpdateConsumer(NotificationService _notificationService) {
         notificationService = _notificationService;
         producer = new NotificationProducer();
     }

@@ -41,6 +41,10 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     private ClientBootstrap bootstrap;
     private OFVersion agreedVersion;
 
+    public void setModuleHandler(IModuleHandler moduleHandler) {
+        this.moduleHandler = moduleHandler;
+    }
+
     public void registerSwitchConnection(ChannelFuture connection, ClientBootstrap bootstrap) {
         future = connection;
         this.bootstrap = bootstrap;
@@ -48,7 +52,6 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 
     public SwitchChannelHandler(ZeroMQBaseConnector connector, OFVersion agreedVersion) {
         coreConnector = connector;
-        moduleHandler = new ModuleHandlerImpl(connector);
         logger = LoggerFactory.getLogger(SwitchChannelHandler.class);
         this.agreedVersion = agreedVersion;
 

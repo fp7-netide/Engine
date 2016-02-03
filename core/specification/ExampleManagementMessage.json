@@ -1,0 +1,9 @@
+{
+	"$schema":"http://netide.eu/schemas/management/v1",
+	"command": "set-configvalue",
+	"parameters": {
+		"pid": "eu.netide.core.connectivity",
+		"key": "port",
+		"value": "5556"
+	}
+}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+
+    <cm:property-placeholder persistent-id="eu.netide.core.management" update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="port" value="5556"/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <bean id="connector" class="eu.netide.core.management.ZeroMQBasedManagementConnector"
+          init-method="Start"
+          destroy-method="Stop">
+        <property name="port" value="${port}"/>
+    </bean>
+
+    <bean id="ManagementHandler"
+          class="eu.netide.core.management.ManagementHandler"
+          scope="singleton"
+          init-method="Start"
+          destroy-method="Stop"
+          activation="eager">
+        <property name="managementMessageListeners" ref="managementListeners"/>
+        <property name="connector" ref="connector"/>
+    </bean>
+
+    <reference-list id="managementListeners" interface="eu.netide.core.api.IManagementMessageListener"
+                    activation="eager"
+                    availability="optional" member-type="service-object"/>
+
+</blueprint>

@@ -41,7 +41,13 @@ public class OpenFlowMessage extends Message {
     public byte[] getPayload() {
         ChannelBuffer dcb = ChannelBuffers.dynamicBuffer();
         ofMessage.writeTo(dcb);
-        this.payload = dcb.array();
+        this.payload = new byte[dcb.readableBytes()];
+        dcb.readBytes(this.payload, 0, this.payload.length);
         return this.payload;
+    }
+
+    @Override
+    public String toString() {
+        return "OpenFlowMessage [Header=" + header.toString() + ",Type=" + ofMessage.getType().toString() + ",OFMessage=" + ofMessage.toString() + "]";
     }
 }
