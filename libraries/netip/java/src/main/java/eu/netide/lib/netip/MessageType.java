@@ -41,6 +41,10 @@ public enum MessageType {
      */
     OPFLEX(Protocol.OPFLEX.getValue()),
     /**
+     * FENCE message
+     */
+    FENCE((byte)0x08),
+    /**
      * The UNSUPPORTED type.
      */
     UNSUPPORTED((byte) 0x00);

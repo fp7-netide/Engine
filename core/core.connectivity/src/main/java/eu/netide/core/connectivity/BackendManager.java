@@ -2,6 +2,7 @@ package eu.netide.core.connectivity;
 
 import eu.netide.core.api.*;
 import eu.netide.lib.netip.*;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,7 @@ import java.util.stream.Stream;
 
 /**
  * BackendManager implementation for the core.
- *
+ * <p>
  * Created by timvi on 11.08.2015.
  */
 public class BackendManager implements IBackendManager, IConnectorListener {
@@ -29,8 +30,19 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private Map<Integer, String> moduleToNameMappings = new HashMap<>();
 
     private final ExecutorService pool = Executors.newCachedThreadPool();
-    private final Dictionary<Integer, RequestResult> results = new Hashtable<>();
-    private final Dictionary<Integer, Semaphore> locks = new Hashtable<>();
+
+
+    static class PendingRequest {
+        private final Semaphore lock;
+        private final RequestResult result;
+
+        PendingRequest(RequestResult requestResult, Semaphore sem) {
+            result = requestResult;
+            lock = sem;
+        }
+    }
+
+    private final Map<Pair<Integer, Integer>, PendingRequest> requests = new Hashtable<>();
 
     private Random random = new Random();
 
@@ -56,11 +68,10 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
 
     @Override
-    public boolean sendMessageAllBackends(Message message)
-    {
-        boolean success =true;
+    public boolean sendMessageAllBackends(Message message) {
+        boolean success = true;
         logger.info("Sending message '" + message.toString() + "' to  all backends ");
-        for (String backendId: backendIds)
+        for (String backendId : backendIds)
             success = connector.SendData(message.toByteRepresentation(), backendId) && success;
 
         return success;
@@ -69,26 +80,35 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public RequestResult sendRequest(Message message) {
-        Integer id = message.getHeader().getModuleId();
-        if (results.get(id) != null) {
-            throw new IllegalStateException("Still waiting for former request to finish.");
+        RequestResult result;
+
+        int moduleId;
+        Semaphore requestLock;
+        Pair<Integer, Integer> requestKey;
+        synchronized (requests) {
+            moduleId = message.getHeader().getModuleId();
+            int xid = message.getHeader().getTransactionId();
+            requestKey = Pair.with(moduleId, xid);
+            if (requests.get(requestKey) != null) {
+                throw new IllegalStateException("Still waiting for former request to finish.");
+            }
+            result = new RequestResult(message);
+            requestLock = new Semaphore(0);
+            requests.put(requestKey, new PendingRequest(result, requestLock));
         }
-        RequestResult result = new RequestResult(message);
-        Semaphore lock = new Semaphore(0);
-        results.put(id, result);
-        locks.put(id, lock);
         sendMessage(message);
 
         while (!result.isDone()) {
-            logger.info("Waiting for request with id '" + id + "' to complete...");
+            logger.info("Waiting for request with id '" + moduleId + "' to complete...");
             try {
-                lock.acquire();
+                requestLock.acquire();
             } catch (InterruptedException e) {
                 logger.error("InterruptedException occurred while waiting for results", e);
             }
         }
-        results.remove(id);
-        locks.remove(id);
+        synchronized (requests) {
+            requests.remove(requestKey);
+        }
         return result;
     }
 
@@ -114,10 +134,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public String getBackend(Integer moduleId) {
-        if (moduleToBackendMappings.containsKey(moduleId))
+        if (moduleToBackendMappings.containsKey(moduleId)) {
             return moduleToBackendMappings.get(moduleId);
-        else
+        } else {
             throw new UnsupportedOperationException("Backend mapping unknown for moduleId '" + moduleId + "'.");
+        }
     }
 
     public int getModuleId(String moduleName) {
@@ -126,16 +147,16 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     //! This methods marks a module as finished even though no fence message has been received
     @Override
-    public void markModuleAsFinished(int moduleId)
-    {
-        RequestResult r = results.get(moduleId);
-        Semaphore lock = locks.get(moduleId);
-        if (r !=null )
-        {
-            ManagementMessage fakeDoneMessage = new ManagementMessage();
-            fakeDoneMessage.setPayloadString("NO FENCE SUPPORT FAKE MSG");
-            r.signalIsDone(fakeDoneMessage);
-            lock.release();
+    public void markModuleAllOutstandingRequestsAsFinished(int moduleId) {
+        synchronized (requests) {
+            for (Map.Entry<Pair<Integer, Integer>, PendingRequest> item : requests.entrySet()) {
+                if (item.getKey().getValue0() == moduleId && !item.getValue().result.isDone()) {
+                    FenceMessage fakeFenceMessage = new FenceMessage();
+                    fakeFenceMessage.setPayload("NO FENCE SUPPORT FAKE MSG".getBytes());
+                    item.getValue().result.signalIsDone(fakeFenceMessage);
+                    item.getValue().lock.release();
+                }
+            }
         }
     }
 
@@ -152,69 +173,74 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
         logger.info("Data received from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'.");
 
-        RequestResult r = results.get(id);
-        Semaphore lock = locks.get(id);
+        synchronized (requests) {
+            int mxid = message.getHeader().getTransactionId();
 
-        // TODO: XID checking here is dubious
-        if (r != null && lock != null && (r.getRequestMessage().getHeader().getTransactionId() == message.getHeader().getTransactionId() ||
-               message.getHeader().getTransactionId()==0 )) {
-            // Message belongs to former request
-            if (message instanceof ManagementMessage) {
-                // check for finished execution
-                // TODO real check
-                r.signalIsDone((ManagementMessage) message);
-                lock.release();
-                logger.info("Data completes request (" + message.toString() + ").");
-            } else {
-                // add to result
-                r.addResultMessage(message);
-                logger.info("Message adds to running request (" + message.toString() + ").");
-            }
-        } else {
-            // Random message from backend
-            if (message instanceof HelloMessage) {
-                // just relay it to the shim
-                logger.info("Received HelloMessage from backend, relaying to shim...");
-                connector.SendData(message.toByteRepresentation(), Constants.SHIM);
-                return;
-            } else if (message instanceof ModuleAnnouncementMessage) {
-                // remember backend
-                if (!backendIds.stream().anyMatch(a -> a.equals(backendId))) {
-                    backendIds.add(backendId);
-                }
-                // get new module ID
-                ModuleAnnouncementMessage mam = (ModuleAnnouncementMessage) message;
-                logger.info("Received ModuleAnnouncement for module '" + mam.getModuleName() + "' from backend '" + backendId + "'. Calculating ID...");
-                int moduleId = random.nextInt(1000); // for easier typing in the emulator, restrict to smaller numbers
-                while (moduleToNameMappings.keySet().contains(moduleId) || moduleId < 1) {
-                    moduleId = random.nextInt(1000);
-                }
-                moduleToNameMappings.put(moduleId, mam.getModuleName());
-                moduleToBackendMappings.put(moduleId, backendId);
-                // send acknowledge back
-                ModuleAcknowledgeMessage ack = new ModuleAcknowledgeMessage();
-                ack.setModuleName(mam.getModuleName());
-                ack.setHeader(NetIPUtils.StubHeaderFromPayload(ack.getPayload()));
-                ack.getHeader().setMessageType(MessageType.MODULE_ACKNOWLEDGE);
-                ack.getHeader().setModuleId(moduleId);
-                connector.SendData(ack.toByteRepresentation(), backendId);
-                logger.info("Mapped module '" + mam.getModuleName() + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
-            } else if (message instanceof ManagementMessage) {
-                logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
-                connector.SendData(message.toByteRepresentation(), Constants.SHIM);
-            } else {
-                logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
-                try {
-                    listenerLock.acquire();
-                    // Notify listeners and send to shim
-                    for (IBackendMessageListener listener : backendMessageListeners) {
-                        pool.submit(() -> listener.OnBackendMessage(message, backendId));
+            PendingRequest rh = requests.get(Pair.with(message.getHeader().getModuleId(), message.getHeader().getTransactionId()));
+
+            if (rh != null) {
+                // Message belongs to former request
+                if (message instanceof FenceMessage) {
+                    // check for finished execution
+                    // TODO real check
+                    rh.result.signalIsDone((FenceMessage) message);
+                    rh.lock.release();
+                    logger.info("Data completes request (" + message.toString() + ").");
+                } else {
+                    // add to result
+                    try {
+                        rh.result.addResultMessage(message);
+                    } catch (IllegalStateException ise) {
+                        logger.error("FIXME", ise);
                     }
-                    connector.SendData(message.toByteRepresentation(), Constants.SHIM); // TODO make shim name a constant
-                } catch (InterruptedException e) {
-                    logger.error("", e);
-                } finally {
-                    listenerLock.release();
+                    logger.info("Message adds to running request (" + message.toString() + ").");
+                }
+            } else {
+                // Random message from backend
+                if (message instanceof HelloMessage) {
+                    // just relay it to the shim
+                    logger.info("Received HelloMessage from backend, relaying to shim...");
+                    connector.SendData(message.toByteRepresentation(), Constants.SHIM);
+                    return;
+                } else if (message instanceof ModuleAnnouncementMessage) {
+                    // remember backend
+                    if (!backendIds.stream().anyMatch(a -> a.equals(backendId))) {
+                        backendIds.add(backendId);
+                    }
+                    // get new module ID
+                    ModuleAnnouncementMessage mam = (ModuleAnnouncementMessage) message;
+                    logger.info("Received ModuleAnnouncement for module '" + mam.getModuleName() + "' from backend '" + backendId + "'. Calculating ID...");
+                    int moduleId = random.nextInt(1000); // for easier typing in the emulator, restrict to smaller numbers
+                    while (moduleToNameMappings.keySet().contains(moduleId) || moduleId < 1) {
+                        moduleId = random.nextInt(1000);
+                    }
+                    moduleToNameMappings.put(moduleId, mam.getModuleName());
+                    moduleToBackendMappings.put(moduleId, backendId);
+                    // send acknowledge back
+                    ModuleAcknowledgeMessage ack = new ModuleAcknowledgeMessage();
+                    ack.setModuleName(mam.getModuleName());
+                    ack.setHeader(NetIPUtils.StubHeaderFromPayload(ack.getPayload()));
+                    ack.getHeader().setMessageType(MessageType.MODULE_ACKNOWLEDGE);
+                    ack.getHeader().setModuleId(moduleId);
+                    connector.SendData(ack.toByteRepresentation(), backendId);
+                    logger.info("Mapped module '" + mam.getModuleName() + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
+                } else if (message instanceof ManagementMessage) {
+                    logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
+                    connector.SendData(message.toByteRepresentation(), Constants.SHIM);
+                } else {
+                    logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
+                    try {
+                        listenerLock.acquire();
+                        // Notify listeners and send to shim
+                        for (IBackendMessageListener listener : backendMessageListeners) {
+                            pool.submit(() -> listener.OnBackendMessage(message, backendId));
+                        }
+                        connector.SendData(message.toByteRepresentation(), Constants.SHIM); // TODO make shim name a constant
+                    } catch (InterruptedException e) {
+                        logger.error("", e);
+                    } finally {
+                        listenerLock.release();
+                    }
                 }
             }
         }
@@ -225,6 +251,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
      *
      * @param connector The connector.
      */
+
     public void setConnector(IBackendConnector connector) {
         this.connector = connector;
         connector.RegisterBackendListener(this);

@@ -1,52 +1,81 @@
-# ODL shim client
-This version of the ODL shim client is prepared to work with the Helium version of Opendaylight, and particularly using Karaf. 
+# OpenDaylight Shim Layer
 
-# Getting OpenDaylight
-First of all, we want to be able to use OpenDaylight, which already uses OpenFlow, and for this we will follow the second step from the following guide: https://wiki.opendaylight.org/view/OpenDaylight_OpenFlow_Plugin::Running_controller_with_the_new_OF_plugin (which allows the use of the OpenFlow plugin for versions 1.0 and 1.3).
+The OpenDaylight shim layer is one of the components of the NetIDE Network Engine and is implemented as a component of the OpenDaylight controller by using the OpenFlow libraries included in the OpenDaylight's source code.
+Differently from previous versions of the Network Engine implementation which leveraged on the protocol used between the Pyretic backend and the OpenFlow client, the current modules (such as shim layer and backend) use the NetIDE Intermediate protocol v1.X to communicate with each other (see a short description in the Network Engine introduction).
 
-So clone the following repository for getting the OpenDaylight distribution:
-```
-git clone https://git.opendaylight.org/gerrit/p/openflowplugin.git
-```
+## Installation
 
-After that, go to the openflowplugin directory ```cd openflowplugin``` and run ```git checkout stable/helium``` and ```mvn clean install```. If that raises any errors, just run it adding -DskipTests (i.e. ```mvn clean install -DskipTests```). If that still raises any errors, run ```mvn dependency:tree```, which hopefully will solve all the dependencies. 
+The procedure is tested on an Ubuntu 14.04 machine
 
-At this point, you have OpenDaylight Helium ready to be run. Now cd to /openflowplugin/distribution/karaf/target/assembly/bin/ (omit /openflowplugin/ if you were already in this folder)  and here launch Karaf by running ```./karaf```
+Install Java Openjdk 1.7
 
-> **Note:** Each time you recompile the ODL bundle and generate the .jar, all the contents inside data folder (in openflowplugin/distribution/karaf/target/assembly/) need to be removed. Otherwise, your bundle will automatically be installed inside karaf and you won't be able to see any of the changes. 
+```sudo apt-get install openjdk-7-jdk```
 
-# Getting the ODL bundle and running ODL shim client inside Karaf
-Now that you have your karaf distribution running, you will have to clone the odl-shim:
-With authentication:
-```git clone https://username:password@github.com/fp7-netide/Engine/```
+Install Maven 3.1.x or later. Download packages from [http://maven.apache.org/download.cgi]
 
-Without authentication:
-```git clone https://github.com/fp7-netide/Engine/```
+```tar -zxf apache-maven-3.x.x-bin.tar.gz```
 
-Now, navigate to Engine/odl-shim and perform ```mvn clean install``` 
+```sudo cp -R apache-maven-3.x.x /usr/local```
 
-The .jar should be in this path:
-~/.m2/repository/org/opendaylight/openflowplugin/pyretic-odl/0.1.0-SNAPSHOT
-In addition, it is inside the target folder that has just being created in Engine/odl-shim. 
+```sudo ln -s /usr/local/apache-maven-3.x.x/bin/mvn /usr/bin/mvn```
 
-Go to the karaf console (which you opened before, just after running ```./bin/karaf```, right?) and install the json bundle (which is a dependency that the odl shim has) like this:
-```bundle:install -s mvn:com.googlecode.json-simple/json-simple/1.1.1```
+Verify Maven installation
 
-Now, install the following bundle:
-```bundle:install -s mvn:org.apache.commons/commons-lang3/3.3.2```
+```mvn --version```
 
-After that, you can install the odl shim bundle just fine:
-```bundle:install -s mvn:org.opendaylight.openflowplugin/pyretic-odl/0.1.0-SNAPSHOT```
+Edit your ~/.m2/settings.xml
 
-> Alternative: When using Helium Release SR3, parent version in pom.xml is <version>0.0.6-Helium-SR3</version>, and the bundle is installed like this:
-```bundle:install -s mvn:org.opendaylight.openflowplugin/pyretic-odl/0.0.6-Helium-SR3```
+```mkdir -p ~/.m2```
 
-That is the default pom.xml right now. If you are using Helium Release SR1.1, then you need to rename pom_sr1.xml to pom.xml and perform mvn clean install again. 
+```wget -q -O - https://raw.githubusercontent.com/opendaylight/odlparent/master/settings.xml > ~/.m2/settings.xml```
 
-You can avoid installing the json bundle if you copy .the jar (which is this one: .m2/repository/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar) and paste it into openflowplugin/distribution/karaf/target/assembly/deploy. You just have to do this once. (The .m2 refers to linux platforms. If you don't know where that is, find out where maven creates it in your specific platform).
+Increase the amount of RAM maven can use
 
-> **Note:** You have to perform the bundle:install of the odl shim each time you launch karaf. You can only put it into the deploy folder and avoid installing if it has no changes at all from the previous version. 
+```export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'```
 
-That should be everything. Now, when you create a new topology in mininet and ping between any of the nodes, you should be seeing things happening in the karaf console. 
+Build Odl Shim
+
+```cd odl-shim```
+
+```mvn clean install```
+
+
+## Running
+Start karaf and install the the ODL Shim
+
+```cd odl-shim/karaf/target/assembly/bin```
+
+./karaf
+
+```feature:install odl-netide-rest```
+
+Wait until the following command give an input
+
+```log:display | grep "NetideProvider Session Initiated"```
+
+# Testing
+To test the ODL shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
+In the ```ryu-backend/tests``` folder, a minimal implementation of the Core is provided.
+For instance, to use this shim with the Ryu backend run following sequence of commands:
+
+Run mininet and create the topology
+
+```cd ryu-backend/tests```
+
+```sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6644```
+
+Run the core
+
+```cd ryu-backend/tests```
+
+```python AdvancedProxyCore.py -c CompositionSpecification.xml```
+
+Run Ryu-backend (with OF1.0 apps). Follow the instructions at [https://github.com/fp7-netide/Engine/tree/master/ryu-backend] to install Ryu-Backend.
+
+```cd Engine/ryu-backend```
+
+```ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
+
+To test the demo from mininet console execute ```pingall```. The Results should be 8% dropped (11/12 received)
 
 

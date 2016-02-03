@@ -1,5 +1,3 @@
-/* TODO
-
 package eu.netide.lib.netip.tests;
 
 import eu.netide.lib.netip.*;
@@ -10,7 +8,6 @@ import org.testng.annotations.Test;
 
 import java.util.Arrays;
 
-*/
 /**
  * Tests for creation, serialization and deserialization of OPENFLOW messages.
  * Created by timvi on 10.08.2015.
@@ -643,17 +640,21 @@ public class OpenFlowMessageTests {
  * <p>
  * Payload:
  * - bla (0x62 0x6c 0x61)
- *//*
+ */
+
+import org.testng.annotations.Test;
+
+
+public class OpenFlowMessageTests {
+    /**
+     * Test message serialization.
+     */
 
     private static final byte[] expectedMessage1 = new byte[]
             {
                     0x02, 0x11, 0x00, 0x03, 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2A, 0x62, 0x6c, 0x61
             };
 
-    */
-/**
- * Test message serialization.
- *//*
 
     @Test(testName = "OpenFlowMessage serialization test", suiteName = "OpenFlowMessage Tests")
     public void TestMessageSerialization() {
@@ -672,10 +673,10 @@ public class OpenFlowMessageTests {
         Assert.assertEquals(testBytes, expectedMessage1, "Arrays do not match!");
     }
 
-    */
-/**
- * Test general message parsing.
- *//*
+
+    /**
+     * Test general message parsing.
+     */
 
     @Test(testName = "OpenFlowMessage general parse test", suiteName = "OpenFlowMessage Tests")
     public void TestMessageParsingGeneral() {
@@ -690,10 +691,10 @@ public class OpenFlowMessageTests {
         Assert.assertEquals(testMessage.getPayload(), new byte[]{0x62, 0x6c, 0x61});
     }
 
-    */
-/**
- * Test concrete message parsing.
- *//*
+
+    /**
+     * Test concrete message parsing.
+     */
 
     @Test(testName = "OpenFlowMessage concrete parse test", suiteName = "OpenFlowMessage Tests")
     public void TestMessageParsingConcrete() {
@@ -710,4 +711,3 @@ public class OpenFlowMessageTests {
         Assert.assertEquals(mm.getPayload(), new byte[]{0x62, 0x6c, 0x61});
     }
 }
-*/

@@ -1,96 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>org.opendaylight.openflowplugin</groupId>
-        <artifactId>openflowplugin-parent</artifactId>
-	<version>0.0.6-Helium-SR3</version>
-        <!--<version>1.1.6-Helium-SR3</version>-->
-        <!--  has to be 
-        <version>0.1.0-SNAPSHOT</version>
-        for bleeding edge-->
-        <relativePath>../../openflowplugin</relativePath>
-    </parent>
+<!-- Copyright (c) 2015 NetIDE Consortium and others. All rights reserved. 
+	This program and the accompanying materials are made available under the 
+	terms of the Eclipse Public License v1.0 which accompanies this distribution, 
+	and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<parent>
+		<groupId>org.opendaylight.netide</groupId>
+		<artifactId>netide-parent</artifactId>
+		<version>0.1.0-SNAPSHOT</version>
+		<relativePath>parent</relativePath>
+	</parent>
+	<artifactId>netide-aggregator</artifactId>
 
-    <artifactId>pyretic-odl</artifactId>
-    <packaging>bundle</packaging>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.3.6</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <instructions>
-                        <Embed-Transitive>
-                            false
-                        </Embed-Transitive>
-                        <Bundle-Activator>
-                            org.opendaylight.openflowplugin.pyretic.Activator
-                        </Bundle-Activator>
-                    </instructions>
-                    <manifestLocation>${project.build.directory}/META-INF</manifestLocation>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.controller.model</groupId>
-            <artifactId>model-flow-base</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.controller.model</groupId>
-            <artifactId>model-flow-service</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.controller.model</groupId>
-            <artifactId>model-inventory</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>sal-binding-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.yangtools</groupId>
-            <artifactId>yang-binding</artifactId>
-	    <version>0.6.3-Helium-SR1.1</version> 
-            <!-- has to be
-            <version>0.7.0-SNAPSHOT</version>
-            for bleeding edge -->
-            
-        </dependency>
-        <dependency>
-          <groupId>org.osgi</groupId>
-          <artifactId>org.osgi.core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
-            <version>1.1.1</version>
-        </dependency>
-	<dependency>
-		<groupId>org.apache.commons</groupId>
-		<artifactId>commons-lang3</artifactId>
-		<version>3.3.2</version>
-	</dependency>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>sal</artifactId>
-            <version>0.8.1-SNAPSHOT</version>
-        </dependency>
-	<dependency>
-          <groupId>org.opendaylight.controller</groupId>
-          <artifactId>liblldp</artifactId>
-          <version>0.8.1-SNAPSHOT</version>
-        </dependency>
-    </dependencies>
+	<name>NetIDE</name>
+	<description>The NetIDE aggregator project used to build all the components.</description>
+	<url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+	<packaging>pom</packaging>
+	<modelVersion>4.0.0</modelVersion>
+	<licenses>
+		<license>
+			<name>The Eclipse Public License v1.0 </name>
+			<url>http://www.eclipse.org/legal/epl-v10.html</url>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Alexander J. Leckey</name>
+			<email>alexander.j.leckey@intel.com</email>
+			<organization>Intel</organization>
+			<organizationUrl>http://www.intel.com</organizationUrl>
+		</developer>
+		<developer>
+			<name>Giuseppe Petralia</name>
+			<email>giuseppex.petralia@intel.com</email>
+			<organization>Intel</organization>
+			<organizationUrl>http://www.intel.com</organizationUrl>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:git:ssh://git.opendaylight.org:29418/netide.git</connection>
+		<developerConnection>scm:git:ssh://git.opendaylight.org:29418/netide.git</developerConnection>
+		<url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+		<tag>HEAD</tag>
+	</scm>
+	<prerequisites>
+		<maven>3.1.1</maven>
+	</prerequisites>
+	<modules>
+		<module>parent</module>
+		<module>api</module>
+		<module>config</module>
+		<module>netiplib</module>
+		<module>shim</module>
+		<module>features</module>
+		<module>artifacts</module>
+		<module>karaf</module>
+		<module>impl</module>
+        	<module>netide-it</module>
+	</modules>
+	<!-- DO NOT install or deploy the repo root pom as it's only needed to initiate 
+		a build -->
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-install-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

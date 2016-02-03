@@ -3,7 +3,6 @@ package eu.netide.core.caos;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
-import eu.netide.core.api.RequestResult;
 import eu.netide.core.caos.composition.CompositionSpecification;
 import eu.netide.core.caos.composition.CompositionSpecificationLoader;
 import eu.netide.core.caos.composition.ExecutionFlowStatus;
@@ -123,7 +122,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
                 for (Module module : compositionSpecification.getModules()) {
                     if (!module.getFenceSupport()) {
                         int mId = getBackendManager().getModuleId(module.getId());
-                        getBackendManager().markModuleAsFinished(mId);
+                        getBackendManager().markModuleAllOutstandingRequestsAsFinished(mId);
                     }
                 }
             }

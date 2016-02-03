@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+Copyright NetIDE Consortium
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-netide-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+  <repository>mvn:org.opendaylight.mdsal.model/features-mdsal-model/${mdsal.model.version}/xml/features</repository>
+  <repository>mvn:org.opendaylight.controller/features-mdsal/${controller.mdsal.version}/xml/features</repository>
+  <repository>mvn:org.opendaylight.netconf/features-restconf/${restconf.version}/xml/features</repository>
+  <repository>mvn:org.opendaylight.openflowjava/features-openflowjava/${openflowjava.version}/xml/features</repository>
+  <repository>mvn:org.opendaylight.openflowplugin/features-openflowplugin/${openflowplugin.version}/xml/features</repository>
+  <feature name='odl-netide-api' version='${project.version}' description='OpenDaylight :: netide :: api'>
+    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>
+    <bundle>mvn:org.opendaylight.netide/netide-api/${project.version}</bundle>
+  </feature>
+  
+  <feature name='odl-netide-impl' version='${project.version}' description='OpenDaylight :: netide :: impl'>
+    <feature version='${controller.mdsal.version}'>odl-mdsal-broker</feature>
+    <feature version='${project.version}'>odl-netide-api</feature>
+    <feature version='${mdsal.model.version}'>odl-mdsal-models</feature>  
+    <feature version="${openflowjava.version}">odl-openflowjava-protocol</feature>
+    <feature version="${openflowplugin.version}">odl-openflowplugin-flow-services</feature>
+    <bundle>mvn:org.opendaylight.netide/shim/${project.version}</bundle>
+    <bundle>mvn:org.opendaylight.netide/netide-impl/${project.version}</bundle>
+    <configfile finalname="${configfile.directory}/43-netide.xml">mvn:org.opendaylight.netide/shim-config/${project.version}/xml/config</configfile>
+  </feature>
+  
+  <feature name='odl-netide-rest' version='${project.version}' description='OpenDaylight :: Netide :: REST'>
+    <feature version='${restconf.version}'>odl-restconf</feature>
+    <feature version='${restconf.version}'>odl-mdsal-apidocs</feature>
+    <feature version='${controller.mdsal.version}'>odl-mdsal-xsql</feature>
+    <feature version='${project.version}'>odl-netide-impl</feature>
+  </feature>
+</features>
