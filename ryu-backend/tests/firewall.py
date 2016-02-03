@@ -103,14 +103,14 @@ class Firewall(app_manager.RyuApp):
             self.forwardPacket(msg, 1)  
 
     # Feature reply handler: used to install proactive actions
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, MAIN_DISPATCHER)
     def _switch_features_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
         
-        #if datapath.id == FW_DPID and self.stateless_FW_configured == False:
-        self.Configure_stateless_FW(datapath)
-        self.stateless_FW_configured = True
+        if self.stateless_FW_configured == False:
+            self.Configure_stateless_FW(datapath)
+            self.stateless_FW_configured = True
     
     # PacketIn handler for reactive actions
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
