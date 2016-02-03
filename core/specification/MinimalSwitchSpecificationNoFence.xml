@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CompositionSpecification  xmlns="http://netide.eu/schemas/compositionspecification/v1">
   <Modules>
-    <Module id="SimpleSwitch" loaderIdentification="simple_switch.py" noFenceSupport="false"/>
+    <Module id="SimpleSwitch" loaderIdentification="simple_switch.py" noFenceSupport="true"/>
   </Modules>
   <Composition>
     <ModuleCall module="SimpleSwitch"/>

@@ -104,3 +104,13 @@ Sent.
 ```
 9. Run now Mininet, the shim and finally the backend (Note: If you are using the example composition file, you should use the Ryu `simple_switch.py` application)
  
+
+### Composition specification via karaf
+1. ```config:edit eu.netide.core.caos```
+2.
+```
+config:property-set compositionSpecification "<?xml version=\"1.0\" ?>
+  <CompositionSpecification
+    ....
+```
+3. ```config:update```
