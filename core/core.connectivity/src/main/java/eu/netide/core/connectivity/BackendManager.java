@@ -133,6 +133,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     }
 
     @Override
+    public String getModuleName(Integer moduleId) throws NoSuchElementException {
+        return moduleToNameMappings.get(moduleId);
+    }
+
+    @Override
     public String getBackend(Integer moduleId) {
         if (moduleToBackendMappings.containsKey(moduleId)) {
             return moduleToBackendMappings.get(moduleId);

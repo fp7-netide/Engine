@@ -70,6 +70,12 @@ public interface IBackendManager {
     Stream<String> getModules();
 
     /**
+     * Returns the name for a module id
+     * @return name of the module
+     */
+    String getModuleName(Integer moduleId) throws NoSuchElementException;
+
+    /**
      * Gets the backend id for a given module id.
      *
      * @param moduleId the module id.
