@@ -6,8 +6,6 @@ package eu.netide.lib.netip;
  */
 public class FenceMessage extends Message {
 
-    private String payloadString;
-
     public FenceMessage() {
         super(new MessageHeader(), new byte[0]);
         header.setMessageType(MessageType.FENCE );
@@ -24,6 +22,6 @@ public class FenceMessage extends Message {
 
     @Override
     public byte[] getPayload() {
-        return payloadString.getBytes();
+        return payload;
     }
 }
