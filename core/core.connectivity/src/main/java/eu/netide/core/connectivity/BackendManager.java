@@ -233,6 +233,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                         int oldid = getModuleId(moduleName);
                         logger.warn("Module with name %s already exists (id: %d), using newer module", moduleName, oldid);
                         moduleToNameMappings.put(oldid, "old_" + moduleName);
+                        markModuleAllOutstandingRequestsAsFinished(oldid);
                     }
 
                     moduleToNameMappings.put(moduleId, moduleName);
