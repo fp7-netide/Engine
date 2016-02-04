@@ -28,6 +28,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private List<String> backendIds = new ArrayList<>();
     private Map<Integer, String> moduleToBackendMappings = new HashMap<>();
     private Map<Integer, String> moduleToNameMappings = new HashMap<>();
+    private Map<Integer, Long> moduleLastMessage = new HashMap<>();
 
     private final ExecutorService pool = Executors.newCachedThreadPool();
 
@@ -146,6 +147,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         }
     }
 
+    @Override
+    public Long getLastMessageTime(Integer moduleId) {
+        return moduleLastMessage.get(moduleId);
+    }
+
     public int getModuleId(String moduleName) {
         return moduleToNameMappings.keySet().stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
     }
@@ -175,6 +181,8 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             return;
         }
         int id = message.getHeader().getModuleId();
+
+        moduleLastMessage.put(id, System.currentTimeMillis());
 
         logger.info("Data received from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'.");
 
@@ -214,28 +222,29 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     }
                     // get new module ID
                     ModuleAnnouncementMessage mam = (ModuleAnnouncementMessage) message;
-                    logger.info("Received ModuleAnnouncement for module '" + mam.getModuleName() + "' from backend '" + backendId + "'. Calculating ID...");
+                    String moduleName = mam.getModuleName();
+                    logger.info("Received ModuleAnnouncement for module '" + moduleName + "' from backend '" + backendId + "'. Calculating ID...");
                     int moduleId = random.nextInt(1000); // for easier typing in the emulator, restrict to smaller numbers
                     while (moduleToNameMappings.keySet().contains(moduleId) || moduleId < 1) {
                         moduleId = random.nextInt(1000);
                     }
 
-                    if (moduleToNameMappings.values().contains(mam.getModuleName())) {
-                        int oldid = getModuleId(mam.getModuleName());
-                        logger.warn("Module with name %s already exists (id: %d), using newer module", mam.getModuleName(), oldid);
-                        moduleToNameMappings.remove(oldid);
+                    if (moduleToNameMappings.values().contains(moduleName)) {
+                        int oldid = getModuleId(moduleName);
+                        logger.warn("Module with name %s already exists (id: %d), using newer module", moduleName, oldid);
+                        moduleToNameMappings.put(oldid, "old_" + moduleName);
                     }
 
-                    moduleToNameMappings.put(moduleId, mam.getModuleName());
+                    moduleToNameMappings.put(moduleId, moduleName);
                     moduleToBackendMappings.put(moduleId, backendId);
                     // send acknowledge back
                     ModuleAcknowledgeMessage ack = new ModuleAcknowledgeMessage();
-                    ack.setModuleName(mam.getModuleName());
+                    ack.setModuleName(moduleName);
                     ack.setHeader(NetIPUtils.StubHeaderFromPayload(ack.getPayload()));
                     ack.getHeader().setMessageType(MessageType.MODULE_ACKNOWLEDGE);
                     ack.getHeader().setModuleId(moduleId);
                     connector.SendData(ack.toByteRepresentation(), backendId);
-                    logger.info("Mapped module '" + mam.getModuleName() + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
+                    logger.info("Mapped module '" + moduleName + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
                 } else if (message instanceof ManagementMessage) {
                     logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
                     connector.SendData(message.toByteRepresentation(), Constants.SHIM);

@@ -83,6 +83,14 @@ public interface IBackendManager {
      */
     String getBackend(Integer moduleId) throws NoSuchElementException;
 
+
+    /**
+     * Get backend last message time to know if it is still alive
+     * @param moduleId the module id.
+     * @return unix time stamp.
+     */
+    Long getLastMessageTime(Integer moduleId);
+
     /**
      * Gets the moduleId from a given module name.
      *

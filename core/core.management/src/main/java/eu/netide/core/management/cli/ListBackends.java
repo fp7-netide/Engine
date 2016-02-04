@@ -18,14 +18,19 @@ public class ListBackends extends OsgiCommandSupport {
     protected Object doExecute() throws Exception {
         IBackendManager backendManager = getService(IBackendManager.class);
 
-        System.out.format("%5s %20s %20s\n", "Id", "Name", "Backend");
+        System.out.format("%5s %20s %20s %20s\n", "Id", "Name", "Backend", "Last message (s ago)");
+        long now = System.currentTimeMillis();
         backendManager.getModuleIds().forEach(i -> {
                     String backendname = backendManager.getBackend(i);
                     String moduleName = backendManager.getModuleName(i);
-            System.out.format("%5d %20s %20s\n", i, moduleName, backendname);
+                    String lastMessage;
+                    if (backendManager.getLastMessageTime(i) != null)
+                        lastMessage = String.format("%.2f", (now - backendManager.getLastMessageTime(i)) / 1000f);
+                    else
+                        lastMessage = "-";
+                    System.out.format("%5d %20s %20s %20s\n", i, moduleName, backendname, lastMessage);
 
                 }
-
         );
         return null;
     }
