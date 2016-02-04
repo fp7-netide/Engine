@@ -30,8 +30,12 @@
 
     <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
         <command>
-            <action class="eu.netide.core.management.cli.ListBackends" />
+            <action class="eu.netide.core.management.cli.ListBackends"/>
+
+        </command>
+        <command>
             <action class="eu.netide.core.management.cli.LoadComposition"/>
+            <!--<completer class="org.apache.karaf.shell.console.completer.FileCompleter"/>-->
         </command>
     </command-bundle>
 

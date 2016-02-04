@@ -1,6 +1,7 @@
 package eu.netide.core.management.cli;
 
 import eu.netide.core.api.IBackendManager;
+import jline.console.completer.FileNameCompleter;
 import org.apache.karaf.shell.commands.Command;
 import org.apache.karaf.shell.console.OsgiCommandSupport;
 
@@ -24,6 +25,7 @@ public class ListBackends extends OsgiCommandSupport {
             System.out.format("%5d %20s %20s\n", i, moduleName, backendname);
 
                 }
+
         );
         return null;
     }
