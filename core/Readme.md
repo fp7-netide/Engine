@@ -106,11 +106,14 @@ Sent.
  
 
 ### Composition specification via karaf
-1. ```config:edit eu.netide.core.caos```
-2.
 ```
-config:property-set compositionSpecification "<?xml version=\"1.0\" ?>
-  <CompositionSpecification
-    ....
+karaf@root()>  netide:loadcomposition /path/to/composition
 ```
-3. ```config:update```
+ 
+### Show connected backends/modules
+```
+  karaf@root()> netide:listmodules 
+     Id                 Name              Backend Last message (s ago)
+    797         SimpleSwitch    backend-ryu-14172                    -
+    238    backend-ryu-14172    backend-ryu-14172                 4,66
+  ```
