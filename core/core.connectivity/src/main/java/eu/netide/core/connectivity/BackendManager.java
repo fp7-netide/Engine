@@ -219,6 +219,13 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     while (moduleToNameMappings.keySet().contains(moduleId) || moduleId < 1) {
                         moduleId = random.nextInt(1000);
                     }
+
+                    if (moduleToNameMappings.values().contains(mam.getModuleName())) {
+                        int oldid = getModuleId(mam.getModuleName());
+                        logger.warn("Module with name %s already exists (id: %d), using newer module", mam.getModuleName(), oldid);
+                        moduleToNameMappings.remove(oldid);
+                    }
+
                     moduleToNameMappings.put(moduleId, mam.getModuleName());
                     moduleToBackendMappings.put(moduleId, backendId);
                     // send acknowledge back
