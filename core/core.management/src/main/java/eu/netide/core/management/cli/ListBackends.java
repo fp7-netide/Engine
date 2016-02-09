@@ -11,7 +11,7 @@ import java.util.function.Consumer;
  * Created by arne on 04.02.16.
  */
 
-@Command(scope = "netide", name = "listModules", description = "Says hello")
+@Command(scope = "netide", name = "listModules", description = "List connected/known backend")
 public class ListBackends extends OsgiCommandSupport {
 
     @Override
