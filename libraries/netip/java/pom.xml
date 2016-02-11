@@ -15,44 +15,44 @@
     <name>NetIP Library</name>
     <description>Java Library for handling the NetIDE intermediate protocol.</description>
     <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
-	<licenses>
-	  <license>
-	    <name>The Eclipse Public License v1.0 </name>
-	    <url>http://www.eclipse.org/legal/epl-v10.html</url>
-	  </license>
-	</licenses>
+    <licenses>
+        <license>
+            <name>The Eclipse Public License v1.0 </name>
+            <url>http://www.eclipse.org/legal/epl-v10.html</url>
+        </license>
+    </licenses>
     <developers>
-      <developer>
-        <name>Arne Schwabe</name>
-        <email>schwabe@uni-paderborn.de</email>
-        <organization>University of Paderborn</organization>
-        <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/</organizationUrl>
-      </developer>
-      <developer>
-        <name>Tim Vinkemeier</name>
-        <email>Vinkemeier@uni-paderborn.de</email>
-        <organization>University of Paderborn</organization>
-        <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/</organizationUrl>
-      </developer>
+        <developer>
+            <name>Arne Schwabe</name>
+            <email>schwabe@uni-paderborn.de</email>
+            <organization>University of Paderborn</organization>
+            <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/</organizationUrl>
+        </developer>
+        <developer>
+            <name>Tim Vinkemeier</name>
+            <email>Vinkemeier@uni-paderborn.de</email>
+            <organization>University of Paderborn</organization>
+            <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/</organizationUrl>
+        </developer>
     </developers>
     <scm>
-      <connection>scm:git:ssh://github.com:fp7-netide/Engine.git</connection>
-      <developerConnection>scm:git:ssh://github.com:fp7-netide/Engine.git</developerConnection>
-      <url>http://www.netide.eu</url>
-      <tag>HEAD</tag>
+        <connection>scm:git:ssh://github.com:fp7-netide/Engine.git</connection>
+        <developerConnection>scm:git:ssh://github.com:fp7-netide/Engine.git</developerConnection>
+        <url>http://www.netide.eu</url>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
-      <snapshotRepository>
-        <id>ossrh</id>
-        <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-      </snapshotRepository>
-      <repository>
-        <id>ossrh</id>
-        <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-      </repository>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
     </distributionManagement>
-  
+
     <dependencies>
         <dependency>
             <groupId>org.osgi</groupId>
@@ -69,14 +69,14 @@
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>openflowj</artifactId>
-            <version>0.4.0.onos</version>
-            <scope>compile</scope>
+            <version>0.9.0.onos</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.javatuples</groupId>
             <artifactId>javatuples</artifactId>
             <version>1.2</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -100,10 +100,39 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>
-                            eu.netide.lib.netip;version=${project.version},org.projectfloodlight.openflow,org.projectfloodlight.openflow.annotations,org.projectfloodlight.openflow.exceptions,org.projectfloodlight.openflow.protocol,org.projectfloodlight.openflow.types,org.projectfloodlight.openflow.util,org.projectfloodlight.openflow.protocol.match,org.projectfloodlight.openflow.protocol.action,org.projectfloodlight.openflow.protocol.actionid,org.projectfloodlight.openflow.protocol.bsntlv,org.projectfloodlight.openflow.protocol.errormsg,org.projectfloodlight.openflow.protocol.instruction,org.projectfloodlight.openflow.protocol.instructionid,org.projectfloodlight.openflow.protocol.meterband,org.projectfloodlight.openflow.protocol.oxm,org.projectfloodlight.openflow.protocol.queueprop,org.projectfloodlight.openflow.protocol.ver10,org.projectfloodlight.openflow.protocol.ver11,org.projectfloodlight.openflow.protocol.ver12,org.projectfloodlight.openflow.protocol.ver13,org.projectfloodlight.openflow.protocol.ver14
+                            eu.netide.lib.netip;
+                            uses:="org.projectfloodlight.openflow.protocol,
+                            org.projectfloodlight.openflow.annotations,
+                            org.projectfloodlight.openflow.exceptions,
+                            org.projectfloodlight.openflow.types,
+                            org.projectfloodlight.openflow.util,
+                            org.javatuples";
+                            version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.framework
+                            org.osgi.framework,
+                            org.javatuples,
+                            org.jboss.netty.buffer;version="[3.9,4)",
+                            org.projectfloodlight.openflow.annotations;version="[1.3,2)",
+                            org.projectfloodlight.openflow.exceptions,
+                            org.projectfloodlight.openflow.protocol;version="[1.3,2)",
+                            org.projectfloodlight.openflow.types,
+                            org.projectfloodlight.openflow.util,
+                            org.projectfloodlight.openflow.protocol.match,
+                            org.projectfloodlight.openflow.protocol.action,
+                            org.projectfloodlight.openflow.protocol.actionid,
+                            org.projectfloodlight.openflow.protocol.bsntlv,
+                            org.projectfloodlight.openflow.protocol.errormsg,
+                            org.projectfloodlight.openflow.protocol.instruction,
+                            org.projectfloodlight.openflow.protocol.instructionid,
+                            org.projectfloodlight.openflow.protocol.meterband,
+                            org.projectfloodlight.openflow.protocol.oxm,
+                            org.projectfloodlight.openflow.protocol.queueprop,
+                            org.projectfloodlight.openflow.protocol.ver10,
+                            org.projectfloodlight.openflow.protocol.ver11,
+                            org.projectfloodlight.openflow.protocol.ver12,
+                            org.projectfloodlight.openflow.protocol.ver13,
+                            org.projectfloodlight.openflow.protocol.ver14
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
@@ -111,60 +140,60 @@
                 </configuration>
             </plugin>
             <!-- Source plugin to attached code sources -->
-			<plugin>
-			  <groupId>org.apache.maven.plugins</groupId>
-			  <artifactId>maven-source-plugin</artifactId>
-			  <version>2.2.1</version>
-			  <executions>
-			    <execution>
-			      <id>attach-sources</id>
-			      <goals>
-			        <goal>jar-no-fork</goal>
-			      </goals>
-			    </execution>
-			  </executions>
-			</plugin>
-			<!-- Javadoc plugin for docs -->
-			<plugin>
-			  <groupId>org.apache.maven.plugins</groupId>
-			  <artifactId>maven-javadoc-plugin</artifactId>
-			  <version>2.9.1</version>
-			  <executions>
-			    <execution>
-			      <id>attach-javadocs</id>
-			      <goals>
-			        <goal>jar</goal>
-			      </goals>
-			    </execution>
-			  </executions>
-			</plugin>
-			<!-- GPG plugin for signing -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>1.5</version>
-				<executions>
-			 	  <execution>
-			    	<id>sign-artifacts</id>
-			    	<phase>verify</phase>
-			    	<goals>
-			          <goal>sign</goal>
-			    	</goals>
-			    </execution>
-			  </executions>
-			</plugin>
-			<!-- Nexus Staging Maven plugin for deploying snapshots -->
-			<plugin>
-			  <groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-			  <version>1.6.3</version>
-			  <extensions>true</extensions>
-			  <configuration>
-			    <serverId>ossrh</serverId>
-			    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-			    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-			  </configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Javadoc plugin for docs -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- GPG plugin for signing -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Nexus Staging Maven plugin for deploying snapshots -->
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
         </plugins>
 
         <pluginManagement>
