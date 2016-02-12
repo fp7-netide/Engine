@@ -111,8 +111,6 @@ public class ZeroMQBaseConnector implements Runnable {
                         coreListener.onHelloCoreMessage(((HelloMessage) msg));
                     } else if (msg instanceof OpenFlowMessage) {
                         coreListener.onOpenFlowCoreMessage(((OpenFlowMessage) msg));
-                    } else if (msg instanceof ModuleAnnouncementMessage) {
-                    	coreListener.onModuleAnnouncementMessage((ModuleAnnouncementMessage) msg);
                     }
                 }
             }

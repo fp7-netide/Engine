@@ -228,7 +228,7 @@ public class Shim implements IFloodlightModule, IOFMessageListener, ICoreListene
 		OpenFlowMessage msg = new OpenFlowMessage();
 		msg.getHeader().setDatapathId(sw.getId().getLong());
 		msg.getHeader().setTransactionId((int) ofmsg.getXid());
-		msg.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_2);
+		msg.getHeader().setNetIDEProtocolVersion(NETIDE_VERSION);
 		msg.getHeader().setModuleId(moduleId);
 		msg.setOfMessage(ofmsg);
 		logger.debug("Sending OF Message to Core " + msg.getOfMessage().getType().toString());
@@ -350,18 +350,6 @@ public class Shim implements IFloodlightModule, IOFMessageListener, ICoreListene
 			logger.debug("Sent hello ack to backend "+backendId+" with protocol(s)"+supportedProtocols);
 			sendFeatureRequest(backendId);
 		}
-	}
-	private int modId = 42;
-	@Override
-	public void onModuleAnnouncementMessage(ModuleAnnouncementMessage msg){
-		logger.info("Received Module Announcement message from "+msg.getModuleName());
-		ModuleAcknowledgeMessage ack = new ModuleAcknowledgeMessage();
-		ack.getHeader().setPayloadLength((short) msg.getPayload().length);
-		ack.setModuleName(msg.getModuleName());
-		ack.getHeader().setModuleId(modId);
-		logger.info("Sent ack to module "+msg.getModuleName()+" with ID "+modId+".");
-		coreConnector.sendData(ack.toByteRepresentation());
-		modId++;
 	}
 
 }

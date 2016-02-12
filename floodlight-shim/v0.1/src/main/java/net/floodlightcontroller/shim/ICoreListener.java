@@ -8,13 +8,7 @@
 package net.floodlightcontroller.shim;
 
 import eu.netide.lib.netip.HelloMessage;
-import eu.netide.lib.netip.ModuleAnnouncementMessage;
 import eu.netide.lib.netip.OpenFlowMessage;
-import eu.netide.lib.netip.Protocol;
-import eu.netide.lib.netip.ProtocolVersions;
-import java.util.List;
-import org.javatuples.Pair;
-import org.projectfloodlight.openflow.protocol.OFMessage;
 
 /**
  * @author giuseppex.petralia@intel.com
@@ -25,7 +19,5 @@ public interface ICoreListener {
     void onHelloCoreMessage(HelloMessage msg);
 
 	void onOpenFlowCoreMessage(OpenFlowMessage msg);
-
-	void onModuleAnnouncementMessage(ModuleAnnouncementMessage msg);
 
 }
