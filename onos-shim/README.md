@@ -1,6 +1,6 @@
-# ONOS Garbage Collector
+# ONOS shim layer
 
- The ONOS garbage collector is a network application that permits the intelligent cleaning of switches flow tables.
+The ONOS shim layer is implemented as a bundle for the [ONOS controller](http://onosproject.org/) by using the libraries included in its [source code](https://wiki.onosproject.org/display/ONOS/Downloads).  
  
 ## Installation
 
