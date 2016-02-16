@@ -10,14 +10,14 @@ class MyTopo( Topo ):
         Topo.__init__( self )
 
         #F irewall
-        s11 = self.addSwitch( 's11', dpid = '000000000000000A', protocols = 'OpenFlow10')
+        s11 = self.addSwitch( 's11', dpid = '000000000000000A')
         #s12 = self.addSwitch( 's12', dpid = '000000000000000B', protocols = 'OpenFlow10')
         #s13 = self.addSwitch( 's13', dpid = '000000000000000C')
 
         #Learning Switches
-        s21 = self.addSwitch( 's21', dpid = '0000000000000001', protocols = 'OpenFlow10')
-        s22 = self.addSwitch( 's22', dpid = '0000000000000002', protocols = 'OpenFlow10')
-        s23 = self.addSwitch( 's23', dpid = '0000000000000003', protocols = 'OpenFlow10')
+        s21 = self.addSwitch( 's21', dpid = '0000000000000001')
+        s22 = self.addSwitch( 's22', dpid = '0000000000000002')
+        s23 = self.addSwitch( 's23', dpid = '0000000000000003')
 
         #Internal hosts
         alice = self.addHost( 'alice', ip='10.0.0.1', mac='0000000000E1')
