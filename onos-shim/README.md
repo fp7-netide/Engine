@@ -40,7 +40,7 @@ $ cd onos-shim && mvn clean install -DskipTests
 
 - Mininet VM version >= 2.2.0 is required. Please refer to this [guide](http://mininet.org/download/#option-1-mininet-vm-installation-easy-recommended).
 
-- The core requires the Java NetIP library in your local Maven repository for a successful build. Therefore, go to the [libraries/netip/java](../lib/netip/java) directory and run `mvn clean install` before continuing.
+- The ONOS shim requires the Java NetIP library in your local Maven repository for a successful build. Therefore, go to the [libraries/netip/java](../lib/netip/java) directory and run `mvn clean install` before continuing.
 
 ### 2. Set up your test environment
 
@@ -59,11 +59,13 @@ Additional python packages may be required in order to succefully complete the i
 
 #### 2.2 ONOS setup
 
-If you successfully complete the procedure in [ONOS Prerequisites](#step-3-create-a-custom-onos-cell), now you can start ONOS in your local system with this command:
+ONOS can be run on your local machine or on a VM. If you successfully complete the procedure in [ONOS Prerequisites](#step-2-onos-prerequisites), now you can start ONOS in your local system with this command:
 
 ```
 $ ok clean
 ```
+
+or you can access the VM where ONOS is deployed.
 
 Once ONOS is running, the configuration of FlowRuleManager must be modified in order to permit network rules that are not installed directly by ONOS. The following commands must be issued in the Karaf shell of ONOS:
 
@@ -71,8 +73,28 @@ Once ONOS is running, the configuration of FlowRuleManager must be modified in o
 onos> onos:cfg set org.onosproject.net.flow.impl.FlowRuleManager allowExtraneousRules true
 ```
 
+#### 2.3 ONOS shim installation
+
+In order to install the ONOS shim, the following command is required in the `onos-shim` folder:
+
+```$ onos-app $OC1 install target/onos-app-shim-1.0.0-SNAPSHOT.oar```
+
+Where `$OC1` represents the ONOS IP address that should be set in the `cell` file, as described in [Create a custom ONOS cell](#step-3-create-a-custom-onos-cell)
+
+In order to modify the CORE address (default is *localhost:5555*), the following commands can be used in the Karaf shell of ONOS:
+
+```
+onos> config:edit eu.netide.shim.ShimLayer
+
+onos> property-set coreAddress *CORE IP*
+
+onos> property-set corePort *CORE PORT*
+
+onos> config:update
+```
+
 ### 3. Running
-Within the  ```ryu-backend``` folder, run the following command to use the Ryu backend with the, e.g., ```simple_switch ``` application on top of it:
+The ONOS shim application can be tested with the `ryu-backend`. In the ```ryu-backend``` folder, run the following command to use the Ryu backend with the, e.g., ```simple_switch ``` application on top of it:
 
 ``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 
@@ -83,26 +105,11 @@ Finally, ```simple_switch``` is a simple L2 learning switch application and ```f
 
 ### 4. Testing
 
-To test the Ryu backend it is necessary to run one of the shim layers provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
-In the ```tests``` folder, a minimal implementation of the Core is provided.
-For instance, to use this backend with the Ryu shim run following sequence of commands:
+To test the ONOS shim it is necessary to run one of the backend provided in this Github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
+In the ```ryu-backend/tests``` folder, a minimal implementation of the Core is provided.
+For instance, to use this shim with the Ryu backend run following sequence of commands:
 ```
 $ python AdvancedProxyCore.py -c CompositionSpecification.xml
-
-$ onos-app $OC1 install target/onos-app-shim-1.0.0-SNAPSHOT.oar
-
-```
-
-In order to modify the CORE address (default is *localhost:5555*), the following commands can be used:
-
-```
-onos> config:edit eu.netide.shim.ShimLayer
-
-onos> property-set coreAddress *CORE IP*
-
-onos> property-set corePort *CORE PORT*
-
-onos> config:update
 ```
 
 Now the ONOS shim can be activated:
@@ -117,7 +124,7 @@ A network emulator such as Mininet can be used to test the software. In the ```t
 ```
 $ sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=IP_ADDRESS,port=6633
 ```
-Where IP_ADDRESS is the IP address of the machine where the Ryu shim layer is running. The IP address specification is not needed when Ryu and Mininet are running on the same machine. Add options ```--switch ovs,protocols=OpenFlow13``` if you want to use the OpenFlow-1.3 protocol and test applications.
+Where IP_ADDRESS is the IP address of the machine where the ONOS shim layer is running. The IP address specification is not needed when Ryu and Mininet are running on the same machine. Add options ```--switch ovs,protocols=OpenFlow13``` if you want to use the OpenFlow-1.3 protocol and test applications.
 
 This script configures the following topology:
 
@@ -138,11 +145,9 @@ Once both Core and Ryu shim are running, the backend and OpenFlow 1.0 network ap
 
 ``` $ ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 
-or
+If you want to test the OpenFlow 1.3 applications:
 
 ``` $ ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch_13.py tests/firewall_13.py```
-
-if you want to test the OpenFlow 1.3 applications.
 
 The composition configuration defined in ```CompositionSpecification.xml``` loaded by the ```AdvancedProxyCore.py``` assigns switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
 
@@ -161,13 +166,12 @@ See the LICENSE file.
 
 ## ChangeLog
 
-onos-shim: 2015-06-15 Mon Matteo Gerola <matteo.gerola@create-net.org>
-
-  * First version of the implementation of the shim for the ONOS platform. It supports ```packet_in```, ```packet_out```, ```flow_mod``` and ```LLDP``` packets.
-  
 onos-shim: 2016-02-16 Tue Antonio Marsico <antonio.marsico@create-net.org>
   
   * Improved ONOS shim with: 
     * NetIP library support
     * OF 1.3
 
+onos-shim: 2015-06-15 Mon Matteo Gerola <matteo.gerola@create-net.org>
+
+  * First version of the implementation of the shim for the ONOS platform. It supports ```packet_in```, ```packet_out```, ```flow_mod``` and ```LLDP``` packets.
