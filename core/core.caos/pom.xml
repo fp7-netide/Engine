@@ -103,7 +103,7 @@
                             eu.netide.core.caos;version=${project.version},eu.netide.core.caos.composition;version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip,org.slf4j,org.projectfloodlight.openflow,org.projectfloodlight.openflow.annotations,org.projectfloodlight.openflow.exceptions,org.projectfloodlight.openflow.protocol,org.projectfloodlight.openflow.types,org.projectfloodlight.openflow.util,org.projectfloodlight.openflow.protocol.match,org.projectfloodlight.openflow.protocol.action,org.projectfloodlight.openflow.protocol.actionid
+                            eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip,org.slf4j,org.projectfloodlight.openflow.annotations,org.projectfloodlight.openflow.exceptions,org.projectfloodlight.openflow.protocol,org.projectfloodlight.openflow.types,org.projectfloodlight.openflow.util,org.projectfloodlight.openflow.protocol.match,org.projectfloodlight.openflow.protocol.action,org.projectfloodlight.openflow.protocol.actionid
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>

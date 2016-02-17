@@ -17,6 +17,8 @@
         <bundle>mvn:eu.netide.core/core.logpub/1.0.1.0-SNAPSHOT</bundle>
     </feature>
     <feature name="netide-core">
+        <bundle>wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"</bundle>
+        <bundle>mvn:io.netty/netty/3.9.2.Final</bundle>
         <feature>netide-core-api</feature>
         <feature>netide-core-connectivity</feature>
         <feature>netide-core-logpub</feature>
