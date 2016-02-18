@@ -47,7 +47,7 @@
                                     <classifier>features</classifier>
                                 </artifact>-->
                                 <artifact>
-                                    <file>featuresv3.xml</file>
+                                    <file>features.xml</file>
                                     <type>xml</type>
                                     <classifier>features</classifier>
                                 </artifact>
