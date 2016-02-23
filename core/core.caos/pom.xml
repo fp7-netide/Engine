@@ -11,6 +11,12 @@
     <name>core.caos Bundle</name>
     <description>core.caos OSGi bundle project.</description>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 <!--    <parent>
         <artifactId>core</artifactId>
         <version>1.0.1.0-SNAPSHOT</version>
