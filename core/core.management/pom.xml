@@ -12,6 +12,13 @@
     <name>core.management Bundle</name>
     <description>core.management OSGi bundle project.</description>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
     <dependencies>
         <dependency>
             <groupId>eu.netide.core</groupId>
