@@ -10,13 +10,19 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>eu.netide.lib</groupId>
     <artifactId>netip</artifactId>
-    <version>1.0.1.0-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>NetIP Library</name>
     <description>Java Library for handling the NetIDE intermediate protocol.
     </description>
     <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <openflowj.version>0.9.1.onos</openflowj.version>
+    </properties>
+
     <licenses>
         <license>
             <name>The Eclipse Public License v1.0</name>
@@ -65,12 +71,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>5.0.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>6.9.4</version>
@@ -79,7 +79,7 @@
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>openflowj</artifactId>
-            <version>0.9.1.onos</version>
+            <version>${openflowj.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -119,10 +119,9 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
-                        <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>
-                            eu.netide.lib.netip.*;
-                            org.projectfloodlight.openflow.*;
+                            eu.netide.lib.netip.*,
+                            org.projectfloodlight.openflow.*,
                         </Export-Package>
                         <Import-Package>
                             org.osgi.framework
@@ -200,8 +199,6 @@
             </plugins>
         </pluginManagement>
     </build>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
+
 
 </project>

@@ -9,13 +9,15 @@
         <!--<bundle>-->
             <!--wrap:mvn:org.onosproject/openflowj/0.9.1.onos$Bundle-SymbolicName=org.onosproject.openflowj&amp;Bundle-Version=0.9.1&amp;Export-Package=org.projectfloodlight.openflow.*;version="0.9.1"-->
         <!--</bundle>-->
-        <bundle>mvn:io.netty/netty/3.9.2.Final</bundle>
+        <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
+        <bundle>mvn:com.google.guava/guava/18.0</bundle>
     </feature>
 
 
     <feature name="core-api" version="@FEATURE-VERSION">
         <feature>core-thirdparty-dependencies</feature>
         <bundle>mvn:eu.netide.lib/netip/@CORE-VERSION</bundle>
+        <bundle>mvn:eu.netide.core/core.api/@CORE-VERSION</bundle>
     </feature>
 
     <feature name="core-caos" version="@FEATURE-VERSION">
