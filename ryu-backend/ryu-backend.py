@@ -124,13 +124,13 @@ class BackendDatapath(controller.Datapath):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
+        self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
 
-        if msg:
+        if msg and self.netide_xid is not 0 :
             ev = ofp_event.ofp_msg_to_ev(msg)
             event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
-            self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
             for key, value in self.channel.running_modules.iteritems():
                 if value == module_id and key in event_observers:
                     module_brick = ryu.base.app_manager.lookup_service_brick(key)
