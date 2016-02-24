@@ -136,9 +136,7 @@ class BackendDatapath(controller.Datapath):
                     module_brick = ryu.base.app_manager.lookup_service_brick(key)
                     module_brick_handlers = module_brick.get_handlers(ev)
                     for handler in module_brick_handlers:
-                        print "START calling the handler from backend", ev
                         handler(ev)
-                        print "END calling the handler from backend"
                     break
 
             # Sending the FENCE message to the Core only if self.netide_xid is not 0

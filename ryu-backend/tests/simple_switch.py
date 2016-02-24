@@ -54,7 +54,6 @@ class SimpleSwitch(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
         ofproto = datapath.ofproto
-        print "SIMPLE SWITCH packet in from dpid: ",datapath.id," msg:",  msg
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocol(ethernet.ethernet)
 
