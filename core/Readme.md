@@ -71,7 +71,7 @@ If we want to include some composition specification, then we have to follow som
 3. Go to the *tools/emulator* inside the *core* directory and execute `mvn package`. Then, back to *core* and run `mvn clean install` again. This will create the emulator package, which lets the user introduce a composition specification file defined in *.xml.
 4. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html). (we use v3.0.3 since both ODL and ONOS use that same version)
 5. Start Karaf by going into the downloaded folder and running `bin/karaf`.
-6. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core/1.0.1.0-SNAPSHOT/xml/features` and then running `feature:install netide-core`.
+6. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core.features/1.0.1.0-SNAPSHOT/xml/features` and then running `feature:install netide-core`.
 	- The output shold indicate that the core is waiting for the shim to connect.
 7. Copy the composition file into the *tools/emulator/target* folder in the *core* (the *xml should be in the same folder than the generated *.jar). There is an example called `MinimalSpecification.xml` in the *tools* folder, which defines a single switch application module. 
 8. Go to *tools/emulator/target* and execute the emulator package to send the composition file to the running core `java -jar emulator-1.0-jar-with-dependencies.jar`. The emulator will request you to enter some parameters, an example is shown below:
