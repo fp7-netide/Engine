@@ -127,7 +127,7 @@ class BackendDatapath(controller.Datapath):
         self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
 
-        if msg and self.netide_xid is not 0 :
+        if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
@@ -141,9 +141,10 @@ class BackendDatapath(controller.Datapath):
                         print "END calling the handler from backend"
                     break
 
-            # Sending the FENCE message to the Core
-            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
-            self.channel.socket.send(msg_to_send)
+            # Sending the FENCE message to the Core only if self.netide_xid is not 0
+            if self.netide_xid is not 0:
+                msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
+                self.channel.socket.send(msg_to_send)
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
