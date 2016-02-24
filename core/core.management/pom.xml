@@ -89,6 +89,10 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
+                        <Import-Package>
+                            eu.netide.core.api,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
