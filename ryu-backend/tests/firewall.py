@@ -118,7 +118,6 @@ class Firewall(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
 
-        print "FIREWALL packet in from dpid: ",datapath.id," msg:",  msg
         pkt = packet.Packet(msg.data)
         self.Configure_stateful_FW(msg)
 

@@ -48,7 +48,6 @@ class Firewall(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
-        print "START: firewall switch features handler: ", ev
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -68,8 +67,6 @@ class Firewall(app_manager.RyuApp):
         if  self.stateless_FW_configured == False:
             self.Configure_stateless_FW(datapath)
             self.stateless_FW_configured = True
-
-        print "END: firewall switch features handler"
 
     def add_flow(self, datapath, priority, match, actions, idle_to=0, hard_to=0, buffer_id=None):
         ofproto = datapath.ofproto
@@ -153,8 +150,6 @@ class Firewall(app_manager.RyuApp):
     # PacketIn handler for reactive actions
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        print "START: firewall packet in handler ", ev
         msg = ev.msg
         datapath = msg.datapath
         self.Configure_stateful_FW(msg)
-        print "END: firewall packet in handler"
