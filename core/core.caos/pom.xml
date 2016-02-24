@@ -9,7 +9,7 @@
     <parent>
         <artifactId>core</artifactId>
         <groupId>eu.netide.core</groupId>
-        <version>1.0.1.0-SNAPSHOT</version>
+        <version>1.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -27,6 +27,12 @@
     </licenses>
 
     <dependencies>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>onlab-misc</artifactId>
+            <version>${onos.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
@@ -70,12 +76,7 @@
             <version>1.7.12</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onlab-misc</artifactId>
-            <version>1.2.1</version>
-            <scope>compile</scope>
-        </dependency>
+
         <dependency>
             <groupId>org.javatuples</groupId>
             <artifactId>javatuples</artifactId>
@@ -106,33 +107,22 @@
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>eu.netide.core.caos.Activator
                         </Bundle-Activator>
-                        <Export-Package>
-                            eu.netide.core.caos;version=${project.version},eu.netide.core.caos.composition;version=${project.version}
-                        </Export-Package>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
                         <Import-Package>
                             org.osgi.framework,
                             eu.netide.core.api,
+                            eu.netide.lib.netip,
                             javax.xml.bind,
                             javax.xml.bind.helpers,
                             org.slf4j,
-                            eu.netide.lib.netip
+                            org.projectfloodlight.openflow.*
                         </Import-Package>
-                        <Embed-Dependency>*;scope=compile|runtime
-                        </Embed-Dependency>
-                        <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+
     </build>
 
 </project>
