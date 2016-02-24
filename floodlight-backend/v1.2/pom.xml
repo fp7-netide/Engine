@@ -39,9 +39,9 @@
          <dependency>
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
-            <version>1.0.0.0</version>
+            <version>1.0.0.0-SNAPSHOT</version>
             <scope>system</scope>
-            <systemPath>${basedir}/lib/netip-1.0.0.0.jar</systemPath>
+            <systemPath>${basedir}/lib/netip-1.0.0.0-SNAPSHOT.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

@@ -1,26 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.netide.core</groupId>
+
+    <parent>
+        <artifactId>core</artifactId>
+        <groupId>eu.netide.core</groupId>
+        <version>1.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>core.caos</artifactId>
-    <version>1.0.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>core.caos Bundle</name>
     <description>core.caos OSGi bundle project.</description>
 
-<!--    <parent>
-        <artifactId>core</artifactId>
-        <version>1.0.0.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent> -->
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
     <dependencies>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>onlab-misc</artifactId>
+            <version>${onos.version}</version>
+            <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -44,14 +60,14 @@
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.connectivity</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -60,10 +76,11 @@
             <version>1.7.12</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onlab-misc</artifactId>
-            <version>1.2.1</version>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
@@ -85,30 +102,27 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}
+                        </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Bundle-Activator>eu.netide.core.caos.Activator</Bundle-Activator>
-                        <Export-Package>
-                            eu.netide.core.caos;version=${project.version},eu.netide.core.caos.composition;version=${project.version}
-                        </Export-Package>
-                        <Import-Package>
-                            eu.netide.core.api,org.osgi.framework,javax.xml.bind,javax.xml.bind.helpers,eu.netide.lib.netip,org.slf4j,org.projectfloodlight.openflow,org.projectfloodlight.openflow.annotations,org.projectfloodlight.openflow.exceptions,org.projectfloodlight.openflow.protocol,org.projectfloodlight.openflow.types,org.projectfloodlight.openflow.util,org.projectfloodlight.openflow.protocol.match,org.projectfloodlight.openflow.protocol.action,org.projectfloodlight.openflow.protocol.actionid
-                        </Import-Package>
+                        <Bundle-Activator>eu.netide.core.caos.Activator
+                        </Bundle-Activator>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
+                        <Import-Package>
+                            org.osgi.framework,
+                            eu.netide.core.api,
+                            eu.netide.lib.netip,
+                            javax.xml.bind,
+                            javax.xml.bind.helpers,
+                            org.slf4j,
+                            org.projectfloodlight.openflow.*
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+
     </build>
 
 </project>

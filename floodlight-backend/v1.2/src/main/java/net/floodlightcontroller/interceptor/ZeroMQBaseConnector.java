@@ -5,24 +5,30 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.netide.shim;
+package net.floodlightcontroller.interceptor;
 
-import io.netty.buffer.Unpooled;
-import org.opendaylight.netide.netiplib.HelloMessage;
-import org.opendaylight.netide.netiplib.Message;
-import org.opendaylight.netide.netiplib.NetIDEProtocolVersion;
-import org.opendaylight.netide.netiplib.NetIPConverter;
-import org.opendaylight.netide.netiplib.OpenFlowMessage;
+import eu.netide.lib.netip.HelloMessage;
+import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.ModuleAcknowledgeMessage;
+import eu.netide.lib.netip.NetIPConverter;
+import eu.netide.lib.netip.OpenFlowMessage;
+import eu.netide.lib.netip.Protocol;
+import eu.netide.lib.netip.ProtocolVersions;
+import java.util.List;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+/**
+ * @author giuseppex.petralia@intel.com
+ *
+ */
 public class ZeroMQBaseConnector implements Runnable {
-
     private static final String STOP_COMMAND = "Control.STOP";
-    private static final String CONTROL_ADDRESS = "inproc://ShimControllerQueue";
-    private NetIDEProtocolVersion netIpVersion = NetIDEProtocolVersion.VERSION_1_2;
+    private static final String CONTROL_ADDRESS = "inproc://BackendControllerQueue";
+
     private static final Logger LOG = LoggerFactory.getLogger(ZeroMQBaseConnector.class);
     private String address;
     private int port;
@@ -30,13 +36,11 @@ public class ZeroMQBaseConnector implements Runnable {
     private Thread thread;
 
     private ICoreListener coreListener;
+    private IModuleHandler moduleListener;
+    List<Pair<Protocol, ProtocolVersions>> supportedProtocols;
 
-    public ZeroMQBaseConnector() {
-
-    }
-
-    public void setContext(ZMQ.Context cont) {
-        context = cont;
+    public ZeroMQBaseConnector(List<Pair<Protocol, ProtocolVersions>> supportedProtocols) {
+        this.supportedProtocols = supportedProtocols;
     }
 
     public void Start() {
@@ -50,8 +54,7 @@ public class ZeroMQBaseConnector implements Runnable {
         if (thread != null) {
             ZMQ.Socket stopSocket = context.socket(ZMQ.PUSH);
             stopSocket.connect(CONTROL_ADDRESS);
-            // stopSocket.send(STOP_COMMAND);
-            send(STOP_COMMAND, stopSocket);
+            stopSocket.send(STOP_COMMAND);
             stopSocket.close();
             try {
                 thread.join();
@@ -62,37 +65,34 @@ public class ZeroMQBaseConnector implements Runnable {
         }
     }
 
-    public boolean send(String data, ZMQ.Socket socket) {
-        if (data != null && socket != null)
-            socket.send(data);
-        return true;
-    }
-
-    public boolean send(ZMsg message, ZMQ.Socket socket) {
-        if (message != null && socket != null)
-            message.send(socket);
-        return true;
-    }
-
     public void RegisterCoreListener(ICoreListener listener) {
         this.coreListener = listener;
+    }
+
+    public void RegisterModuleListener(IModuleHandler listener) {
+        this.moduleListener = listener;
     }
 
     public boolean SendData(byte[] data) {
         ZMsg msg = new ZMsg();
         msg.add(data);
-        ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
-        sendSocket.setIdentity("shim".getBytes());
-        sendSocket.connect(CONTROL_ADDRESS);
-        send(msg, sendSocket);
-        sendSocket.close();
-        return true;
+        if (context != null) {
+            ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
+            sendSocket.setIdentity("backend".getBytes());
+            sendSocket.connect(CONTROL_ADDRESS);
+            msg.send(sendSocket);
+            sendSocket.close();
+            return true;
+        }
+        LOG.info("Core context null");
+        return false;
+
     }
 
     @Override
     public void run() {
         ZMQ.Socket socket = context.socket(ZMQ.DEALER);
-        socket.setIdentity("shim".getBytes());
+        socket.setIdentity("floodlight-backend".getBytes());
         socket.connect("tcp://" + getAddress() + ":" + getPort());
         LOG.info("Trying to connect to core on address tcp://" + getAddress() + ":" + getPort());
 
@@ -102,6 +102,7 @@ public class ZeroMQBaseConnector implements Runnable {
         ZMQ.Poller poller = new ZMQ.Poller(2);
         poller.register(socket, ZMQ.Poller.POLLIN);
         poller.register(controlSocket, ZMQ.Poller.POLLIN);
+        LOG.info("Successfully connected to core on address tcp://" + getAddress() + ":" + getPort());
 
         while (!Thread.currentThread().isInterrupted()) {
             poller.poll(10);
@@ -109,25 +110,20 @@ public class ZeroMQBaseConnector implements Runnable {
                 ZMsg message = ZMsg.recvMsg(socket);
                 byte[] data = message.getLast().getData();
                 if (coreListener != null) {
-                    try{
-
-                        Message msg = NetIPConverter.parseConcreteMessage(data);
-                        if (msg.getHeader().getNetIDEProtocolVersion() == netIpVersion) {
-                            if (msg instanceof HelloMessage) {
-
-                                coreListener.onHelloCoreMessage(((HelloMessage) msg).getSupportedProtocols(),
-                                        ((HelloMessage) msg).getHeader().getModuleId());
-                            } else if (msg instanceof OpenFlowMessage) {
-
-                                byte[] payload = msg.getPayload();
-                                coreListener.onOpenFlowCoreMessage(msg.getHeader().getDatapathId(),
-                                        Unpooled.wrappedBuffer(payload), msg.getHeader().getModuleId());
-                            }
-                        }
-                    }catch(IllegalArgumentException ex) {
-                        LOG.error("NetIp malformed message received. Message dropped.");
+                    Message msg = NetIPConverter.parseConcreteMessage(data);
+                    if (msg instanceof HelloMessage) {
+                        coreListener.onHelloCoreMessage(((HelloMessage) msg).getSupportedProtocols(),
+                                ((HelloMessage) msg).getHeader().getModuleId());
+                    } else if (msg instanceof OpenFlowMessage) {
+                        coreListener.onOpenFlowCoreMessage(msg.getHeader().getDatapathId(),
+                                ((OpenFlowMessage) msg).getOfMessage(), msg.getHeader().getModuleId());
+                    } else if (msg instanceof ModuleAcknowledgeMessage) {
+                        int moduleId = ((ModuleAcknowledgeMessage) msg).getHeader().getModuleId();
+                        String moduleName = ((ModuleAcknowledgeMessage) msg).getModuleName();
+                        LOG.info("Module Announcement received. ModuleName: " + moduleName + "ModuleId: " + moduleId);
+                        moduleListener.onModuleAckMessage(moduleName, moduleId);
                     }
-                }    
+                }
             }
             if (poller.pollin(1)) {
                 ZMsg message = ZMsg.recvMsg(controlSocket);
@@ -157,4 +153,5 @@ public class ZeroMQBaseConnector implements Runnable {
     public String getAddress() {
         return address;
     }
+
 }
