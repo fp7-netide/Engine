@@ -3,7 +3,8 @@
   This program and the accompanying materials are made available under the 
   terms of the Eclipse Public License v1.0 which accompanies this distribution, 
   and is available at http://www.eclipse.org/legal/epl-v10.html INTERNAL -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
@@ -13,11 +14,12 @@
     <packaging>bundle</packaging>
 
     <name>NetIP Library</name>
-    <description>Java Library for handling the NetIDE intermediate protocol.</description>
+    <description>Java Library for handling the NetIDE intermediate protocol.
+    </description>
     <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
     <licenses>
         <license>
-            <name>The Eclipse Public License v1.0 </name>
+            <name>The Eclipse Public License v1.0</name>
             <url>http://www.eclipse.org/legal/epl-v10.html</url>
         </license>
         <license>
@@ -30,18 +32,21 @@
             <name>Arne Schwabe</name>
             <email>schwabe@uni-paderborn.de</email>
             <organization>University of Paderborn</organization>
-            <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/</organizationUrl>
+            <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/
+            </organizationUrl>
         </developer>
         <developer>
             <name>Tim Vinkemeier</name>
             <email>Vinkemeier@uni-paderborn.de</email>
             <organization>University of Paderborn</organization>
-            <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/</organizationUrl>
+            <organizationUrl>http://cs.uni-paderborn.de/en/department/welcome/
+            </organizationUrl>
         </developer>
     </developers>
     <scm>
         <connection>scm:git:ssh://github.com:fp7-netide/Engine.git</connection>
-        <developerConnection>scm:git:ssh://github.com:fp7-netide/Engine.git</developerConnection>
+        <developerConnection>scm:git:ssh://github.com:fp7-netide/Engine.git
+        </developerConnection>
         <url>http://www.netide.eu</url>
         <tag>HEAD</tag>
     </scm>
@@ -53,7 +58,8 @@
         </snapshotRepository>
         <repository>
             <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/
+            </url>
         </repository>
     </distributionManagement>
 
@@ -101,7 +107,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}
+                        </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>
                             eu.netide.lib.netip.*;
@@ -110,7 +117,8 @@
                         <Import-Package>
                             org.osgi.framework
                         </Import-Package>
-                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Dependency>*;scope=compile|runtime
+                        </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
@@ -182,5 +190,8 @@
             </plugins>
         </pluginManagement>
     </build>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
 
 </project>
