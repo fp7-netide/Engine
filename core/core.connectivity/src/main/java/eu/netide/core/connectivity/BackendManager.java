@@ -250,7 +250,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
                     connector.SendData(message.toByteRepresentation(), Constants.SHIM);
                 } else if (message instanceof FenceMessage) {
-                    logger.error("Received unrequested FenceMessage: '" + message.toString() + "'. Dropping message");
+                    if (((FenceMessage) message).getHeader().getTransactionId()==0) {
+                        logger.debug("FenceMessage with xid==0 makes no sense '" + message.toString() + "'. Dropping message");
+                    } else{
+                        logger.error("Received unrequested FenceMessage: '" + message.toString() + "'. Dropping message");
+                    }
                 } else {
                     logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
                     try {
