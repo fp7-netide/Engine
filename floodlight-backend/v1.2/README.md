@@ -10,10 +10,13 @@ Differently from previous versions of the Network Engine implementation which le
 
 * Copy the jar files under lib folder in floodlight lib folder (Except floodlight.jar used only during development for compilation)
 
-* Add to build.xml of floodlightV1.1 the following lines inside <patternset id="lib"> tag:
-	<include name="jeromq-0.3.4.jar"/>
-    	<include name="javatuples-1.2.jar"/>
-    	<include name="netip-1.1.0-SNAPSHOT.jar"/>
+* Add to build.xml of floodlightV1.1 the following lines inside `<patternset id="lib">` tag:
+
+```xml
+<include name="jeromq-0.3.4.jar"/>
+<include name="javatuples-1.2.jar"/>
+<include name="netip-1.1.0-SNAPSHOT.jar"/>
+```
 
 * Replace /floodlightv1.1/src/main/resources/floodlightdefault.properties with the given one that can be found at:
 	/floodlight-backend/v1.2/main/resources/floodlightdefault.properties
