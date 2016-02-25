@@ -1,0 +1,68 @@
+# FLOODLIGHT BACKEND
+The Floodlight backend is one of the components of the NetIDE Network Engine and is implemented as application for the [Floodlight controller](http://www.projectfloodlight.org/floodlight/).
+
+Differently from previous versions of the Network Engine implementation which leveraged on the protocol used between the [Pyretic backend and the OpenFlow client](http://www.cs.princeton.edu/~jrex/papers/pyretic13.pdf), the current modules (such as shim layer and backend) use the NetIDE Intermediate protocol v1.X to communicate with each other (see a short description in the [Network Engine introduction](https://github.com/fp7-netide/Engine)).
+
+
+## Installation
+
+* Copy the package net.floodlight.interceptor in the floodlight source folder.
+
+* Copy the jar files under lib folder in floodlight lib folder (Except floodlight.jar used only during development for compilation)
+
+* Add to build.xml of floodlightV1.1 the following lines inside <patternset id="lib"> tag:
+	<include name="jeromq-0.3.4.jar"/>
+    	<include name="javatuples-1.2.jar"/>
+    	<include name="netip-1.1.0-SNAPSHOT.jar"/>
+
+* Replace /floodlightv1.1/src/main/resources/floodlightdefault.properties with the given one that can be found at:
+	/floodlight-backend/v1.2/main/resources/floodlightdefault.properties
+
+* Add to /floodlightv1.1/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule the following line:
+	net.floodlightcontroller.interceptor.NetIdeModule
+
+* Compile the project with make command
+
+
+## Testing
+
+To test it, we will need the Python Core and a Shim (ODL or RYU shim)
+
+### Python Core
+Using the FLCompositionSpecification.xml under floodlight-backend/v1.2/test
+
+```python AdvancedProxyCore -c FLCompositionSpecification.xml```
+
+
+### ODL Shim
+
+* Clone the repo from https://github.com/opendaylight/netide
+
+* Build it using
+	```mvn clean install```
+
+* Go to karaf/target/assembly/bin
+
+* Start karaf with (Prior you have to setup JAVA_HOME env variable to the correct path):
+	```./karaf```
+
+* Install netide feature with:
+	```feature:install odl-netide-rest```
+
+
+### Mininet Topology:
+* Create mininet topology using the following command:
+	```sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6644```
+
+* Wait until the virtual switches are connected to the shim.
+
+
+
+### Start Floodlight
+
+Test that everything is working fine using pingall from mininet shell.
+
+### KNOWN BUG:
+If, starting floodlight, you receive an Error of Manager address already in use please manually change the manager port used by floodlight in Class
+net.floodlightcontroller.core.internal.Controller line 136 from  6653 to 7753.
+
