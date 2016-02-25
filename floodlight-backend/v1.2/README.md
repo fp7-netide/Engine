@@ -43,11 +43,11 @@ Using the FLCompositionSpecification.xml under floodlight-backend/v1.2/test
 
 * Go to karaf/target/assembly/bin
 
-* Start karaf with (Prior you have to setup JAVA_HOME env variable to the correct path):
-	```./karaf```
+* Start karaf with (Prior you have to setup JAVA_HOME env variable to the correct path).
 
 * Install netide feature with:
 	```feature:install odl-netide-rest```
+
 
 
 ### Mininet Topology:
