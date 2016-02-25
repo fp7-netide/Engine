@@ -223,6 +223,27 @@ class RyuShim(app_manager.RyuApp):
             req.xid = store_xid(backend_id,backend_id)
             datapath.send_msg(req)
 
+    def add_flow10(self, datapath, match, actions, idle_to, hard_to):
+        ofproto = datapath.ofproto
+        mod = datapath.ofproto_parser.OFPFlowMod(
+            datapath=datapath, match=match, cookie=0,
+            command=ofproto.OFPFC_ADD, idle_timeout=idle_to, hard_timeout=hard_to,
+            priority=ofproto.OFP_DEFAULT_PRIORITY,
+            flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
+        datapath.send_msg(mod)
+
+    def add_flow(self, datapath, priority, match, actions, idle_to=0, hard_to=0, buffer_id=None):
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,actions)]
+        if buffer_id:
+            mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
+                                    priority=priority, match=match,
+                                    instructions=inst6)
+        else:
+            mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
+                                    match=match, instructions=inst, idle_timeout=idle_to, hard_timeout=hard_to)
+        datapath.send_msg(mod)
 
     #Register switches and determine OpenFlow version
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -236,6 +257,14 @@ class RyuShim(app_manager.RyuApp):
             self.supported_protocols[OPENFLOW_PROTO].append(msg.version)
         if datapath not in self.switches:
             self.switches[datapath.id] = datapath
+
+        # if ofp_version >= OF1.3, then install the table-miss default behavior
+        if self.ofp_version >= 0x04:
+            ofproto = datapath.ofproto
+            parser = datapath.ofproto_parser
+            match = parser.OFPMatch()
+            actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, ofproto.OFPCML_NO_BUFFER)]
+            self.add_flow(datapath, 0, match, actions)
 
     #Listen for switch features even after initial config state (in case new ones are connected)
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, MAIN_DISPATCHER)
