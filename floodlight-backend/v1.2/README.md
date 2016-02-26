@@ -19,7 +19,7 @@ Differently from previous versions of the Network Engine implementation which le
 ```
 
 * Replace /floodlightv1.1/src/main/resources/floodlightdefault.properties with the given one that can be found at:
-	/floodlight-backend/v1.2/main/resources/floodlightdefault.properties
+	/floodlight-backend/v1.2/src/main/resources/floodlightdefault.properties
 
 * Add to /floodlightv1.1/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule the following line:
 	net.floodlightcontroller.interceptor.NetIdeModule
