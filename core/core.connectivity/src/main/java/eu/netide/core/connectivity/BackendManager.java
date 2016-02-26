@@ -171,6 +171,38 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         }
     }
 
+    /* TODO: Probably more places to remove old backend */
+    @Override
+    public void removeBackend(int id)
+    {
+        String backEndName = getBackend(id);
+        logger.info("Removing backend %s", backEndName);
+
+        LinkedList<Integer> removedModules= new LinkedList<>();
+
+        for (Map.Entry<Integer,String> modID: moduleToBackendMappings.entrySet()) {
+            if (modID.getValue().equals(backEndName)) {
+                moduleToBackendMappings.remove(modID.getKey());
+                moduleToNameMappings.remove(modID.getKey());
+                moduleLastMessage.remove(modID.getKey());
+                removedModules.add(modID.getKey());
+            }
+        }
+        backendIds.remove(backEndName);
+
+        try {
+            listenerLock.acquire();
+            // Notify listeners and send to shim
+            for (IBackendMessageListener listener : backendMessageListeners) {
+                pool.submit(() -> listener.OnBackendRemoved(backEndName, removedModules));
+            }
+        } catch (InterruptedException e) {
+            logger.error("", e);
+        } finally {
+            listenerLock.release();
+        }
+    }
+
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message;

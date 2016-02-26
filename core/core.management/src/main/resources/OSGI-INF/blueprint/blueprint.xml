@@ -37,6 +37,9 @@
             <action class="eu.netide.core.management.cli.LoadComposition"/>
             <!--<completer class="org.apache.karaf.shell.console.completer.FileCompleter"/>-->
         </command>
+        <command>
+            <action class="eu.netide.core.management.cli.RemoveStaleBackends" />
+        </command>
     </command-bundle>
 
 </blueprint>
