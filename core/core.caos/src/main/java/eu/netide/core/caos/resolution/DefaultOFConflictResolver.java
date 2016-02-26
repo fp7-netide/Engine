@@ -57,6 +57,8 @@ public class DefaultOFConflictResolver implements IConflictResolver {
             return new ResolutionResult(messages, actions);
         }
         switch (policy) {
+            case PASS:
+                return resolvePass(messages);
             case AUTO:
                 return resolveAuto(messages, priorities);
             case PRIORITY:
@@ -66,6 +68,13 @@ public class DefaultOFConflictResolver implements IConflictResolver {
             default:
                 throw new IllegalArgumentException("Unsupported policy type '" + policy.value() + "'.");
         }
+    }
+
+    private ResolutionResult resolvePass(Message[] messages) {
+        Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
+        for (Message m: messages)
+            actions.put(m, ResolutionAction.NONE);
+        return new ResolutionResult(messages, actions);
     }
 
     @Override
@@ -78,6 +87,20 @@ public class DefaultOFConflictResolver implements IConflictResolver {
         }
         return false;
     }
+
+    @Override
+    public boolean containsConflictDifferentPriorities(Message[] messages, PriorityInfo priorities) {
+        if (messages == null) return false;
+        for (int i = 0; i < messages.length; i++) {
+            for (int j = i + 1; j < messages.length; j++) {
+                if (priorities.getPriority(messages[i].getHeader().getModuleId()) !=
+                        priorities.getPriority(messages[j].getHeader().getModuleId()) &&
+                        containsConflict(messages[i], messages[j])) return true;
+            }
+        }
+        return false;
+    }
+
 
     @Override
     public boolean containsConflict(Message message1, Message message2) {
@@ -208,13 +231,16 @@ public class DefaultOFConflictResolver implements IConflictResolver {
         Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
         for (Message m : messages)
             actions.put(m, ResolutionAction.NONE);
-        while (containsConflict(messages)) {
+        while (containsConflictDifferentPriorities(messages, priorities)) {
             for (int i = 0; i < messages.length; i++) {
                 for (int j = i + 1; j < messages.length; j++) {
                     if (containsConflict(messages[i], messages[j])) {
                         int p1 = priorities.getPriority(messages[i].getHeader().getModuleId());
                         int p2 = priorities.getPriority(messages[j].getHeader().getModuleId());
-                        if (p1 > p2) {
+                        if (p1 == p2) {
+                            actions.put(messages[i], ResolutionAction.NONE);
+                            actions.put(messages[i], ResolutionAction.NONE);
+                        } else if (p1 > p2) {
                             actions.put(messages[i], ResolutionAction.NONE);
                             actions.put(messages[j], ResolutionAction.IGNORED);
                             messages[j] = null;

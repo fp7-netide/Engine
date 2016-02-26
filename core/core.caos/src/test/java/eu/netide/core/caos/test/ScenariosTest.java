@@ -19,6 +19,8 @@ import org.testng.internal.collections.Pair;
 
 import javax.xml.bind.JAXBException;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.*;
 
@@ -37,6 +39,7 @@ public class ScenariosTest {
     private CompositionSpecification comppsec;
     private ShimManager shimManager;
     private ExecutorService pool;
+    private FakeShimConnector shimConnector;
 
     @Test
     public void testNormal() throws JAXBException, InterruptedException, ExecutionException, TimeoutException {
@@ -111,6 +114,30 @@ public class ScenariosTest {
     }
 
     @Test
+    public void testTwoFlowModsPacketOUt() throws InterruptedException, JAXBException, TimeoutException, ExecutionException {
+        setupComposition();
+        int swModId = backendManager.getModuleId(SW_ID);
+
+        int dpid=2;
+        sendPacketIn(dpid, 800);
+
+        int xid = extractXidFromFirstMsgToBackend(SW_BE_ID);
+
+        backendManager.OnDataReceived(getFlowModMsg(xid, dpid, swModId).toByteRepresentation(), SW_BE_ID);
+        backendManager.OnDataReceived(getPacketOutMsg(xid, dpid, swModId).toByteRepresentation(), SW_BE_ID);
+        backendManager.OnDataReceived(getFlowModMsg(xid, dpid, swModId).toByteRepresentation(), SW_BE_ID);
+        backendManager.OnDataReceived(getFenceMessage(xid, dpid, swModId), SW_BE_ID);
+
+        ExecutionFlowStatus statusResult = statusFuture.get(1000, TimeUnit.MILLISECONDS);
+        Map<Long,List<Message>> results = statusResult.getResultMessages();
+        Assert.assertTrue(results.get((long) dpid).size()==3);
+
+
+    }
+
+
+
+    @Test
     public void signalisDoneMultipleTimes() throws JAXBException, InterruptedException {
         setupComposition();
 
@@ -166,6 +193,7 @@ public class ScenariosTest {
 
 
         backendConnector = new FakeBackEndConnector();
+        shimConnector = new FakeShimConnector();
 
         backendManager.setConnector(backendConnector);
         backendManager.setBackendMessageListeners(new LinkedList<>());
@@ -231,6 +259,11 @@ public class ScenariosTest {
 
     Message getFlowModMsg(int xid, long dpid, int modId) {
         String flow_mod_str = "010e0050424db09e003ffff60001000000000000e6402675839c0000000000000000000000000000000000000000000000000000000000000000000000008000ffffffffffff0001000000080002ffe5";
+        return getByteArrayToMessage(xid, dpid, modId, flow_mod_str);
+
+    }
+
+    private Message getByteArrayToMessage(int xid, long dpid, int modId, String flow_mod_str) {
         byte[] flow_mod = hexStringToByteArray(flow_mod_str);
         MessageHeader header = new MessageHeader();
         header.setDatapathId(dpid);
@@ -238,7 +271,21 @@ public class ScenariosTest {
         header.setModuleId(modId);
         header.setTransactionId(xid);
         return new Message(header, flow_mod);
+    }
 
+    private byte[] getFenceMessage(int xid, int dpid, int modId) {
+        MessageHeader header = new MessageHeader();
+        header.setDatapathId(dpid);
+        header.setMessageType(MessageType.FENCE);
+        header.setModuleId(modId);
+        header.setTransactionId(xid);
+        return new Message(header, new byte[]{}).toByteRepresentation();
+    }
+
+    Message getPacketOutMsg(int xid, long dpid, int modId) {
+        // With buffer id, no data
+        String packetOut = "040d0028866f3059000002c10000000200100000000000000000001000000001ffe5000000000000";
+        return getByteArrayToMessage(xid, dpid, modId, packetOut);
     }
 
 

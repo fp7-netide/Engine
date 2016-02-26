@@ -46,7 +46,8 @@ public class ResolutionUtils {
                 TCP_SRC,
                 TCP_DST,
                 UDP_SRC,
-                UDP_DST
+                UDP_DST,
+                IN_PORT
         };
     }
 
