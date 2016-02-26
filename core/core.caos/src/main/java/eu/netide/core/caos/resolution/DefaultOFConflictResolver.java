@@ -18,7 +18,7 @@ import static org.projectfloodlight.openflow.protocol.OFType.FLOW_MOD;
 
 /**
  * Default implementation of IConflictResolver for OpenFlow messages.
- * <p>
+ * <p/>
  * Created by timvi on 24.08.2015.
  */
 public class DefaultOFConflictResolver implements IConflictResolver {
@@ -72,17 +72,21 @@ public class DefaultOFConflictResolver implements IConflictResolver {
 
     private ResolutionResult resolvePass(Message[] messages) {
         Dictionary<Message, ResolutionAction> actions = new Hashtable<>();
-        for (Message m: messages)
+        for (Message m : messages)
             actions.put(m, ResolutionAction.NONE);
         return new ResolutionResult(messages, actions);
     }
 
     @Override
     public boolean containsConflict(Message[] messages) {
-        if (messages == null) return false;
+        if (messages == null) {
+            return false;
+        }
         for (int i = 0; i < messages.length; i++) {
             for (int j = i + 1; j < messages.length; j++) {
-                if (containsConflict(messages[i], messages[j])) return true;
+                if (containsConflict(messages[i], messages[j])) {
+                    return true;
+                }
             }
         }
         return false;
@@ -90,12 +94,17 @@ public class DefaultOFConflictResolver implements IConflictResolver {
 
     @Override
     public boolean containsConflictDifferentPriorities(Message[] messages, PriorityInfo priorities) {
-        if (messages == null) return false;
+        if (messages == null) {
+            return false;
+        }
         for (int i = 0; i < messages.length; i++) {
             for (int j = i + 1; j < messages.length; j++) {
-                if (priorities.getPriority(messages[i].getHeader().getModuleId()) !=
-                        priorities.getPriority(messages[j].getHeader().getModuleId()) &&
-                        containsConflict(messages[i], messages[j])) return true;
+                if (containsConflict(messages[i], messages[j]) &&
+                        (priorities.getPriority(messages[i].getHeader().getModuleId()) !=
+                                priorities.getPriority(messages[j].getHeader().getModuleId()))
+                        ) {
+                    return true;
+                }
             }
         }
         return false;
@@ -104,7 +113,9 @@ public class DefaultOFConflictResolver implements IConflictResolver {
 
     @Override
     public boolean containsConflict(Message message1, Message message2) {
-        if (message1 == null || message2 == null) return false;
+        if (message1 == null || message2 == null) {
+            return false;
+        }
         if (message1.getHeader().getMessageType() != MessageType.OPENFLOW) {
             throw new IllegalArgumentException("Unsupported message type in first argument (" + message1.getHeader().getMessageType().name() + ").");
         }
@@ -154,8 +165,9 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                 OpenFlowMessage m2 = pair.getValue1();
 
                 // if this pair was already processed, skip it
-                if (processedPairs.stream().anyMatch(p -> p.getValue0().equals(m1) && p.getValue1().equals(m2)))
+                if (processedPairs.stream().anyMatch(p -> p.getValue0().equals(m1) && p.getValue1().equals(m2))) {
                     continue;
+                }
 
                 List<OFMatchConflict> conflicts = ResolutionUtils.getMatchConflicts(m1, m2, fM(m1).getMatch(), fM(m2).getMatch()).collect(Collectors.toList());
                 if (conflicts.size() == 0) {
@@ -180,8 +192,9 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                         log.info("Introduced new replacement rule for messages '" + m1.toString() + "' and '" + m2.toString() + "'.");
                         newWorkingSet.addDistinct(candidateMessage);
                         workingSet.getMessages().forEach(m -> {
-                            if (!m.equals(m1) && !m.equals(m2))
+                            if (!m.equals(m1) && !m.equals(m2)) {
                                 newWorkingSet.addDistinct(m);
+                            }
                         });
                         hasOptimized = true;
                         break;
@@ -204,8 +217,9 @@ public class DefaultOFConflictResolver implements IConflictResolver {
                     }
                 }
             }
-            if (hasOptimized)
+            if (hasOptimized) {
                 workingSet = newWorkingSet;
+            }
         }
         return new ResolutionResult(workingSet.toMessageArray(), actions);
     }
