@@ -6,7 +6,7 @@ Differently from previous versions of the Network Engine implementation which le
 
 ## Installation
 * Clone locally Floodlight v1.1 https://github.com/floodlight/floodlight/tree/v1.1
-* Copy the package net.floodlight.interceptor in the floodlight source folder.
+* Copy the package net.floodlight.interceptor in the floodlight source folder. (Copy floodlight-backend/v1.2/src/main/java/net/floodlightcontroller/interceptor folder to floodlight/src/main/java/net/floodlightcontroller)
 
 * Copy the jar files under lib folder in floodlight lib folder (Except floodlight.jar used only during development for compilation)
 
@@ -19,7 +19,7 @@ Differently from previous versions of the Network Engine implementation which le
 ```
 
 * Replace /floodlightv1.1/src/main/resources/floodlightdefault.properties with the given one that can be found at:
-	/floodlight-backend/v1.2/main/resources/floodlightdefault.properties
+	/floodlight-backend/v1.2/src/main/resources/floodlightdefault.properties
 
 * Add to /floodlightv1.1/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule the following line:
 	net.floodlightcontroller.interceptor.NetIdeModule
@@ -62,6 +62,12 @@ Using the FLCompositionSpecification.xml under floodlight-backend/v1.2/test
 
 
 ### Start Floodlight
+Use the script provided in the floodlight folder floodlight.sh to start the controller.
+If the script returns an error related to java options used to start floodlight, replace the 14 line of the script with the following:
+
+```
+JVM_OPTS="$JVM_OPTS -XX:CompileThreshold=1500" #-XX:PreBlockSpin=8"
+```
 
 Test that everything is working fine using pingall from mininet shell.
 
