@@ -20,6 +20,9 @@ make
 
 * Copy the jar files under lib folder in floodlight lib folder (Except floodlight.jar used only during development for compilation)
 
+* Replace /floodlightv1.1/src/main/resources/floodlightdefault.properties with the given one that can be found at:
+	/floodlight-backend/v1.2/src/main/resources/floodlightdefault.properties
+
 * Add to build.xml of floodlightV1.1 the following lines inside `<patternset id="lib">` tag:
 
 ```xml
@@ -27,12 +30,11 @@ make
 <include name="javatuples-1.2.jar"/>
 <include name="netip-1.1.0-SNAPSHOT.jar"/>
 ```
-
-* Replace /floodlightv1.1/src/main/resources/floodlightdefault.properties with the given one that can be found at:
-	/floodlight-backend/v1.2/src/main/resources/floodlightdefault.properties
+(or directly replace the file with the one provided in ```manual/build.xml```)
 
 * Add to /floodlightv1.1/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule the following line:
 	net.floodlightcontroller.interceptor.NetIdeModule
+(or manually replace the file with the one provided in ```manual/IFloodlightModule```)
 
 * Compile the project with make command
 
@@ -78,10 +80,12 @@ If the script returns an error related to java options used to start floodlight,
 ```
 JVM_OPTS="$JVM_OPTS -XX:CompileThreshold=1500" #-XX:PreBlockSpin=8"
 ```
+(or manually replace the file with the one provided in ```manual/floodlight.sh```)
 
 Test that everything is working fine using pingall from mininet shell.
 
 ### KNOWN BUG:
 If, starting floodlight, you receive an Error of Manager address already in use please manually change the manager port used by floodlight in Class
 net.floodlightcontroller.core.internal.Controller line 136 from  6653 to 7753.
+(or manually replace the file with the one provided in ```manual/Controller.java``` and recompile the project)
 
