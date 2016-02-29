@@ -146,7 +146,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
 
                 logger.info("Flow execution finished.");
             } else {
-                logger.error("Could not handle incoming message due to configuration error (%s): %s", compositionNotReadyReason, message);
+                logger.error("Could not handle incoming message due to configuration error {}: {}", compositionNotReadyReason, message);
             }
         } catch (UnsupportedOperationException e) {
             if (bypassUnsupportedMessages) {
