@@ -179,16 +179,19 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         logger.info("Removing backend %s", backEndName);
 
         LinkedList<Integer> removedModules= new LinkedList<>();
+        moduleToBackendMappings.entrySet().forEach(
+                (modID) -> {
+                    if (modID.getValue().equals(backEndName)) {
+                        moduleToNameMappings.remove(modID.getKey());
+                        moduleLastMessage.remove(modID.getKey());
+                        removedModules.add(modID.getKey());
+                    }
+                });
 
-        for (Map.Entry<Integer,String> modID: moduleToBackendMappings.entrySet()) {
-            if (modID.getValue().equals(backEndName)) {
-                moduleToBackendMappings.remove(modID.getKey());
-                moduleToNameMappings.remove(modID.getKey());
-                moduleLastMessage.remove(modID.getKey());
-                removedModules.add(modID.getKey());
-            }
-        }
-        backendIds.remove(backEndName);
+        removedModules.forEach((key) -> {
+            moduleToBackendMappings.remove(key);
+            backendIds.remove(backEndName);
+        });
 
         try {
             listenerLock.acquire();
