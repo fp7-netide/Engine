@@ -30,7 +30,7 @@
 
     <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
         <command>
-            <action class="eu.netide.core.management.cli.ListBackends"/>
+            <action class="eu.netide.core.management.cli.ListModules"/>
 
         </command>
         <command>
