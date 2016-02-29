@@ -12,7 +12,7 @@
         </Module>
     </Modules>
     <Composition>
-        <ParallelCall resolutionPolicy="priority">
+        <ParallelCall resolutionPolicy="pass">
             <ModuleCall module="Firewall" priority="1"/>
             <ModuleCall module="SimpleSwitch" priority="2"/>
         </ParallelCall>
