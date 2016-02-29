@@ -33,7 +33,7 @@ Increase the amount of RAM maven can use
 
 ```export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'```
 
-Build Odl Shim
+Build ODL Shim
 
 ```cd odl-shim```
 
@@ -52,6 +52,8 @@ Start karaf and install the the ODL Shim
 Wait until the following command give an input
 
 ```log:display | grep "NetideProvider Session Initiated"```
+
+*Note*: To run another Karaf instance (apart from ODL's), we need to modify the following file: ```odl-shim/karaf/target/assembly/etc/org.apache.karaf``` and manually change ports 1099 and 44444 to something different.
 
 # Testing
 To test the ODL shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
