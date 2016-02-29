@@ -5,7 +5,17 @@ Differently from previous versions of the Network Engine implementation which le
 
 
 ## Installation
-* Clone locally Floodlight v1.1 https://github.com/floodlight/floodlight/tree/v1.1
+* Clone locally Floodlight (https://github.com/floodlight/floodlight.git) and then switch to v1.1 version:
+
+```
+git checkout v1.1
+```
+
+* Build floodlight using make
+```
+make
+```
+
 * Copy the package net.floodlight.interceptor in the floodlight source folder. (Copy floodlight-backend/v1.2/src/main/java/net/floodlightcontroller/interceptor folder to floodlight/src/main/java/net/floodlightcontroller)
 
 * Copy the jar files under lib folder in floodlight lib folder (Except floodlight.jar used only during development for compilation)
