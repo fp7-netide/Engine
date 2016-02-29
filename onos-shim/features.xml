@@ -19,7 +19,7 @@
         <!--<bundle>mvn:io.netty/netty/3.9.2.Final</bundle>-->
         <bundle>wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"</bundle>
         <bundle>wrap:mvn:org.zeromq/jeromq/0.3.4$Bundle-SymbolicName=zeromq&amp;Bundle-Version=0.3.4&amp;Export-Package=org.zeromq;version="0.3.4"</bundle>
-        <bundle>mvn:eu.netide.lib/netip/1.0.0.0-SNAPSHOT</bundle>
+        <bundle>mvn:eu.netide.lib/netip/1.1.0-SNAPSHOT</bundle>
         <bundle>mvn:eu.netide/onos-app-shim/${project.version}</bundle>
     </feature>
 </features>

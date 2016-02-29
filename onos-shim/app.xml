@@ -19,5 +19,5 @@
     <artifact>mvn:${project.groupId}/${project.artifactId}/${project.version}</artifact>
     <artifact>mvn:org.javatuples/javatuples/1.2</artifact>
     <artifact>mvn:org.zeromq/jeromq/0.3.4</artifact>
-    <artifact>mvn:eu.netide.lib/netip/1.0.0.0-SNAPSHOT</artifact>
+    <artifact>mvn:eu.netide.lib/netip/1.1.0-SNAPSHOT</artifact>
 </app>
