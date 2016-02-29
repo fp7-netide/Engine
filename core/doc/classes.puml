@@ -1,0 +1,62 @@
+@startuml
+
+namespace core.api {
+
+class IBackendManager
+class IShimManager
+class RequestResult
+
+}
+
+namespace core.connecitivity {
+class BackendManager <|- core.api.IBackendManager
+class ShimManager <|- core.api.IShimManager
+class ZeroMQBasedConnector
+
+BackendManager --> ZeroMQBasedConnector
+ShimManager --> ZeroMQBasedConnector
+}
+
+
+namespace karaf {
+ class Configuration {
+   pseudo class that stands for the
+   configuration in karaf
+ }
+}
+
+namespace core.caos {
+
+class XMLClasses {
+A number of classes that
+directly map 1:1 to the elements
+of the elements of the xml
+compositition specification
+}
+
+class CompositionManager
+
+CompositionManager --> karaf.Configuration
+CompositionManager --> core.api.IBackendManager
+CompositionManager --> core.api.IShimManager
+CompositionManager --> core.api.RequestResult
+CompositionManager o-- XMLClasses
+CompositionManager o-- ConflictResolver
+
+class SequentialComposition
+class ParallelComposition
+class ConflictResolver
+
+}
+
+namespace core.logpub {
+class LogPub
+LogPub --> core.api.IBackendManager
+LogPub --> core.api.IShimManager
+}
+
+namespace core.management {
+     class ManagementHandler
+     ManagementHandler --> karaf.Configuration
+}
+@enduml         
