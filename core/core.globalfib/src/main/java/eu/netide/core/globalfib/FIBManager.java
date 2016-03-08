@@ -1,5 +1,6 @@
 package eu.netide.core.globalfib;
 
+import com.google.common.annotations.VisibleForTesting;
 import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
@@ -19,11 +20,12 @@ import org.slf4j.LoggerFactory;
 @Service
 public class FIBManager implements IFIBManager, IShimMessageListener{
     private final OFMessageReader<OFMessage> reader;
-    private final GlobalFIB gfib;
+    private final GlobalFIB globalFIB;
 
     private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    @VisibleForTesting
     private IShimManager shimManager;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
@@ -32,8 +34,7 @@ public class FIBManager implements IFIBManager, IShimMessageListener{
     public FIBManager()
     {
         reader = OFFactories.getGenericReader();
-        gfib = new GlobalFIB();
-
+        globalFIB = new GlobalFIB();
     }
 
     @Activate
@@ -67,11 +68,9 @@ public class FIBManager implements IFIBManager, IShimMessageListener{
                 if (ofmessage instanceof OFFlowAdd) {
                     OFFlowAdd ofFlowAdd = (OFFlowAdd) ofmessage;
 
-                    gfib.addFlow(datapathId, ofFlowAdd);
-
-
+                    //globalFIB.addFlowMod(ofFlowAdd, datapathId);
                 } if (ofmessage instanceof OFPacketIn) {
-                    gfib.handlePacketIn((OFPacketIn) ofmessage, datapathId);
+                    globalFIB.handlePacketIn((OFPacketIn) ofmessage, datapathId);
                 }
             } catch (OFParseError ofParseError) {
                 ofParseError.printStackTrace();
@@ -82,7 +81,17 @@ public class FIBManager implements IFIBManager, IShimMessageListener{
 
     @Override
     public void handleMessage(Message message) {
+        if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
+            OpenFlowMessage ofMessage = (OpenFlowMessage) message;
+            if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD) {
+                globalFIB.addFlowMod(ofMessage);
+            }
+        }
         log.info("Relaying message to shim.");
         shimManager.sendMessage(message);
+    }
+
+    public void bindShimManager(IShimManager shimManager) {
+        this.shimManager = shimManager;
     }
 }
