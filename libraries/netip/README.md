@@ -44,3 +44,5 @@ application modules running on top of each client controller.
 The composition mechanism in the core leverages on this
 field to implement the correct execution flow of these modules. Finally, ```xid``` is the transaction identifier associated to
 the each message. Replies must use the same value to facilitate the pairing.
+
+The ```netip``` library provides the necessary APIs required for the implementation of the NetIDE protocol. Folder ```docs``` contains the protocol specifications.
