@@ -1,4 +1,4 @@
-## The NetIDE Intermediate protocol v1.1
+## The NetIDE Intermediate protocol
 
 The intermediate protocol serves several needs. It has to
 (i) carry control messages between the modules of the Network Engine (such as shim and backend), e.g., to start up/take down a particular module, providing
