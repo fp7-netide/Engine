@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -22,7 +23,7 @@ import java.util.concurrent.*;
  *
  * Created by timvi on 25.06.2015.
  */
-public class CompositionManager implements ICompositionManager, IShimMessageListener {
+public class CompositionManager implements ICompositionManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CompositionManager.class);
     private ExecutorService pool = Executors.newSingleThreadExecutor();
@@ -99,8 +100,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         });
     }
 
-    @Override
-    public void OnShimMessage(Message message, String originId) {
+    public List<Message> processShimMessage(Message message, String originId) {
         logger.info("CompositionManager received message from shim: " + message.toString());
         try {
             csLock.acquire(); // can only handle when not reconfiguring
@@ -109,13 +109,11 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
 
                 status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), shimManager, backendManager);
 
-                // Send results
-                for (Map.Entry<Long, List<Message>> entry : status.getResultMessages().entrySet()) {
-                    entry.getValue().stream().forEach(fibManager::handleMessage);
-                    logger.info("Sent " + entry.getValue().size() + " rules for switch " + entry.getKey() + " to FIBManager.");
-                }
-
                 logger.info("Flow execution finished.");
+
+                List<Message> results = new ArrayList<Message>();
+                status.getResultMessages().values().forEach(results::addAll);
+                return results;
             } else {
                 logger.error("Could not handle incoming message due to configuration error.", message);
             }
@@ -141,6 +139,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         } finally {
             csLock.release();
         }
+        return null;
     }
 
     public void setFibManager(IFIBManager fibManager) {

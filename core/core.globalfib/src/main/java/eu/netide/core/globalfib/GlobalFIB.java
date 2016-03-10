@@ -1,6 +1,5 @@
 package eu.netide.core.globalfib;
 
-import eu.netide.core.topology.ITopology;
 import eu.netide.lib.netip.OpenFlowMessage;
 import org.onosproject.net.flow.*;
 import org.onosproject.openflow.controller.Dpid;
@@ -18,8 +17,6 @@ import java.util.*;
 public class GlobalFIB {
     private static final Logger logger = LoggerFactory.getLogger(GlobalFIB.class);
 
-    private ITopology topogloy;
-
     private List<FlowEntry> globalFIB = new LinkedList<>();
 
     private HashMap<Long, Vector<OFFlowMod>> individualSwitchFlowMap = new HashMap<>();
@@ -31,7 +28,7 @@ public class GlobalFIB {
         }
 
         OFFlowMod flowMod = (OFFlowMod) ofMessage.getOfMessage();
-        FlowEntryBuilder flowEntryBuilder = new FlowEntryBuilder(new Dpid(ofMessage.getHeader().getDatapathId()), flowMod);
+        FlowEntryBuilder flowEntryBuilder = new FlowEntryBuilder(new Dpid(ofMessage.getHeader().getDatapathId()), flowMod, null);
         FlowEntry flowEntry = flowEntryBuilder.build();
 
         // TODO: correct treatment, if entry already exists?

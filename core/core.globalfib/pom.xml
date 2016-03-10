@@ -25,6 +25,7 @@
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
             <version>1.0.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -45,6 +46,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>eu.netide.core</groupId>
+            <artifactId>core.caos</artifactId>
+            <version>1.0.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <version>5.0.0</version>
@@ -58,22 +65,26 @@
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>onos-api</artifactId>
-            <version>1.2.2</version>
+            <version>1.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>onos-core-net</artifactId>
-            <version>1.2.2</version>
+            <version>1.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>onlab-misc</artifactId>
-            <version>1.2.2</version>
+            <version>1.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.onosproject</groupId>
             <artifactId>onos-of-provider-flow</artifactId>
-            <version>1.2.2</version>
+            <version>1.4.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.felix</groupId>
@@ -118,12 +129,15 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Export-Package>
-                            eu.netide.core.globalfib;version=${project.version}
+                            ${project.artifactId};version=${project.version}
                         </Export-Package>
                         <Import-Package>
+                            !org.onosproject.provider.of.flow.impl,
                             !${project.artifactId},
                             *
                         </Import-Package>
+                        <Embed-Dependency>org.onosproject.provider.of.flow.impl</Embed-Dependency>
+                        <Embed-Transitive>true</Embed-Transitive>
                         <Service-Component>*</Service-Component>
                     </instructions>
                 </configuration>

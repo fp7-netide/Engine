@@ -1,9 +1,8 @@
 package eu.netide.core.globalfib;
 
-import com.google.common.annotations.VisibleForTesting;
-import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
+import eu.netide.core.caos.ICompositionManager;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
@@ -16,25 +15,29 @@ import org.projectfloodlight.openflow.protocol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 @Component(immediate=true)
 @Service
-public class FIBManager implements IFIBManager, IShimMessageListener{
+public class FIBManager implements IShimMessageListener {
     private final OFMessageReader<OFMessage> reader;
     private final GlobalFIB globalFIB;
 
     private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
 
-    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
-    @VisibleForTesting
-    private IShimManager shimManager;
+    //@Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private ICompositionManager compositionManager;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private IShimManager shimManager;
+
+    //@Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private TopologyService topologyService;
 
     public FIBManager()
     {
         reader = OFFactories.getGenericReader();
-        globalFIB = new GlobalFIB();
+        globalFIB = null;//new GlobalFIB();
     }
 
     @Activate
@@ -52,6 +55,12 @@ public class FIBManager implements IFIBManager, IShimMessageListener{
     @Override
     public void OnShimMessage(Message message, String originId) {
         log.info("FIBManager received message from shim: " + message.getHeader().toString());
+
+        List<Message> backendResults = compositionManager.processShimMessage(message, originId);
+        for (Message result: backendResults) {
+            handleResult(result);
+        }
+
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
             if (ofMessage.getOfMessage().getType() == OFType.ECHO_REQUEST) {
@@ -75,12 +84,10 @@ public class FIBManager implements IFIBManager, IShimMessageListener{
             } catch (OFParseError ofParseError) {
                 ofParseError.printStackTrace();
             }
-
         }
     }
 
-    @Override
-    public void handleMessage(Message message) {
+    private void handleResult(Message message) {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
             if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD) {
@@ -93,5 +100,9 @@ public class FIBManager implements IFIBManager, IShimMessageListener{
 
     public void bindShimManager(IShimManager shimManager) {
         this.shimManager = shimManager;
+    }
+
+    public void bindCompositionManager(ICompositionManager compositionManager) {
+        this.compositionManager = compositionManager;
     }
 }
