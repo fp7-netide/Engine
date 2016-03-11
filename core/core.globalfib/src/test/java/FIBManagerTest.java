@@ -68,8 +68,10 @@ public class FIBManagerTest {
                 .build();
         OpenFlowMessage message2 = messageFromOFMessage(offm2);
 
+r       /*
         fibManager.handleMessage(message1);
         fibManager.handleMessage(message2);
+        */
     }
 
 

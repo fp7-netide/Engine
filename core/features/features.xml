@@ -37,11 +37,16 @@
         <feature>core-api</feature>
         <bundle>mvn:eu.netide.core/core.logpub/@CORE-VERSION</bundle>
     </feature>
+    <feature name="core-globalfib" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
+    </feature>
     <feature name="core" version="@FEATURE-VERSION">
         <feature>core-api</feature>
         <feature>core-connectivity</feature>
         <feature>core-caos</feature>
         <feature>core-logpub</feature>
+        <feature>core-globalfib</feature>
         <feature>core-management</feature>
     </feature>
 </features>

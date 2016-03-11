@@ -67,12 +67,26 @@ public interface IBackendManager {
     Stream<String> getModules();
 
     /**
+     * Returns the name for a module id
+     * @return name of the module
+     */
+    String getModuleName(Integer moduleId) throws NoSuchElementException;
+
+    /**
      * Gets the backend id for a given module id.
      *
      * @param moduleId the module id.
      * @return The corresponding backend id.
      */
     String getBackend(Integer moduleId) throws NoSuchElementException;
+
+
+    /**
+     * Get backend last message time to know if it is still alive
+     * @param moduleId the module id.
+     * @return unix time stamp.
+     */
+    Long getLastMessageTime(Integer moduleId);
 
     /**
      * Gets the moduleId from a given module name.
@@ -81,4 +95,13 @@ public interface IBackendManager {
      * @return The module id.
      */
     int getModuleId(String moduleName) throws NoSuchElementException;
+
+    //! This methods marks a module as finished even though no fence message has been received
+    void markModuleAllOutstandingRequestsAsFinished(int moduleId);
+
+    /**
+     * Removes a backend from the list of modules
+     * @param id The id of the backend to remove
+     */
+    void removeBackend(int id);
 }

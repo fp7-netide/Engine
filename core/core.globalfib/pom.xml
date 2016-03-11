@@ -5,16 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
 
-<!--    <parent>
-        <groupId>eu.netide.core</groupId>
+    <parent>
         <artifactId>core</artifactId>
-        <version>1.0.0.0-SNAPSHOT</version>
+        <groupId>eu.netide.core</groupId>
+        <version>1.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
-    </parent> -->
+    </parent>
 
-    <groupId>eu.netide.core</groupId>
     <artifactId>core.globalfib</artifactId>
-    <version>1.0.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
 
     <name>core.globalfib Bundle</name>
@@ -24,7 +22,7 @@
         <dependency>
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -36,19 +34,13 @@
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>eu.netide.core</groupId>
-            <artifactId>core.topology</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.caos</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -110,15 +102,6 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <version>2.5.4</version>
@@ -128,15 +111,14 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Export-Package>
-                            ${project.artifactId};version=${project.version}
-                        </Export-Package>
+                        <!--
                         <Import-Package>
                             !org.onosproject.provider.of.flow.impl,
                             !${project.artifactId},
                             *
                         </Import-Package>
-                        <Embed-Dependency>org.onosproject.provider.of.flow.impl</Embed-Dependency>
+                        -->
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
                         <Service-Component>*</Service-Component>
                     </instructions>
@@ -163,15 +145,6 @@
                 </configuration>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.18.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 
 </project>
