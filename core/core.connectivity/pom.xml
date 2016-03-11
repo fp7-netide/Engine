@@ -22,25 +22,38 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.netide.core</groupId>
+
+    <parent>
+        <artifactId>core</artifactId>
+        <groupId>eu.netide.core</groupId>
+        <version>1.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>core.connectivity</artifactId>
-    <version>1.0.0.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
 
     <name>core.connectivity Bundle</name>
     <description>core.connectivity OSGi bundle project.</description>
 
     <dependencies>
         <dependency>
-            <groupId>org.osgi</groupId>
-            <artifactId>org.osgi.core</artifactId>
-            <version>5.0.0</version>
-            <scope>provided</scope>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>1.1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -52,7 +65,7 @@
         <dependency>
             <groupId>eu.netide.lib</groupId>
             <artifactId>netip</artifactId>
-            <version>1.0.0.0-SNAPSHOT</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -89,14 +102,7 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Bundle-Activator>eu.netide.core.connectivity.Activator</Bundle-Activator>
-                        <Export-Package>
-                            eu.netide.core.connectivity;version=${project.version}
-                        </Export-Package>
-                        <Import-Package>
-                            org.osgi.framework,eu.netide.core.api,eu.netide.lib.netip,org.slf4j
-                        </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-                        <Embed-Transitive>true</Embed-Transitive>
                     </instructions>
                 </configuration>
             </plugin>

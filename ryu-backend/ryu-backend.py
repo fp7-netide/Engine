@@ -18,28 +18,34 @@
 
 import os
 import logging
+import struct
+import sys
 import socket
 import random
+import binascii
 import time
 import ryu
 import inspect
 from eventlet.green import zmq
+from eventlet.green import select
 from eventlet.green import threading
 from ryu.base import app_manager
 from ryu.controller import ofp_event
+from ryu.controller import dpset
 from ryu.controller import controller
 from ryu.ofproto import ofproto_parser
+from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
 from ryu.ofproto import ofproto_v1_3, ofproto_v1_3_parser
 from ryu.ofproto import ofproto_v1_4, ofproto_v1_4_parser
 from ryu.ofproto import ofproto_v1_5, ofproto_v1_5_parser
-from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER
+from ryu.controller.handler import HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.netide.netip import *
 
 
 NETIDE_CORE_PORT = 5555
-HEARTBEAT_TIMEOUT = 5  # in seconds
+HEARTBEAT_TIMEOUT = 5 #5 seconds
 
 logger = logging.getLogger('ryu-backend')
 logger.setLevel(logging.DEBUG)
@@ -56,11 +62,10 @@ class BackendDatapath(controller.Datapath):
         self.ofpp = ofpp
         self.id = id
         self.xid = 0
+        self.netide_xid = 0
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
         self.is_active = True
-        # maps from OF xid to NetIDE xid
-        self.xid_db = dict()
 
     def handle_write(self):
         pass
@@ -107,42 +112,37 @@ class BackendDatapath(controller.Datapath):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-
-        netide_xid = None
-        if msg.xid in self.xid_db:
-            netide_xid = self.xid_db[msg.xid]
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', netide_xid, module_id, msg.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', self.netide_xid, module_id, msg.datapath.id, str(msg.buf))
         logger.debug("Sent Message header: %s", NetIDEOps.netIDE_decode_header(msg_to_send))
         logger.debug("Sent Message body: %s",':'.join(x.encode('hex') for x in msg_to_send[NetIDEOps.NetIDE_Header_Size:]))
         self.channel.socket.send(msg_to_send)
 
-    # TODO: temporary patch in order to let the core know that the application has finished processing the packet_in.
-    #       has to be called manually be the handling application.
-    def send_mgmt_msg(self, module_name, xid):
-        netide_xid = self.xid_db[xid]
-        module_id = 0
-        for key, value in self.channel.running_modules.iteritems():
-            if key == module_name:
-                module_id = value
-                break
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', netide_xid, module_id, 0, "")
-        self.channel.socket.send(msg_to_send)
 
-    # Handles the events and sends them to the listening RYU Applications
+
+    #Handles the events and sends them to the listening RYU Applications
     def handle_event(self, header, msg):
-        # required_len = self.ofp.OFP_HEADER_SIZE
+        #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
+        self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
+
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
+            event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
-            self.xid_db[xid] = header[NetIDEOps.NetIDE_header['XID']]
             for key, value in self.channel.running_modules.iteritems():
-                if value == module_id:
-                    module_name = key
-                    self.ofp_brick.send_event(module_name,ev, self.state)
+                if value == module_id and key in event_observers:
+                    module_brick = ryu.base.app_manager.lookup_service_brick(key)
+                    module_brick_handlers = module_brick.get_handlers(ev)
+                    for handler in module_brick_handlers:
+                        handler(ev)
                     break
+
+            # Sending the FENCE message to the Core only if self.netide_xid is not 0
+            if self.netide_xid is not 0:
+                msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
+                self.channel.socket.send(msg_to_send)
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -151,6 +151,9 @@ class BackendDatapath(controller.Datapath):
 
             for handler in handlers:
                 handler(ev)
+
+            # Resetting netide_xid to zero
+            self.netide_xid = 0
 
 # Heartbeat thread
 class HeatbeatThread(threading.Thread):
@@ -282,11 +285,13 @@ class CoreConnection(threading.Thread):
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         logger.debug("Received Message header: %s", decoded_header)
+        message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
+        logger.debug("Message type: %s", message_type)
+        message_xid = decoded_header[NetIDEOps.NetIDE_header['XID']]
+        logger.debug("Message xid: %s", message_xid)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:]
         logger.debug("Received Message body: %s",':'.join(x.encode('hex') for x in message_data))
-        message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
-        logger.debug("Message type: %s", message_type)
 
         # control messages are processed only if the handshake has been successfully completeds
         if message_type is 'NETIDE_OPENFLOW' and self.backend_info['connected'] == True:

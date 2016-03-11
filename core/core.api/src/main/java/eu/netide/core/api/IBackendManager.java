@@ -29,9 +29,6 @@ public interface IBackendManager {
      */
     boolean sendMessageAllBackends(Message message);
 
-
-
-
     /**
      * Sends a request as specified in the given message and waits for the execution results.
      *

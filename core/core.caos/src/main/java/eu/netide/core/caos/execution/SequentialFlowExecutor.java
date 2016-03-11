@@ -35,12 +35,19 @@ public class SequentialFlowExecutor implements IFlowExecutor {
         if (status.getOriginalMessage().getHeader().getMessageType() != MessageType.OPENFLOW) {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow message.");
         }
+
         OpenFlowMessage originalMessage = (OpenFlowMessage) NetIPUtils.ConcretizeMessage(status.getOriginalMessage());
+
         if (originalMessage.getOfMessage().getType() != OFType.PACKET_IN) {
             throw new UnsupportedOperationException("Can only handle flows initiated by an OpenFlow PacketIn message.");
         }
+
         OFPacketIn originalPacketIn = (OFPacketIn) originalMessage.getOfMessage();
         List<ExecutionFlowNode> collectedNodes = nodes.collect(Collectors.toList());
+        if (collectedNodes.size() ==0) {
+            log.error("Composition empty for packet, ignoring packet");
+            return status;
+        }
         ExecutionFlowNode executionFlowNode = collectedNodes.get(0);
 
         // request results
@@ -48,12 +55,16 @@ public class SequentialFlowExecutor implements IFlowExecutor {
 
         // prepare message(s) for next node, if there is one
         if (collectedNodes.size() > 1) {
+            // Do network emulation
             Ethernet ethernet = (Ethernet) new Ethernet().deserialize(originalPacketIn.getData(), 0, originalPacketIn.getData().length);
             IPacket[] newPackets = ExecutionUtils.emulateNetworkBehaviour(status.getResultMessages(), ethernet, originalPacketIn);
+
+
             if (newPackets.length == 1) {
-                // no multiflow
+                // no multiflow (i.e. more than one new packet)
                 return this.executeFlow(status, collectedNodes.stream().skip(1), shimManager, backendManager);
             }
+
             // MultiFlow
             ExecutionFlowStatus[] statuses = new ExecutionFlowStatus[newPackets.length];
             int i = 0;

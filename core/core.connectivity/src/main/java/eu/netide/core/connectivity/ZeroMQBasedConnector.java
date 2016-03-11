@@ -1,5 +1,6 @@
 package eu.netide.core.connectivity;
 
+import eu.netide.core.api.Constants;
 import eu.netide.core.api.IBackendConnector;
 import eu.netide.core.api.IConnectorListener;
 import eu.netide.core.api.IShimConnector;
@@ -64,14 +65,13 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
 
     @Override
     public boolean SendData(byte[] data) {
-        return SendData(data, "shim");
+        return SendData(data,  Constants.SHIM);
     }
 
     @Override
     public boolean SendData(byte[] data, String destinationId) {
         ZMsg msg = new ZMsg();
         msg.add(destinationId);
-        msg.add("");
         msg.add(data);
         logger.info("Sending to via relay to '" + destinationId + "'.");
         // relayed via control socket to prevent threading issues
@@ -106,10 +106,14 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
                     String senderId = message.getFirst().toString();
                     byte[] data = message.getLast().getData();
                     logger.info("Data received from '" + senderId + "'.");
-                    if (senderId.equals("shim") && shimListener != null) {
+                    if (senderId.equals(Constants.SHIM) && shimListener != null) {
                         shimListener.OnDataReceived(data, senderId);
                     } else if (backendListener != null) {
-                        backendListener.OnDataReceived(data, senderId);
+                        try {
+                            backendListener.OnDataReceived(data, senderId);
+                        } catch (Exception e) {
+                            logger.error("Error on backend Data handling", e);
+                        }
                     }
                 }
                 if (poller.pollin(1)) {

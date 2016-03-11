@@ -1,0 +1,71 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.netide.floodlight</groupId>
+	<artifactId>floodlight-backend</artifactId>
+	<version>1.2.0-SNAPSHOT</version>
+
+	<dependencies>
+        <dependency>
+            <groupId>org.projectfloodlight</groupId>
+            <artifactId>floodlight</artifactId>
+            <version>1.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/floodlight.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>3.2.6.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/javatuples-1.2.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.zeromq</groupId>
+            <artifactId>jeromq</artifactId>
+            <version>0.3.4</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/jeromq-0.3.4.jar</systemPath>
+        </dependency>
+         <dependency>
+            <groupId>eu.netide.lib</groupId>
+            <artifactId>netip</artifactId>
+            <version>1.0.0.0-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/netip-1.0.0.0-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+         
+	</dependencies>
+    
+	<build>
+	  <testSourceDirectory>src/main/test</testSourceDirectory>
+	  <plugins>
+	    <plugin>
+	      <groupId>org.apache.maven.plugins</groupId>
+	      <artifactId>maven-compiler-plugin</artifactId>
+	      <version>3.1</version>
+	       <configuration>
+               <source>1.7</source>
+               <target>1.7</target>
+               <encoding>UTF-8</encoding>
+           </configuration>
+	    </plugin>
+	  </plugins>
+	</build>
+
+</project>

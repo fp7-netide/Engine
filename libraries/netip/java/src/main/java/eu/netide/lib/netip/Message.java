@@ -49,7 +49,7 @@ public class Message {
      * Gets the current payload as bytes.
      *
      * @return the payload
-     * @implNote This method has to ensure that the returned payload reflects the current state of any convenience fields!
+     *  This method has to ensure that the returned payload reflects the current state of any convenience fields!
      */
     public byte[] getPayload() {
         return this.payload;

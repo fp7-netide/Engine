@@ -1,4 +1,4 @@
-## The NetIDE Intermediate protocol v1.1
+## The NetIDE Intermediate protocol
 
 The intermediate protocol serves several needs. It has to
 (i) carry control messages between the modules of the Network Engine (such as shim and backend), e.g., to start up/take down a particular module, providing
@@ -44,3 +44,5 @@ application modules running on top of each client controller.
 The composition mechanism in the core leverages on this
 field to implement the correct execution flow of these modules. Finally, ```xid``` is the transaction identifier associated to
 the each message. Replies must use the same value to facilitate the pairing.
+
+The ```netip``` library provides the necessary APIs required for the implementation of the NetIDE protocol. Folder ```docs``` contains the protocol specifications.

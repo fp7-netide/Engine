@@ -1,14 +1,20 @@
 package eu.netide.core.caos;
 
 import eu.netide.core.api.IBackendManager;
-import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.caos.composition.CompositionSpecification;
 import eu.netide.core.caos.composition.CompositionSpecificationLoader;
 import eu.netide.core.caos.composition.ExecutionFlowStatus;
+import eu.netide.core.caos.composition.Module;
 import eu.netide.core.caos.execution.FlowExecutors;
 import eu.netide.lib.netip.Message;
+import eu.netide.lib.netip.OpenFlowMessage;
+import org.projectfloodlight.openflow.protocol.OFEchoReply;
+import org.projectfloodlight.openflow.protocol.OFEchoRequest;
+import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
+import org.projectfloodlight.openflow.protocol.OFFeaturesRequest;
+import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,10 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of ICompositionManager
- *
+ * <p>
  * Created by timvi on 25.06.2015.
  */
 public class CompositionManager implements ICompositionManager {
@@ -31,18 +38,18 @@ public class CompositionManager implements ICompositionManager {
     // Settings
     private static String previousCompositionSpecificationXml = "";
     private String compositionSpecificationXml = "";
-    private int maxModuleWaitSeconds = 60;
+    private int maxModuleWaitSeconds = 600;
     private boolean bypassUnsupportedMessages = true;
 
     // Fields
     private IShimManager shimManager;
     private IBackendManager backendManager;
-    private IFIBManager fibManager;
     private CompositionSpecification compositionSpecification = new CompositionSpecification();
     private final Semaphore csLock = new Semaphore(1);
     private volatile boolean correctlyConfigured = false;
     private Future<?> reconfigurationFuture;
-
+    private static ExecutionFlowStatus lastStatus = null;
+    private String compositionNotReadyReason = "No composition file loaded";
 
     /**
      * Called by blueprint on startup.
@@ -67,12 +74,12 @@ public class CompositionManager implements ICompositionManager {
         reconfigurationFuture = pool.submit(() -> {
             try {
                 // wait for required modules to connect for at most maxModuleWaitSeconds
-                long modulesUnconnected = compositionSpecification.getModules().size();
+                List<Module> modulesUnconnected = compositionSpecification.getModules();
                 logger.info("Waiting for required modules to connect, " + modulesUnconnected + " left...");
                 int waitCount = 0;
                 do {
-                    modulesUnconnected = compositionSpecification.getModules().stream().filter(m -> !backendManager.getModules().anyMatch(mn -> mn.equals(m.getId()))).count();
-                    if (modulesUnconnected > 0) {
+                    modulesUnconnected = compositionSpecification.getModules().stream().filter(m -> !backendManager.getModules().anyMatch(mn -> mn.equals(m.getId()))).collect(Collectors.toList());
+                    if (modulesUnconnected.size() > 0) {
                         try {
                             Thread.sleep(2000);
                             waitCount++;
@@ -80,20 +87,25 @@ public class CompositionManager implements ICompositionManager {
                                 logger.info((maxModuleWaitSeconds - waitCount) + " seconds remaining for " + modulesUnconnected + " module(s) to connect...");
                             }
                             if (waitCount >= maxModuleWaitSeconds) {
-                                throw new TimeoutException("Required modules did not connect.");
+                                compositionNotReadyReason = "Required modules did not connect. Missing" + modulesUnconnected.stream().map(Object::toString).collect(Collectors.joining(","));
+                                throw new TimeoutException(compositionNotReadyReason);
                             }
                         } catch (InterruptedException e) {
+                            compositionNotReadyReason = "Interrupted while waiting for required modules to connect.";
                             logger.error("Interrupted while waiting for required modules to connect.", e);
                             return;
                         } catch (TimeoutException e) {
-                            logger.error("Reconfiguration unsuccessful: timed out with " + modulesUnconnected + " unconnected modules.", e);
+                            compositionNotReadyReason = "Reconfiguration unsuccessful: timed out with " + modulesUnconnected.size() + " unconnected modules: " +
+                                    modulesUnconnected.stream().map(Object::toString).collect(Collectors.joining(","));
+                            logger.error(compositionNotReadyReason, e);
                             return;
                         }
                     }
-                } while (modulesUnconnected > 0 && !Thread.interrupted());
+                } while (modulesUnconnected.size() > 0 && !Thread.interrupted());
                 correctlyConfigured = true;
                 logger.info("All required modules connected. Reconfiguration successful.");
             } catch (Exception ex) {
+                compositionNotReadyReason = "Error while reconfiguring.";
                 logger.error("Error while reconfiguring.", ex);
                 correctlyConfigured = false;
             }
@@ -103,10 +115,25 @@ public class CompositionManager implements ICompositionManager {
     public List<Message> processShimMessage(Message message, String originId) {
         logger.info("CompositionManager received message from shim: " + message.toString());
         try {
+            int compQueueLen = csLock.getQueueLength();
+            if (compQueueLen > 10) {
+                logger.warn(String.format("%d outstanding compositions", compQueueLen));
+            } else {
+                logger.debug(String.format("%d outstanding compositions", compQueueLen));
+            }
+
+            ExecutionFlowStatus status = new ExecutionFlowStatus(message);
+
+            if (compQueueLen >= 1) {
+                for (Module module : compositionSpecification.getModules()) {
+                    if (!module.getFenceSupport()) {
+                        int mId = getBackendManager().getModuleId(module.getId());
+                        getBackendManager().markModuleAllOutstandingRequestsAsFinished(mId);
+                    }
+                }
+            }
             csLock.acquire(); // can only handle when not reconfiguring
             if (correctlyConfigured) {
-                ExecutionFlowStatus status = new ExecutionFlowStatus(message);
-
                 status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), shimManager, backendManager);
 
                 logger.info("Flow execution finished.");
@@ -115,15 +142,27 @@ public class CompositionManager implements ICompositionManager {
                 status.getResultMessages().values().forEach(results::addAll);
                 return results;
             } else {
-                logger.error("Could not handle incoming message due to configuration error.", message);
+                logger.error("Could not handle incoming message due to configuration error {}: {}", compositionNotReadyReason, message);
             }
         } catch (UnsupportedOperationException e) {
             if (bypassUnsupportedMessages) {
-                logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
+                boolean warn=true;
+                if (message instanceof OpenFlowMessage) {
+                    OFMessage openFlowMessage = ((OpenFlowMessage) message).getOfMessage();
+                    if (openFlowMessage instanceof OFEchoRequest ||
+                            openFlowMessage instanceof OFEchoReply)
+                        warn = false;
+                    else if (openFlowMessage instanceof OFFeaturesReply ||
+                            openFlowMessage instanceof OFFeaturesRequest)
+                        warn =false;
+                }
+
+                if (warn)
+                    logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
 
                 try {
-                    if (message.getHeader().getModuleId()==0) {
-                        logger.warn("Message ID is 0 relaying to ALL backends");
+                    if (message.getHeader().getModuleId() == 0) {
+                        logger.info("Message ID is 0 relaying to ALL backends");
                         backendManager.sendMessageAllBackends(message);
                     } else {
                         backendManager.sendMessage(message);
@@ -140,10 +179,6 @@ public class CompositionManager implements ICompositionManager {
             csLock.release();
         }
         return null;
-    }
-
-    public void setFibManager(IFIBManager fibManager) {
-        this.fibManager = fibManager;
     }
 
     /**
@@ -221,8 +256,9 @@ public class CompositionManager implements ICompositionManager {
             }
             logger.warn("Reusing previous specification '" + previousCompositionSpecificationXml + "'.");
             this.compositionSpecificationXml = previousCompositionSpecificationXml;
-            if (reconfigurationFuture == null)
+            if (reconfigurationFuture == null) {
                 correctlyConfigured = true;
+            }
         } catch (TimeoutException ex) {
             logger.error("TimeoutException occurred.", ex);
         } finally {

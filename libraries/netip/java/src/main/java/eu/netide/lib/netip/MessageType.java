@@ -25,9 +25,13 @@ public enum MessageType {
      */
     MODULE_ACKNOWLEDGE((byte) 0x05),
     /**
+     * The HEARTBEAT Type
+     */
+    HEARTBEAT((byte)0x06),
+    /**
      * The TOPOLOGY_UPDATE.
      */
-    TOPOLOGY_UPDATE((byte) 0x06),
+    TOPOLOGY_UPDATE((byte) 0x07),
     /**
      * The OPENFLOW type.
      */
@@ -40,6 +44,10 @@ public enum MessageType {
      * The OPFLEX type.
      */
     OPFLEX(Protocol.OPFLEX.getValue()),
+    /**
+     * FENCE message
+     */
+    FENCE((byte)0x08),
     /**
      * The UNSUPPORTED type.
      */

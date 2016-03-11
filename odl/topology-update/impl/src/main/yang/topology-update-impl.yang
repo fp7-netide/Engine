@@ -1,0 +1,119 @@
+module topology-update-impl {
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:topology-update:impl";
+    prefix "topology-update-impl";
+
+    import config { prefix config; revision-date 2013-04-05; }
+    import opendaylight-md-sal-dom {prefix dom; revision-date 2013-10-28;}
+    import opendaylight-md-sal-binding { prefix md-sal-binding; revision-date 2013-10-28;}
+    import opendaylight-sal-binding-broker-impl { prefix sal-broker; revision-date 2013-10-28;}
+
+    description
+        "Service definition for topology-update project";
+
+    revision "2014-12-10" {
+        description
+            "Initial revision";
+    }
+
+    identity topology-update {
+        base config:module-type;
+        config:java-name-prefix TopologyUpdate;
+    }
+
+    augment "/config:modules/config:module/config:configuration" {
+        case topology-update {
+            when "/config:modules/config:module/config:type = 'topology-update'";
+            
+            leaf rabbit-host {
+                description "RabbitMQ server hostname";
+                type string;
+                mandatory true;
+            }
+            
+            leaf rabbit-port {
+                description "RabbitMQ server port";
+                type uint16;
+                mandatory true;
+            }
+            
+            leaf rabbit-user {
+                description "RabbitMQ username";
+                type string;
+                mandatory true;
+            }
+            
+            leaf rabbit-password {
+                description "RabbitMQ password";
+                type string;
+                mandatory true;
+            }
+            
+            leaf rabbit-virtual-host {
+                description "RabbitMQ virtual host";
+                type string;
+                mandatory true;
+            }
+            
+            leaf exchange-name {
+                description "AMQP exchange name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf base-topic-name {
+                description "Base AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf node-topic-name {
+                description "Node AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf node-connector-topic-name {
+                description "Node Connector AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            leaf link-topic-name {
+                description "Link AMQP topic name";
+                type string;
+                mandatory true;
+            }
+            
+            
+            
+            
+            container broker {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity md-sal-binding:binding-broker-osgi-registry;
+                    }
+                }
+            }
+            
+            container notification-service {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity md-sal-binding:binding-notification-service;
+                    }
+                }
+            }
+
+            container notification-adapter {
+                uses config:service-ref {
+                    refine type {
+                        mandatory true;
+                        config:required-identity sal-broker:binding-new-notification-service;
+                    }
+                }
+            }
+        }
+    }
+}

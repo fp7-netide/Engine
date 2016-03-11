@@ -1,0 +1,10 @@
+<?xml version="1.0" ?> 
+<CompositionSpecification>
+  <Modules>
+    <Module id="SimpleSwitch" loaderIdentification="simple_switch.py">
+			<CallCondition events="packetIn" datapaths="0x1 0x2 0x3 0xA"/>
+	</Module>
+  </Modules>
+  <Composition>
+  </Composition>
+</CompositionSpecification>

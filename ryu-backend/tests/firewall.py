@@ -106,7 +106,7 @@ class Firewall(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
         
-        if datapath.id == FW_DPID and self.stateless_FW_configured == False:
+        if self.stateless_FW_configured == False:
             self.Configure_stateless_FW(datapath)
             self.stateless_FW_configured = True
     
@@ -116,7 +116,6 @@ class Firewall(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
 
-        print "FIREWALL packet in from dpid: ",datapath.id," msg:",  msg
         pkt = packet.Packet(msg.data)
         self.Configure_stateful_FW(msg)
 
