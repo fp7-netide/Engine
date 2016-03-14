@@ -122,7 +122,6 @@
                         </Bundle-SymbolicName>
                         <Export-Package>
                             eu.netide.lib.netip.*,
-                            org.projectfloodlight.openflow.*,
                         </Export-Package>
                         <Import-Package>
                             org.osgi.framework
