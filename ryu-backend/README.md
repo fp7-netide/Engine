@@ -28,9 +28,9 @@ Finally, ```simple_switch``` is a simple L2 learning switch application and ```f
 
 ## Testing
 
-To test the Ryu shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2 or later.
+To test the Ryu backend it is necessary to run one of the shim layers provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2 or later.
 The Java implementation of the Core can be found in this repository within folder ```core```.
-First, start the Core by following the accompanying README and then, run the ```ryu-shim``` with the following command:
+For instance, to use this backend with the Ryu shim, first start the Core by following the accompanying README and then, run the ```ryu-shim``` with the following command:
 ```
 ryu-manager ryu-shim.py
 ```
