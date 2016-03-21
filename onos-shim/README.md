@@ -134,7 +134,7 @@ s23 lo:  s23-eth1:www-eth0 s23-eth2:s21-eth3
 
 Where ```alice```, ```bob``` and ```www``` belong to a hypothetical LAN protected by a firewall (switch ```s11```), while ```charlie``` is outside the LAN.
 
-Once both Core and Ryu shim are running, the backend and OpenFlow 1.0 network applications can be started with:
+Once both Core and ONOS shim are running, the backend and OpenFlow 1.0 network applications can be started with:
 
 ``` $ ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 

@@ -49,7 +49,7 @@ import static org.onlab.util.Tools.get;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Sample reactive forwarding application.
+ * ONOS shim application.
  */
 @Component(immediate = true)
 public class ShimLayer {
