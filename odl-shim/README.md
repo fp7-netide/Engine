@@ -33,7 +33,7 @@ Increase the amount of RAM maven can use
 
 ```export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'```
 
-Build Odl Shim
+Build ODL Shim
 
 ```cd odl-shim```
 
@@ -53,6 +53,8 @@ Wait until the following command give an input
 
 ```log:display | grep "NetideProvider Session Initiated"```
 
+*Note*: To run another Karaf instance (apart from ODL's), we need to modify the following file: ```odl-shim/karaf/target/assembly/etc/org.apache.karaf``` and manually change ports 1099 and 44444 to something different.
+
 # Testing
 To test the ODL shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
 In the ```ryu-backend/tests``` folder, a minimal implementation of the Core is provided.
@@ -64,11 +66,8 @@ Run mininet and create the topology
 
 ```sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6644```
 
-Run the core
+Run the Core by following the README in [https://github.com/fp7-netide/Engine/tree/master/core].
 
-```cd ryu-backend/tests```
-
-```python AdvancedProxyCore.py -c CompositionSpecification.xml```
 
 Run Ryu-backend (with OF1.0 apps). Follow the instructions at [https://github.com/fp7-netide/Engine/tree/master/ryu-backend] to install Ryu-Backend.
 
@@ -77,5 +76,3 @@ Run Ryu-backend (with OF1.0 apps). Follow the instructions at [https://github.co
 ```ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 
 To test the demo from mininet console execute ```pingall```. The Results should be 8% dropped (11/12 received)
-
-

@@ -30,14 +30,12 @@ The IP address specification is not needed when Ryu and Mininet are running on t
 
 ## Testing
 
-To test the Ryu shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
-In the ```tests``` folder, a minimal implementation of the Core is provided.
-For instance, to use this shim with the Ryu backend run following sequence of commands:
+To test the Ryu shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2 or later.
+The Java implementation of the Core can be found in this repository within folder ```core```.
+First, start the Core by following the accompanying README and then, run the ```ryu-shim``` with the following command:
 ```
-python AdvancedProxyCore.py -c CompositionSpecification.xml
 ryu-manager ryu-shim.py
 ```
-```AdvancedProxyCore.py``` has many option (such as the composition specification file to load) that can be discovered by running ```AdvancedProxyCore.py -h```.
 
 A network emulator such as Mininet can be used to test the software. In the ```test``` folder a script (```netide-topo.py```) that automatically configures Mininet with a 4 switches and 4 hosts topology.
 ```
@@ -72,7 +70,7 @@ or
 
 if you want to test the OpenFlow 1.3 applications.
 
-The composition configuration defined in ```CompositionSpecification.xml``` loaded by the ```AdvancedProxyCore.py``` assigns switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
+For instance, the composition configuration for the Core could assign switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
 
 As an alternative, one may want to test different applications running on different instances of the client controller. In this case, just open two terminals and run the following commands (one for each terminal):
 

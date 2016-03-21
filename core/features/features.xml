@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          name="NetIDE Core Features-@CORE-VERSION">
+
+    <feature name="core-thirdparty-dependencies" version="@FEATURE-VERSION">
+        <bundle>
+            wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"
+        </bundle>
+        <bundle>mvn:com.google.guava/guava/18.0</bundle>
+        <bundle>
+            wrap:mvn:org.onosproject/openflowj/0.9.1.onos$Bundle-SymbolicName=org.onosproject.openflowj&amp;Bundle-Version=0.9.1&amp;Export-Package=org.projectfloodlight.openflow.*;version="0.9.1"&amp;Import-Package=com.google.common.base;version="[18.0,19)",com.google.common.collect;version="[18.0,19)",com.google.common.hash;version="[18.0,19)",com.google.common.primitives;version="[18.0,19)",org.jboss.netty.buffer;version="[3.9,4)",org.jboss.netty.channel;version="[3.9,4)"
+        </bundle>
+        <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
+        <bundle>mvn:com.google.guava/guava/18.0</bundle>
+    </feature>
+
+
+    <feature name="core-api" version="@FEATURE-VERSION">
+        <feature>core-thirdparty-dependencies</feature>
+        <bundle>mvn:eu.netide.lib/netip/@CORE-VERSION</bundle>
+        <bundle>mvn:eu.netide.core/core.api/@CORE-VERSION</bundle>
+    </feature>
+
+    <feature name="core-caos" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.caos/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-connectivity" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.connectivity/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-management" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.management/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-logpub" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.logpub/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <feature>core-connectivity</feature>
+        <feature>core-caos</feature>
+        <feature>core-logpub</feature>
+        <feature>core-management</feature>
+    </feature>
+</features>

@@ -124,26 +124,25 @@ class BackendDatapath(controller.Datapath):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
+        self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
 
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
             event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
-            self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
             for key, value in self.channel.running_modules.iteritems():
                 if value == module_id and key in event_observers:
                     module_brick = ryu.base.app_manager.lookup_service_brick(key)
                     module_brick_handlers = module_brick.get_handlers(ev)
                     for handler in module_brick_handlers:
-                        print "START calling the handler from backend", ev
                         handler(ev)
-                        print "END calling the handler from backend"
                     break
 
-            # Sending the FENCE message to the Core
-            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
-            self.channel.socket.send(msg_to_send)
+            # Sending the FENCE message to the Core only if self.netide_xid is not 0
+            if self.netide_xid is not 0:
+                msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
+                self.channel.socket.send(msg_to_send)
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -206,7 +205,7 @@ class CoreConnection(threading.Thread):
         # TODO: it seems that the ofp_event is always the last module registered by Ryu: to be checked!!!
         while 'ofp_event' not in app_manager.SERVICE_BRICKS:
             time.sleep(2)
-        if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
+        if self.module_announcement(app_manager.SERVICE_BRICKS, self.backend) is False:
             print "No module ids received from the core!!! Exiting..."
             return
 
@@ -251,12 +250,11 @@ class CoreConnection(threading.Thread):
                 ack = True
         return True
 
-    def module_announcement(self, bricks):
+    def module_announcement(self, bricks, backend):
         for key,value in bricks.iteritems():
             module_name = key
             if key is not "ofp_event" and key is not self.backend.name: #we take only the control applications
-                xid = random.randint(0, 1000000)
-                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', xid, None, None, module_name)
+                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', 0, backend.backend_id, None, module_name)
                 self.socket.send(ann_message)
                 ack = False
                 while ack is False:

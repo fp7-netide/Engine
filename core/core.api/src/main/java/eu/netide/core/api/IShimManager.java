@@ -22,4 +22,10 @@ public interface IShimManager {
      * @return True, if the transmission was succesful, false otherwise.
      */
     boolean sendMessage(Message message);
+
+    /**
+     * Get shim last message time to know if it is still alive
+     * @return unix time stamp.
+     */
+    long getLastMessageTime();
 }

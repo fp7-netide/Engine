@@ -171,6 +171,41 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         }
     }
 
+    /* TODO: Probably more places to remove old backend */
+    @Override
+    public void removeBackend(int id)
+    {
+        String backEndName = getBackend(id);
+        logger.info("Removing backend %s", backEndName);
+
+        LinkedList<Integer> removedModules= new LinkedList<>();
+        moduleToBackendMappings.entrySet().forEach(
+                (modID) -> {
+                    if (modID.getValue().equals(backEndName)) {
+                        moduleToNameMappings.remove(modID.getKey());
+                        moduleLastMessage.remove(modID.getKey());
+                        removedModules.add(modID.getKey());
+                    }
+                });
+
+        removedModules.forEach((key) -> {
+            moduleToBackendMappings.remove(key);
+            backendIds.remove(backEndName);
+        });
+
+        try {
+            listenerLock.acquire();
+            // Notify listeners and send to shim
+            for (IBackendMessageListener listener : backendMessageListeners) {
+                pool.submit(() -> listener.OnBackendRemoved(backEndName, removedModules));
+            }
+        } catch (InterruptedException e) {
+            logger.error("", e);
+        } finally {
+            listenerLock.release();
+        }
+    }
+
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message;
@@ -250,7 +285,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
                     connector.SendData(message.toByteRepresentation(), Constants.SHIM);
                 } else if (message instanceof FenceMessage) {
-                    logger.error("Received unrequested FenceMessage: '" + message.toString() + "'. Dropping message");
+                    if (((FenceMessage) message).getHeader().getTransactionId()==0) {
+                        logger.debug("FenceMessage with xid==0 makes no sense '" + message.toString() + "'. Dropping message");
+                    } else{
+                        logger.error("Received unrequested FenceMessage: '" + message.toString() + "'. Dropping message");
+                    }
                 } else {
                     logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
                     try {

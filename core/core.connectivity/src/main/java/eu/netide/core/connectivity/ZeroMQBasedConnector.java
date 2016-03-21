@@ -109,7 +109,11 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
                     if (senderId.equals(Constants.SHIM) && shimListener != null) {
                         shimListener.OnDataReceived(data, senderId);
                     } else if (backendListener != null) {
-                        backendListener.OnDataReceived(data, senderId);
+                        try {
+                            backendListener.OnDataReceived(data, senderId);
+                        } catch (Exception e) {
+                            logger.error("Error on backend Data handling", e);
+                        }
                     }
                 }
                 if (poller.pollin(1)) {

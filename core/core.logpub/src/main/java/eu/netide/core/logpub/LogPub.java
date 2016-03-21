@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+import java.util.LinkedList;
+
 public class LogPub implements IBackendMessageListener, IShimMessageListener, IManagementMessageListener, Runnable{
 
     private static final String STOP_COMMAND = "Control.STOP";
@@ -99,6 +101,11 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
         sendSocket.connect(CONTROL_ADDRESS);
         zmq_message.send(sendSocket);
         sendSocket.close();
+    }
+
+    @Override
+    public void OnBackendRemoved(String backEndName, LinkedList<Integer> removedModules) {
+
     }
 
     @Override

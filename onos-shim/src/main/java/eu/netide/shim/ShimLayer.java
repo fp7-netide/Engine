@@ -49,7 +49,7 @@ import static org.onlab.util.Tools.get;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Sample reactive forwarding application.
+ * ONOS shim application.
  */
 @Component(immediate = true)
 public class ShimLayer {
@@ -188,14 +188,12 @@ public class ShimLayer {
         String newCoreAddress = isNullOrEmpty(coreAddressProperty) ?
                 DEFAULT_CORE_ADDRESS : coreAddressProperty;
 
-        Integer newCorePort;
+        Integer newCorePort = getIntegerProperty(properties, "corePort");
 
-        try {
-            newCorePort = isNullOrEmpty(corePortProperty) ?
-                    DEFAULT_CORE_PORT : Integer.parseInt(corePortProperty.trim());
-        } catch (NumberFormatException e) {
-            return;
+        if (newCorePort == null) {
+            newCorePort = DEFAULT_CORE_PORT;
         }
+
         if (!Objects.equals(newCoreAddress, coreAddress) || !Objects.equals(newCorePort, corePort)) {
             coreAddress = newCoreAddress;
             corePort = newCorePort;
@@ -231,6 +229,26 @@ public class ShimLayer {
             enabled = false;
         }
         return enabled;
+    }
+
+    /**
+     * Get Integer property from the propertyName
+     * Return null if propertyName is not found.
+     *
+     * @param properties   properties to be looked up
+     * @param propertyName the name of the property to look up
+     * @return value when the propertyName is defined or return null
+     */
+    private static Integer getIntegerProperty(Dictionary<?, ?> properties,
+                                              String propertyName) {
+        Integer value = null;
+        try {
+            String s = (String) properties.get(propertyName);
+            value = isNullOrEmpty(s) ? value : Integer.parseInt(s.trim());
+        } catch (NumberFormatException | ClassCastException e) {
+            value = null;
+        }
+        return value;
     }
 
 }

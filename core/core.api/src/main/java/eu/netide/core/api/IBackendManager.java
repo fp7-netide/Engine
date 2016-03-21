@@ -29,9 +29,6 @@ public interface IBackendManager {
      */
     boolean sendMessageAllBackends(Message message);
 
-
-
-
     /**
      * Sends a request as specified in the given message and waits for the execution results.
      *
@@ -101,4 +98,10 @@ public interface IBackendManager {
 
     //! This methods marks a module as finished even though no fence message has been received
     void markModuleAllOutstandingRequestsAsFinished(int moduleId);
+
+    /**
+     * Removes a backend from the list of modules
+     * @param id The id of the backend to remove
+     */
+    void removeBackend(int id);
 }

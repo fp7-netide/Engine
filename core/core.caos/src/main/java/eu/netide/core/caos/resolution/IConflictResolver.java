@@ -64,6 +64,16 @@ public interface IConflictResolver {
     boolean containsConflict(Message[] messages);
 
     /**
+     * Gets a value indicating whether conflicts exist in the given set of messages with different priority
+     * Conflict between message with the same priority are ignored
+     *
+     * @param messages The set of messages to check.
+     * @param priorities Information about module priorities.
+     * @return True, if conflicts where found. False otherwise.
+     */
+    boolean containsConflictDifferentPriorities(Message[] messages, PriorityInfo priorities);
+
+    /**
      * Gets a value indicating whether a conflict exists between the two given messages.
      *
      * @param message1 The first message.

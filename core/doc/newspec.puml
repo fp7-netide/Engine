@@ -1,0 +1,34 @@
+@startuml
+
+actor User
+
+participant "Karaf Console" as kc
+User -> kc: netide:loadcomposition new.xml
+kc -> LoadComposition
+
+participant "Karaf Configuration" as config
+
+LoadComposition -> LoadComposition: read content of xml file
+
+LoadComposition -> config: setConfigValue\n(composition, xmlcontent)
+
+participant "core.caos" as caos
+config -> caos: ReloadOSGIModule
+
+caos -> config: getConfiguration\n(composition)
+
+create CompositionSpecification
+caos -> CompositionSpecification: Load
+CompositionSpecification --> caos: List of required Modules
+
+loop
+caos -> BackendManager: getBackends()
+caos <-- BackendManager: currently connected backends
+
+note over caos: Check if all required \nmodules are present
+end
+
+note over caos: Reconfiguration finished
+
+caos -> kc: Log succesful reconfiguration
+@enduml
