@@ -41,13 +41,13 @@ public class FIBManager implements IShimMessageListener {
     }
 
     @Activate
-    protected void start()
+    public void Start()
     {
         log.info("FIBManager started.");
     }
 
     @Deactivate
-    protected void stop()
+    public void Stop()
     {
         log.info("FIBManager stopped.");
     }
@@ -66,10 +66,8 @@ public class FIBManager implements IShimMessageListener {
             if (ofMessage.getOfMessage().getType() == OFType.ECHO_REQUEST) {
                 return;
             }
-            // OpenFlow Message
 
-            // Our API is broken
-
+            /*
             ChannelBuffer bb = ChannelBuffers.copiedBuffer(message.getPayload());
             try {
                 OFMessage ofmessage = reader.readFrom(bb);
@@ -84,6 +82,7 @@ public class FIBManager implements IShimMessageListener {
             } catch (OFParseError ofParseError) {
                 ofParseError.printStackTrace();
             }
+            */
         }
     }
 
@@ -96,13 +95,5 @@ public class FIBManager implements IShimMessageListener {
         }
         log.info("Relaying message to shim.");
         shimManager.sendMessage(message);
-    }
-
-    public void bindShimManager(IShimManager shimManager) {
-        this.shimManager = shimManager;
-    }
-
-    public void bindCompositionManager(ICompositionManager compositionManager) {
-        this.compositionManager = compositionManager;
     }
 }
