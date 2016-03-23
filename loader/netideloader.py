@@ -47,6 +47,7 @@ import signal
 import sys
 import time
 import zmq
+import tarfile
 
 import subprocess as sp
 
@@ -60,8 +61,34 @@ from loader.package import Package
 # TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
 os.environ["ANSIBLE_HOST_KEY_CHECKING"] = "False"
+extractPath = os.path.join(dataroot, "extractPath.txt")
 
 logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=logging.DEBUG)
+
+def extract_package(args):
+    
+    os.makedirs(dataroot, exist_ok=True)
+    
+    if os.path.exists(extractPath):
+        if os.path.isfile(extractPath): 
+            f = open(extractPath)
+            tmpPath = f.read()
+    else:
+        tmpPath = dataroot     
+    #expect path to tar archive as args and extract content
+    tar = tarfile.open(sys.argv[2])
+    tar.extractall(tmpPath)
+    tar.close()
+    
+    return 0
+
+def set_extraction_path(args):
+    os.makedirs(dataroot, exist_ok=True)
+
+    f = open(extractPath, 'w')
+    f.write(sys.argv[2])
+    f.close
+    return 0;
 
 def load_package(args):
     if args.mode == "appcontroller":
@@ -270,6 +297,14 @@ def install(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
+    
+    parser_load = subparsers.add_parser("extractArchive", description ="extractsArchive")
+    parser_load.add_argument("path", type=str, help="Path to archive")
+    parser_load.set_defaults(func=extract_package, mode="all")
+    
+    parser_load = subparsers.add_parser("extractionPath", description ="Set the extraction path to the given argument")
+    parser_load.add_argument("path", type=str, help="Path to store extracted package")
+    parser_load.set_defaults(func=set_extraction_path, mode="all")
 
     parser_load = subparsers.add_parser("load", description="Load a NetIDE package and start its applications")
     parser_load.add_argument("package", type=str, help="Package to load")
