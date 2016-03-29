@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.onlab.util.Tools.get;
@@ -92,8 +93,9 @@ public class ShimLayer {
 
     @Activate
     public void activate(ComponentContext context) {
-        cfgService.registerProperties(getClass());
+
         appId = coreService.registerApplication("eu.netide.shim");
+        cfgService.registerProperties(getClass());
 
         //ZeroMQ connection handler
         coreConnector = new ZeroMQBaseConnector();
@@ -153,15 +155,15 @@ public class ShimLayer {
         TrafficSelector.Builder selector = DefaultTrafficSelector.builder();
         selector.matchEthType(Ethernet.TYPE_IPV4);
         packetService.requestPackets(selector.build(), PacketPriority.REACTIVE,
-                                     appId);
+                                     appId, Optional.empty());
         selector.matchEthType(Ethernet.TYPE_ARP);
         packetService.requestPackets(selector.build(), PacketPriority.REACTIVE,
-                                     appId);
+                                     appId, Optional.empty());
 
         if (ipv6Forwarding) {
             selector.matchEthType(Ethernet.TYPE_IPV6);
             packetService.requestPackets(selector.build(),
-                                         PacketPriority.REACTIVE, appId);
+                                         PacketPriority.REACTIVE, appId, Optional.empty());
         }
     }
 
@@ -182,8 +184,6 @@ public class ShimLayer {
         }
 
         String coreAddressProperty = get(properties,"coreAddress");
-
-        String corePortProperty = get(properties,"corePort");
 
         String newCoreAddress = isNullOrEmpty(coreAddressProperty) ?
                 DEFAULT_CORE_ADDRESS : coreAddressProperty;
