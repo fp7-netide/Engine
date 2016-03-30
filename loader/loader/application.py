@@ -17,6 +17,9 @@ import inspect
 import json
 import os
 import logging
+import configparser
+import ast
+import re
 
 from loader import controllers
 from loader import environment
@@ -72,9 +75,34 @@ class Application(object):
 
     @classmethod
     def get_controller(cls, path):
-        with open(os.path.join(path, "_meta.json")) as f:
-            m = json.load(f)
-            c = m.get("controller")
-            if c is None:
-                return None
-            return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
+        test = os.path.basename(path) + ".sysreq"
+        print(test)
+        
+        with open(os.path.join(path, test),'r') as inf:
+            linesFromFile = inf.readlines()# = ast.literal_eval(inf.read())
+            
+            print(linesFromFile)
+            flag = 0
+            for line in linesFromFile:
+                if "controller" in line:
+                    flag = 1
+                    
+                if "name" in line and (flag == 1):
+                   # print(line)
+                    controllerName = re.findall(r'"([^"]*)"', line)
+                   # print(controllerName)
+                
+                if "entrypoint" in line and (flag == 1):
+                    #print(line)
+                    entryPoint = re.findall(r'"([^"]*)"', line)
+                    #print(entryPoint)
+            
+            
+        #config = configparser.RawConfigParser()
+        #with open(os.path.join(path, test), 'r') as f:
+            #config.sections()
+           # config.read(f)
+            #config.sections
+            #print(config.read(f))
+
+            return (controllerName, entryPoint)

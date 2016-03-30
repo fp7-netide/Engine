@@ -76,18 +76,20 @@ def extract_package(args):
     else:
         tmpPath = dataroot     
     #expect path to tar archive as args and extract content
-    tar = tarfile.open(sys.argv[2])
-    tar.extractall(tmpPath)
-    tar.close()
+    with tarfile.open(args.path) as tar:
+        tar.extractall(tmpPath)
+    
+    
+    print("Extracted to:" + tmpPath)
     
     return 0
 
 def set_extraction_path(args):
     os.makedirs(dataroot, exist_ok=True)
+    
+    with open(extractPath, 'w') as f:
+        f.write(args.path)
 
-    f = open(extractPath, 'w')
-    f.write(sys.argv[2])
-    f.close
     return 0;
 
 def load_package(args):
@@ -298,13 +300,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
     
-    parser_load = subparsers.add_parser("extractArchive", description ="extractsArchive")
-    parser_load.add_argument("path", type=str, help="Path to archive")
-    parser_load.set_defaults(func=extract_package, mode="all")
+    parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")
+    parser_extract.add_argument("path", type=str, help="Path to archive")
+    parser_extract.set_defaults(func=extract_package, mode="all")
     
-    parser_load = subparsers.add_parser("extractionPath", description ="Set the extraction path to the given argument")
-    parser_load.add_argument("path", type=str, help="Path to store extracted package")
-    parser_load.set_defaults(func=set_extraction_path, mode="all")
+    parser_extract_path = subparsers.add_parser("extractionPath", description ="Set the extraction path to the given argument")
+    parser_extract_path.add_argument("path", type=str, help="Path to store extracted package")
+    parser_extract_path.set_defaults(func=set_extraction_path, mode="all")
 
     parser_load = subparsers.add_parser("load", description="Load a NetIDE package and start its applications")
     parser_load.add_argument("package", type=str, help="Package to load")

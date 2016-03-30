@@ -35,6 +35,8 @@ class Package(object):
     def __init__(self, prefix, dataroot):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
+        
+        #might be unneccessary due to changes to netideloader - need to check with christian
         if prefix.endswith(".zip") and os.path.isfile(self.path):
             p = tempfile.mkdtemp(prefix="netide-tmp")
             with zipfile.ZipFile(self.path) as zf:
@@ -42,28 +44,37 @@ class Package(object):
             self.path = p
             # self.cleanup = True
 
-        p = os.path.join(self.path, "controllers.json")
+        p = os.path.join(self.path, "parameters.json")
         if os.path.exists(p):
             with open(p) as f:
                 self.config = json.load(f)
-
+                self.appNames = self.config.keys()
+                for key in self.appNames:
+                     print(key)
+        
         logging.debug("Loading applications for host {}".format(platform.node()))
-        p = os.path.join(self.path, "_apps")
+        p = os.path.join(self.path, "apps")
+        
         for d in os.listdir(p):
-            nodes = []
-            print(self.config.get("clients", {}))
-            for node, v in self.config.get("clients", {}).items():
-                if d in v.get("apps", []):
-                    nodes.append(node)
-            logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
-            app = os.path.join(p, d)
-            ctrl = Application.get_controller(app)
-            for n in nodes:
-                if n not in self.controllers:
-                    self.controllers[n] = {}
-                if ctrl not in self.controllers[n]:
-                    self.controllers[n][ctrl] = ctrl(dataroot)
-                self.controllers[n][ctrl].applications.append(Application(app))
+            if not d == ".DS_Store":
+                nodes = []
+                print(d)
+                for v in self.appNames:
+                    if d in v:
+                        nodes.append(v)
+                logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
+                app = os.path.join(p, d)
+                
+                #returns controller and entrypoint
+                ctrl = Application.get_controller(app)
+                for x in ctrl:
+                    print(x)
+                for n in nodes:
+                    if n not in self.controllers:
+                        self.controllers[n] = {}
+                    if ctrl not in self.controllers[n]:
+                        self.controllers[n][ctrl] = ctrl(dataroot)
+                    self.controllers[n][ctrl].applications.append(Application(app))
 
         hash = hashlib.sha1()
         for (dirpath, dirnames, filenames) in os.walk(self.path):

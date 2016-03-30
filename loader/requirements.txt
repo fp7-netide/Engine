@@ -2,3 +2,4 @@ nose
 requests
 pyzmq
 tarfile
+configparser
