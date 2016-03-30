@@ -8,10 +8,9 @@
         </bundle>
         <bundle>mvn:com.google.guava/guava/18.0</bundle>
         <bundle>
-            wrap:mvn:org.onosproject/openflowj/0.9.1.onos$Bundle-SymbolicName=org.onosproject.openflowj&amp;Bundle-Version=0.9.1&amp;Export-Package=org.projectfloodlight.openflow.*;version="0.9.1"&amp;Import-Package=com.google.common.base;version="[18.0,19)",com.google.common.collect;version="[18.0,19)",com.google.common.hash;version="[18.0,19)",com.google.common.primitives;version="[18.0,19)",org.jboss.netty.buffer;version="[3.9,4)",org.jboss.netty.channel;version="[3.9,4)"
+            wrap:mvn:org.onosproject/openflowj/0.9.1.onos$Bundle-SymbolicName=org.onosproject.openflowj&amp;Bundle-Version=0.9.1&amp;Export-Package=org.projectfloodlight.openflow.*;version="0.9.1"&amp;Import-Package=com.google.common.base;version="[18.0,19)",com.google.common.collect;version="[18.0,19)",com.google.common.hash;version="[18.0,19)",com.google.common.primitives;version="[18.0,19)",org.jboss.netty.buffer;version="[3.9,4)",org.jboss.netty.channel;version="[3.9,4)",org.slf4j
         </bundle>
         <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
-        <bundle>mvn:com.google.guava/guava/18.0</bundle>
     </feature>
 
 
