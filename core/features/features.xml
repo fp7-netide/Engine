@@ -36,6 +36,9 @@
         <feature>core-api</feature>
         <bundle>mvn:eu.netide.core/core.logpub/@CORE-VERSION</bundle>
     </feature>
+    <feature name="core-branding" version="@FEATURE-VERSION">
+        <bundle>mvn:eu.netide.core/core.branding/@CORE-VERSION</bundle>
+    </feature>
     <feature name="core" version="@FEATURE-VERSION">
         <feature>core-api</feature>
         <feature>core-connectivity</feature>
