@@ -1,9 +1,6 @@
 package eu.netide.core.management;
 
-import eu.netide.core.api.IConnectorListener;
-import eu.netide.core.api.IManagementConnector;
-import eu.netide.core.api.IManagementHandler;
-import eu.netide.core.api.IManagementMessageListener;
+import eu.netide.core.api.*;
 import eu.netide.lib.netip.*;
 import org.apache.karaf.config.core.ConfigMBean;
 import org.json.JSONException;
@@ -146,7 +143,7 @@ public class ManagementHandler implements IConnectorListener, IManagementHandler
         }
     }
 
-    private boolean setConfigurationValue(String pid, String key, String value) throws IOException, MalformedObjectNameException, MBeanException {
+    public static boolean setConfigurationValue(String pid, String key, String value) throws IOException, MalformedObjectNameException, MBeanException {
         JMXConnector connector = null;
         try {
             JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:1099/karaf-root");

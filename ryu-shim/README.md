@@ -9,10 +9,8 @@ To use the shim, first clone the Ryu code (from [here](https://github.com/osrg/r
 Then, add the Ryu's installation path to the PYTHONPATH variable in your ~/.profile or ~/.bashrc (e.g. in a Ubuntu 14.04 Linux OS: ```export PYTHONPATH=/usr/local/lib/python2.7/dist-packages/ryu```).
 
 Additional python packages may be required in order to succefully complete the installation procedure. On a Ubuntu 14.04 Linux OS the following must be installed:
-* ```apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev python-zmq```
-* ```pip install ecdsa```
-* ```pip install stevedore```
-* ```pip install greenlet```
+* ```sudo apt-get install python-pip python-dev python-repoze.lru libxml2-dev libxslt1-dev zlib1g-dev python-zmq```
+* ```sudo pip install ecdsa stevedore greenlet oslo.config eventlet WebOb Routes```
 
 ## Running
 
@@ -21,7 +19,7 @@ The shim layer is a client for the NetIDE Core. Therefore, first start the Core,
 ryu-manager ryu-shim.py
 ```
 
-This command will start the shim layer along with the rest of the Ryu platform. The Ryu shim will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 41414.
+This command will start the shim layer along with the rest of the Ryu platform. The Ryu shim will try to connect to a running NetIDE Core which must be already running and listening on the TCP port 5555.
 
 **Note:** The Ryu controller platform listens for connections from the switches on the port 6633. Therefore, when using Mininet for testing purposes, start mininet by specifying the controller information as follows:
 ```
@@ -32,33 +30,70 @@ The IP address specification is not needed when Ryu and Mininet are running on t
 
 ## Testing
 
-To test the Ryu shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
-In the ```ryu-backend/tests``` folder, a minimal implementation of the Core is provided.
-For instance, to use this shim with the Ryu backend run following sequence of commands:
+To test the Ryu shim it is necessary to run one of the backends provided in this github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2 or later.
+The Java implementation of the Core can be found in this repository within folder ```core```.
+First, start the Core by following the accompanying README and then, run the ```ryu-shim``` with the following command:
 ```
-python AdvancedProxyCore.py
 ryu-manager ryu-shim.py
 ```
 
-A network emulator such as Mininet can be used to test the software:
+A network emulator such as Mininet can be used to test the software. In the ```test``` folder a script (```netide-topo.py```) that automatically configures Mininet with a 4 switches and 4 hosts topology.
 ```
-sudo mn --topo linear,4 --controller=remote,ip=IP_ADDRESS,port=6633
+sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=IP_ADDRESS,port=6633
 ```
-Where IP_ADDRESS is the IP address of the machine where the Ryu and the shim layer are running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
+Where IP_ADDRESS is the IP address of the machine where the Ryu shim layer is running. The IP address specification is not needed when Ryu and Mininet are running on the same machine.
+Add options ```--switch ovs,protocols=OpenFlow13``` if you want to use the OpenFlow-1.3 protocol and test applications.
 
-Once both Core and Ryu shim are running, the backend and a network application can be started with:
 
-``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py```
+This script configures the following topology:
 
-Where ```simple_switch``` is a simple application provided with the Ryu backend for testing purposes. Other applications can be used as well. Many sample applications are available in the Ryu source tree in the ```ryu/app``` folder.
+```
+alice alice-eth0:s22-eth1
+bob bob-eth0:s22-eth2
+charlie charlie-eth0:s11-eth1
+www www-eth0:s23-eth1
+s11 lo:  s11-eth1:charlie-eth0 s11-eth2:s21-eth1
+s21 lo:  s21-eth1:s11-eth2 s21-eth2:s22-eth3 s21-eth3:s23-eth2
+s22 lo:  s22-eth1:alice-eth0 s22-eth2:bob-eth0 s22-eth3:s21-eth2
+s23 lo:  s23-eth1:www-eth0 s23-eth2:s21-eth3
+```
 
-Within the Mininet CLI, a successful ```pingall``` demonstrates that the hosts are able to comminicate with each others.
+Where ```alice```, ```bob``` and ```www``` belong to a hypothetical LAN protected by a firewall (switch ```s11```), while ```charlie``` is outside the LAN.
+
+Once both Core and Ryu shim are running, the backend and OpenFlow 1.0 network applications can be started with:
+
+``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
+
+or
+
+``` ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch_13.py tests/firewall_13.py```
+
+if you want to test the OpenFlow 1.3 applications.
+
+For instance, the composition configuration for the Core could assign switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
+
+As an alternative, one may want to test different applications running on different instances of the client controller. In this case, just open two terminals and run the following commands (one for each terminal):
+
+```
+ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py
+ryu-manager --ofp-tcp-listen-port 7734 ryu-backend.py tests/firewall.py
+```
+
+Within the Mininet CLI, a ```pingall``` command demonstrates what traffic is allowed and what is not, depending on the rules installed by the firewall application.
 
 ## License
 
 See the LICENSE file.
 
 ## ChangeLog
+
+ryu-backend: 2015-11-11 Wed Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Added OpenFlow 1.3 test applications
+
+ryu-backend: 2015-11-09 Mon Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Added management of OpenFlow synchromous messages
 
 ryu-shim: 2015-10-01 Thu Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 

@@ -7,23 +7,21 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * <p>Java-Klasse für events.
- * <p>
+ * <p>Java-Klasse fÃ¼r events.
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
- * <p>
  * <pre>
- * &lt;simpleType name="events">
- *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string">
- *     &lt;enumeration value="packetIn"/>
- *     &lt;enumeration value="flowMod"/>
- *     &lt;enumeration value="connectionUp"/>
- *     &lt;enumeration value="connectionDown"/>
- *     &lt;enumeration value="portStatus"/>
- *     &lt;enumeration value="flowRemoved"/>
- *     &lt;enumeration value="errorIn"/>
- *     &lt;enumeration value="barrierIn"/>
- *   &lt;/restriction>
- * &lt;/simpleType>
+ * &lt;simpleType name="events"&gt;
+ *   &lt;restriction base="{http://www.w3.org/2001/XMLSchema}string"&gt;
+ *     &lt;enumeration value="packetIn"/&gt;
+ *     &lt;enumeration value="flowMod"/&gt;
+ *     &lt;enumeration value="connectionUp"/&gt;
+ *     &lt;enumeration value="connectionDown"/&gt;
+ *     &lt;enumeration value="portStatus"/&gt;
+ *     &lt;enumeration value="flowRemoved"/&gt;
+ *     &lt;enumeration value="errorIn"/&gt;
+ *     &lt;enumeration value="barrierIn"/&gt;
+ *   &lt;/restriction&gt;
+ * &lt;/simpleType&gt;
  * </pre>
  */
 @XmlType(name = "Events", namespace = "http://netide.eu/schemas/compositionspecification/v1")

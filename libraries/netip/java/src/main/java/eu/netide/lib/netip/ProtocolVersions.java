@@ -1,7 +1,7 @@
 package eu.netide.lib.netip;
 
 /**
- * Enumeration of known protocol versions. Useful for Protocol->supportedVersion mappings.
+ * Enumeration of known protocol versions. Useful for Protocol to supportedVersion mappings.
  */
 public enum ProtocolVersions {
     /**
@@ -68,6 +68,7 @@ public enum ProtocolVersions {
      * Parse protocol versions.
      *
      * @param value the value
+     * @param protocol Protocol to test against
      * @return the protocol versions
      */
     public static ProtocolVersions parse(final Protocol protocol, final byte value) {

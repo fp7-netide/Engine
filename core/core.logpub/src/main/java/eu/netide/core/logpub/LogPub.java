@@ -9,6 +9,7 @@ import org.zeromq.ZMsg;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 public class LogPub implements IBackendMessageListener, IShimMessageListener, IManagementMessageListener, Runnable{
 
@@ -147,6 +148,11 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     @Override
     public void OnBackendMessage(Message message, String originId) {
         OnShimAndBackendMessage(message, "0", originId);
+    }
+
+    @Override
+    public void OnBackendRemoved(String backEndName, LinkedList<Integer> removedModules) {
+
     }
 
     @Override

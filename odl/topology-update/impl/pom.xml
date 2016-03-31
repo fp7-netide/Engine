@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: --><!--
+Copyright (c) 2014 Cisco Systems, Inc. and others.  All rights reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <parent>
+    <groupId>org.opendaylight.controller</groupId>
+    <artifactId>config-parent</artifactId>
+    <version>0.4.0-SNAPSHOT</version>
+    <relativePath/>
+  </parent>
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>eu.netide.util</groupId>
+  <artifactId>topology-update-impl</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+  <name>Netide Topology Updater Impl project</name>
+  <description>Allows to query the network topology</description>
+  <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+  <licenses>
+    <license>
+      <name>The Eclipse Public License v1.0 </name>
+      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Alec Leckey</name>
+      <email>alexander.j.leckey@intel.com</email>
+      <organization>Intel</organization>
+      <organizationUrl>http://www.intel.eu/labs</organizationUrl>
+    </developer>
+    <developer>
+      <name>Giuseppe Petralia</name>
+      <email>giuseppex.petralia@intel.com</email>
+      <organization>Intel</organization>
+      <organizationUrl>http://www.intel.eu/labs</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:ssh://github.com/fp7-netide/Engine.git</connection>
+    <developerConnection>scm:git:ssh://github.com/fp7-netide/Engine.git</developerConnection>
+    <url>https://wiki.opendaylight.org/view/NetIDE:Main</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-Version>${project.version}</Bundle-Version>
+             <Export-Package>
+              com.rabbitmq.client.*,
+              com.rabbitmq.utility.*
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+      <!-- Source plugin to attached code sources -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Javadoc plugin for docs -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- GPG plugin for signing -->
+      <plugin>
+      	<groupId>org.apache.maven.plugins</groupId>
+      	<artifactId>maven-gpg-plugin</artifactId>
+      	<version>1.5</version>
+      	<executions>
+	      <execution>
+          	<id>sign-artifacts</id>
+          	<phase>verify</phase>
+          	<goals>
+	          <goal>sign</goal>
+          	</goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- Nexus Staging Maven plugin for deploying snapshots -->
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+      	<artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.3</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>topology-update-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.rabbitmq</groupId>
+        <artifactId>amqp-client</artifactId>
+        <version>3.5.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.controller</groupId>
+      <artifactId>sal-core-api</artifactId>
+      <version>${mdsal.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.opendaylight.controller</groupId>
+      <artifactId>messagebus-api</artifactId>
+      <version>${mdsal.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>org.opendaylight.controller</groupId>
+        <artifactId>config-api</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.17</version>
+    </dependency>
+     <dependency>
+        <groupId>org.opendaylight.openflowplugin.model</groupId>
+        <artifactId>model-flow-service</artifactId>
+        <version>0.2.0-SNAPSHOT</version>
+    </dependency>    
+    <dependency>
+        <groupId>org.opendaylight.openflowplugin.model</groupId>
+        <artifactId>model-flow-base</artifactId>
+        <version>0.2.0-SNAPSHOT</version>
+    </dependency>
+    <!-- Testing Dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

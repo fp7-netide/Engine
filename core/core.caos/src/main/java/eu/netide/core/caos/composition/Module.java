@@ -6,21 +6,19 @@ import javax.xml.bind.annotation.*;
 
 /**
  * <p>Java-Klasse f�r anonymous complex type.
- * <p>
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
- * <p>
  * <pre>
- * &lt;complexType>
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;choice minOccurs="0">
- *         &lt;element ref="{http://netide.eu/schemas/compositionspecification/v1}CallFilter"/>
- *       &lt;/choice>
- *       &lt;attribute name="id" use="required" type="{http://netide.eu/schemas/compositionspecification/v1}moduleID" />
- *       &lt;attribute name="loaderIdentification" use="required" type="{http://netide.eu/schemas/compositionspecification/v1}loaderIdentification" />
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
+ * &lt;complexType&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;choice minOccurs="0"&gt;
+ *         &lt;element ref="{http://netide.eu/schemas/compositionspecification/v1}CallFilter"/&gt;
+ *       &lt;/choice&gt;
+ *       &lt;attribute name="id" use="required" type="{http://netide.eu/schemas/compositionspecification/v1}moduleID" /&gt;
+ *       &lt;attribute name="loaderIdentification" use="required" type="{http://netide.eu/schemas/compositionspecification/v1}loaderIdentification" /&gt;
+ *     &lt;/restriction&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
  * </pre>
  */
 @XmlAccessorType(XmlAccessType.NONE)

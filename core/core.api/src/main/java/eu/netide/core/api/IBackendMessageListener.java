@@ -2,6 +2,8 @@ package eu.netide.core.api;
 
 import eu.netide.lib.netip.Message;
 
+import java.util.LinkedList;
+
 /**
  * Interface for backend message listeners.
  *
@@ -15,4 +17,11 @@ public interface IBackendMessageListener {
      * @param originId The id of the backend that sent the message.
      */
     void OnBackendMessage(Message message, String originId);
+
+    /**
+     * Called *after* a backend has been removed
+     * @param backEndName the backend that has been removed
+     * @param removedModules
+     */
+    void OnBackendRemoved(String backEndName, LinkedList<Integer> removedModules);
 }

@@ -52,7 +52,7 @@ public class ParallelCallNodeExecutor implements IFlowNodeExecutor {
                 log.error("Unable to get result of ModuleCall", e);
                 throw new RuntimeException("Unable to get result of ModuleCall", e);
             }
-        }).flatMap(efs -> efs.getResultMessages().values().stream().flatMap(Collection::stream)).toArray(Message[]::new);
+        }).flatMap(executionFlowStatus -> executionFlowStatus.getResultMessages().values().stream().flatMap(Collection::stream)).toArray(Message[]::new);
         // Resolve conflicts per datapath
         List<Message> allResolvedMessages = new ArrayList<>();
 

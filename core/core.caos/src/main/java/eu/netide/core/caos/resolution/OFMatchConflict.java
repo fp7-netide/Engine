@@ -16,8 +16,8 @@ public class OFMatchConflict extends Conflict {
     /**
      * Creates a new instance of the OFMatchConflict class.
      *
-     * @param message1 The first message of the conflict.
-     * @param message2 The second message of the conflict.
+     * @param maskedOrExactMessage The first message of the conflict.
+     * @param exactMessage The second message of the conflict.
      * @param field    The Matchfield that creates the conflict.
      * @param type     The type of the conflict.
      */
