@@ -70,6 +70,12 @@
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Export-Package>
+                            eu.netide.core.logpub;version=${project.version}
+                        </Export-Package>
+                        <Import-Package>
+                            org.osgi.framework,eu.netide.core.api,eu.netide.core.connectivity,eu.netide.lib.netip,org.slf4j
+                        </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                     </instructions>
                 </configuration>
