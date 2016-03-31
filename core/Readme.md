@@ -38,6 +38,7 @@ The external tools (like the Logger) will subscribe to that queue.
 
 ## Used frameworks and technologies
 - JDK 8
+- Java NetIP library (see [lib](../lib) folder)
 - Maven for building the projects (especially the maven-bundle-plugin)
 - Apache Karaf as the runtime OSGi container (currently v3.0.3)
 - Apache Aries Blueprint for service discovery and injection
@@ -49,9 +50,6 @@ The external tools (like the Logger) will subscribe to that queue.
 - SLF4J for logging (provided by Karaf)
 
 ## How to deploy
-### Prerequisites
-- The core requires the Java NetIP library in your local Maven repository for a successful build. Therefore, go to the [libraries/netip/java](../lib/netip/java) directory and run `mvn clean install` before continuing. [Important note: The NetIP library should have the exact same location as it is now in the GitHub Engine repository: relative path to core/ is `../libraries/netip/java', otherwise compiling the core project afterwards will fail, because the pom.xml directly references it in that location]
-
 ### Core Deployment 
 1. Clone the *master* branch of the repository to your machine.
 2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
