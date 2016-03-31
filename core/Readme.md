@@ -57,7 +57,11 @@ The external tools (like the Logger) will subscribe to that queue.
 1. Clone the *CoreImplementation* branch of the repository to your machine.
 2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
 3. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html) v3.0.5
+	- Optional: Go to the *doc* directory of this repository and copy the *branding.properties* file to the *etc* directory of Apache Karaf.
 4. Start Karaf by going into the downloaded folder and running `bin/karaf`.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/fp7-netide/Engine/master/core/doc/branding.png" alt="Branding Apache Karaf"/>
+</p>
 5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features` and then running `feature:install core` (`feature:install netide-core` before).
 	- The output shold indicate that the core is waiting for the shim to connect.
 
