@@ -78,16 +78,16 @@ then
 	echo "---Install Java core"
 	sudo chmod +777 -R $HOME/NetIDE/Engine-mixed
 	#sudo export JAVA_HOME=/usr/lib/jvm/java-8-oracle/
-	cd $HOME/NetIDE/Engine-mixed/
-	cd librariesJava/netip/java
-	sudo mvn clean install -Dgpg.passphrase=netide #-Dgpg.skip=true 
+	#cd $HOME/NetIDE/Engine-mixed/
+	#cd librariesJava/netip/java
+	#sudo mvn clean install -Dgpg.passphrase=netide #-Dgpg.skip=true #New PGP key (elisa.rojas@telcaria; netide)
 	cd $HOME/NetIDE/Engine-mixed/core
 	sudo mvn clean install -Dgpg.passphrase=netide
-	cd tools/emulator
-	sudo mvn package 
-	sudo mv ../MinimalSpecification.xml target/
-	cd ../..
-	sudo mvn clean install -Dgpg.passphrase=netide
+	#cd tools/emulator
+	#sudo mvn package
+	#sudo mv ../MinimalSpecification.xml target/
+	#cd ../..
+	#sudo mvn clean install -Dgpg.passphrase=netide #--offline
 	sleep 5
 fi
 
@@ -103,7 +103,7 @@ then
 
 	echo "---Update ODL shim (master)"
 	git fetch
-	git checkout master 
+	git checkout master
 	git pull origin master
 	#sudo cp -r odl-shim $HOME/NetIDE/Engine-mixed/
 	cd $HOME/NetIDE/Engine-mixed/
@@ -136,7 +136,7 @@ then
 
 	echo "---Update ONOS shim (master)"
 	git fetch
-	git checkout master 
+	git checkout master
 	git pull origin master
 	sudo cp -r onos-shim $HOME/NetIDE/Engine-mixed/
 	ls $HOME/NetIDE/Engine-mixed/
@@ -146,8 +146,6 @@ then
 	sudo chmod +777 -R $HOME/NetIDE/Engine-mixed #to allow mvn clean install without 'sudo'
 	cd $HOME/NetIDE
 	cp netide_cell onos/tools/test/cells/netide
-	cd onos
-	cell netide
 	cd $HOME/NetIDE/Engine-mixed/onos-shim
 	mvn clean install
 	cd $HOME/NetIDE/onos
@@ -155,7 +153,7 @@ then
 	sleep 5
 
 	#echo "---Final checks..."
-	#sudo cp $HOME/NetIDE/org.apache.karaf.management.cfg $HOME/NetIDE/Engine-mixed/odl-shim/karaf/target/assembly/etc/org.apache.karaf.management.cfg #Changing ports (1099->1098 and 44444->44445)	
+	#sudo cp $HOME/NetIDE/org.apache.karaf.management.cfg $HOME/NetIDE/Engine-mixed/odl-shim/karaf/target/assembly/etc/org.apache.karaf.management.cfg #Changing ports (1099->1098 and 44444->44445)
 fi
 
 #FL backend
@@ -171,7 +169,7 @@ then
 
 	echo "---Update FL backend v1.2 (master)"
 	git fetch
-	git checkout master 
+	git checkout master
 	git pull origin master
 	sudo cp -r floodlight-backend $HOME/NetIDE/Engine-mixed/
 	ls $HOME/NetIDE/Engine-mixed/
