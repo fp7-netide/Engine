@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ASCII"?>
+<eu.netide.configuration:NetworkEnvironment xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:eu.netide.configuration="eu.netide.configuration.topology" name="Imported">
+  <networks name="Imported">
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s10"/>
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s1"/>
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s2"/>
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s3"/>
+  </networks>
+</eu.netide.configuration:NetworkEnvironment>

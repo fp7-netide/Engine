@@ -44,7 +44,8 @@ def do_server_install(pkg):
             raise InstallException('"server" section missing from configuration!')
 
         conf = p.config["server"]
-        if "host" in conf and platform.node() != conf["host"]:
+   
+        if "host" in conf and platform.node() != conf["host"] and conf["host"] != "localhost":
             raise InstallException("Attempted server installation on host {} (!= {})".format(platform.node(), conf["host"]))
 
         tasks = []

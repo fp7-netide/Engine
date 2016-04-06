@@ -122,6 +122,7 @@ def load_package(args):
             logging.error(err)
             return 1
     else:
+
         # TODO:
         # [X] Start server controller (if not already running)
         # [ ] Make sure NetIDE stuff is running in server controller
@@ -133,6 +134,8 @@ def load_package(args):
 
         with util.TempDir("netide-client-dispatch") as t:
             pkg = Package(args.package, t)
+            clients = pkg.get_clients()
+
             util.write_ansible_hosts(pkg.get_clients(), os.path.join(t, "ansible-hosts"))
 
             vars = {"netide_karaf_bin":
@@ -168,11 +171,13 @@ def load_package(args):
             playbook = [{"hosts": "localhost", "tasks": tasks, "vars": vars}, {"hosts": "clients", "tasks": ctasks}]
             with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
                 json.dump(playbook, ah, indent=2)
+               
             util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
 
             # Make netip python library available. This has been installed here by installer.do_server_install()
             p = ["~", "Core", "libraries", "netip", "python"]
             sys.path.append(os.path.expanduser(os.path.join(*p)))
+  
             from netip import NetIDEOps
 
             m = NetIDEOps.netIDE_encode(

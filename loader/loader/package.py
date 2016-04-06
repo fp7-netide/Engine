@@ -44,31 +44,36 @@ class Package(object):
             self.path = p
             # self.cleanup = True
 
-        p = os.path.join(self.path, "parameters.json")
+        p = os.path.join(self.path, "controllers.json")
+
         if os.path.exists(p):
             with open(p) as f:
                 self.config = json.load(f)
-                self.appNames = self.config.keys()
-                for key in self.appNames:
-                     print(key)
-        
+           #     self.appNames = self.config.keys()
+            #    for key in self.appNames:
+             #        print(key)
+        else:
+            with open(p, "w+") as f:
+                json.dump({'clients': {'vagrant-ubuntu-trusty-64' : {'identity' : '~/testvm-bare/.vagrant/machines/default/virtualbox/private_key', 'port' : 2222, 'host' : 'localhost', 'user' : 'vagrant', }}, 'server': { 'host' : 'localhost', 'type' : 'odl'}}, f, indent= 4)
+                self.config = json.load(f)
+                
         logging.debug("Loading applications for host {}".format(platform.node()))
         p = os.path.join(self.path, "apps")
-        
+        self.appNames = []
         for d in os.listdir(p):
             if not d == ".DS_Store":
                 nodes = []
                 print(d)
-                for v in self.appNames:
-                    if d in v:
-                        nodes.append(v)
+                self.appNames.append(d)
+                nodes.append(d)
+                
                 logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
                 app = os.path.join(p, d)
                 
-                #returns controller and entrypoint
+                #returns controller
                 ctrl = Application.get_controller(app)
-                for x in ctrl:
-                    print(x)
+                print(ctrl)
+                    
                 for n in nodes:
                     if n not in self.controllers:
                         self.controllers[n] = {}
@@ -92,6 +97,7 @@ class Package(object):
         return 'Package("{}")'.format(self.path)
 
     def controllers_for_node(self, node=None):
+        print(node)
         if node is None:
             node = platform.node()
         return self.controllers[node]
@@ -149,15 +155,29 @@ class Package(object):
 
     def get_clients(self):
         clients = [ ]
-        for (name, d) in self.config.get("clients", {}).items():
-            host = d.get("host", name)
-            if "user" in d:
-                host = "{}@{}".format(d["user"], host)
 
-            entry = [ name, host ]
-            if "port" in d:
-                entry.append(d["port"])
-            if "identity" in d:
-                entry.append(os.path.expanduser(d["identity"]))
+        p = os.path.join(self.path, "controllers.json")
+        if os.path.exists(p):
+
+            for (name, d) in self.config.get("clients", {}).items():
+                host = d.get("host", name)
+    
+                if "user" in d:
+                    host = "{}@{}".format(d["user"], host)
+        
+                entry = [ name, host ]
+                if "port" in d:
+                    entry.append(d["port"])
+                if "identity" in d:
+                    entry.append(os.path.expanduser(d["identity"]))
+                clients.append(entry)
+        else:
+
+            name = "vagrant-ubuntu-trusty-64"
+            host = "vagrant@localhost"
+            port = 2222
+            identity = "~/testvm-bare/.vagrant/machines/default/virtualbox/private_key"
+            entry = [name, host, port, identity]
             clients.append(entry)
+
         return clients

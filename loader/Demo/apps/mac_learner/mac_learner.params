@@ -1,0 +1,3 @@
+parameters: {
+	idle_timeout: Integer
+}

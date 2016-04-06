@@ -90,11 +90,13 @@ class Application(object):
                 if "name" in line and (flag == 1):
                    # print(line)
                     controllerName = re.findall(r'"([^"]*)"', line)
+                    c = controllerName[0]
+                    print(c)
                    # print(controllerName)
                 
-                if "entrypoint" in line and (flag == 1):
+                #if "entrypoint" in line and (flag == 1):
                     #print(line)
-                    entryPoint = re.findall(r'"([^"]*)"', line)
+                 #   entryPoint = re.findall(r'"([^"]*)"', line)
                     #print(entryPoint)
             
             
@@ -104,5 +106,6 @@ class Application(object):
            # config.read(f)
             #config.sections
             #print(config.read(f))
-
-            return (controllerName, entryPoint)
+            #return (controllerName)
+            return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
+           # return (controllerName, entryPoint)

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ASCII"?>
+<eu.netide.configuration:NetworkEnvironment xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:eu.netide.configuration="eu.netide.configuration.topology" name="Demo">
+  <networks name="">
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s11" ip="" dpid="000000000000000A" mac="" controller="//@controllers.0">
+      <ports id="1" connector="//@networks.0/@connectors.0"/>
+      <ports id="2" connector="//@networks.0/@connectors.1"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s21" ip="" dpid="0000000000000001" mac="" controller="//@controllers.0">
+      <ports id="1" connector="//@networks.0/@connectors.1"/>
+      <ports id="2" connector="//@networks.0/@connectors.2"/>
+      <ports id="3" connector="//@networks.0/@connectors.4"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s23" dpid="0000000000000003" controller="//@controllers.0">
+      <ports id="1" connector="//@networks.0/@connectors.2"/>
+      <ports id="2" connector="//@networks.0/@connectors.3"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Switch" name="s22" dpid="0000000000000002" mac="" controller="//@controllers.0">
+      <ports id="1" connector="//@networks.0/@connectors.4"/>
+      <ports id="2" connector="//@networks.0/@connectors.5"/>
+      <ports id="3" connector="//@networks.0/@connectors.6"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Host" name="charlie" ip="10.0.0.3" mac="0000000000E3">
+      <ports id="1" connector="//@networks.0/@connectors.0"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Host" name="alice" ip="10.0.0.1" mac="0000000000E1">
+      <ports id="1" connector="//@networks.0/@connectors.5"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Host" name="bob" ip="10.0.0.2" mac="0000000000E2">
+      <ports id="1" connector="//@networks.0/@connectors.6"/>
+    </networkelements>
+    <networkelements xsi:type="eu.netide.configuration:Host" name="www" ip="10.0.0.10" mac="0000000000EA">
+      <ports id="1" connector="//@networks.0/@connectors.3"/>
+    </networkelements>
+    <connectors connectedports="//@networks.0/@networkelements.4/@ports.0 //@networks.0/@networkelements.0/@ports.0"/>
+    <connectors connectedports="//@networks.0/@networkelements.0/@ports.1 //@networks.0/@networkelements.1/@ports.0"/>
+    <connectors connectedports="//@networks.0/@networkelements.1/@ports.1 //@networks.0/@networkelements.2/@ports.0"/>
+    <connectors connectedports="//@networks.0/@networkelements.2/@ports.1 //@networks.0/@networkelements.7/@ports.0"/>
+    <connectors connectedports="//@networks.0/@networkelements.1/@ports.2 //@networks.0/@networkelements.3/@ports.0"/>
+    <connectors connectedports="//@networks.0/@networkelements.3/@ports.1 //@networks.0/@networkelements.5/@ports.0"/>
+    <connectors connectedports="//@networks.0/@networkelements.3/@ports.2 //@networks.0/@networkelements.6/@ports.0"/>
+  </networks>
+  <controllers name="c1" switches="//@networks.0/@networkelements.0 //@networks.0/@networkelements.1 //@networks.0/@networkelements.3 //@networks.0/@networkelements.2" ip="127.0.0.1" portNo="6644"/>
+</eu.netide.configuration:NetworkEnvironment>

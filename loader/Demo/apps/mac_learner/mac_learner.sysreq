@@ -1,0 +1,10 @@
+app: {
+	name: "Ryu Mac Learner",
+	version: "0.1",
+	controller:
+	{ 
+		name: "Ryu",
+		version: "3.30",
+	},
+	hardwareReq :{CPU :"Cpu",OS:"Windows",},
+}
