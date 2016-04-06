@@ -56,10 +56,17 @@ class Firewall(app_manager.RyuApp):
         
     def forwardPacket(self, msg, outPort):
 		# Does not install a rule. Just forwards this packet.
-        datapath=msg.datapath		
-        if msg.buffer_id is not None:
+        datapath=msg.datapath
+
+        ofproto = datapath.ofproto
+
+        data=None
+        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+            data = msg.data
+
+        if msg.buffer_id is not ofproto.OFP_NO_BUFFER:
             po_actions = [datapath.ofproto_parser.OFPActionOutput(outPort)]
-            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port, actions=po_actions)
+            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port, data=data, actions=po_actions)
             datapath.send_msg(pkt_out)
         
     # Static rules for the web and dns services
