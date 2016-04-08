@@ -4,18 +4,30 @@
 
     <cm:property-placeholder persistent-id="eu.netide.core.logpub" update-strategy="reload">
         <cm:default-properties>
-            <cm:property name="port" value="5557"/>
+            <cm:property name="pubPort" value="5557"/>
+            <cm:property name="subPort" value="5558"/>
         </cm:default-properties>
     </cm:property-placeholder>
+
+    <reference id="shimmanager"
+               interface="eu.netide.core.api.IShimManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
+    <reference id="backendmanager"
+               interface="eu.netide.core.api.IBackendManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
 
     <bean id="logpub" class="eu.netide.core.logpub.LogPub"
           init-method="Start"
           destroy-method="Stop">
-        <property name="port" value="${port}"/>
+        <property name="pubPort" value="${pubPort}"/>
+        <property name="subPort" value="${subPort}"/>
+        <property name="shimManager" ref="shimmanager"/>
+        <property name="backendManager" ref="backendmanager"/>
     </bean>
 
-    <service ref="logpub"
-             interface="eu.netide.core.api.IShimMessageListener"/>
-    <service ref="logpub"
-             interface="eu.netide.core.api.IBackendMessageListener"/>
 </blueprint>

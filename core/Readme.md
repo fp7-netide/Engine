@@ -50,65 +50,27 @@ The external tools (like the Logger) will subscribe to that queue.
 - SLF4J for logging (provided by Karaf)
 
 ## How to deploy
-### Prerequisites
-- The core requires the Java NetIP library in your local Maven repository for a successful build. Therefore, go to the [libraries/netip/java](../lib/netip/java) directory and run `mvn clean install` before continuing. [Important note: The NetIP library should have the exact same location as it is now in the GitHub Engine repository: relative path to core/ is `../libraries/netip/java', otherwise compiling the core project afterwards will fail, because the pom.xml directly references it in that location]
-
 ### Core Deployment 
-1. Clone the *CoreImplementation* branch of the repository to your machine.
+1. Clone the *master* branch of the repository to your machine.
 2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
 3. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html) v3.0.5
+	- Optional: Install the branding osgi packet to the lib directory of karaf
+	```cp core.branding/target/core.branding-1.1.0-SNAPSHOT.jar ~/dl/apache-karaf-3.0.5/lib/``
 4. Start Karaf by going into the downloaded folder and running `bin/karaf`.
-5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features` and then running `feature:install core` (`feature:install netide-core` before).
+<p align="center">
+  <img src="https://raw.githubusercontent.com/fp7-netide/Engine/master/core/doc/branding.png" alt="Branding Apache Karaf"/>
+</p>
+5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features` and then running `feature:install core`.
 	- The output shold indicate that the core is waiting for the shim to connect.
-
-If you need to refresh the modules in karaf use `bundle:watch *` (This works only if the module versions have a -SNAPSHOT suffix)
-	
-### Core Deployment + Composition Specification
-If we want to include some composition specification, then we have to follow some intermediate steps:
-
-1. Clone the *CoreImplementation* branch of the repository to your machine.
-2. Go to the *core* directory and run `mvn clean install`. This will build the bundles and install them to your local Maven repository.
-3. Go to the *tools/emulator* inside the *core* directory and execute `mvn package`. Then, back to *core* and run `mvn clean install` again. This will create the emulator package, which lets the user introduce a composition specification file defined in *.xml.
-4. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html) v3.0.5
-5. Start Karaf by going into the downloaded folder and running `bin/karaf`.
-6. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features` and then running `feature:install core` (`feature:install netide-core` before).
-	- The output shold indicate that the core is waiting for the shim to connect.
-7. Copy the composition file into the *tools/emulator/target* folder in the *core* (the *xml should be in the same folder than the generated *.jar). There is an example called `MinimalSpecification.xml` in the *tools* folder, which defines a single switch application module. 
-8. Go to *tools/emulator/target* and execute the emulator package to send the composition file to the running core `java -jar emulator-1.0-jar-with-dependencies.jar`. The emulator will request you to enter some parameters, an example is shown below:
+6. Load a composition specification with netide:loadcomposition, for example the Minimal Specification
 ```
-Demo started.
-How do you want to identify? (shim, backendX; default=shim)
-> backend1
-To which port do you want to connect? (default=5555)
-> 5555
-Which socket type do you want to use? (dealer,sub;default=dealer)
-> dealer
-Enter command: (packetIn (p), composition (c), announcement (a), acknowledge (ack), flowmod (f), requestend (r), exit)
-> Connected to localhost:5555 as 'backend1' using a DEALER socket.
-c
-Which file?
-> MinimalSpecification.xml
-To which port? (default=5556)
-> 5556
-Sending composition specification '/home/tamu/netide/CoreImplementation/core/tools/emulator/target/MinimalSpecification.xml' to management interface at localhost:5556...
-Sending:
-{
-   "parameters": {
-      "pid": "eu.netide.core.caos",
-      "value": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<CompositionSpecification  xmlns=\"http://netide.eu/schemas/compositionspecification/v1\">\n  <Modules>\n    <Module id=\"SimpleSwitch\" loaderIdentification=\"simple_switch.py\"/>\n  <\/Modules>\n  <Composition>\n    <ModuleCall module=\"SimpleSwitch\"/>\n  <\/Composition>\n<\/CompositionSpecification>\n",
-      "key": "compositionSpecification"
-   },
-   "command": "set-configvalue"
-}
-Sent.
+karaf@root()>  netide:loadcomposition /home/tamu/netide/CoreImplementation/core/tools/emulator/target/MinimalSpecification.xml
 ```
-9. Run now Mininet, the shim and finally the backend (Note: If you are using the example composition file, you should use the Ryu `simple_switch.py` application)
+7. Run now Mininet, the shim and finally the backend (Note: If you are using the example composition file, you should use the Ryu `simple_switch.py` application)
  
+### Developing
+To make karaf reload changed bundles after a mvn install , tell karaf to watch the bundles by `bundle:watch *`. This works only if the core version has a -SNAPSHOT suffix)
 
-### Composition specification via karaf
-```
-karaf@root()>  netide:loadcomposition /path/to/composition
-```
  
 ### Show connected backends/modules
 ```
@@ -116,4 +78,5 @@ karaf@root()>  netide:loadcomposition /path/to/composition
      Id                 Name              Backend Last message (s ago)
     797         SimpleSwitch    backend-ryu-14172                    -
     238    backend-ryu-14172    backend-ryu-14172                 4,66
+      -                 shim                    -                 0,32
 ```

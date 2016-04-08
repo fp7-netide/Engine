@@ -123,6 +123,7 @@ public class ZeroMQBaseConnector implements Runnable {
                 byte[] data = message.getLast().getData();
                 if (coreListener != null) {
                     Message msg = NetIPConverter.parseConcreteMessage(data);
+                    log.debug("Core message: {}", msg);
                     if (msg instanceof HelloMessage) {
 
                         coreListener.onHelloCoreMessage(((HelloMessage) msg).getSupportedProtocols(),

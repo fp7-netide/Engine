@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
@@ -29,7 +28,7 @@
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
-            <version>${project.version}</version>
+            <version>1.1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -70,6 +69,12 @@
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Export-Package>
+                            eu.netide.core.logpub;version=${project.version}
+                        </Export-Package>
+                        <Import-Package>
+                            org.osgi.framework,eu.netide.core.api,eu.netide.core.connectivity,eu.netide.lib.netip,org.slf4j
+                        </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                     </instructions>
                 </configuration>
