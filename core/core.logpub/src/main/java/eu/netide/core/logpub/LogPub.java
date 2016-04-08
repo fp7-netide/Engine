@@ -8,7 +8,6 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 
 public class LogPub implements IBackendMessageListener, IShimMessageListener, IManagementMessageListener, Runnable{
@@ -18,8 +17,8 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
     private static final Logger log = LoggerFactory.getLogger(LogPub.class);
 
-    private int pub_port;
-    private int sub_port;
+    private int pubPort;
+    private int subPort;
 
     private HashMap<HashMap<Integer,Integer>,String> hMap;
 
@@ -62,13 +61,13 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     public void run() {
         log.info("LogPub started.");
         ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
-        pubSocket.bind("tcp://*:" + pub_port);
-        log.info("Listening PUB queue on port " + pub_port);
+        pubSocket.bind("tcp://*:" + pubPort);
+        log.info("Listening PUB queue on port " + pubPort);
 
         ZMQ.Socket subSocket = context.socket(ZMQ.ROUTER);
         subSocket.setIdentity("logpub".getBytes(ZMQ.CHARSET));
-        subSocket.bind("tcp://*:" + sub_port);
-        log.info("Listening SUB queue on port " + sub_port);
+        subSocket.bind("tcp://*:" + subPort);
+        log.info("Listening SUB queue on port " + subPort);
 
         ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
         controlSocket.bind(CONTROL_ADDRESS);
@@ -131,17 +130,17 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
     }
 
     public void setPubPort(int pub_port) {
-        this.pub_port = pub_port;
+        this.pubPort = pub_port;
     }
     public int getPubPort() {
-        return pub_port;
+        return pubPort;
     }
     public void setSubPort(int sub_port) {
-        this.sub_port = sub_port;
+        this.subPort = sub_port;
     }
     public int getSubPort()
     {
-        return sub_port;
+        return subPort;
     }
 
 
