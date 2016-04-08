@@ -22,7 +22,6 @@ public class GlobalFIB {
     private HashMap<Long, Vector<OFFlowMod>> individualSwitchFlowMap = new HashMap<>();
 
     public void addFlowMod(OpenFlowMessage ofMessage) {
-        /*
         // The FlowEntryBuilder currently does only support OF version >= 1.3
         if (ofMessage.getOfMessage().getVersion().getWireVersion() < OFVersion.OF_13.getWireVersion()) {
             throw new RuntimeException("Only OpenFlow 1.3+ supported at the moment");
@@ -37,7 +36,6 @@ public class GlobalFIB {
             logger.debug("Adding FlowEntry ");
             globalFIB.add(flowEntry);
         }
-        */
     }
 
     public boolean handlePacketIn(OFPacketIn packetIn, long datapathId) {

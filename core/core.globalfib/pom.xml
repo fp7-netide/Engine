@@ -50,12 +50,6 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onos-of-provider-flow</artifactId>
-            <version>1.4.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
             <version>1.9.6</version>

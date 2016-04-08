@@ -67,7 +67,6 @@ public class FIBManager implements IShimMessageListener {
                 return;
             }
 
-            /*
             ChannelBuffer bb = ChannelBuffers.copiedBuffer(message.getPayload());
             try {
                 OFMessage ofmessage = reader.readFrom(bb);
@@ -82,7 +81,6 @@ public class FIBManager implements IShimMessageListener {
             } catch (OFParseError ofParseError) {
                 ofParseError.printStackTrace();
             }
-            */
         }
     }
 

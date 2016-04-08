@@ -2,6 +2,8 @@
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
           name="NetIDE Core Features-@CORE-VERSION">
 
+    <repository>mvn:org.onosproject/onos-features/@ONOS-VERSION/xml/features</repository>
+
     <feature name="core-thirdparty-dependencies" version="@FEATURE-VERSION">
         <bundle>
             wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"
@@ -39,6 +41,11 @@
     </feature>
     <feature name="core-globalfib" version="@FEATURE-VERSION">
         <feature>core-api</feature>
+
+        <feature>onos-rest</feature>
+        <feature>onos-api</feature>
+        <bundle>mvn:org.onosproject/onos-of-api/@ONOS-VERSION</bundle>
+
         <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
     </feature>
     <feature name="core" version="@FEATURE-VERSION">
