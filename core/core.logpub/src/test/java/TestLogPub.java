@@ -13,7 +13,7 @@ public class TestLogPub {
         LogPub l = new LogPub();
         l.Start();
         try {
-            Thread.sleep(100);
+            Thread.sleep(1000);
             // Building message
             MessageHeader mh = new MessageHeader();
             mh.setDatapathId(42);
