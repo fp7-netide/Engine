@@ -82,9 +82,16 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
             poller.poll(10);
             if (poller.pollin(0)) {
                 ZMsg zmqMessage = ZMsg.recvMsg(subSocket);
-                String dst = zmqMessage.popString();
-                String src = zmqMessage.popString();
-                byte[] data = zmqMessage.getLast().getData();
+                String dst = null;
+                String src = null;
+                byte[] data = null;
+                try{
+                	dst = zmqMessage.popString();
+                	src = zmqMessage.popString();
+                	data = zmqMessage.getLast().getData();
+                }catch(NullPointerException e){
+                	log.error("NullPointerException:"+e);
+                }
                 Message netideMessage = NetIPConverter.parseRawMessage(data);
                 log.info("Data received in SUB queue: from "+src+" to "+dst+ ".");
                 HashMap<Integer,Integer> key = new HashMap<Integer,Integer>(){{
