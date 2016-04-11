@@ -29,5 +29,10 @@
         <property name="shimManager" ref="shimmanager"/>
         <property name="backendManager" ref="backendmanager"/>
     </bean>
+    
+     <service ref="logpub"
+              interface="eu.netide.core.api.IShimMessageListener"/>
+     <service ref="logpub"
+              interface="eu.netide.core.api.IBackendMessageListener"/>
 
 </blueprint>
