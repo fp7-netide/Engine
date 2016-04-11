@@ -98,37 +98,37 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 						dst = zmqMessage.popString();
 						src = zmqMessage.popString();
 						data = zmqMessage.getLast().getData();
+						Message netideMessage = NetIPConverter.parseRawMessage(data);
+						log.info("Data received in SUB queue: from "+src+" to "+dst+ ".");
+						HashMap<Integer,Integer> key = new HashMap<Integer,Integer>(){{
+							put(netideMessage.getHeader().getModuleId(),netideMessage.getHeader().getTransactionId());}};
+							if (hMap.containsKey(key)){
+								//this Tool already sent a message with this ModuleID/XID, treat as an error
+								ErrorMessage error = new ErrorMessage();
+								ZMsg PubMessage = new ZMsg();
+								PubMessage.add(src);
+								PubMessage.add(dst);
+								PubMessage.add(error.toByteRepresentation());
+								log.debug("Received message from "+src.substring(2)+" but it already sent a similar message (same Module_ID and XID)");
+								ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
+								sendSocket.connect(CONTROL_ADDRESS);
+								PubMessage.send(sendSocket);
+								sendSocket.close();
+							}else {
+								if (netideMessage.getHeader().getTransactionId() != 0)
+									hMap.put(key, src);
+								if (dst.startsWith("1_"))
+									// send message to shim
+									shimManager.sendMessage(netideMessage);
+								else if (dst.startsWith("0_"))
+									// send message to backend
+									backendManager.sendMessage(netideMessage);
+								else
+									log.debug("Got unknown message in SUB queue:" + netideMessage.toString());
+							}
 					}catch(NullPointerException e){
 						log.error("NullPointerException:"+e);
 					}
-					Message netideMessage = NetIPConverter.parseRawMessage(data);
-					log.info("Data received in SUB queue: from "+src+" to "+dst+ ".");
-					HashMap<Integer,Integer> key = new HashMap<Integer,Integer>(){{
-						put(netideMessage.getHeader().getModuleId(),netideMessage.getHeader().getTransactionId());}};
-						if (hMap.containsKey(key)){
-							//this Tool already sent a message with this ModuleID/XID, treat as an error
-							ErrorMessage error = new ErrorMessage();
-							ZMsg PubMessage = new ZMsg();
-							PubMessage.add(src);
-							PubMessage.add(dst);
-							PubMessage.add(error.toByteRepresentation());
-							log.debug("Received message from "+src.substring(2)+" but it already sent a similar message (same Module_ID and XID)");
-							ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
-							sendSocket.connect(CONTROL_ADDRESS);
-							PubMessage.send(sendSocket);
-							sendSocket.close();
-						}else {
-							if (netideMessage.getHeader().getTransactionId() != 0)
-								hMap.put(key, src);
-							if (dst.startsWith("1_"))
-								// send message to shim
-								shimManager.sendMessage(netideMessage);
-							else if (dst.startsWith("0_"))
-								// send message to backend
-								backendManager.sendMessage(netideMessage);
-							else
-								log.debug("Got unknown message in SUB queue:" + netideMessage.toString());
-						}
 				}
 				if (poller.pollin(1)) {
 					ZMsg message = ZMsg.recvMsg(controlSocket);
@@ -167,11 +167,13 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 	@Override
 	public void OnBackendMessage(Message message, String originId) {
+		log.debug("Received backend message");
 		OnShimAndBackendMessage(message, "0", originId);
 	}
 
 	@Override
 	public void OnShimMessage(Message message, String originId) {
+		log.debug("Received shim message");
 		OnShimAndBackendMessage(message, "1", originId);
 	}
 
@@ -244,6 +246,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	@Override
 	public void OnBackendRemoved(String backEndName, LinkedList<Integer> removedModules) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }
