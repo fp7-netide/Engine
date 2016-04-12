@@ -40,6 +40,7 @@ def do_server_install(pkg):
 
     with util.TempDir("netide-server-install") as t:
         p = Package(pkg, t)
+
         if "server" not in p.config:
             raise InstallException('"server" section missing from configuration!')
 
@@ -216,6 +217,7 @@ def do_client_installs(pkgpath, dataroot):
         playbook = [{"hosts": "clients", "tasks": tasks}]
 
         for c in clients:
+        
             ctasks = []
 
             apps = []

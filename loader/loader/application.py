@@ -29,12 +29,12 @@ class Application(object):
 
     def __init__(self, prefix):
         self.path = prefix
-
         self.files = []
         for dirname, dirs, files in os.walk(self.path):
             for f in files:
                 self.files.append(os.path.join(os.path.abspath(dirname), f))
 
+    #doesn't exist anymore !!
         p = os.path.join(self.path, "_meta.json")
         if os.path.exists(p):
             with open(p) as f:
@@ -76,12 +76,11 @@ class Application(object):
     @classmethod
     def get_controller(cls, path):
         test = os.path.basename(path) + ".sysreq"
-        print(test)
+       
         
         with open(os.path.join(path, test),'r') as inf:
             linesFromFile = inf.readlines()# = ast.literal_eval(inf.read())
             
-            print(linesFromFile)
             flag = 0
             for line in linesFromFile:
                 if "controller" in line:
@@ -91,7 +90,6 @@ class Application(object):
                    # print(line)
                     controllerName = re.findall(r'"([^"]*)"', line)
                     c = controllerName[0]
-                    print(c)
                    # print(controllerName)
                 
                 #if "entrypoint" in line and (flag == 1):
