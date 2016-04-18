@@ -3,3 +3,4 @@ requests
 pyzmq
 tarfile
 configparser
+zmq
