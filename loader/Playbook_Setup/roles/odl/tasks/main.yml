@@ -1,0 +1,6 @@
+---
+
+- name: install ODL
+  script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_odl.sh
+
+...

@@ -1,0 +1,11 @@
+---
+
+- name: install prereq for all hosts
+  hosts: localhost
+  
+  roles:
+    - prereq
+    - tools
+    - core
+    
+...

@@ -5,15 +5,17 @@
     netide_scripts: /home/vagrant/playbookGen/IDE/plugins/eu.netide.configuration.launcher/scripts
 
   tasks:
-    - name: Clone NetIDE Engine(master)
-      git: repo=https://github.com/fp7-netide/Engine.git dest=/home/vagrant/playbookGen/Engine update=yes
 
     - name: Clone NetIDE IDE(master)
       git: repo=https://github.com/fp7-netide/IDE.git dest=/home/vagrant/playbookGen/IDE update=yes
 
+    - name: Install Engine Script
+      script: /home/vagrant/playbookGen/IDE/plugins/eu.netide.configuration.launcher/scripts/install_engine.sh
+      
     - name: Build NetIDE netip library
       shell: mvn install -Dgpg.skip=true
       args:
         chdir: /home/vagrant/playbookGen/Engine/libraries/netip/java
         creates: /home/vagrant/playbookGen/Engine/libraries/netip/java/target/netip-1.1.0-SNAPSHOT.jar
+        
 ...

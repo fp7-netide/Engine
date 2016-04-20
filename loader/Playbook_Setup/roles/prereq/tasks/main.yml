@@ -1,0 +1,6 @@
+---
+
+- name: install prereq
+  script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_prereq.sh
+
+...

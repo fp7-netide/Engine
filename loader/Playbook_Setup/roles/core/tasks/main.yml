@@ -1,0 +1,6 @@
+---
+
+- name: install Core
+  script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_core.sh
+
+...
