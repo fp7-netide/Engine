@@ -62,6 +62,21 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- For flow package -->
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>onos-core-net</artifactId>
+            <version>${onos.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>onos-openflow</artifactId>
+            <version>${onos.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+
         <!-- For testing -->
         <dependency>
             <groupId>org.testng</groupId>
@@ -88,9 +103,6 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <!--
-                        <Private-Package>org.onosproject.provider.of.flow.impl</Private-Package>
-                        -->
                         <Embed-Dependency>
                             *;scope=compile|runtime
                         </Embed-Dependency>

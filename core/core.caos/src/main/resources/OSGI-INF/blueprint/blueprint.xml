@@ -35,4 +35,7 @@
         <property name="bypassUnsupportedMessages"
                   value="${bypassUnsupportedMessages}"/>
     </bean>
+
+    <service ref="compositionManager"
+             interface="eu.netide.core.caos.ICompositionManager"/>
 </blueprint>

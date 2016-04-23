@@ -1,9 +1,9 @@
 package eu.netide.core.globalfib;
 
+import eu.netide.core.globalfib.flow.FlowEntryBuilder;
 import eu.netide.lib.netip.OpenFlowMessage;
 import org.onosproject.net.flow.*;
 import org.onosproject.openflow.controller.Dpid;
-import org.onosproject.provider.of.flow.impl.*;
 import org.projectfloodlight.openflow.protocol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

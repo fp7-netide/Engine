@@ -25,19 +25,19 @@ public class FIBManager implements IShimMessageListener {
 
     private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
 
-    //@Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private ICompositionManager compositionManager;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private IShimManager shimManager;
 
     //@Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
-    private TopologyService topologyService;
+    //private TopologyService topologyService;
 
     public FIBManager()
     {
         reader = OFFactories.getGenericReader();
-        globalFIB = null;//new GlobalFIB();
+        globalFIB = new GlobalFIB();
     }
 
     @Activate
@@ -84,7 +84,7 @@ public class FIBManager implements IShimMessageListener {
         }
     }
 
-    private void handleResult(Message message) {
+    public void handleResult(Message message) {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
             if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD) {
@@ -93,5 +93,9 @@ public class FIBManager implements IShimMessageListener {
         }
         log.info("Relaying message to shim.");
         shimManager.sendMessage(message);
+    }
+
+    public void bindShimManager(IShimManager shimManager) {
+        this.shimManager = shimManager;
     }
 }
