@@ -1,7 +1,7 @@
 # ONOS shim layer
 
 The ONOS shim layer is implemented as a bundle for the [ONOS controller](http://onosproject.org/) by using the libraries included in its [source code](https://wiki.onosproject.org/display/ONOS/Downloads).  
- 
+
 ## Installation
 
 ### STEP 1: Download ONOS
@@ -105,20 +105,13 @@ Finally, ```simple_switch``` is a simple L2 learning switch application and ```f
 
 ### 4. Testing
 
-To test the ONOS shim it is necessary to run one of the backend provided in this Github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2.
-In the ```ryu-backend/tests``` folder, a minimal implementation of the Core is provided.
-For instance, to use this shim with the Ryu backend run following sequence of commands:
-```
-$ python AdvancedProxyCore.py -c CompositionSpecification.xml
-```
-
-Now the ONOS shim can be activated:
+To test the ONOS shim it is necessary to run one of the backends provided in this Github repository and the NetIDE Core. Both must support the NetIDE Intermediate protocol v1.2 or later.
+The Java implementation of the Core can be found in this repository within folder ```core```.
+For instance, to use this shim with the Ryu backend, first start the Core by following the accompanying README and then, run the following command:
 
 ```
 onos> app activate eu.netide.shim
 ```
-
-```AdvancedProxyCore.py``` has many option (such as the composition specification file to load) that can be discovered by running ```AdvancedProxyCore.py -h```.
 
 A network emulator such as Mininet can be used to test the software. In the ```test``` folder a script (```netide-topo.py```) that automatically configures Mininet with a 4 switches and 4 hosts topology.
 ```
@@ -141,7 +134,7 @@ s23 lo:  s23-eth1:www-eth0 s23-eth2:s21-eth3
 
 Where ```alice```, ```bob``` and ```www``` belong to a hypothetical LAN protected by a firewall (switch ```s11```), while ```charlie``` is outside the LAN.
 
-Once both Core and Ryu shim are running, the backend and OpenFlow 1.0 network applications can be started with:
+Once both Core and ONOS shim are running, the backend and OpenFlow 1.0 network applications can be started with:
 
 ``` $ ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 
@@ -149,7 +142,7 @@ If you want to test the OpenFlow 1.3 applications:
 
 ``` $ ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch_13.py tests/firewall_13.py```
 
-The composition configuration defined in ```CompositionSpecification.xml``` loaded by the ```AdvancedProxyCore.py``` assigns switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
+For instance, the composition configuration for the Core could assign switches ```S21```, ```S22``` and ```S23``` to the ```simple_switch``` application, while the ```S11``` to the ```firewall``` application.
 
 As an alternative, one may want to test different applications running on different instances of the client controller. In this case, just open two terminals and run the following commands (one for each terminal):
 
@@ -167,8 +160,8 @@ See the LICENSE file.
 ## ChangeLog
 
 onos-shim: 2016-02-16 Tue Antonio Marsico <antonio.marsico@create-net.org>
-  
-  * Improved ONOS shim with: 
+
+  * Improved ONOS shim with:
     * NetIP library support
     * OF 1.3
 

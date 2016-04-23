@@ -205,7 +205,7 @@ class CoreConnection(threading.Thread):
         # TODO: it seems that the ofp_event is always the last module registered by Ryu: to be checked!!!
         while 'ofp_event' not in app_manager.SERVICE_BRICKS:
             time.sleep(2)
-        if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
+        if self.module_announcement(app_manager.SERVICE_BRICKS, self.backend) is False:
             print "No module ids received from the core!!! Exiting..."
             return
 
@@ -250,12 +250,11 @@ class CoreConnection(threading.Thread):
                 ack = True
         return True
 
-    def module_announcement(self, bricks):
+    def module_announcement(self, bricks, backend):
         for key,value in bricks.iteritems():
             module_name = key
             if key is not "ofp_event" and key is not self.backend.name: #we take only the control applications
-                xid = random.randint(0, 1000000)
-                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', xid, None, None, module_name)
+                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', 0, backend.backend_id, None, module_name)
                 self.socket.send(ann_message)
                 ack = False
                 while ack is False:

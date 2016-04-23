@@ -146,11 +146,11 @@ class Firewall(app_manager.RyuApp):
             logger.debug("Got packet from inside to outside, allowing it (fwd+flow mod): %s" % repr(pkt))
             match = parser.OFPMatch(in_port=FW_INPORT, eth_type = ETH_IP, eth_src=hwsrc, eth_dst=hwdst)
             actions = [parser.OFPActionOutput(FW_OUTPORT)]
-            self.add_flow(datapath, 1, match, actions, 5, 0)
+            self.add_flow(datapath, 6, match, actions, 5, 0)
 
             match = parser.OFPMatch(in_port=FW_OUTPORT, eth_type = ETH_IP, eth_src=hwdst, eth_dst=hwsrc)
             actions = [parser.OFPActionOutput(FW_INPORT)]
-            self.add_flow(datapath, 1, match, actions, 5, 0)
+            self.add_flow(datapath, 6, match, actions, 5, 0)
 
             # forward the packet
             self.forwardPacket(msg, FW_OUTPORT)

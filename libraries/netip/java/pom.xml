@@ -80,7 +80,7 @@
             <groupId>org.onosproject</groupId>
             <artifactId>openflowj</artifactId>
             <version>${openflowj.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.javatuples</groupId>
@@ -94,11 +94,6 @@
            <version>3.9.2.Final</version>
            <scope>provided</scope>
        </dependency>
-       <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>18.0</version>
-       </dependency>
     </dependencies>
 
     <build>
@@ -107,25 +102,55 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.5.4</version>
+                <version>3.0.1</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Export-Package>
-                            eu.netide.lib.netip.*,
-                            org.projectfloodlight.openflow.*,
+                            eu.netide.lib.netip;
+                            uses:="org.projectfloodlight.openflow.protocol,
+                            org.projectfloodlight.openflow.annotations,
+                            org.projectfloodlight.openflow.exceptions,
+                            org.projectfloodlight.openflow.types,
+                            org.projectfloodlight.openflow.util,
+                            org.javatuples,
+                            org.jboss.netty.buffer";
+                            version=${project.version}
                         </Export-Package>
                         <Import-Package>
-                            org.osgi.framework
+                            org.osgi.framework,
+                            org.javatuples,
+                            org.slf4j,
+                            org.jboss.netty.buffer;version="[3.9,4)",
+                            org.projectfloodlight.openflow.annotations,
+                            org.projectfloodlight.openflow.exceptions,
+                            org.projectfloodlight.openflow.protocol,
+                            org.projectfloodlight.openflow.types,
+                            org.projectfloodlight.openflow.util,
+                            org.projectfloodlight.openflow.protocol.match,
+                            org.projectfloodlight.openflow.protocol.action,
+                            org.projectfloodlight.openflow.protocol.actionid,
+                            org.projectfloodlight.openflow.protocol.bsntlv,
+                            org.projectfloodlight.openflow.protocol.errormsg,
+                            org.projectfloodlight.openflow.protocol.instruction,
+                            org.projectfloodlight.openflow.protocol.instructionid,
+                            org.projectfloodlight.openflow.protocol.meterband,
+                            org.projectfloodlight.openflow.protocol.oxm,
+                            org.projectfloodlight.openflow.protocol.queueprop,
+                            org.projectfloodlight.openflow.protocol.ver10,
+                            org.projectfloodlight.openflow.protocol.ver11,
+                            org.projectfloodlight.openflow.protocol.ver12,
+                            org.projectfloodlight.openflow.protocol.ver13,
+                            org.projectfloodlight.openflow.protocol.ver14
                         </Import-Package>
                         <Embed-Dependency>*;scope=compile|runtime
                         </Embed-Dependency>

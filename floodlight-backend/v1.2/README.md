@@ -41,17 +41,14 @@ make
 
 ## Testing
 
-To test it, we will need the Python Core and a Shim (ODL or RYU shim)
+To test it, we will need the NetIDE Core and a Shim (ODL or Ryu shim)
 
-### Python Core
-Using the FLCompositionSpecification.xml under floodlight-backend/v1.2/test
-
-```python AdvancedProxyCore -c FLCompositionSpecification.xml```
-
+### NetIDE Core
+To run the NetIDE core, please follow the procedure described in the README at [https://github.com/fp7-netide/Engine/tree/master/core]
 
 ### ODL Shim
 
-* Clone the repo from https://github.com/opendaylight/netide
+* Clone the repo from [https://github.com/opendaylight/netide]
 
 * Build it using
 	```mvn clean install```
@@ -88,4 +85,3 @@ Test that everything is working fine using pingall from mininet shell.
 If, starting floodlight, you receive an Error of Manager address already in use please manually change the manager port used by floodlight in Class
 net.floodlightcontroller.core.internal.Controller line 136 from  6653 to 7753.
 (or manually replace the file with the one provided in ```manual/Controller.java``` and recompile the project)
-

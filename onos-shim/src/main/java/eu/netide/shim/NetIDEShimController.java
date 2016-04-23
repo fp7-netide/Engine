@@ -93,13 +93,13 @@ public class NetIDEShimController implements ICoreListener {
 
         //TODO: Handle messages that requires replies (e.g. barrier)
         Dpid dpid = new Dpid(datapathId);
+        log.debug("Dpid {}", dpid);
         OpenFlowSwitch sw = controller.getSwitch(dpid);
 
         ChannelBuffer buffer = ChannelBuffers.copiedBuffer(msg.array());
         OFMessageReader<OFMessage> reader = OFFactories.getGenericReader();
         try {
             OFMessage message = reader.readFrom(buffer);
-            log.debug("Msg from core: {}",message);
             switch (message.getType()) {
                 case FLOW_MOD:
                     OFFlowMod flowMod = (OFFlowMod) message;
@@ -117,13 +117,17 @@ public class NetIDEShimController implements ICoreListener {
                     break;
                 case BARRIER_REQUEST:
                     //Save the xid
-                    xids.put(message.getXid(), moduleId);;
+                    xids.put(message.getXid(), moduleId);
                     break;
                 case ECHO_REQUEST:
                     xids.put(message.getXid(), moduleId);
                     break;
+                case PACKET_OUT:
+                    sw.sendMsg(message);
+                    break;
                 default:
                     sw.sendMsg(message);
+                    break;
             }
 
         } catch (Exception e) {

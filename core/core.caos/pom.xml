@@ -76,6 +76,12 @@
             <version>1.7.12</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.onosproject</groupId>
+            <artifactId>openflowj</artifactId>
+            <version>${openflowj.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.javatuples</groupId>

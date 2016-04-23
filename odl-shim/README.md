@@ -66,11 +66,8 @@ Run mininet and create the topology
 
 ```sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6644```
 
-Run the core
+Run the Core by following the README in [https://github.com/fp7-netide/Engine/tree/master/core].
 
-```cd ryu-backend/tests```
-
-```python AdvancedProxyCore.py -c CompositionSpecification.xml```
 
 Run Ryu-backend (with OF1.0 apps). Follow the instructions at [https://github.com/fp7-netide/Engine/tree/master/ryu-backend] to install Ryu-Backend.
 
@@ -79,5 +76,3 @@ Run Ryu-backend (with OF1.0 apps). Follow the instructions at [https://github.co
 ```ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py tests/simple_switch.py tests/firewall.py```
 
 To test the demo from mininet console execute ```pingall```. The Results should be 8% dropped (11/12 received)
-
-
