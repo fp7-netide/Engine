@@ -3,20 +3,20 @@
 
 NetIDE_DIR="$HOME/NetIDE"
 
-#if [ "$1" == "-h" ] || [ "$1" == "--help" ]
-#then
-#	echo "Usage: setEngine.sh"
-#	exit 0
-#fi
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]
+then
+	echo "Usage: setEngine.sh"
+	exit 0
+fi
 
-#if [ -d $NetIDE_DIR ]; then
-#        echo "NetIDE folder already exists"
-#	exit 0
-#fi
+if [ -d $NetIDE_DIR ]; then
+        echo "NetIDE folder already exists"
+	exit 0
+fi
 
-#mkdir $NetIDE_DIR
-#cd $NetIDE_DIR
-#git clone https://github.com/fp7-netide/Engine.git
+mkdir $NetIDE_DIR
+cd $NetIDE_DIR
+git clone https://github.com/fp7-netide/Engine.git
 
 echo -e "\nThis setup requires the following components:"
 echo "  => git, curl,... (and other packages required by the Engine -> check GitHub)"
