@@ -9,9 +9,11 @@
             wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"
         </bundle>
         <bundle>mvn:com.google.guava/guava/18.0</bundle>
-        <bundle>
-            wrap:mvn:org.onosproject/openflowj/0.9.1.onos$Bundle-SymbolicName=org.onosproject.openflowj&amp;Bundle-Version=0.9.1&amp;Export-Package=org.projectfloodlight.openflow.*;version="0.9.1"&amp;Import-Package=com.google.common.base;version="[18.0,19)",com.google.common.collect;version="[18.0,19)",com.google.common.hash;version="[18.0,19)",com.google.common.primitives;version="[18.0,19)",org.jboss.netty.buffer;version="[3.9,4)",org.jboss.netty.channel;version="[3.9,4)",org.slf4j
-        </bundle>
+
+        <feature>onos-rest</feature>
+        <feature>onos-api</feature>
+        <bundle>mvn:org.onosproject/onos-of-api/@ONOS-VERSION</bundle>
+
         <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
         <bundle>mvn:com.google.guava/guava/18.0</bundle>
     </feature>
@@ -44,11 +46,6 @@
     </feature>
     <feature name="core-globalfib" version="@FEATURE-VERSION">
         <feature>core-api</feature>
-
-        <feature>onos-rest</feature>
-        <feature>onos-api</feature>
-        <bundle>mvn:org.onosproject/onos-of-api/@ONOS-VERSION</bundle>
-
         <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
     </feature>
     <feature name="core" version="@FEATURE-VERSION">
