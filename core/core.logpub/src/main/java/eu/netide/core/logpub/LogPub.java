@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -69,13 +70,13 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void run() {
 		log.info("LogPub started.");
 		ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
-		pubSocket.bind("tcp://*:" + pubPort);
-		log.info("Listening PUB queue on port " + pubPort);
+		pubSocket.bind("tcp://*:" + (pubPort==0?5557:pubPort));
+		log.info("Listening PUB queue on port " + (pubPort==0?5557:pubPort));
 
 		ZMQ.Socket subSocket = context.socket(ZMQ.ROUTER);
 		subSocket.setIdentity("logpub".getBytes(ZMQ.CHARSET));
-		subSocket.bind("tcp://*:" + subPort);
-		log.info("Listening SUB queue on port " + subPort);
+		subSocket.bind("tcp://*:" + (subPort==0?5558:subPort));
+		log.info("Listening SUB queue on port " + (subPort==0?5558:subPort));
 
 		ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
 		controlSocket.bind(CONTROL_ADDRESS);
@@ -95,11 +96,12 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 					String src = null;
 					byte[] data = null;
 					try{
+						ZFrame header = zmqMessage.pop();
 						dst = zmqMessage.popString();
 						src = zmqMessage.popString();
 						data = zmqMessage.getLast().getData();
 						Message netideMessage = NetIPConverter.parseRawMessage(data);
-						log.info("Data received in SUB queue: from "+src+" to "+dst+ ".");
+						log.debug("Data received in SUB queue: from "+src+" to "+dst+ ". (data:"+netideMessage.toByteRepresentation()+")");
 						HashMap<Integer,Integer> key = new HashMap<Integer,Integer>(){{
 							put(netideMessage.getHeader().getModuleId(),netideMessage.getHeader().getTransactionId());}};
 							if (hMap.containsKey(key)){
@@ -124,10 +126,10 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 									// send message to backend
 									backendManager.sendMessage(netideMessage);
 								else
-									log.debug("Got unknown message in SUB queue:" + netideMessage.toString());
+									log.error("Got unknown message in SUB queue:" + netideMessage.toString());
 							}
-					}catch(NullPointerException e){
-						log.error("NullPointerException:"+e);
+					}catch(NullPointerException | IllegalArgumentException e){
+						log.error("Error in LogPub:");e.printStackTrace();
 					}
 				}
 				if (poller.pollin(1)) {
@@ -199,7 +201,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void OnManagementMessage(ManagementMessage message) {
 		ZMsg zmq_message = new ZMsg();
 		zmq_message.add(message.getPayloadString());
-		log.debug("Received message form management:" + zmq_message.toString());
+		log.debug("Received message from management:" + zmq_message.toString());
 		ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
 		sendSocket.connect(CONTROL_ADDRESS);
 		zmq_message.send(sendSocket);
@@ -212,7 +214,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	 */
 	public void setShimManager(IShimManager manager) {
 		shimManager = manager;
-		log.info("ShimManager set.");
+		log.debug("ShimManager set.");
 	}
 
 	/**
@@ -231,7 +233,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	 */
 	public void setBackendManager(IBackendManager manager) {
 		backendManager = manager;
-		log.info("BackendManager set.");
+		log.debug("BackendManager set.");
 	}
 
 	/**
