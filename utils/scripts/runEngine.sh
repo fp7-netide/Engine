@@ -1,24 +1,30 @@
 #!/bin/bash
-#Runs the different parts of the Engine: 1 call = 1 item in the architecture (23/02/16)
+#Runs the different parts of the Engine: 1 call = 1 item in the architecture (20/04/16)
 
-ERROR=-1
-echo ""
-echo "========================================= NetIDE Engine =========================================="
+NetIDE_DIR="$HOME/NetIDE"
+EngineMixed_DIR="$NetIDE_DIR/Engine-mixed"
+
 # Start backend (-b), core (-c), shim (-s) or help (-h/--help)
 if [ -z "$1" ] || [ "$1" == "-h" ] || [ "$1" == "--help" ]
 then
-	echo "Usage: <runEngine.sh> <-b (backend) / -c (core) / -s (shim) / -m (Mininet)> <type (Ryu/Floodlight; Java/Python; Ryu/ODL/ONOS; netide-topo)>"
+        echo "Usage: runEngine.sh -b (backend) Ryu/Floodlight"
+	echo "                    -c (core) Java/Python"
+	echo "                    -s (shim) Ryu/ODL/ONOS"
+        echo "                    -m (Mininet) netide-topo of1X [6644]"
 	exit 0
 fi
 
-#Go to Engine folder
-cd $HOME/NetIDE/Engine-mixed
-ls
+echo -e "\n==========================="
+echo "====== NetIDE Engine ======"
+echo "==========================="
+
+#Go to the Engine folder
+cd $EngineMixed_DIR
 
 #Start backend
 if [ "$1" == "-b" ]
-then 
-	echo "---- Backend:" $2 "----"
+then
+	echo -e "=> Backend: $2\n"
 	if [ "$2" == "Ryu" ] || [ "$2" == "ryu" ]
 	then
 		cd ryu-backend
@@ -39,7 +45,6 @@ then
 			ryu-manager --ofp-tcp-listen-port 7734 ryu-backend.py tests/firewall.py
 		elif [ "$3" == "of13" ] || [ "$3" == "of13-sw+fw" ]
 		then
-			#sudo ovs-ofctl -O Openflow13 add-flow s11 actions=CONTROLLER
 			if [ "$4" == "-p" ]
 			then
 				cd $HOME/NetIDE/
@@ -67,7 +72,7 @@ then
 #Start shim
 elif [ "$1" == "-s" ]
 then
-	echo "---- Shim:" $2 "----"
+	echo "=> Shim: $2"
 	if [ "$2" == "Ryu" ] || [ "$2" == "ryu" ]
 	then
 		cd ryu-shim
@@ -76,8 +81,10 @@ then
 	then
 		export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
 		export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'
-		echo "odl> feature:install odl-netide-rest"
-		echo "log:display | grep 'NetideProvider Session Initiated'"
+                echo -e "\n> To install NetIDE shim:"
+                echo -e "feature:install odl-netide-rest\n"
+                echo -e "> To check the installation::"
+                echo -e "log:display | grep 'NetideProvider Session Initiated'\n"
 		cd odl-shim/karaf/target/assembly/bin
 		./karaf
 	elif [ "$2" == "ONOS" ] || [ "$2" == "onos" ]
@@ -85,13 +92,17 @@ then
 		export ONOS_ROOT=$HOME/NetIDE/onos
 		source $ONOS_ROOT/tools/dev/bash_profile
 		cell netide
-		echo "---To modify core address - default is localhost:5555 -, run the following:"
-		echo "onos> config:edit eu.netide.shim.ShimLayer"
-		echo "onos> property-set coreAddress *CORE IP*"
-		echo "onos> property-set corePort *CORE PORT*"
-		echo "onos> config:update"
-		echo "---To start the shim, run the following command in the odl-shim folder"
+		echo -e "\n> To modify core address (by default: localhost:5555), run the following command:"
+		echo "config:edit eu.netide.shim.ShimLayer"
+		echo "property-set coreAddress *CORE IP*"
+		echo "property-set corePort *CORE PORT*"
+		echo "config:update"
+                echo -e "\n> To permit extraneous network rules:"
+                echo "onos:cfg set org.onosproject.net.flow.impl.FlowRuleManager allowExtraneousRules true"
+		echo -e "\n> To install the shim, run the following command in the onos-shim folder:"
 		echo "onos-app $OC1 install target/onos-app-shim-1.0.0-SNAPSHOT.oar"
+                echo -e "\n> To activate the shim:"
+                echo -e "app activate eu.netide.shim\n"
                 onos-karaf clean
 	else
 		echo "Error! Shim" $2 "not available... <choose type (Ryu/ODL/ONOS)>"
@@ -100,18 +111,23 @@ then
 #Start core
 elif [ "$1" == "-c" ]
 then
-	echo "---- Core:" $2 "----"
+	echo "=> Core: $2"
 	if [ "$2" == "Java" ] || [ "$2" == "java" ]
 	then
-		export JAVA_HOME=/usr/lib/jvm/java-8-oracle/
-		echo "karaf> feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features (1.0.0.0) (1.0.1.0)"
-		echo "karaf> feature:install core (netide-core)"
-		echo "karaf> netide:loadcomposition /path/to/composition (DpidPartitionABCW.xml)"
-		echo "karaf> netide:listmodules"
-		#cd apache-karaf-3.0.3/
-		cd apache-karaf-3.0.5/
-		bin/karaf clean --verbose
-	elif [ "$2" == "Python" ] || [ "$2" == "python" ] 
+		cd $NetIDE_DIR/apache-karaf-3.0.5
+		bin/start clean
+		echo -e "\nStarting Karaf..."
+		sleep 10
+		bin/client feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features
+		bin/client feature:install core
+		bin/client netide:loadcomposition DpidPartitionABCW.xml
+		sleep 2
+		echo -e "\n> To list NetIDE modules:"
+		echo -e "netide:listmodules\n"
+		echo -e "> To shutdown Karaf:"
+		echo -e "shutdown -f\n"
+		bin/client
+	elif [ "$2" == "Python" ] || [ "$2" == "python" ]
 	then
 		if [ -z "$3" ]
 		then
@@ -119,7 +135,7 @@ then
 		else
 			COMPFILE=$3
 		fi
-		cd ryu-backend/tests
+		cd $NetIDE_DIR/Python-Core
 		echo "Loading Python core with" $COMPFILE
 		cat $COMPFILE
 		echo ""
@@ -154,5 +170,5 @@ then
 		echo "Error! Mininet test" $2 "not available... <choose type (netide-topo)>"
 	fi
 fi
-echo "=================================================================================================="
-echo ""
+
+echo -e "\n==========================="

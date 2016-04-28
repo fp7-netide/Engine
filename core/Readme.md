@@ -80,3 +80,11 @@ To make karaf reload changed bundles after a mvn install , tell karaf to watch t
     238    backend-ryu-14172    backend-ryu-14172                 4,66
       -                 shim                    -                 0,32
 ```
+
+### Debugging the core
+1. Start Karaf with the parameter debug, e.g. `bin/karaf debug`.
+2. Add a remote target in the IDE (e.g. IntelliJ) with localhost:5005 as target:
+ <p align="center">
+   <img src="https://raw.githubusercontent.com/fp7-netide/Engine/master/core/doc/remote-debug.png" alt="IntelliJ Remote Deubg Config"/>
+ </p>
+3. After the core has started run the remoteDebug configuration from IntelliJ and debug as usual.
