@@ -1,15 +1,19 @@
 package eu.netide.core.api;
 
 import eu.netide.lib.netip.Message;
+import org.onosproject.net.flow.FlowEntry;
+
+import java.util.List;
 
 /**
  * Created by msp on 1/13/16.
  */
 public interface IFIBManager {
+
     /**
-     * Handles the given message (given by caos).
+     * Returns a list of installed FlowMods.
      *
-     * @param message The message to be handled.
+     * @return The list of FlowMods.
      */
-    void handleMessage(Message message);
+    List<FlowEntry> getFlowMods();
 }

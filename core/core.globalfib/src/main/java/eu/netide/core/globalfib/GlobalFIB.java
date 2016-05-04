@@ -17,7 +17,7 @@ import java.util.*;
 public class GlobalFIB {
     private static final Logger logger = LoggerFactory.getLogger(GlobalFIB.class);
 
-    private List<FlowEntry> globalFIB = new LinkedList<>();
+    private List<FlowEntry> flowEntries = new LinkedList<>();
 
     private HashMap<Long, Vector<OFFlowMod>> individualSwitchFlowMap = new HashMap<>();
 
@@ -29,12 +29,12 @@ public class GlobalFIB {
 
         OFFlowMod flowMod = (OFFlowMod) ofMessage.getOfMessage();
         FlowEntryBuilder flowEntryBuilder = new FlowEntryBuilder(new Dpid(ofMessage.getHeader().getDatapathId()), flowMod, null);
-        FlowEntry flowEntry = flowEntryBuilder.build();
+        FlowEntry flowEntry = flowEntryBuilder.build(FlowEntry.FlowEntryState.ADDED);
 
         // TODO: correct treatment, if entry already exists?
         if (getFlowEntry(flowEntry) == null) {
             logger.debug("Adding FlowEntry ");
-            globalFIB.add(flowEntry);
+            flowEntries.add(flowEntry);
         }
     }
 
@@ -49,7 +49,7 @@ public class GlobalFIB {
      * Looks in the GlobalFIB for an Entry that matches the specifics
      */
     private FlowEntry getFlowEntry(FlowEntry flowEntry) {
-        for (FlowEntry fibEntry : globalFIB) {
+        for (FlowEntry fibEntry : flowEntries) {
             if (flowEntry.exactMatch(fibEntry)) {
                 logger.debug("Found matching flow entry");
                 return fibEntry;
@@ -59,4 +59,7 @@ public class GlobalFIB {
         return null;
     }
 
+    public List<FlowEntry> getFlowEntries() {
+        return flowEntries;
+    }
 }

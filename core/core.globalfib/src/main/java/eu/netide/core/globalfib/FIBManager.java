@@ -1,5 +1,6 @@
 package eu.netide.core.globalfib;
 
+import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.caos.ICompositionManager;
@@ -9,7 +10,7 @@ import eu.netide.lib.netip.OpenFlowMessage;
 import org.apache.felix.scr.annotations.*;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.onosproject.net.topology.TopologyService;
+import org.onosproject.net.flow.FlowEntry;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
 import org.projectfloodlight.openflow.protocol.*;
 import org.slf4j.Logger;
@@ -19,7 +20,7 @@ import java.util.List;
 
 @Component(immediate=true)
 @Service
-public class FIBManager implements IShimMessageListener {
+public class FIBManager implements IFIBManager, IShimMessageListener {
     private final OFMessageReader<OFMessage> reader;
     private final GlobalFIB globalFIB;
 
@@ -97,5 +98,10 @@ public class FIBManager implements IShimMessageListener {
 
     public void bindShimManager(IShimManager shimManager) {
         this.shimManager = shimManager;
+    }
+
+    @Override
+    public List<FlowEntry> getFlowMods() {
+        return globalFIB.getFlowEntries();
     }
 }
