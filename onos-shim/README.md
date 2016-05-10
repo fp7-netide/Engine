@@ -7,7 +7,7 @@ The ONOS shim layer is implemented as a bundle for the [ONOS controller](http://
 ### STEP 1: Download ONOS
 ```
 $ git clone https://gerrit.onosproject.org/onos
-$ git checkout v1.5.0
+$ git checkout 1.5.1
 ```
 ### STEP 2: ONOS Prerequisites
 
