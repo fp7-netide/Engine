@@ -23,7 +23,9 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 	private static final String STOP_COMMAND = "Control.STOP";
 	private static final String CONTROL_ADDRESS = "inproc://LogPubControl";
-
+    private static final int DEFAULT_PUB_PORT = 5557;
+    private static final int DEFAULT_SUB_PORT = 5558;
+    
 	private static final Logger log = LoggerFactory.getLogger(LogPub.class);
 
 	private int pubPort;
@@ -70,13 +72,13 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void run() {
 		log.info("LogPub started.");
 		ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
-		pubSocket.bind("tcp://*:" + (pubPort==0?5557:pubPort));
-		log.info("Listening PUB queue on port " + (pubPort==0?5557:pubPort));
+		pubSocket.bind("tcp://*:" + (pubPort==0?DEFAULT_PUB_PORT:pubPort));
+		log.info("Listening PUB queue on port " + (pubPort==0?DEFAULT_PUB_PORT:pubPort));
 
 		ZMQ.Socket subSocket = context.socket(ZMQ.ROUTER);
 		subSocket.setIdentity("logpub".getBytes(ZMQ.CHARSET));
-		subSocket.bind("tcp://*:" + (subPort==0?5558:subPort));
-		log.info("Listening SUB queue on port " + (subPort==0?5558:subPort));
+		subSocket.bind("tcp://*:" + (subPort==0?DEFAULT_SUB_PORT:subPort));
+		log.info("Listening SUB queue on port " + (subPort==0?DEFAULT_SUB_PORT:subPort));
 
 		ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
 		controlSocket.bind(CONTROL_ADDRESS);
