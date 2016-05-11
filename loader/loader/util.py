@@ -72,9 +72,8 @@ def build_ssh_commands(c):
 
 def spawn_logged(cmd):
     print(cmd)
-    #p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.STDOUT)
-    p = sp.Popen(['ansible-playbook', '-i', '/var/folders/80/t24jc5vx4d77rq0r4s6v2vnc0000gn/T/tmpk5bvw_e2-netide-server-install/', 'a-playbook.yml'], stdout=sp.PIPE, stderr=sp.STDOUT)
-    
+    p = sp.Popen(cmd, stdout=sp.PIPE, stderr=sp.STDOUT)
+
     for l in p.stdout:
         l = l.decode('utf-8').rstrip()
         logging.debug(l)

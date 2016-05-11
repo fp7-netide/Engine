@@ -4,3 +4,4 @@ pyzmq
 tarfile
 configparser
 zmq
+pyaml

@@ -20,9 +20,12 @@ import logging
 import configparser
 import ast
 import re
+import io
 
+from yaml import load
 from loader import controllers
 from loader import environment
+from functools import reduce
 
 class Application(object):
     metadata = {}
@@ -77,33 +80,24 @@ class Application(object):
     def get_controller(cls, path):
         test = os.path.basename(path) + ".sysreq"
        
-        
-        with open(os.path.join(path, test),'r') as inf:
-            linesFromFile = inf.readlines()# = ast.literal_eval(inf.read())
+    
+        with open(os.path.join(path, test)) as f:
             
-            flag = 0
-            for line in linesFromFile:
-                if "controller" in line:
-                    flag = 1
-                    
-                if "name" in line and (flag == 1):
-                   # print(line)
-                    controllerName = re.findall(r'"([^"]*)"', line)
-                    c = controllerName[0]
-                   # print(controllerName)
-                
-                #if "entrypoint" in line and (flag == 1):
-                    #print(line)
-                 #   entryPoint = re.findall(r'"([^"]*)"', line)
-                    #print(entryPoint)
+            s = io.StringIO()
+
+            st = reduce(lambda x, y: x + y, f)
+            f.seek(0)
+
+            enclosed = st.lstrip()[0] == "{"
+
+            if not enclosed: s.write("{")
+            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
+            if not enclosed: s.write("}")
             
+            s.seek(0)
             
-        #config = configparser.RawConfigParser()
-        #with open(os.path.join(path, test), 'r') as f:
-            #config.sections()
-           # config.read(f)
-            #config.sections
-            #print(config.read(f))
-            #return (controllerName)
+            y = load(s)
+            
+            c = y.get("app").get("controller").get("name")
+
             return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
-           # return (controllerName, entryPoint)

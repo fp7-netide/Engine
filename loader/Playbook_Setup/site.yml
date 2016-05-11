@@ -5,7 +5,6 @@
   
   roles:
     - prereq
-    - tools
     - core
-    
+
 ...
