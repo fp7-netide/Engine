@@ -119,11 +119,18 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
                 if (shimController.containsXid(msg.getXid())) {
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
                 }
+                break;
             case ECHO_REPLY:
                 if (shimController.containsXid(msg.getXid())) {
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
                 }
+                break;
             default:
+                if (shimController.containsXid(msg.getXid())) {
+                    shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
+                } else {
+                    shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
+                }
                 break;
         }
     }
