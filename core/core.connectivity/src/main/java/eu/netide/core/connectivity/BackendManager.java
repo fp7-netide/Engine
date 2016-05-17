@@ -314,7 +314,6 @@ public class BackendManager implements IBackendManager, IConnectorListener {
      *
      * @param connector The connector.
      */
-
     public void setConnector(IBackendConnector connector) {
         this.connector = connector;
         connector.RegisterBackendListener(this);
