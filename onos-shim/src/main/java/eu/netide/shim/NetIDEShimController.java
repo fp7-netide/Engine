@@ -132,15 +132,12 @@ public class NetIDEShimController implements ICoreListener {
                             OFDescStatsRequest ofDescStatsRequest = (OFDescStatsRequest) reply;
                             OFDescStatsReply.Builder ofDescReply = sw.factory().buildDescStatsReply();
                             ofDescReply.setXid(ofDescStatsRequest.getXid());
-                            //Set<OFStatsReplyFlags> flags = Sets.newHashSet(OFStatsReplyFlags.)
-                            //ofDescReply.setFlags()
                             sendOpenFlowMessageToCore(ofDescReply.build(),ofDescReply.getXid(),sw.getId(),moduleId);
                             break;
                         default:
                             //Save the xid
                             xids.put(message.getXid(), moduleId);
                             sw.sendMsg(message);
-
                     }
                     break;
 
