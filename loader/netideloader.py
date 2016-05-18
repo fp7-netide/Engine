@@ -47,7 +47,6 @@ import signal
 import sys
 import time
 import zmq
-import tarfile
 
 import subprocess as sp
 
@@ -68,28 +67,12 @@ logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=l
 
 def extract_package(args):
     
-    os.makedirs(dataroot, exist_ok=True)
-    
-    if os.path.exists(extractPath):
-        if os.path.isfile(extractPath): 
-            f = open(extractPath)
-            tmpPath = f.read()
-    else:
-        tmpPath = dataroot     
-    #expect path to tar archive as args and extract content
-    with tarfile.open(args.path) as tar:
-        tar.extractall(tmpPath)
-    
-    
-    print("Extracted to:" + tmpPath)
+    util.extractPackage(args.path)
     
     return 0
 
 def set_extraction_path(args):
-    os.makedirs(dataroot, exist_ok=True)
-    
-    with open(extractPath, 'w') as f:
-        f.write(args.path)
+    util.setExtractionPath(args.path)
 
     return 0;
 

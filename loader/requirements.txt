@@ -1,7 +1,0 @@
-nose
-requests
-pyzmq
-tarfile
-configparser
-zmq
-pyaml

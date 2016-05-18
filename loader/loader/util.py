@@ -3,8 +3,38 @@ import logging
 import os
 import shutil
 import tempfile
+import tarfile
 
 import subprocess as sp
+
+
+dataroot = "/tmp/netide"
+extractPath = os.path.join(dataroot, "extractPath.txt")
+
+
+def extractPackage(path):
+    os.makedirs(dataroot, exist_ok=True)
+    
+    if os.path.exists(extractPath):
+        if os.path.isfile(extractPath): 
+            f = open(extractPath)
+            tmpPath = f.read()
+    else:
+        tmpPath = dataroot     
+    #expect path to tar archive as args and extract content
+    with tarfile.open(path) as tar:
+        tar.extractall(tmpPath)
+    
+    print("Extracted to:" + tmpPath)
+    return tmpPath
+
+def setExtractionPath(path):
+    os.makedirs(dataroot, exist_ok=True)
+    
+    with open(extractPath, 'w') as f:
+        f.write(args.path)
+    return 0
+
 
 class Chdir(object):
     "Context manager for switching to a directory, doing something and switching back"

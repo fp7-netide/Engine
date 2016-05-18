@@ -36,12 +36,9 @@ class Package(object):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         
-        #might be unneccessary due to changes to netideloader - need to check with christian
-        if prefix.endswith(".zip") and os.path.isfile(self.path):
-            p = tempfile.mkdtemp(prefix="netide-tmp")
-            with zipfile.ZipFile(self.path) as zf:
-                zf.extractall(path=p)
-            self.path = p
+        if (prefix.endswith(".zip") or prefix.endswith(".tar") or prefix.endswith(".gz")) and os.path.isfile(self.path):
+           
+            self.path = os.path.join(util.extractPackage(self.path), "Demo")
             # self.cleanup = True
 
         p = os.path.join(self.path, "controllers.json")

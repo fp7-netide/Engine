@@ -56,6 +56,8 @@ def do_server_install(pkg):
        # with open("Playbook_Setup/sever.yml", "w") as serverYml:
         #    serverYml.write("--- \n - name: install prereq for all hosts \n hosts: localhost \n roles: - prereq - core \n ...")
         
+        #install core and engine on server (usually localhost)
+        #read p.config[server] and add server to site.yml
         util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", os.path.join("Playbook_Setup", "site.yml")])
 
 
@@ -68,11 +70,6 @@ def do_client_installs(pkgpath, dataroot):
         clients = pkg.get_clients()
 
         util.write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
-
-        # Install Python2.7 so we can use ansible
-        # XXX: make the package name configurable
-        util.spawn_logged(["ansibleEnvironment/bin/ansible", "clients", "-i", os.path.join(t, "ansible-hosts"),
-            "-m", "raw", "-a", install_package_command.format("python2.7")])
 
         tasks = []
 
@@ -97,6 +94,7 @@ def do_client_installs(pkgpath, dataroot):
             "shell": "bash ./setup.sh",
             "args": { "chdir": "{{ansible_user_dir}}/netide-loader" }})
 
+        #is already cloned...
         tasks.append({
             "name": "Clone IDE repository",
             "git": {
@@ -104,6 +102,7 @@ def do_client_installs(pkgpath, dataroot):
                 "dest": "{{ansible_user_dir}}/IDE",
                 "version": "development"}})
 
+        #has been done in setup server
         tasks.append({
             "name": "Install Engine",
             "shell": "bash {{ansible_user_dir}}/IDE/plugins/eu.netide.configuration.launcher/scripts/install_engine.sh"})
@@ -121,6 +120,7 @@ def do_client_installs(pkgpath, dataroot):
 
         playbook = [{"hosts": "clients", "tasks": tasks}]
 
+        #use new role system here !
         for c in clients:
         
             ctasks = []
