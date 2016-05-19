@@ -2,6 +2,8 @@
 
 - name: install core
   script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_core.sh
+  args:
+    chdir: ~
   when: (engine_path.stat.isdir is defined and engine_path.stat.isdir == True) == False or 
         (netip_path.stat.isdir is defined and netip_path.stat.isdir == True) == False or 
         (core_path.stat.isdir is defined and core_path.stat.isdir == True) == False or 
