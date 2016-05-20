@@ -19,16 +19,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.JAXBException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 /**
  * Implementation of ICompositionManager
  * <p>
  * Created by timvi on 25.06.2015.
  */
-public class CompositionManager implements ICompositionManager, IShimMessageListener {
+public class CompositionManager implements ICompositionManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CompositionManager.class);
     private ExecutorService pool = Executors.newSingleThreadExecutor();
@@ -47,7 +49,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
     private volatile boolean correctlyConfigured = false;
     private Future<?> reconfigurationFuture;
     private static ExecutionFlowStatus lastStatus = null;
-
+    private String compositionNotReadyReason = "No composition file loaded";
 
     /**
      * Called by blueprint on startup.
@@ -72,12 +74,12 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         reconfigurationFuture = pool.submit(() -> {
             try {
                 // wait for required modules to connect for at most maxModuleWaitSeconds
-                long modulesUnconnected = compositionSpecification.getModules().size();
+                List<Module> modulesUnconnected = compositionSpecification.getModules();
                 logger.info("Waiting for required modules to connect, " + modulesUnconnected + " left...");
                 int waitCount = 0;
                 do {
-                    modulesUnconnected = compositionSpecification.getModules().stream().filter(m -> !backendManager.getModules().anyMatch(mn -> mn.equals(m.getId()))).count();
-                    if (modulesUnconnected > 0) {
+                    modulesUnconnected = compositionSpecification.getModules().stream().filter(m -> !backendManager.getModules().anyMatch(mn -> mn.equals(m.getId()))).collect(Collectors.toList());
+                    if (modulesUnconnected.size() > 0) {
                         try {
                             Thread.sleep(2000);
                             waitCount++;
@@ -85,28 +87,32 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
                                 logger.info((maxModuleWaitSeconds - waitCount) + " seconds remaining for " + modulesUnconnected + " module(s) to connect...");
                             }
                             if (waitCount >= maxModuleWaitSeconds) {
-                                throw new TimeoutException("Required modules did not connect.");
+                                compositionNotReadyReason = "Required modules did not connect. Missing" + modulesUnconnected.stream().map(Object::toString).collect(Collectors.joining(","));
+                                throw new TimeoutException(compositionNotReadyReason);
                             }
                         } catch (InterruptedException e) {
+                            compositionNotReadyReason = "Interrupted while waiting for required modules to connect.";
                             logger.error("Interrupted while waiting for required modules to connect.", e);
                             return;
                         } catch (TimeoutException e) {
-                            logger.error("Reconfiguration unsuccessful: timed out with " + modulesUnconnected + " unconnected modules.", e);
+                            compositionNotReadyReason = "Reconfiguration unsuccessful: timed out with " + modulesUnconnected.size() + " unconnected modules: " +
+                                    modulesUnconnected.stream().map(Object::toString).collect(Collectors.joining(","));
+                            logger.error(compositionNotReadyReason, e);
                             return;
                         }
                     }
-                } while (modulesUnconnected > 0 && !Thread.interrupted());
+                } while (modulesUnconnected.size() > 0 && !Thread.interrupted());
                 correctlyConfigured = true;
                 logger.info("All required modules connected. Reconfiguration successful.");
             } catch (Exception ex) {
+                compositionNotReadyReason = "Error while reconfiguring.";
                 logger.error("Error while reconfiguring.", ex);
                 correctlyConfigured = false;
             }
         });
     }
 
-    @Override
-    public void OnShimMessage(Message message, String originId) {
+    public List<Message> processShimMessage(Message message, String originId) {
         logger.info("CompositionManager received message from shim: " + message.toString());
         try {
             int compQueueLen = csLock.getQueueLength();
@@ -130,17 +136,13 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
             if (correctlyConfigured) {
                 status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), shimManager, backendManager);
 
-                // Send results
-                for (Map.Entry<Long, List<Message>> entry : status.getResultMessages().entrySet()) {
-                    entry.getValue().stream().forEach((Message x) -> logger.warn("Sending composition result message {} to shim.", x));
-                    entry.getValue().stream().forEach(shimManager::sendMessage);
-
-                    logger.warn("Sent " + entry.getValue().size() + " rules to switch " + entry.getKey());
-                }
-
                 logger.info("Flow execution finished.");
+
+                List<Message> results = new ArrayList<Message>();
+                status.getResultMessages().values().forEach(results::addAll);
+                return results;
             } else {
-                logger.error("Could not handle incoming message due to configuration error.", message);
+                logger.error("Could not handle incoming message due to configuration error {}: {}", compositionNotReadyReason, message);
             }
         } catch (UnsupportedOperationException e) {
             if (bypassUnsupportedMessages) {
@@ -176,6 +178,7 @@ public class CompositionManager implements ICompositionManager, IShimMessageList
         } finally {
             csLock.release();
         }
+        return null;
     }
 
     /**

@@ -18,7 +18,10 @@ public enum ResolutionPolicy {
     @XmlEnumValue("priority")
     PRIORITY("priority"),
     @XmlEnumValue("ignore")
-    IGNORE("ignore");
+    IGNORE("ignore"),
+    @XmlEnumValue("pass")
+    PASS("pass");
+
 
     private final String value;
 

@@ -65,14 +65,8 @@ public class CompositionManagerTest {
     @Test
     public void TestSingleNodeComposition() throws InterruptedException {
         // create PacketIn
-        Ethernet ethernet = new Ethernet().setEtherType(Ethernet.TYPE_IPV4).setSourceMACAddress(MacAddress.valueOf(42)).setDestinationMACAddress(MacAddress.valueOf(43));
-        IPv4 iPv4 = new IPv4().setProtocol(IPv4.PROTOCOL_TCP);
-        TCP tcp = new TCP().setSourcePort((short) 80).setDestinationPort((short) 80);
-        iPv4.setPayload(tcp);
-        ethernet.setPayload(iPv4);
-        OFPacketIn newPacketIn = OFFactories.getFactory(OFVersion.OF_10).buildPacketIn().setData(ethernet.serialize()).setReason(OFPacketInReason.NO_MATCH).build();
-        OpenFlowMessage newMessage = new OpenFlowMessage();
-        newMessage.setOfMessage(newPacketIn);
+
+        OpenFlowMessage newMessage = getPacketInMessage();
 
         // create and mock objects
         CompositionManager manager = new CompositionManager();
@@ -80,13 +74,40 @@ public class CompositionManagerTest {
         Mockito.when(backendManager.getModules()).thenReturn(Stream.of("fw"));
         RequestResult result = new RequestResult(ofm1);
         result.addResultMessage(ofm1);
+        result.addResultMessage(ofm2);
         result.signalIsDone(new FenceMessage());
         Mockito.when(backendManager.sendRequest(Mockito.any(Message.class))).thenReturn(result);
         manager.setBackendManager(backendManager);
         manager.setCompositionSpecificationXml(SingleCallXml);
         Thread.sleep(300); // wait for reconfiguration
 
-        manager.OnShimMessage(newMessage, Constants.SHIM);
+        manager.processShimMessage(newMessage, Constants.SHIM);
+
+    }
+
+    private OpenFlowMessage getPacketInMessage() {
+        OFPacketIn newPacketIn = getOfPacketIn();
+        OpenFlowMessage newMessage = new OpenFlowMessage();
+        newMessage.setOfMessage(newPacketIn);
+        return newMessage;
+    }
+
+    private OFPacketIn getOfPacketIn() {
+        Ethernet ethernet = new Ethernet().setEtherType(Ethernet.TYPE_IPV4).setSourceMACAddress(MacAddress.valueOf(42)).setDestinationMACAddress(MacAddress.valueOf(43));
+        IPv4 iPv4 = new IPv4().setProtocol(IPv4.PROTOCOL_TCP);
+        TCP tcp = new TCP().setSourcePort((short) 80).setDestinationPort((short) 80);
+        iPv4.setPayload(tcp);
+        ethernet.setPayload(iPv4);
+        return OFFactories.getFactory(OFVersion.OF_10).buildPacketIn().setData(ethernet.serialize()).setReason(OFPacketInReason.NO_MATCH).build();
+    }
+
+    private void testResultTwoFlowMods ()
+    {
+
+        RequestResult result = new RequestResult(getPacketInMessage());
+        result.addResultMessage(ofm2);
+        result.addResultMessage(ofm1);
+        result.signalIsDone(new FenceMessage());
     }
 
     private static OpenFlowMessage messageFromFlowMod(OFFlowMod flowMod) {

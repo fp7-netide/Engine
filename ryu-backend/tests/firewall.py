@@ -56,10 +56,17 @@ class Firewall(app_manager.RyuApp):
         
     def forwardPacket(self, msg, outPort):
 		# Does not install a rule. Just forwards this packet.
-        datapath=msg.datapath		
-        if msg.buffer_id is not None:
+        datapath=msg.datapath
+
+        ofproto = datapath.ofproto
+
+        data=None
+        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+            data = msg.data
+
+        if msg.buffer_id is not ofproto.OFP_NO_BUFFER:
             po_actions = [datapath.ofproto_parser.OFPActionOutput(outPort)]
-            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port, actions=po_actions)
+            pkt_out = datapath.ofproto_parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port, data=data, actions=po_actions)
             datapath.send_msg(pkt_out)
         
     # Static rules for the web and dns services
@@ -103,14 +110,14 @@ class Firewall(app_manager.RyuApp):
             self.forwardPacket(msg, 1)  
 
     # Feature reply handler: used to install proactive actions
-    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
+    @set_ev_cls(ofp_event.EventOFPSwitchFeatures, MAIN_DISPATCHER)
     def _switch_features_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
         
-        #if datapath.id == FW_DPID and self.stateless_FW_configured == False:
-        self.Configure_stateless_FW(datapath)
-        self.stateless_FW_configured = True
+        if self.stateless_FW_configured == False:
+            self.Configure_stateless_FW(datapath)
+            self.stateless_FW_configured = True
     
     # PacketIn handler for reactive actions
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -118,7 +125,6 @@ class Firewall(app_manager.RyuApp):
         msg = ev.msg
         datapath = msg.datapath
 
-        print "FIREWALL packet in from dpid: ",datapath.id," msg:",  msg
         pkt = packet.Packet(msg.data)
         self.Configure_stateful_FW(msg)
 

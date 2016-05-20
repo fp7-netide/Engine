@@ -9,17 +9,15 @@ import java.util.Arrays;
 
 
 /**
- * <p>Java-Klasse für anonymous complex type.
- * <p>
+ * <p>Java-Klasse fÃ¼r anonymous complex type.
  * <p>Das folgende Schemafragment gibt den erwarteten Content an, der in dieser Klasse enthalten ist.
- * <p>
  * <pre>
- * &lt;complexType>
- *   &lt;complexContent>
- *     &lt;extension base="{http://netide.eu/schemas/compositionspecification/v1}ExecutionFlowNodeContainer">
- *     &lt;/extension>
- *   &lt;/complexContent>
- * &lt;/complexType>
+ * &lt;complexType&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;extension base="{http://netide.eu/schemas/compositionspecification/v1}ExecutionFlowNodeContainer"&gt;
+ *     &lt;/extension&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
  * </pre>
  */
 @XmlAccessorType(XmlAccessType.NONE)

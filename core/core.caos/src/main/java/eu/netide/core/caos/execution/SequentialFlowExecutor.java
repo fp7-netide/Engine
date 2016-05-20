@@ -44,6 +44,10 @@ public class SequentialFlowExecutor implements IFlowExecutor {
 
         OFPacketIn originalPacketIn = (OFPacketIn) originalMessage.getOfMessage();
         List<ExecutionFlowNode> collectedNodes = nodes.collect(Collectors.toList());
+        if (collectedNodes.size() ==0) {
+            log.error("Composition empty for packet, ignoring packet");
+            return status;
+        }
         ExecutionFlowNode executionFlowNode = collectedNodes.get(0);
 
         // request results

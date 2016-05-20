@@ -76,6 +76,7 @@ class NetIDEOps:
         'MODULE_ACKNOWLEDGE'    : 0x05,
         'NETIDE_HEARTBEAT'      : 0x06,
         'TOPOLOGY_UPDATE'       : 0x07,
+        'NETIDE_FENCE'          : 0x08,
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
         'NETIDE_OPFLEX'     : OPFLEX_PROTO
@@ -149,6 +150,11 @@ class NetIDEOps:
     def netIDE_set_module_id(raw_data, new_mod_id):
         (version, msg_type, length, xid, mod_id, dpid, msg) = NetIDEOps.netIDE_decode(raw_data)     
         return NetIDEOps.netIDE_encode(NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, msg_type), xid, new_mod_id, dpid, msg)
+
+    @staticmethod
+    def netIDE_set_xid(raw_data, new_xid):
+        (version, msg_type, length, xid, mod_id, dpid, msg) = NetIDEOps.netIDE_decode(raw_data)
+        return NetIDEOps.netIDE_encode(NetIDEOps.key_by_value(NetIDEOps.NetIDE_type, msg_type), new_xid, mod_id, dpid, msg)
 
     #Return the key name from a value in a dictionary
     @staticmethod

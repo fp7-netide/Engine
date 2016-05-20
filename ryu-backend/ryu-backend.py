@@ -62,6 +62,7 @@ class BackendDatapath(controller.Datapath):
         self.ofpp = ofpp
         self.id = id
         self.xid = 0
+        self.netide_xid = 0
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
         self.is_active = True
@@ -111,19 +112,10 @@ class BackendDatapath(controller.Datapath):
         if msg.xid is None:
             self.set_xid(msg)
         msg.serialize()
-        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', None, module_id, msg.datapath.id, str(msg.buf))
+        msg_to_send = NetIDEOps.netIDE_encode('NETIDE_OPENFLOW', self.netide_xid, module_id, msg.datapath.id, str(msg.buf))
         logger.debug("Sent Message header: %s", NetIDEOps.netIDE_decode_header(msg_to_send))
         logger.debug("Sent Message body: %s",':'.join(x.encode('hex') for x in msg_to_send[NetIDEOps.NetIDE_Header_Size:]))
         self.channel.socket.send(msg_to_send)
-        
-        #TODO: temporary patch in order to let the core know that the application has finished processing the packet_in. Only for packet_outs and flow_mods
-        if msg.msg_type is self.ofproto.OFPT_PACKET_OUT or msg.msg_type is self.ofproto.OFPT_FLOW_MOD:
-            msg_to_send = NetIDEOps.netIDE_encode('NETIDE_MGMT', 0, module_id, 0, "")
-            self.channel.socket.send(msg_to_send)
-        
-        # LOG.debug('send_msg %s', msg)
-        #print msg.buf
-        #self.send(msg.buf)
 
 
 
@@ -132,15 +124,25 @@ class BackendDatapath(controller.Datapath):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
+        self.netide_xid = header[NetIDEOps.NetIDE_header['XID']]
         msg = ofproto_parser.msg(self, version, msg_type, msg_len, xid, ret)
+
         if msg:
             ev = ofp_event.ofp_msg_to_ev(msg)
+            event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
             for key, value in self.channel.running_modules.iteritems():
-                if value == module_id:
-                    module_name = key
-                    self.ofp_brick.send_event(module_name,ev, self.state)
+                if value == module_id and key in event_observers:
+                    module_brick = ryu.base.app_manager.lookup_service_brick(key)
+                    module_brick_handlers = module_brick.get_handlers(ev)
+                    for handler in module_brick_handlers:
+                        handler(ev)
                     break
+
+            # Sending the FENCE message to the Core only if self.netide_xid is not 0
+            if self.netide_xid is not 0:
+                msg_to_send = NetIDEOps.netIDE_encode('NETIDE_FENCE', self.netide_xid, module_id, 0, "")
+                self.channel.socket.send(msg_to_send)
 
             dispatchers = lambda x: x.callers[ev.__class__].dispatchers
             handlers = [handler for handler in
@@ -149,6 +151,9 @@ class BackendDatapath(controller.Datapath):
 
             for handler in handlers:
                 handler(ev)
+
+            # Resetting netide_xid to zero
+            self.netide_xid = 0
 
 # Heartbeat thread
 class HeatbeatThread(threading.Thread):
@@ -200,7 +205,7 @@ class CoreConnection(threading.Thread):
         # TODO: it seems that the ofp_event is always the last module registered by Ryu: to be checked!!!
         while 'ofp_event' not in app_manager.SERVICE_BRICKS:
             time.sleep(2)
-        if self.module_announcement(app_manager.SERVICE_BRICKS) is False:
+        if self.module_announcement(app_manager.SERVICE_BRICKS, self.backend) is False:
             print "No module ids received from the core!!! Exiting..."
             return
 
@@ -245,12 +250,11 @@ class CoreConnection(threading.Thread):
                 ack = True
         return True
 
-    def module_announcement(self, bricks):
+    def module_announcement(self, bricks, backend):
         for key,value in bricks.iteritems():
             module_name = key
             if key is not "ofp_event" and key is not self.backend.name: #we take only the control applications
-                xid = random.randint(0, 1000000)
-                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', xid, None, None, module_name)
+                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', 0, backend.backend_id, None, module_name)
                 self.socket.send(ann_message)
                 ack = False
                 while ack is False:
@@ -280,11 +284,13 @@ class CoreConnection(threading.Thread):
     def handle_read(self,msg):
         decoded_header = NetIDEOps.netIDE_decode_header(msg)
         logger.debug("Received Message header: %s", decoded_header)
+        message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
+        logger.debug("Message type: %s", message_type)
+        message_xid = decoded_header[NetIDEOps.NetIDE_header['XID']]
+        logger.debug("Message xid: %s", message_xid)
         message_length = decoded_header[NetIDEOps.NetIDE_header['LENGTH']]
         message_data = msg[NetIDEOps.NetIDE_Header_Size:]
         logger.debug("Received Message body: %s",':'.join(x.encode('hex') for x in message_data))
-        message_type = NetIDEOps.key_by_value(NetIDEOps.NetIDE_type,decoded_header[NetIDEOps.NetIDE_header['TYPE']])
-        logger.debug("Message type: %s", message_type)
 
         # control messages are processed only if the handshake has been successfully completeds
         if message_type is 'NETIDE_OPENFLOW' and self.backend_info['connected'] == True:

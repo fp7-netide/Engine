@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+
 from ryu.base import app_manager
 from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
@@ -21,6 +23,9 @@ from ryu.ofproto import ofproto_v1_3
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet
 from ryu.lib.packet import ether_types
+
+logger = logging.getLogger('firewall')
+logger.setLevel(logging.DEBUG)
 
 PROTO_TCP = 6
 PROTO_UDP = 17
@@ -130,22 +135,28 @@ class Firewall(app_manager.RyuApp):
 
         # Forward all arp
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
+            logger.debug("Received ARP packet, forwarding it via Packet out: %s" % repr(pkt))
             if in_port == FW_INPORT:
                 self.forwardPacket(msg, FW_OUTPORT)
             if in_port == FW_OUTPORT:
                 self.forwardPacket(msg, FW_INPORT)
+                
         # Forward packets from inside to outside and also install the reverse rule with idle_to=5 sec
         elif in_port == FW_INPORT:
+            logger.debug("Got packet from inside to outside, allowing it (fwd+flow mod): %s" % repr(pkt))
             match = parser.OFPMatch(in_port=FW_INPORT, eth_type = ETH_IP, eth_src=hwsrc, eth_dst=hwdst)
             actions = [parser.OFPActionOutput(FW_OUTPORT)]
-            self.add_flow(datapath, 1, match, actions, 5, 0)
+            self.add_flow(datapath, 6, match, actions, 5, 0)
 
             match = parser.OFPMatch(in_port=FW_OUTPORT, eth_type = ETH_IP, eth_src=hwdst, eth_dst=hwsrc)
             actions = [parser.OFPActionOutput(FW_INPORT)]
-            self.add_flow(datapath, 1, match, actions, 5, 0)
+            self.add_flow(datapath, 6, match, actions, 5, 0)
 
             # forward the packet
             self.forwardPacket(msg, FW_OUTPORT)
+            
+        else:
+            logger.debug("Ignoring packet from in_port %d: %s" % (in_port,repr(pkt)))
 
     # PacketIn handler for reactive actions
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)

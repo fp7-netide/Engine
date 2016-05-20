@@ -1,0 +1,61 @@
+@startuml
+participant shim #67363
+shim -> ConnectivityManager: Packet IN
+
+
+
+ConnectivityManager -> ShimManager: OnDataReceived
+
+participant ShimManager
+participant BackendManager
+
+ShimManager -> CompositionManager: OnShimMessage
+
+create RequestResult as status
+CompositionManager -> status: new
+
+CompositionManager -> SequentialFlowExecutor: executeFlow(result)
+
+
+
+
+participant backend1 #67363
+participant backend2 #67363
+
+SequentialFlowExecutor -> BackendManager: PacketIN
+BackendManager -> backend1: PacketIN
+backend1 -> ConnectivityManager: FlowMod
+ConnectivityManager -> BackendManager: Flow MOD
+BackendManager -> status: addResultMessage
+
+backend1 -> ConnectivityManager: FlowMod
+ConnectivityManager -> BackendManager: Flow MOD
+BackendManager -> status: addResultMessage
+
+backend1 -> ConnectivityManager: Fence Msg
+ConnectivityManager -> BackendManager: Fence Msg
+BackendManager -> status: addFinishedMessage
+
+SequentialFlowExecutor -> BackendManager: PacketIN
+BackendManager -> backend2: PacketIN
+backend2 -> ConnectivityManager: FlowMod
+ConnectivityManager -> BackendManager: Flow MOD
+BackendManager -> status: addResultMessage
+
+backend2 -> ConnectivityManager: FlowMod
+ConnectivityManager -> BackendManager: Flow MOD
+BackendManager -> status: addResultMessage
+
+backend2 -> ConnectivityManager: Fence Msg
+ConnectivityManager -> BackendManager: Fence Msg
+BackendManager -> status: addFinishedMessage
+
+
+SequentialFlowExecutor --> CompositionManager: return status
+
+note over CompositionManager: The Composition manager\n queries the result\nof the composition.
+CompositionManager -> ShimManager: sendMessage (flow mod)
+ShimManager -> ConnectivityManager: flow mod
+ConnectivityManager -> shim: flow mod
+
+@enduml

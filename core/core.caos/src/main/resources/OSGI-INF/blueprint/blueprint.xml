@@ -5,7 +5,7 @@
                              update-strategy="reload">
         <cm:default-properties>
             <cm:property name="compositionSpecification" value=""/>
-            <cm:property name="maxModuleWaitSeconds" value="60"/>
+            <cm:property name="maxModuleWaitSeconds" value="600"/>
             <cm:property name="bypassUnsupportedMessages" value="true"/>
         </cm:default-properties>
     </cm:property-placeholder>
@@ -37,5 +37,5 @@
     </bean>
 
     <service ref="compositionManager"
-             interface="eu.netide.core.api.IShimMessageListener"/>
+             interface="eu.netide.core.caos.ICompositionManager"/>
 </blueprint>

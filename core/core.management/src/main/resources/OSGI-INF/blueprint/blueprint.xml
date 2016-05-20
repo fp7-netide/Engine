@@ -28,4 +28,21 @@
                     activation="eager"
                     availability="optional" member-type="service-object"/>
 
+    <command-bundle xmlns="http://karaf.apache.org/xmlns/shell/v1.1.0">
+        <command>
+            <action class="eu.netide.core.management.cli.ListModules"/>
+
+        </command>
+        <command>
+            <action class="eu.netide.core.management.cli.LoadComposition"/>
+            <!--<completer class="org.apache.karaf.shell.console.completer.FileCompleter"/>-->
+        </command>
+        <command>
+            <action class="eu.netide.core.management.cli.RemoveStaleBackends" />
+        </command>
+        <command>
+            <action class="eu.netide.core.management.cli.ListFlowMods" />
+        </command>
+    </command-bundle>
+
 </blueprint>

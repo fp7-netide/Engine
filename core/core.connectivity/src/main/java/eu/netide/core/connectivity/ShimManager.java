@@ -26,6 +26,7 @@ public class ShimManager implements IShimManager, IConnectorListener {
     private Semaphore listenerLock = new Semaphore(1);
     private ExecutorService pool = Executors.newCachedThreadPool();
     private IBackendManager backendManager;
+    private long mLastMessageTime=0;
 
     public void Start() {
         logger.info("ShimManager started.");
@@ -41,7 +42,13 @@ public class ShimManager implements IShimManager, IConnectorListener {
     }
 
     @Override
+    public long getLastMessageTime() {
+        return mLastMessageTime;
+    }
+
+    @Override
     public void OnDataReceived(byte[] data, String originId) {
+        mLastMessageTime = System.currentTimeMillis();
         Message message;
         try {
             message = NetIPConverter.parseConcreteMessage(data);

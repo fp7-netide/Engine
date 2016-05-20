@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0"
+          name="NetIDE Core Features-@CORE-VERSION">
+
+    <repository>mvn:org.onosproject/onos-features/@ONOS-VERSION/xml/features</repository>
+
+    <feature name="core-thirdparty-dependencies" version="@FEATURE-VERSION">
+        <bundle>
+            wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"
+        </bundle>
+        <bundle>mvn:com.google.guava/guava/18.0</bundle>
+
+        <!-- Without onos-rest, onos-api will have dependency issuses, not needed otherwise -->
+        <feature>onos-rest</feature>
+        <feature>onos-api</feature>
+        <bundle>mvn:org.onosproject/onos-of-api/@ONOS-VERSION</bundle>
+
+        <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
+        <bundle>mvn:com.google.guava/guava/18.0</bundle>
+    </feature>
+
+
+    <feature name="core-api" version="@FEATURE-VERSION">
+        <feature>core-thirdparty-dependencies</feature>
+        <bundle>mvn:eu.netide.lib/netip/@CORE-VERSION</bundle>
+        <bundle>mvn:eu.netide.core/core.api/@CORE-VERSION</bundle>
+    </feature>
+
+    <feature name="core-caos" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.caos/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-connectivity" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.connectivity/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-management" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.management/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-logpub" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.logpub/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-branding" version="@FEATURE-VERSION">
+        <bundle>mvn:eu.netide.core/core.branding/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core-globalfib" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
+    </feature>
+    <feature name="core" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <feature>core-connectivity</feature>
+        <feature>core-caos</feature>
+        <feature>core-logpub</feature>
+        <feature>core-globalfib</feature>
+        <feature>core-management</feature>
+    </feature>
+</features>

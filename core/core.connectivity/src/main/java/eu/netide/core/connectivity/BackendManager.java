@@ -28,6 +28,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private List<String> backendIds = new ArrayList<>();
     private Map<Integer, String> moduleToBackendMappings = new HashMap<>();
     private Map<Integer, String> moduleToNameMappings = new HashMap<>();
+    private Map<Integer, Long> moduleLastMessage = new HashMap<>();
 
     private final ExecutorService pool = Executors.newCachedThreadPool();
 
@@ -133,12 +134,22 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     }
 
     @Override
+    public String getModuleName(Integer moduleId) throws NoSuchElementException {
+        return moduleToNameMappings.get(moduleId);
+    }
+
+    @Override
     public String getBackend(Integer moduleId) {
         if (moduleToBackendMappings.containsKey(moduleId)) {
             return moduleToBackendMappings.get(moduleId);
         } else {
             throw new UnsupportedOperationException("Backend mapping unknown for moduleId '" + moduleId + "'.");
         }
+    }
+
+    @Override
+    public Long getLastMessageTime(Integer moduleId) {
+        return moduleLastMessage.get(moduleId);
     }
 
     public int getModuleId(String moduleName) {
@@ -160,6 +171,41 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         }
     }
 
+    /* TODO: Probably more places to remove old backend */
+    @Override
+    public void removeBackend(int id)
+    {
+        String backEndName = getBackend(id);
+        logger.info("Removing backend %s", backEndName);
+
+        LinkedList<Integer> removedModules= new LinkedList<>();
+        moduleToBackendMappings.entrySet().forEach(
+                (modID) -> {
+                    if (modID.getValue().equals(backEndName)) {
+                        moduleToNameMappings.remove(modID.getKey());
+                        moduleLastMessage.remove(modID.getKey());
+                        removedModules.add(modID.getKey());
+                    }
+                });
+
+        removedModules.forEach((key) -> {
+            moduleToBackendMappings.remove(key);
+            backendIds.remove(backEndName);
+        });
+
+        try {
+            listenerLock.acquire();
+            // Notify listeners and send to shim
+            for (IBackendMessageListener listener : backendMessageListeners) {
+                pool.submit(() -> listener.OnBackendRemoved(backEndName, removedModules));
+            }
+        } catch (InterruptedException e) {
+            logger.error("", e);
+        } finally {
+            listenerLock.release();
+        }
+    }
+
     @Override
     public void OnDataReceived(byte[] data, String backendId) {
         Message message;
@@ -170,6 +216,8 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             return;
         }
         int id = message.getHeader().getModuleId();
+
+        moduleLastMessage.put(id, System.currentTimeMillis());
 
         logger.info("Data received from backend '" + backendId + "' with moduleId '" + message.getHeader().getModuleId() + "'.");
 
@@ -209,24 +257,39 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     }
                     // get new module ID
                     ModuleAnnouncementMessage mam = (ModuleAnnouncementMessage) message;
-                    logger.info("Received ModuleAnnouncement for module '" + mam.getModuleName() + "' from backend '" + backendId + "'. Calculating ID...");
+                    String moduleName = mam.getModuleName();
+                    logger.info("Received ModuleAnnouncement for module '" + moduleName + "' from backend '" + backendId + "'. Calculating ID...");
                     int moduleId = random.nextInt(1000); // for easier typing in the emulator, restrict to smaller numbers
                     while (moduleToNameMappings.keySet().contains(moduleId) || moduleId < 1) {
                         moduleId = random.nextInt(1000);
                     }
-                    moduleToNameMappings.put(moduleId, mam.getModuleName());
+
+                    if (moduleToNameMappings.values().contains(moduleName)) {
+                        int oldid = getModuleId(moduleName);
+                        logger.warn("Module with name %s already exists (id: %d), using newer module", moduleName, oldid);
+                        moduleToNameMappings.put(oldid, "old_" + moduleName);
+                        markModuleAllOutstandingRequestsAsFinished(oldid);
+                    }
+
+                    moduleToNameMappings.put(moduleId, moduleName);
                     moduleToBackendMappings.put(moduleId, backendId);
                     // send acknowledge back
                     ModuleAcknowledgeMessage ack = new ModuleAcknowledgeMessage();
-                    ack.setModuleName(mam.getModuleName());
+                    ack.setModuleName(moduleName);
                     ack.setHeader(NetIPUtils.StubHeaderFromPayload(ack.getPayload()));
                     ack.getHeader().setMessageType(MessageType.MODULE_ACKNOWLEDGE);
                     ack.getHeader().setModuleId(moduleId);
                     connector.SendData(ack.toByteRepresentation(), backendId);
-                    logger.info("Mapped module '" + mam.getModuleName() + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
+                    logger.info("Mapped module '" + moduleName + "' to id '" + moduleId + "' and sent ModuleAcknowledgeMessage to backend '" + backendId + "'.");
                 } else if (message instanceof ManagementMessage) {
                     logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
                     connector.SendData(message.toByteRepresentation(), Constants.SHIM);
+                } else if (message instanceof FenceMessage) {
+                    if (((FenceMessage) message).getHeader().getTransactionId()==0) {
+                        logger.debug("FenceMessage with xid==0 makes no sense '" + message.toString() + "'. Dropping message");
+                    } else{
+                        logger.error("Received unrequested FenceMessage: '" + message.toString() + "'. Dropping message");
+                    }
                 } else {
                     logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
                     try {
@@ -251,7 +314,6 @@ public class BackendManager implements IBackendManager, IConnectorListener {
      *
      * @param connector The connector.
      */
-
     public void setConnector(IBackendConnector connector) {
         this.connector = connector;
         connector.RegisterBackendListener(this);
