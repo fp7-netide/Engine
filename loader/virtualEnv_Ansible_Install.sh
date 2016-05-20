@@ -2,10 +2,10 @@
 
 if [ ! -d ansibleEnvironment ]; then 
 	
-	sudo apt-get install python-dev
+	sudo apt-get -y install python-dev
 	
-	sudo apt-get install libffi-dev
-	sudo apt-get install libssl-dev
+	sudo apt-get -y install libffi-dev
+	sudo apt-get -y install libssl-dev
 	
 	sudo pip install virtualenv
 	

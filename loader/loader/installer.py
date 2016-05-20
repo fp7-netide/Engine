@@ -58,7 +58,7 @@ def do_server_install(pkg):
         
         #install core and engine on server (usually localhost)
         #read p.config[server] and add server to site.yml
-        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", os.path.join("Playbook_Setup", "site.yml")])
+        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "site.yml")])
 
 
 def do_client_installs(pkgpath, dataroot):
