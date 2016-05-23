@@ -20,8 +20,8 @@ import os
 import platform
 import shutil
 import tempfile
-import zipfile
 import hashlib
+import tarfile
 
 from loader import controllers
 from loader import util
@@ -36,10 +36,11 @@ class Package(object):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         
-        if (prefix.endswith(".zip") or prefix.endswith(".tar") or prefix.endswith(".gz")) and os.path.isfile(self.path):
+        if os.path.isfile(self.path):
+            if (tarfile.is_tarfile(self.path)):
            
-            self.path = os.path.join(util.extractPackage(self.path), "Demo")
-            # self.cleanup = True
+               self.path = util.extractPackage(self.path)
+        
 
         p = os.path.join(self.path, "controllers.json")
 

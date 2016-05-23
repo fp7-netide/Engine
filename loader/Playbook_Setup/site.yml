@@ -1,6 +1,6 @@
 ---
 
-- name: install prereq for all hosts
+- name: install server
   hosts: localhost
   
   roles:
