@@ -49,7 +49,7 @@ def do_server_install(pkg):
             raise InstallException('"server" section missing from configuration!')
 
         conf = p.config["server"]
-   
+        util.editPlaybookServer(conf)
         if "host" in conf and platform.node() != conf["host"] and conf["host"] != "localhost":
             raise InstallException("Attempted server installation on host {} (!= {})".format(platform.node(), conf["host"]))
   
@@ -58,7 +58,7 @@ def do_server_install(pkg):
         
         #install core and engine on server (usually localhost)
         #read p.config[server] and add server to site.yml
-        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "site.yml")])
+        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "siteServer.yml")])
 
 
 def do_client_installs(pkgpath, dataroot):
@@ -68,7 +68,11 @@ def do_client_installs(pkgpath, dataroot):
     with util.TempDir("netide-client-installs") as t:
         pkg = Package(pkgpath, t)
         clients = pkg.get_clients()
-
+        
+        print(clients)
+        util.editPlaybookClient(clients)
+        
+        
         util.write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
 
         tasks = []
@@ -170,4 +174,4 @@ def do_client_installs(pkgpath, dataroot):
         # A valid JSON-document is also valid YAML, so we can take a small shortcut here
         with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
             json.dump(playbook, ah, indent=2)
-        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
+        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])

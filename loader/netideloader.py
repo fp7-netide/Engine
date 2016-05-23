@@ -262,6 +262,7 @@ def get_topology(args):
     return 0
 
 def install(args):
+
     logging.debug(args)
     if args.mode not in ["all", "appcontroller"]:
         logging.error("Unknown installation mode '{}'. Expected one of ['all', 'appcontroller']".format(args.mode))

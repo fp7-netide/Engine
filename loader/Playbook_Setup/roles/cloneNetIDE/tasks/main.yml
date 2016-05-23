@@ -1,6 +1,6 @@
 ---
 - name: creates netide directory
-  file: path=netide state=directory mode=0755
+  file: path=~/netide state=directory mode=0755
   
 - name: Clone NetIDE IDE(master)
   git: repo=https://github.com/fp7-netide/IDE.git dest=~/netide/IDE update=yes

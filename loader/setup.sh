@@ -5,7 +5,9 @@ export LC_ALL=C
     
 if [ ! -d loaderEnvironment ]; then 
 
-
+	if !(hash git 2>/dev/null); then
+		sudo apt-get -y install git
+	fi
 
 	if !(hash pip 2>/dev/null); then
 		sudo apt-get -y install python-pip

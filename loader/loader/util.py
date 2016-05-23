@@ -4,6 +4,7 @@ import os
 import shutil
 import tempfile
 import tarfile
+import yaml
 
 import subprocess as sp
 
@@ -24,7 +25,8 @@ def extractPackage(path):
     #expect path to tar archive as args and extract content
     with tarfile.open(path) as tar:
         tar.extractall(tmpPath)
-    
+        tmpPath = os.path.join(tmpPath, tar.getnames()[0])
+        
     print("Extracted to:" + tmpPath)
     return tmpPath
 
@@ -128,3 +130,36 @@ def write_ansible_hosts(clients, path):
             if len(c) >= 4:
                 ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
             ah.write("\n")
+            
+def editPlaybookClient(clients):
+         
+    open("Playbook_Setup/siteClient.yml", 'w').close()
+        
+    currentContent = []    
+
+    
+    for c in clients:
+        
+        user, host = c[1].split("@", 1)
+
+        currentContent.append({'name' : 'install client' + host, 'hosts' : host, 'roles' : ['ryu']})
+        
+
+    with open("Playbook_Setup/siteClient.yml", "w") as f:
+        yaml.dump(currentContent, f, default_flow_style=False)
+
+
+def editPlaybookServer(conf):
+    open("Playbook_Setup/siteServer.yml", 'w').close()
+    
+    currentContent = []
+
+        
+    currentContent.append({'name' : 'install server', 'hosts' : conf["host"], 'roles' : ["prereq", "engine", "core", conf['type']]}) 
+        
+    
+
+
+    with open("Playbook_Setup/siteServer.yml", "w") as f:
+        yaml.dump(currentContent, f, default_flow_style=False)
+
