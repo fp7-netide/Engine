@@ -1,5 +1,8 @@
 #!/bin/bash
 
+sudo locale-gen en_US.UTF-8
+export LC_ALL=C
+
 if [ ! -d ansibleEnvironment ]; then 
 	
 	sudo apt-get -y install python-dev

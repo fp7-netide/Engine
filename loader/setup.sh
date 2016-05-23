@@ -1,9 +1,11 @@
 #!/bin/bash
 
+sudo locale-gen en_US.UTF-8
+export LC_ALL=C
+    
 if [ ! -d loaderEnvironment ]; then 
 
-    sudo locale-gen en_US.UTF-8
-    export LC_ALL=C
+
 
 	if !(hash pip 2>/dev/null); then
 		sudo apt-get -y install python-pip
