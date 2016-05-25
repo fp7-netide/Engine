@@ -73,6 +73,7 @@ public class CompositionManager implements ICompositionManager {
     private void ReconfigureAsync() throws TimeoutException {
         reconfigurationFuture = pool.submit(() -> {
             try {
+                compositionNotReadyReason = "Composition loaded. Still waiting for modules to connect";
                 // wait for required modules to connect for at most maxModuleWaitSeconds
                 List<Module> modulesUnconnected = compositionSpecification.getModules();
                 logger.info("Waiting for required modules to connect, " + modulesUnconnected + " left...");
@@ -85,6 +86,7 @@ public class CompositionManager implements ICompositionManager {
                             waitCount++;
                             if (waitCount % 10 == 0) {
                                 logger.info((maxModuleWaitSeconds - waitCount) + " seconds remaining for " + modulesUnconnected + " module(s) to connect...");
+                                compositionNotReadyReason = "Waiting for modules to connect. Missing" + modulesUnconnected.stream().map(Object::toString).collect(Collectors.joining(","));
                             }
                             if (waitCount >= maxModuleWaitSeconds) {
                                 compositionNotReadyReason = "Required modules did not connect. Missing" + modulesUnconnected.stream().map(Object::toString).collect(Collectors.joining(","));
