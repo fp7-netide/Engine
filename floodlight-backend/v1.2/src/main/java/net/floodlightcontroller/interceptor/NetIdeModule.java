@@ -308,10 +308,39 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 
         } else if (managedSwitches.get(datapathId).isHandshakeCompleted()
                 || Arrays.asList(handshakeMessages).contains(msg.getType())) {
-            Relay.sendToController(managedSwitchesChannel.get(datapathId), msg);
+            String moduleIdString = "";
+            //TODO: We need a method to get the module ID from the moduleRegistry in ModuleHandlerImpl.java
+            // If no module or moduleId = -1 then return an empty String
+            // getModuleStringFromID(moduleId);
+            Relay.sendToController(switchProvider.getSwitch(DatapathId.of(datapathId));, msg, moduleIdString);
         }
     }
-
+    
+    private void sendToController(IOFSwitch sw, OFMessage message, String moduleId){
+        // SEND PACKETS DIRECTLY TO THE PIPELINE
+        FloodlightContext context = new FloodlightContext();
+        if(moduleId.isEmpty()){
+            // send to all modules
+            context=null;
+            floodlightProvider.handleMessage(sw,message,context);
+        }else{
+            // NetIDE composition, send to a specific module
+            List<IOFMessageListener> listeners = null;
+            Map<OFType,List<IOFMessageListener>> messageListeners = floodlightProvider.getListeners();
+            if (messageListeners.containsKey(message.getType())) {
+                listeners = messageListeners.get(message.getType());
+            }
+            for (IOFMessageListener listener : listeners) {
+                if (moduleId.equals(listener.getName())) {
+                    listener.receive(sw, message, context);
+                    // TODO : the code for sending the FENCE should go here
+                } else {
+                    // TODO : the backend asked for an unknown application. Send an error?
+                }
+            }
+        }
+    }
+    
     private void addNewSwitch(DummySwitch dummySwitch) {
         final SwitchChannelHandler switchHandler = new SwitchChannelHandler(coreConnector, aggreedVersion);
         switchHandler.setDummySwitch(dummySwitch); // CONTAINS ALL THE INFO

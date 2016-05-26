@@ -37,15 +37,4 @@ public class Relay {
         ofMessage.setOfMessage(msg);
         coreConnector.SendData(ofMessage.toByteRepresentation());
     }
-
-    public static void sendToController(ChannelFuture future, OFMessage message) {
-        ChannelBuffer dcb = ChannelBuffers.dynamicBuffer();
-        try {
-            message.writeTo(dcb);
-            future.getChannel().write(dcb);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-    }
-
 }
