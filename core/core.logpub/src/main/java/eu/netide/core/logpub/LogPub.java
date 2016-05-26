@@ -123,10 +123,18 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 									hMap.put(key, src);
 								if (dst.startsWith("1_"))
 									// send message to shim
-									shimManager.sendMessage(netideMessage);
+									try{
+										shimManager.sendMessage(netideMessage);
+									}catch (NullPointerException e) {
+										log.error("shim manager not set");
+									}
 								else if (dst.startsWith("0_"))
 									// send message to backend
-									backendManager.sendMessage(netideMessage);
+									try{
+										backendManager.sendMessage(netideMessage);
+									}catch (NullPointerException e) {
+										log.error("backend manager not set");
+									}
 								else
 									log.error("Got unknown message in SUB queue:" + netideMessage.toString());
 							}
