@@ -40,6 +40,9 @@
         <command>
             <action class="eu.netide.core.management.cli.RemoveStaleBackends" />
         </command>
+        <command>
+            <action class="eu.netide.core.management.cli.ListFlowMods" />
+        </command>
     </command-bundle>
 
 </blueprint>

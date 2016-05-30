@@ -37,5 +37,5 @@
     </bean>
 
     <service ref="compositionManager"
-             interface="eu.netide.core.api.IShimMessageListener"/>
+             interface="eu.netide.core.caos.ICompositionManager"/>
 </blueprint>

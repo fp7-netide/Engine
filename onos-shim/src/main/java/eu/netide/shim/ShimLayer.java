@@ -43,6 +43,7 @@ import org.slf4j.Logger;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.onlab.util.Tools.get;
@@ -61,9 +62,6 @@ public class ShimLayer {
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     protected OpenFlowController controller;
-
-    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
-    protected PacketService packetService;
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     protected FlowRuleService flowRuleService;
@@ -92,8 +90,9 @@ public class ShimLayer {
 
     @Activate
     public void activate(ComponentContext context) {
-        cfgService.registerProperties(getClass());
+
         appId = coreService.registerApplication("eu.netide.shim");
+        cfgService.registerProperties(getClass());
 
         //ZeroMQ connection handler
         coreConnector = new ZeroMQBaseConnector();
@@ -109,6 +108,7 @@ public class ShimLayer {
         //OFDevice initialization
         ofDeviceListener = new NetIDEDeviceListener(controller, shimLayer);
         controller.addListener(ofDeviceListener);
+        controller.monitorAllEvents(true);
         controller.addEventListener(ofDeviceListener);
 
         //TODO: This is not the best way to do it, but NetIDE protocol do not handle different OF versions together
@@ -117,13 +117,9 @@ public class ShimLayer {
             Integer ofVersion = version.getWireVersion();
             shimLayer.setSupportedProtocol(ofVersion.byteValue());
         }
-        //shimLayer.setSupportedProtocol(ProtocolVersions.OPENFLOW_1_0.getValue());
-
-        packetService.addProcessor(ofDeviceListener, PacketProcessor.advisor(100));
 
         log.info("Starting the NetIDE Shim...");
         coreConnector.Start();
-        requestPackests();
         log.info("Started with Application ID {}", appId.id());
     }
 
@@ -134,7 +130,6 @@ public class ShimLayer {
         flowRuleService.removeFlowRulesById(appId);
         controller.removeListener(ofDeviceListener);
         controller.removeEventListener(ofDeviceListener);
-        packetService.removeProcessor(ofDeviceListener);
         ofDeviceListener = null;
         log.info("Stopped");
     }
@@ -143,26 +138,6 @@ public class ShimLayer {
     public void modified(ComponentContext context) {
         // TODO revoke unnecessary packet requests when config being modified
         readComponentConfiguration(context, true);
-        requestPackests();
-    }
-
-    /**
-     * Request packet in via PacketService.
-     */
-    private void requestPackests() {
-        TrafficSelector.Builder selector = DefaultTrafficSelector.builder();
-        selector.matchEthType(Ethernet.TYPE_IPV4);
-        packetService.requestPackets(selector.build(), PacketPriority.REACTIVE,
-                                     appId);
-        selector.matchEthType(Ethernet.TYPE_ARP);
-        packetService.requestPackets(selector.build(), PacketPriority.REACTIVE,
-                                     appId);
-
-        if (ipv6Forwarding) {
-            selector.matchEthType(Ethernet.TYPE_IPV6);
-            packetService.requestPackets(selector.build(),
-                                         PacketPriority.REACTIVE, appId);
-        }
     }
 
     /**
@@ -182,8 +157,6 @@ public class ShimLayer {
         }
 
         String coreAddressProperty = get(properties,"coreAddress");
-
-        String corePortProperty = get(properties,"corePort");
 
         String newCoreAddress = isNullOrEmpty(coreAddressProperty) ?
                 DEFAULT_CORE_ADDRESS : coreAddressProperty;

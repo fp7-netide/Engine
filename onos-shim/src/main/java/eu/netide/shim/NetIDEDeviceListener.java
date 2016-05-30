@@ -48,7 +48,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 /**
  * Created by antonio on 08/02/16.
  */
-public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEventListener, PacketProcessor {
+public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEventListener {
 
     private final Logger log = getLogger(getClass());
 
@@ -119,46 +119,22 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
                 if (shimController.containsXid(msg.getXid())) {
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
                 }
+                break;
             case ECHO_REPLY:
                 if (shimController.containsXid(msg.getXid())) {
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
                 }
+                break;
+            case PACKET_IN:
+                shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
+                break;
             default:
+                if (shimController.containsXid(msg.getXid())) {
+                    shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
+                } else {
+                    shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
+                }
                 break;
         }
-    }
-
-    @Override
-    public void process (PacketContext context) {
-
-        if (context.isHandled()) {
-            return;
-        }
-        Dpid dpid = Dpid.dpid(context.inPacket().receivedFrom().deviceId().uri());
-        OpenFlowSwitch sw = controller.getSwitch(dpid);
-        OFFactory factory = sw.factory();
-
-        OFPacketIn.Builder packetInBuilder = factory.buildPacketIn();
-        packetInBuilder.setXid(0)
-                .setReason(OFPacketInReason.ACTION)
-                .setData(context.inPacket().unparsed().array())
-                .setBufferId(OFBufferId.NO_BUFFER);
-        if (factory.getVersion() == OFVersion.OF_10) {
-            packetInBuilder.setInPort(OFPort.of((int) context.inPacket().receivedFrom().port().toLong()))
-                    .setTotalLen(context.inPacket().unparsed().array().length);
-        } else if (factory.getVersion() == OFVersion.OF_13){
-            Match.Builder matchBuilder = factory.buildMatch();
-            matchBuilder.setExact(MatchField.IN_PORT, OFPort.of((int) context.inPacket().receivedFrom().port().toLong()));
-            Match match = matchBuilder.build();
-            packetInBuilder.setMatch(match)
-                    .setTotalLen(context.inPacket().unparsed().array().length)
-                    .setTableId(TableId.NONE);
-        }
-        OFPacketIn packetIn = packetInBuilder.build();
-
-        log.debug("PacketIn {}", packetIn);
-
-        shimController.sendOpenFlowMessageToCore(packetIn, packetIn.getXid(), dpid.value(), 0);
-
     }
 }

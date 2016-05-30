@@ -81,7 +81,7 @@ public class CompositionManagerTest {
         manager.setCompositionSpecificationXml(SingleCallXml);
         Thread.sleep(300); // wait for reconfiguration
 
-        manager.OnShimMessage(newMessage, Constants.SHIM);
+        manager.processShimMessage(newMessage, Constants.SHIM);
 
     }
 

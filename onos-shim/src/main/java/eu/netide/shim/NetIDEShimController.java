@@ -30,14 +30,26 @@ import org.onosproject.openflow.controller.Dpid;
 import org.onosproject.openflow.controller.OpenFlowController;
 import org.onosproject.openflow.controller.OpenFlowSwitch;
 import org.projectfloodlight.openflow.protocol.OFActionType;
+import org.projectfloodlight.openflow.protocol.OFBarrierReply;
+import org.projectfloodlight.openflow.protocol.OFBarrierRequest;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
+import org.projectfloodlight.openflow.protocol.OFConfigFlags;
+import org.projectfloodlight.openflow.protocol.OFDescStatsReply;
+import org.projectfloodlight.openflow.protocol.OFDescStatsRequest;
+import org.projectfloodlight.openflow.protocol.OFEchoReply;
+import org.projectfloodlight.openflow.protocol.OFEchoRequest;
 import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
+import org.projectfloodlight.openflow.protocol.OFGetConfigReply;
+import org.projectfloodlight.openflow.protocol.OFGetConfigRequest;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFMessageReader;
 import org.projectfloodlight.openflow.protocol.OFPortDescStatsReply;
+import org.projectfloodlight.openflow.protocol.OFSetConfig;
+import org.projectfloodlight.openflow.protocol.OFStatsReply;
+import org.projectfloodlight.openflow.protocol.OFStatsReplyFlags;
 import org.projectfloodlight.openflow.protocol.OFStatsRequest;
 import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.projectfloodlight.openflow.types.DatapathId;
@@ -93,14 +105,15 @@ public class NetIDEShimController implements ICoreListener {
 
         //TODO: Handle messages that requires replies (e.g. barrier)
         Dpid dpid = new Dpid(datapathId);
+        log.debug("Dpid {}", dpid);
         OpenFlowSwitch sw = controller.getSwitch(dpid);
 
         ChannelBuffer buffer = ChannelBuffers.copiedBuffer(msg.array());
         OFMessageReader<OFMessage> reader = OFFactories.getGenericReader();
         try {
             OFMessage message = reader.readFrom(buffer);
-            log.debug("Msg from core: {}",message);
             switch (message.getType()) {
+
                 case FLOW_MOD:
                     OFFlowMod flowMod = (OFFlowMod) message;
                     if (flowMod.getPriority() > ONOS_DEFAULT_PRIORITY) {
@@ -111,23 +124,85 @@ public class NetIDEShimController implements ICoreListener {
                         sw.sendMsg(flowModBuilder.build());
                     }
                     break;
+
                 case STATS_REQUEST:
-                    //Save the xid
-                    xids.put(message.getXid(), moduleId);
+                    OFStatsRequest reply = (OFStatsRequest) message;
+                    switch (reply.getStatsType()) {
+                        case DESC:
+                            OFDescStatsRequest ofDescStatsRequest = (OFDescStatsRequest) reply;
+                            OFDescStatsReply.Builder ofDescReply = sw.factory().buildDescStatsReply();
+                            ofDescReply.setXid(ofDescStatsRequest.getXid());
+                            sendOpenFlowMessageToCore(ofDescReply.build(),ofDescReply.getXid(),sw.getId(),moduleId);
+                            break;
+                        default:
+                            //Save the xid
+                            xids.put(message.getXid(), moduleId);
+                            sw.sendMsg(message);
+                    }
                     break;
+
                 case BARRIER_REQUEST:
-                    //Save the xid
-                    xids.put(message.getXid(), moduleId);;
-                    break;
-                case ECHO_REQUEST:
                     xids.put(message.getXid(), moduleId);
+                    sw.sendMsg(message);
+                    break;
+
+                case ECHO_REQUEST:
+
+                    OFEchoRequest echoRequest = (OFEchoRequest) message;
+                    ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
+                    echoRequest.writeTo(buf);
+                    byte[] payload = buf.array();
+                    OFEchoReply.Builder echoReply = sw.factory().buildEchoReply();
+                    echoReply.setXid(echoRequest.getXid());
+                    echoReply.setData(payload);
+                    sendOpenFlowMessageToCore(echoReply.build(),echoReply.getXid(),sw.getId(),moduleId);
+                    break;
+
+                case FEATURES_REQUEST:
+                    OFFeaturesReply featuresReply = getFeatureReply(sw);
+                    sendOpenFlowMessageToCore(featuresReply,featuresReply.getXid(),sw.getId(),moduleId);
+
+                    //Create OFPortDescStatsReply for OF_13
+                    if (sw.factory().getVersion() == OFVersion.OF_13) {
+                        OFPortDescStatsReply.Builder statsReplyBuilder = sw.factory().buildPortDescStatsReply();
+                        statsReplyBuilder.setEntries(sw.getPorts())
+                                .setXid(0);
+                        OFPortDescStatsReply ofPortStatsReply = statsReplyBuilder.build();
+                        sendOpenFlowMessageToCore(ofPortStatsReply,ofPortStatsReply.getXid(),sw.getId(),moduleId);
+                    }
+                    break;
+
+                case PACKET_OUT:
+                    sw.sendMsg(message);
+                    break;
+
+                case GET_CONFIG_REQUEST:
+                    OFGetConfigRequest setConfig = (OFGetConfigRequest) message;
+                    OFGetConfigReply.Builder configReply = sw.factory().buildGetConfigReply();
+                    configReply.setXid(setConfig.getXid());
+                    Set<OFConfigFlags> flags = Sets.newHashSet(OFConfigFlags.FRAG_NORMAL);
+                    configReply.setFlags(flags);
+                    configReply.setMissSendLen(0);
+                    sendOpenFlowMessageToCore(configReply.build(),configReply.getXid(),sw.getId(),moduleId);
+                    break;
+
+                case SET_CONFIG:
+                    OFSetConfig ofSetConfig = (OFSetConfig) message;
+                    OFGetConfigReply.Builder ofGetConfigReply = sw.factory().buildGetConfigReply();
+                    ofGetConfigReply.setXid(ofSetConfig.getXid());
+                    Set<OFConfigFlags> flagsSet = Sets.newHashSet(OFConfigFlags.FRAG_NORMAL);
+                    ofGetConfigReply.setFlags(flagsSet);
+                    ofGetConfigReply.setMissSendLen(0);
+                    //sendOpenFlowMessageToCore(ofGetConfigReply.build(),ofGetConfigReply.getXid(),sw.getId(),moduleId);
                     break;
                 default:
-                    sw.sendMsg(message);
+                    //sw.sendMsg(message);
+                    log.error("Unhandled OF message {}", message);
+                    break;
             }
 
         } catch (Exception e) {
-            log.error("Error in decoding OFMessage from the CORE");
+            log.error("Error in decoding OFMessage from the CORE {}", e);
         }
     }
 
