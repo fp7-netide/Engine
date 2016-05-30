@@ -117,6 +117,7 @@ def load_package(args):
         # [ ] Ping core about new composition
 
         with util.TempDir("netide-client-dispatch") as t:
+            print("here i am")
             pkg = Package(args.package, t)
             clients = pkg.get_clients()
 
@@ -156,7 +157,7 @@ def load_package(args):
             with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
                 json.dump(playbook, ah, indent=2)
                
-            util.spawn_logged(["ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
+            util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
 
             # Make netip python library available. This has been installed here by installer.do_server_install()
             p = ["~", "Core", "libraries", "netip", "python"]

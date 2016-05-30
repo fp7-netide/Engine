@@ -83,7 +83,10 @@ class Ryu(Base):
             cmdline = base.copy()
             cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
             cmdline.append(os.path.expanduser("~/Engine/ryu-backend/backend.py"))
-
+            
+            #String.format("ryu-manager --ofp-tcp-listen-port=%d ~/netide/apps/%s", port,
+            #    getAppPath.removeFirstSegments(1))
+            
             p = a.metadata.get("param", "")
             args = []
             def f(x):
