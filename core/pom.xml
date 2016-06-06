@@ -12,7 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <openflowj.version>0.9.1.onos</openflowj.version>
-        <onos.version>1.4.0</onos.version>
+        <onos.version>1.5.1</onos.version>
     </properties>
 
     <modules>
