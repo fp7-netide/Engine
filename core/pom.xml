@@ -13,6 +13,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <openflowj.version>0.9.1.onos</openflowj.version>
         <onos.version>1.5.1</onos.version>
+        <maven.bundle.version>3.0.1</maven.bundle.version>
     </properties>
 
     <modules>
@@ -26,6 +27,14 @@
         <module>../libraries/netip/java</module>
         <module>features</module>
     </modules>
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>19.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
     <build>
         <plugins>
             <plugin>
