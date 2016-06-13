@@ -9,6 +9,7 @@ import yaml
 import subprocess as sp
 
 
+
 dataroot = "/tmp/netide"
 extractPath = os.path.join(dataroot, "extractPath.txt")
 
@@ -131,18 +132,19 @@ def write_ansible_hosts(clients, path):
                 ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
             ah.write("\n")
             
-def editPlaybookClient(clients):
-         
+def editPlaybookClient(package):
+     
     open("Playbook_Setup/siteClient.yml", 'w').close()
         
     currentContent = []    
-
     
-    for c in clients:
-        
-        user, host = c[1].split("@", 1)
-
-        currentContent.append({'name' : 'install client' + host, 'hosts' : host, 'roles' : ['ryu']})
+    nameSet = set(package.controllerNames)
+    names = []
+    for name in nameSet:
+        names.append(name.lower())
+        print(name.lower())
+    
+    currentContent.append({'name' : 'install client localhost', 'hosts' : 'localhost', 'roles' : names})
         
 
     with open("Playbook_Setup/siteClient.yml", "w") as f:
@@ -162,4 +164,3 @@ def editPlaybookServer(conf):
 
     with open("Playbook_Setup/siteServer.yml", "w") as f:
         yaml.dump(currentContent, f, default_flow_style=False)
-

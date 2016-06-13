@@ -75,6 +75,31 @@ class Application(object):
         # TODO: Check network
         return True
 
+    @classmethod
+    def get_controller_name(cls, path):
+        test = os.path.basename(path) + ".sysreq"
+       
+    
+        with open(os.path.join(path, test)) as f:
+            
+            s = io.StringIO()
+
+            st = reduce(lambda x, y: x + y, f)
+            f.seek(0)
+
+            enclosed = st.lstrip()[0] == "{"
+
+            if not enclosed: s.write("{")
+            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
+            if not enclosed: s.write("}")
+            
+            s.seek(0)
+            
+            y = load(s)
+            
+            c = y.get("app").get("controller").get("name")
+            
+            return c
 
     @classmethod
     def get_controller(cls, path):

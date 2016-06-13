@@ -2,6 +2,9 @@
 
 sudo locale-gen en_US.UTF-8
 export LC_ALL=C
+
+sudo apt-get -y update
+sudo apt-get -y upgrade
     
 if [ ! -d loaderEnvironment ]; then 
 
@@ -21,11 +24,23 @@ if [ ! -d loaderEnvironment ]; then
         sudo apt-get -y install python3-dev
 	fi
 
-	virtualenv -p /usr/bin/python3 loaderEnvironment	
+    if !(hash automake 2>/dev/null); then
+        sudo apt-get -y install automake
+    fi
+
+    if !(hash tmux 2>/dev/null); then
+        sudo apt-get -y install tmux
+    fi
+
+	virtualenv -p /usr/bin/python3 loaderEnvironment
 fi
 
-source loaderEnvironment/bin/activate 
+source loaderEnvironment/bin/activate
 
 pip install -r requirements.txt
+
+
+
+
 	
 deactivate

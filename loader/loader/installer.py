@@ -68,10 +68,17 @@ def do_client_installs(pkgpath, dataroot):
     with util.TempDir("netide-client-installs") as t:
         pkg = Package(pkgpath, t)
         clients = pkg.get_clients()
+        #controller = pkg.controllers
+        #print("controller: ")
+        #print(controller)
+        #for n in controller:
+        #    print("instance of controller: ")
+        #    print(n)
+        #    for i in controller[n]:
+        #        print(i)
         
-        print(clients)
-        util.editPlaybookClient(clients)
-        
+        util.editPlaybookClient(pkg)
+        util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "siteClient.yml")])
         
         util.write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
 
@@ -174,4 +181,5 @@ def do_client_installs(pkgpath, dataroot):
         # A valid JSON-document is also valid YAML, so we can take a small shortcut here
         with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
             json.dump(playbook, ah, indent=2)
+            print(playbook)
         util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])

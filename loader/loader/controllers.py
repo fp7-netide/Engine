@@ -34,7 +34,11 @@ class Base(object):
         d = os.path.join(self.dataroot, "logs", myid)
         os.makedirs(d, exist_ok=True)
         return d
-
+    
+    @classmethod
+    def getControllerName(cls):
+        "Returns the name of the controller"
+        return None
     @classmethod
     def version(cls):
         "Returns either the version of the controller as a string or None if the controller is not installed"
@@ -46,6 +50,11 @@ class Base(object):
         raise NotImplementedError()
 
 class Ryu(Base):
+    
+    @classmethod
+    def getControllerName(cls):
+        return "ryu"
+    
     @classmethod
     def version(cls):
         try:
@@ -123,6 +132,10 @@ class Ryu(Base):
         return rv
 
 class FloodLight(Base):
+    @classmethod
+    def getControllerName(cls):
+        return "floodlight"
+    
     @classmethod
     def version(cls):
         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
