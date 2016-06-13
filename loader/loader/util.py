@@ -7,7 +7,7 @@ import tarfile
 import yaml
 
 import subprocess as sp
-
+from functools import reduce
 
 
 dataroot = "/tmp/netide"
@@ -164,3 +164,14 @@ def editPlaybookServer(conf):
 
     with open("Playbook_Setup/siteServer.yml", "w") as f:
         yaml.dump(currentContent, f, default_flow_style=False)
+
+
+
+def tmux_line(c):
+
+    varcat = lambda x,y: x + " " + y
+    cmdcat = lambda x,y: x + " && " + y
+    cmdstring = ""
+    if "commands" in c:
+        cmdstring = reduce(cmdcat, c["commands"])
+    return ["tmux", "new-window", cmdstring]

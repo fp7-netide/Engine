@@ -1,0 +1,18 @@
+onos:
+  variables:
+     JAVA_HOME: /usr/lib/jvm/java-8-oracle
+  commands:
+    - ~/netide/onos/bin/karaf
+  sleepafter: 5
+
+pox:
+  variables:
+     PYTHONPATH: PYTHONPATH:$HOME/netide/pox
+  commands:
+    - python ~/netide/pox/pox.py
+
+ryu:
+  variables:
+     PYTHONPATH: PYTHONPATH:$HOME/netide/ryu:/usr/local/lib/python2.7/dist-packages/ryu
+  commands:
+    - ryu-manager

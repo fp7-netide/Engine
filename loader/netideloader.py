@@ -76,6 +76,16 @@ def set_extraction_path(args):
 
     return 0;
 
+def startTest(args):
+    p = Package(args.package, dataroot)
+    print("controllers in package: ")
+    print(p.controllers)
+    for c in p.controllers_for_node().items():
+        print("<--- controller in node ---->")
+        print(c[1])
+        c[1].startNew()
+
+
 def load_package(args):
     if args.mode == "appcontroller":
         p = Package(args.package, dataroot)
@@ -117,7 +127,7 @@ def load_package(args):
         # [ ] Ping core about new composition
 
         with util.TempDir("netide-client-dispatch") as t:
-            print("here i am")
+
             pkg = Package(args.package, t)
             clients = pkg.get_clients()
 
@@ -274,7 +284,8 @@ def install(args):
         #     [ ] Run self with arguments ['install-servercontroller', args.package]
         # [ ] Prepare application controllers
         try:
-            installer.do_server_install(args.package)
+            print("server install skipped for test run")
+            #installer.do_server_install(args.package)
         except installer.InstallException as e:
             logging.error("Failed to install server: {}".format(str(e)))
             return 1
@@ -290,6 +301,11 @@ def install(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
+    
+    parser_startTest = subparsers.add_parser("startTest", description="Load a NetIDE package and start its applications")
+    parser_startTest.add_argument("package", type=str, help="Package to load")
+    parser_startTest.add_argument("--mode", type=str, help="Loading mode, one of {appcontroller,all}")
+    parser_startTest.set_defaults(func=startTest, mode="all")
     
     parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")
     parser_extract.add_argument("path", type=str, help="Path to archive")

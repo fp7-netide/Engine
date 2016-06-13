@@ -21,6 +21,9 @@ import subprocess
 import sys
 import time
 import uuid
+import yaml
+from functools import reduce
+from subprocess import call
 
 from loader import util
 
@@ -64,7 +67,44 @@ class Ryu(Base):
             return None
         except FileNotFoundError:
             return None
+    
+    def startNew(self):
+        base = ["ryu-manager"]
+        print("APPS:")
+        print(self.applications)
+        
+        
+        y = yaml.load(open("commands.yml"))
+        ryuCommands = y['ryu']
+        print(ryuCommands)
+        v = os.environ.copy()
+        
+        print (ryuCommands["variables"])
+        v.update(ryuCommands["variables"])
+        
+        call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
+        time.sleep(1)
+        
+        cmd = util.tmux_line(ryuCommands)
+        print("cmd: ")
+        print(cmd)
+        tmp = cmd[2]
+        for a in self.applications:
+            appPath = os.path.join(a.path, "src/" + os.path.basename(a.path) + ".py")
+            cmd[2] = tmp
+            cmd[2]+=" --ofp-tcp-listen-port=2222 " + appPath
+            print(cmd)
+            call(cmd)
 
+
+
+        if "sleepafter" in ryuCommands:
+            time.sleep(ryuCommands["sleepafter"])
+        
+        #call(["tmux", "kill-window", "-t", "0"])
+        
+        call("tmux attach -t NetIDE", shell=True)
+                
     def start(self):
         base = [ "ryu-manager" ]
         rv = []
@@ -91,7 +131,7 @@ class Ryu(Base):
 
             cmdline = base.copy()
             cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
-            cmdline.append(os.path.expanduser("~/Engine/ryu-backend/backend.py"))
+            cmdline.append(os.path.expanduser("~/netide/Engine/ryu-backend/backend.py"))
             
             #String.format("ryu-manager --ofp-tcp-listen-port=%d ~/netide/apps/%s", port,
             #    getAppPath.removeFirstSegments(1))

@@ -32,6 +32,7 @@ class Package(object):
     controllers = {}
     cleanup = False
     controllerNames = []
+    controllerAppPath = {}
 
     def __init__(self, prefix, dataroot):
         self.dataroot = dataroot
@@ -74,7 +75,7 @@ class Package(object):
                 
                 #returns controller
                 ctrl = Application.get_controller(app)
-                self.controllerNames.append(Application.get_controller_name(app))
+                self.controllerNames.append(ctrl)
 
                 for n in nodes:
                     if n not in self.controllers:
