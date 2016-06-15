@@ -228,7 +228,7 @@ class CoreConnection(threading.Thread):
                 return part
 
     def backend_announcement(self, backend):
-        ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', None, None, None, backend.backend_name)
+        ann_message = NetIDEOps.netIDE_encode('NETIDE_MODULE_ANN', None, None, None, backend.backend_name)
         self.socket.send(ann_message)
         ack = False
         while ack is False:
@@ -243,7 +243,7 @@ class CoreConnection(threading.Thread):
                 continue
             else:
                 message_data = msg[NetIDEOps.NetIDE_Header_Size:NetIDEOps.NetIDE_Header_Size+message_length]
-            if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == backend.backend_name:
+            if message_type is NetIDEOps.NetIDE_type['NETIDE_MODULE_ACK'] and message_data == backend.backend_name:
                 logger.debug( "Received ack from Core: %s" , ack_message)
                 backend_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                 backend.backend_id = backend_id
@@ -254,7 +254,7 @@ class CoreConnection(threading.Thread):
         for key,value in bricks.iteritems():
             module_name = key
             if key is not "ofp_event" and key is not self.backend.name: #we take only the control applications
-                ann_message = NetIDEOps.netIDE_encode('MODULE_ANNOUNCEMENT', 0, backend.backend_id, None, module_name)
+                ann_message = NetIDEOps.netIDE_encode('NETIDE_MODULE_ANN', 0, backend.backend_id, None, module_name)
                 self.socket.send(ann_message)
                 ack = False
                 while ack is False:
@@ -269,7 +269,7 @@ class CoreConnection(threading.Thread):
                         continue
                     else:
                         message_data = msg[NetIDEOps.NetIDE_Header_Size:]
-                    if message_type is NetIDEOps.NetIDE_type['MODULE_ACKNOWLEDGE'] and message_data == module_name:
+                    if message_type is NetIDEOps.NetIDE_type['NETIDE_MODULE_ACK'] and message_data == module_name:
                         logger.debug( "Received ack from Core: %s" , ack_message)
                         module_id = decoded_header[NetIDEOps.NetIDE_header['MOD_ID']]
                         self.running_modules[module_name] = module_id
