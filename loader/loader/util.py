@@ -174,4 +174,4 @@ def tmux_line(c):
     cmdstring = ""
     if "commands" in c:
         cmdstring = reduce(cmdcat, c["commands"])
-    return ["tmux", "new-window", cmdstring]
+    return cmdstring

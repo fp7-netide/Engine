@@ -53,6 +53,7 @@ class Base(object):
         raise NotImplementedError()
 
 class Ryu(Base):
+    appNames = []
     
     @classmethod
     def getControllerName(cls):
@@ -70,38 +71,36 @@ class Ryu(Base):
     
     def startNew(self):
         base = ["ryu-manager"]
-        print("APPS:")
-        print(self.applications)
-        
         
         y = yaml.load(open("commands.yml"))
         ryuCommands = y['ryu']
-        print(ryuCommands)
+
         v = os.environ.copy()
-        
-        print (ryuCommands["variables"])
         v.update(ryuCommands["variables"])
         
         call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
         time.sleep(1)
         
         cmd = util.tmux_line(ryuCommands)
-        print("cmd: ")
-        print(cmd)
-        tmp = cmd[2]
-        for a in self.applications:
-            appPath = os.path.join(a.path, "src/" + os.path.basename(a.path) + ".py")
-            cmd[2] = tmp
-            cmd[2]+=" --ofp-tcp-listen-port=2222 " + appPath
-            print(cmd)
-            call(cmd)
-
-
-
-        if "sleepafter" in ryuCommands:
-            time.sleep(ryuCommands["sleepafter"])
         
-        #call(["tmux", "kill-window", "-t", "0"])
+        #port needs to be listed in the app sysreq
+        port = 2222
+
+        for a in self.applications:
+            
+            appName = os.path.basename(a.path)
+            self.appNames.append(appName)
+            appPath = os.path.join(a.path, "src/" + appName + ".py")
+            
+            call(['tmux', 'new-window', '-n', appName])
+            call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(port) , 'C-m'])
+            
+            port = port *2
+ 
+
+            if "sleepafter" in ryuCommands:
+                time.sleep(ryuCommands["sleepafter"])
+        
         
         call("tmux attach -t NetIDE", shell=True)
                 
