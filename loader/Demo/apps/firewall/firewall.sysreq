@@ -6,5 +6,7 @@ app: {
 		name: "Ryu",
 		version: "3.30",
 		entrypoint: "src/firewall.py",
+		port: 2222,
 	},
+
 }

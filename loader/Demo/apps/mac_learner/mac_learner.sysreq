@@ -5,6 +5,7 @@ app: {
 	{ 
 		name: "Ryu",
 		version: "3.30",
+		entrypoint: "src/mac_learner.py",
+		port: 4444,
 	},
-	hardwareReq :{CPU :"Cpu",OS:"Windows",},
 }

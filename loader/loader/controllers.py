@@ -78,24 +78,27 @@ class Ryu(Base):
         v = os.environ.copy()
         v.update(ryuCommands["variables"])
         
-        call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
-        time.sleep(1)
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+        
+        if [ sessionExists != 0 ]:        
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
+            time.sleep(1)
         
         cmd = util.tmux_line(ryuCommands)
         
-        #port needs to be listed in the app sysreq
-        port = 2222
+
 
         for a in self.applications:
             
-            appName = os.path.basename(a.path)
-            self.appNames.append(appName)
-            appPath = os.path.join(a.path, "src/" + appName + ".py")
-            
-            call(['tmux', 'new-window', '-n', appName])
-            call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(port) , 'C-m'])
-            
-            port = port *2
+
+            self.appNames.append(a.appName)
+
+            appPath = os.path.join(a.path, a.entrypoint)
+
+            #check with list window if exists
+            call(['tmux', 'new-window', '-n', a.appName])
+            call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) , 'C-m'])
+
  
 
             if "sleepafter" in ryuCommands:
@@ -103,6 +106,8 @@ class Ryu(Base):
         
         
         call("tmux attach -t NetIDE", shell=True)
+        
+
                 
     def start(self):
         base = [ "ryu-manager" ]

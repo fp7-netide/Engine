@@ -33,20 +33,41 @@ class Application(object):
     def __init__(self, prefix):
         self.path = prefix
         self.files = []
+        self.entrypoint = ""
+        
         for dirname, dirs, files in os.walk(self.path):
             for f in files:
                 self.files.append(os.path.join(os.path.abspath(dirname), f))
 
-    #doesn't exist anymore !!
-        p = os.path.join(self.path, "_meta.json")
-        if os.path.exists(p):
-            with open(p) as f:
-                self.metadata = json.load(f)
-
-        self.enabled = self.metadata.get("enabled", True)
+        self.loadSysreq(self.path)
 
     def __str__(self):
         return os.path.basename(self.path)
+    
+    def loadSysreq(self, path):
+        sysreqPath = os.path.basename(path) + ".sysreq"
+       
+    
+        with open(os.path.join(path, sysreqPath)) as f:
+            
+            s = io.StringIO()
+
+            st = reduce(lambda x, y: x + y, f)
+            f.seek(0)
+
+            enclosed = st.lstrip()[0] == "{"
+
+            if not enclosed: s.write("{")
+            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
+            if not enclosed: s.write("}")
+            
+            s.seek(0)
+            
+            y = load(s)
+            
+            self.entrypoint = y.get("app").get("controller").get("entrypoint")
+            self.appName = y.get("app").get("name")
+            self.appPort = y.get("app").get("controller").get("port")   
 
 
     def valid_requirements(self):
@@ -103,10 +124,10 @@ class Application(object):
 
     @classmethod
     def get_controller(cls, path):
-        test = os.path.basename(path) + ".sysreq"
+        sysreqPath = os.path.basename(path) + ".sysreq"
        
     
-        with open(os.path.join(path, test)) as f:
+        with open(os.path.join(path, sysreqPath)) as f:
             
             s = io.StringIO()
 
