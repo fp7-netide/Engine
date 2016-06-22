@@ -39,6 +39,15 @@ class Base(object):
         return d
     
     @classmethod
+    def attachTmux(cls):
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+        
+        if [ sessionExists != 0 ]:  
+            call("tmux attach -t NetIDE", shell=True)
+        else:
+            print("Tmux Session NetIDE was not found!")
+    
+    @classmethod
     def getControllerName(cls):
         "Returns the name of the controller"
         return None
@@ -96,19 +105,25 @@ class Ryu(Base):
             appPath = os.path.join(a.path, a.entrypoint)
 
             #check with list window if exists
+            windowNames = self.getWindowList()
+            
             call(['tmux', 'new-window', '-n', a.appName])
             call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) , 'C-m'])
 
- 
 
             if "sleepafter" in ryuCommands:
                 time.sleep(ryuCommands["sleepafter"])
         
         
-        call("tmux attach -t NetIDE", shell=True)
+
+    def getWindowList(self):
+        windowList = call(['tmux', 'list-windows'])
+        print("window")
+        print(windowList)
         
 
                 
+    
     def start(self):
         base = [ "ryu-manager" ]
         rv = []
@@ -243,7 +258,19 @@ class ODL(Base):
     #   - should be done automatically when installing/starting application bundle
     # - start controller if not already done
     # - install/start app bundle
-    pass
+    def start(self):
+        
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+        
+        if [ sessionExists != 0 ]:        
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"])
+            time.sleep(1)
+            
+        call(['tmux', 'new-window', '-n', "ODL"])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf", 'C-m'])
+        
+
+              
 
 class POX(Base):
     pass

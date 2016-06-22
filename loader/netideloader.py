@@ -56,6 +56,8 @@ from loader import installer
 from loader import topology
 from loader import util
 from loader.package import Package
+from loader.controllers import ODL
+from loader.controllers import Base
 
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
@@ -77,13 +79,19 @@ def set_extraction_path(args):
     return 0;
 
 def startTest(args):
+    
+    ODL("").start()
     p = Package(args.package, dataroot)
-    print("controllers in package: ")
-    print(p.controllers)
+
     for c in p.controllers_for_node().items():
-        print("<--- controller in node ---->")
-        print(c[1])
+
         c[1].startNew()
+    
+    attach("")
+        
+
+def attach(args):
+    Base.attachTmux()
 
 
 def load_package(args):
@@ -116,7 +124,9 @@ def load_package(args):
             logging.error(err)
             return 1
     else:
-
+        #server install
+        #feature:install odl-netide-rest // starts shim for odl
+        #
         # TODO:
         # [X] Start server controller (if not already running)
         # [ ] Make sure NetIDE stuff is running in server controller
@@ -301,6 +311,11 @@ def install(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
+    
+    parser_attach = subparsers.add_parser("attach", description="If possible attaches tmux session")
+
+    parser_attach.set_defaults(func=attach, mode="all")
+    
     
     parser_startTest = subparsers.add_parser("startTest", description="Load a NetIDE package and start its applications")
     parser_startTest.add_argument("package", type=str, help="Package to load")
