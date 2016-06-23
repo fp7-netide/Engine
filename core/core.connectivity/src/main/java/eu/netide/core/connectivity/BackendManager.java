@@ -63,8 +63,25 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     @Override
     public boolean sendMessage(Message message) {
+
         logger.info("Sending message '" + message.toString() + "' to backend '" + getBackend(message.getHeader().getModuleId()) + "'.");
-        return connector.SendData(message.toByteRepresentation(), getBackend(message.getHeader().getModuleId()));
+        return sendMessageToBackend(message, getBackend(message.getHeader().getModuleId()));
+    }
+
+    private boolean sendMessageToBackend(Message message, String backendId)
+    {
+        try {
+            listenerLock.acquire();
+            // Notify listeners and send to shim
+            for (IBackendMessageListener listener : backendMessageListeners) {
+                pool.submit(() -> listener.OnOutgoingBackendMessage(message, backendId));
+            }
+        } catch (InterruptedException e) {
+            logger.error("", e);
+        } finally {
+            listenerLock.release();
+        }
+        return connector.SendData(message.toByteRepresentation(), backendId);
     }
 
 
@@ -73,7 +90,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         boolean success = true;
         logger.info("Sending message '" + message.toString() + "' to  all backends ");
         for (String backendId : backendIds)
-            success = connector.SendData(message.toByteRepresentation(), backendId) && success;
+            success = sendMessageToBackend(message, backendId) && success;
 
         return success;
     }
@@ -298,7 +315,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                         for (IBackendMessageListener listener : backendMessageListeners) {
                             pool.submit(() -> listener.OnBackendMessage(message, backendId));
                         }
-                        connector.SendData(message.toByteRepresentation(), Constants.SHIM); // TODO make shim name a constant
+                        connector.SendData(message.toByteRepresentation(), Constants.SHIM);
                     } catch (InterruptedException e) {
                         logger.error("", e);
                     } finally {

@@ -85,6 +85,10 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
         }
     }
 
+    @Override
+    public void OnOutgoingShimMessage(Message message) {
+    }
+
     public void handleResult(Message message) {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
