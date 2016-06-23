@@ -15,7 +15,11 @@ public enum NetIDEProtocolVersion {
     /**
      * The Version 1.2
      */
-    VERSION_1_2((byte) 0x03);
+    VERSION_1_2((byte) 0x03),
+    /**
+     * The Version 1.3
+     */
+    VERSION_1_3((byte) 0x04);
 
     private byte value;
 
