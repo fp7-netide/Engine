@@ -92,7 +92,7 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
                 globalFIB.addFlowMod(ofMessage);
             }
         }
-        log.info("Relaying message to shim.");
+        log.info("Relaying message to shim: {}", message);
         shimManager.sendMessage(message);
     }
 

@@ -100,7 +100,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         sendMessage(message);
 
         while (!result.isDone()) {
-            logger.info("Waiting for request with id '" + moduleId + "' to complete...");
+            logger.info("Waiting for module with id '" + moduleId + "' to complete...");
             try {
                 requestLock.acquire();
             } catch (InterruptedException e) {
@@ -241,7 +241,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
                     } catch (IllegalStateException ise) {
                         logger.error("FIXME", ise);
                     }
-                    logger.info("Message adds to running request (" + message.toString() + ").");
+                    logger.info("Message adds to running request " + message.getHeader().getDatapathId() + " (" + message.toString() + ").");
                 }
             } else {
                 // Random message from backend
