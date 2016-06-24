@@ -1,7 +1,9 @@
 import argparse
+import logging
 import mininet.topo
 import mininet.topolib
 import mininet.util
+import mininet.net
 import os.path
 import xml.dom.minidom as minidom
 import xml.etree.ElementTree as ET
@@ -29,7 +31,10 @@ def generate_xml_file(topology, output_path, print_output=False):
     links = ET.SubElement(root, "Links")
 
     for host in topology.hosts():
-        ET.SubElement(hosts, "Host", id=host)
+        host_info = topology.nodeInfo(host)
+        elem = ET.SubElement(hosts, "Host", id=host, ip=host_info["IP"])
+        if "MAC" in host_info:
+            elem.set("mac", host_info["MAC"])
 
     for switch in topology.switches():
         ET.SubElement(switches, "Switch", id=switch)
@@ -75,12 +80,36 @@ def get_topology(topology_string, customs):
     """
     class_name, args, kwargs = mininet.util.splitArgs(topology_string)
 
+    topology = None
     if class_name in customs:
-        return mininet.util.buildTopo(customs, topology_string)
+        topology = mininet.util.buildTopo(customs, topology_string)
     elif class_name in BUILTIN_TOPOLOGIES:
-        return mininet.util.buildTopo(BUILTIN_TOPOLOGIES, topology_string)
+        topology = mininet.util.buildTopo(BUILTIN_TOPOLOGIES, topology_string)
 
-    return None
+    if not topology:
+        raise Exception("Topology class %s not found." % class_name)
+
+    assign_ip_address = False
+    for host in topology.hosts():
+        host_info = topology.nodeInfo(host)
+        if "IP" not in host_info:
+            logging.warning("Not all hosts have been explicitly assigned an IP address. "
+                            "Using MiniNet default assignment. This may lead to errors.")
+            assign_ip_address = True
+            break
+
+    if assign_ip_address:
+        host_index = 1
+        for host in topology.hosts():
+            ip_base, prefix_len = mininet.util.netParse("10.0.0.0/8")
+            ip = mininet.util.ipAdd(host_index, prefixLen=prefix_len, ipBaseNum=ip_base)
+            host_index += 1
+
+            host_info = topology.nodeInfo(host)
+            host_info["IP"] = ip
+            topology.setNodeInfo(host, host_info)
+
+    return topology
 
 
 def main():
@@ -95,7 +124,7 @@ def main():
     args = parser.parse_args()
 
     if not args.topo:
-        raise Exception("No topology specified")
+        raise Exception("No topology specified.")
 
     customs = {}
     if args.custom:
