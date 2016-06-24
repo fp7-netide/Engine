@@ -24,4 +24,11 @@ public interface IBackendMessageListener {
      * @param removedModules
      */
     void OnBackendRemoved(String backEndName, LinkedList<Integer> removedModules);
+
+    /**
+     * Provides a copy of every message sent to a backend.
+     * @param message The message sent.
+     * @param backendId Backend id the message was sent to.
+     */
+    void OnOutgoingBackendMessage(Message message, String backendId);
 }

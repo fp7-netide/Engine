@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.projectfloodlight.openflow.protocol.OFType.FLOW_MOD;
+import static org.projectfloodlight.openflow.protocol.OFType.PACKET_OUT;
 
 /**
  * Default implementation of IConflictResolver for OpenFlow messages.
@@ -129,6 +130,10 @@ public class DefaultOFConflictResolver implements IConflictResolver {
             Stream<OFMatchConflict> result = ResolutionUtils.getMatchConflicts(m1, m2, fM(m1).getMatch(), fM(m2).getMatch());
             return result.count() != 0;
         }
+
+        // We let two Packet Out always conflict
+        if (m1.getOfMessage().getType() == PACKET_OUT && m2.getOfMessage().getType() == PACKET_OUT)
+            return true;
 
         // TODO other OF message types (?)
 

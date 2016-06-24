@@ -1,5 +1,5 @@
 #!/bin/bash
-#Updates Engine code merging the working branches/tags in a single Engine-mixed folder (20/04/16)
+#Updates Engine code merging the working branches/tags in a single Engine-mixed folder
 
 #NOTES:
 #       ODL compiles with JDK8
@@ -29,6 +29,9 @@ fi
 #git reset --hard #completely remove all staged and unstaged changes to tracked files
 #git clean        #remove files that are not tracked
 #git checkout .   #undo all changes in my working tree
+
+# Load bashrc
+PS1='$ ' . ~/.bashrc
 
 echo -e "\n==========================="
 echo "====== NetIDE Engine ======"
@@ -98,7 +101,9 @@ then
 
 	echo -e "\n=> Installing Java core"
 	cd $EngineMixed_DIR/core
-	sudo mvn clean install -Dgpg.passphrase=netide #-DskipTests
+	mvn clean install -Dgpg.skip=true -DskipTests
+	cp core.branding/target/core.branding-1.1.0-SNAPSHOT.jar $NetIDE_DIR/apache-karaf-3.0.5/lib
+	cp specification/DpidPartitionABCW.xml $NetIDE_DIR/apache-karaf-3.0.5
 	sleep 5
 fi
 
@@ -129,7 +134,7 @@ then
 	mkdir -p ~/.m2
 	wget -q -O - https://raw.githubusercontent.com/opendaylight/odlparent/master/settings.xml > ~/.m2/settings.xml
 	export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'
-	mvn clean install
+	mvn clean install -DskipTests
 	sleep 5
 
         echo -e "\n=> Changing ports in ODL shim (1099->1098 and 44444->44445)"
@@ -160,8 +165,8 @@ then
         echo -e "\n=> Installing ONOS shim"
 	cd $EngineMixed_DIR/onos-shim
 	mvn clean install
-	#cd $NetIDE_DIR/onos
-	#mvn clean install #I had to compile the project twice for 'onos-branding', etc to appear (don't know if it's always necessary...)
+	cd $NetIDE_DIR/onos
+	mvn clean install -DskipTests #Compilation for 'onos-branding'
 	sleep 5
 
         echo -e "\n=> Creating NetIDE cell"
@@ -219,20 +224,17 @@ then
 	cp lib/j* $NetIDE_DIR/floodlight/lib/
 	cp lib/netip* $NetIDE_DIR/floodlight/lib/
 	cp src/main/resources/floodlightdefault.properties $NetIDE_DIR/floodlight/src/main/resources/floodlightdefault.properties
-	cd $NetIDE_DIR
-	cp build.xml floodlight/build.xml #to be updated by Giuseppe (for the IDE)
-	cp net.floodlightcontroller.core.module.IFloodlightModule floodlight/src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule #to be updated by Giuseppe (for the IDE)
 	cd $NetIDE_DIR/floodlight
-	#to solve the 6653 bug
-	cp $NetIDE_DIR/Controller.java $NetIDE_DIR/floodlight/src/main/java/net/floodlightcontroller/core/internal/Controller.java #to be updated by Giuseppe (for the IDE)
+	sed -i '/<patternset id="lib">/a <include name="netip-1.1.0-SNAPSHOT.jar"/>' build.xml
+	sed -i '/<patternset id="lib">/a <include name="javatuples-1.2.jar"/>' build.xml
+	sed -i '/<patternset id="lib">/a <include name="jeromq-0.3.4.jar"/>' build.xml
+	sed -i '$ a net.floodlightcontroller.interceptor.NetIdeModule' src/main/resources/META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule
+	sed -i 's/6653/7753/' src/main/java/net/floodlightcontroller/core/internal/Controller.java
+	sed -i 's/JVM_OPTS="\$JVM_OPTS -XX:CompileThreshold=1500 -XX:PreBlockSpin=8"/JVM_OPTS="\$JVM_OPTS -XX:CompileThreshold=1500"/' floodlight.sh
+	sed -i '/FL_HOME=.*/i cd \$(dirname \$0)' floodlight.sh
+	sed -i 's/FL_HOME=.*/FL_HOME=\./' floodlight.sh
 	make
-	cp $NetIDE_DIR/floodlight.sh $NetIDE_DIR/floodlight/floodlight.sh
 	sleep 5
-
-        echo -e "\n=> Final checks..."
-	cd $EngineMixed_DIR/floodlight-backend/v1.2/test
-	cp FLCompositionSpecification.xml $EngineMixed_DIR/ryu-backend/tests/	#copy to Python core
-	cp FLCompositionSpecification.xml $NetIDE_DIR/apache-karaf-3.0.5/	#copy to Java core
 fi
 
 echo -e "\n==========================="

@@ -1,5 +1,5 @@
 #!/bin/bash
-#Runs the different parts of the Engine: 1 call = 1 item in the architecture (20/04/16)
+#Runs the different parts of the Engine: 1 call = 1 item in the architecture
 
 NetIDE_DIR="$HOME/NetIDE"
 EngineMixed_DIR="$NetIDE_DIR/Engine-mixed"
@@ -114,7 +114,7 @@ then
 	echo "=> Core: $2"
 	if [ "$2" == "Java" ] || [ "$2" == "java" ]
 	then
-		cd $NetIDE_DIR/apache-karaf-3.0.5
+		cd $NetIDE_DIR/apache-karaf-*
 		bin/start clean
 		echo -e "\nStarting Karaf..."
 		sleep 10
