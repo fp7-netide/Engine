@@ -268,9 +268,21 @@ class ODL(Base):
             
         call(['tmux', 'new-window', '-n', "ODL"])
         call(['tmux', 'send-keys', '-t', 'NetIDE' , "~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf", 'C-m'])
-        
+        time.sleep(10)
 
-              
+class Mininet(Base):
+    def start(self):
+        
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+        
+        if [ sessionExists != 0 ]:        
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"])
+            time.sleep(1)
+            
+        call(['tmux', 'new-window', '-n', "Mininet"])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo mn", 'C-m'])
+        time.sleep(10) 
+            
 
 class POX(Base):
     pass

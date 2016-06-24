@@ -141,8 +141,8 @@ def editPlaybookClient(package):
     nameSet = set(package.controllerNames)
     names = []
     for name in nameSet:
-        names.append(name.lower())
-        print(name.lower())
+        names.append(name)
+        print(name)
     
     currentContent.append({'name' : 'install client localhost', 'hosts' : 'localhost', 'roles' : names})
         
@@ -157,7 +157,7 @@ def editPlaybookServer(conf):
     currentContent = []
 
         
-    currentContent.append({'name' : 'install server', 'hosts' : conf["host"], 'roles' : ["prereq", "engine", "core", conf['type']]}) 
+    currentContent.append({'name' : 'install server', 'hosts' : conf["host"], 'roles' : ["prereq", "engine", "core", "mininet", conf['type']]}) 
         
     
 

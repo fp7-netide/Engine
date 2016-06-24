@@ -33,7 +33,8 @@ if [ ! -d loaderEnvironment ]; then
         sudo apt-get -y install pkg-config
     fi
 
-    sudo add-apt-repository ppa:ubuntu-desktop/ubuntu-make
+    sudo add-apt-repository -y ppa:ubuntu-desktop/ubuntu-make
+   
     sudo apt-get update
     sudo apt-get install -y ubuntu-make
 
