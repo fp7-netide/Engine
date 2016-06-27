@@ -108,7 +108,7 @@ class Ryu(Base):
             windowNames = self.getWindowList()
             
             call(['tmux', 'new-window', '-n', a.appName])
-            call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) , 'C-m'])
+            call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
 
 
             if "sleepafter" in ryuCommands:
@@ -125,70 +125,73 @@ class Ryu(Base):
                 
     
     def start(self):
-        base = [ "ryu-manager" ]
-        rv = []
-        appidx = 0
-
-        try:
-            with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
-                data = json.load(fh)
-        except Exception as err:
-            logging.debug("{}: {}".format(type(err), err))
-            data = {}
-        logging.debug("{}".format(data))
-        running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
-
-        for a in self.applications:
-            if not a.enabled:
-                logging.info("Skipping disabled application {}".format(a))
-                continue
-            if str(a) in running_apps:
-                logging.info("App {} already running".format(a))
-                continue
-
-            appidx += 1
-
-            cmdline = base.copy()
-            cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
-            cmdline.append(os.path.expanduser("~/netide/Engine/ryu-backend/backend.py"))
-            
-            #String.format("ryu-manager --ofp-tcp-listen-port=%d ~/netide/apps/%s", port,
-            #    getAppPath.removeFirstSegments(1))
-            
-            p = a.metadata.get("param", "")
-            args = []
-            def f(x):
-                pt = os.path.join(a.path, x)
-                if os.path.exists(pt):
-                    return pt
-                return x
-            if isinstance(p, list):
-                args.extend(map(f, p))
-            else:
-                args.append(f(p))
-
-            cmdline.extend(args)
-
-            logging.debug('Launching "{}" now'.format(cmdline))
-            env = os.environ.copy()
-            ppath = [os.path.abspath(os.path.relpath(a.path))]
-            if "PYTHONPATH" in env:
-                ppath.append(env["PYTHONPATH"])
-            env["PYTHONPATH"] = ":".join(ppath)
-            logging.debug(env["PYTHONPATH"])
-
-            myid = str(uuid.uuid4())
-            logdir = self.makelogdir(myid)
-
-            serr = open(os.path.join(logdir, "stderr"), "w")
-            sout = open(os.path.join(logdir, "stdout"), "w")
-
-            rv.append({
-                "id": myid,
-                "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid,
-                "app": str(a)})
-
-        return rv
+        pass
+#===============================================================================
+#         base = [ "ryu-manager" ]
+#         rv = []
+#         appidx = 0
+# 
+#         try:
+#             with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
+#                 data = json.load(fh)
+#         except Exception as err:
+#             logging.debug("{}: {}".format(type(err), err))
+#             data = {}
+#         logging.debug("{}".format(data))
+#         running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+# 
+#         for a in self.applications:
+#             if not a.enabled:
+#                 logging.info("Skipping disabled application {}".format(a))
+#                 continue
+#             if str(a) in running_apps:
+#                 logging.info("App {} already running".format(a))
+#                 continue
+# 
+#             appidx += 1
+# 
+#             cmdline = base.copy()
+#             cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
+#             cmdline.append(os.path.expanduser("~/netide/Engine/ryu-backend/backend.py"))
+#             
+#             #String.format("ryu-manager --ofp-tcp-listen-port=%d ~/netide/apps/%s", port,
+#             #    getAppPath.removeFirstSegments(1))
+#             
+#             p = a.metadata.get("param", "")
+#             args = []
+#             def f(x):
+#                 pt = os.path.join(a.path, x)
+#                 if os.path.exists(pt):
+#                     return pt
+#                 return x
+#             if isinstance(p, list):
+#                 args.extend(map(f, p))
+#             else:
+#                 args.append(f(p))
+# 
+#             cmdline.extend(args)
+# 
+#             logging.debug('Launching "{}" now'.format(cmdline))
+#             env = os.environ.copy()
+#             ppath = [os.path.abspath(os.path.relpath(a.path))]
+#             if "PYTHONPATH" in env:
+#                 ppath.append(env["PYTHONPATH"])
+#             env["PYTHONPATH"] = ":".join(ppath)
+#             logging.debug(env["PYTHONPATH"])
+# 
+#             myid = str(uuid.uuid4())
+#             logdir = self.makelogdir(myid)
+# 
+#             serr = open(os.path.join(logdir, "stderr"), "w")
+#             sout = open(os.path.join(logdir, "stdout"), "w")
+# 
+#             rv.append({
+#                 "id": myid,
+#                 "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid,
+#                 "app": str(a)})
+# 
+#         return rv
+#===============================================================================
 
 class FloodLight(Base):
     @classmethod

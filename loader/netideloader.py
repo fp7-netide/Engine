@@ -82,20 +82,21 @@ def set_extraction_path(args):
 
 def start_package(args):
 
-
     ODL("").start()
     p = Package(args.package, dataroot)
 
     for c in p.controllers_for_node().items():
 
         c[1].startNew()
-    #time.sleep(2)
-    #Mininet("").start()
+   
+    time.sleep(2)
+    Mininet("").start()
     
     attach("")
         
 
 def attach(args):
+
     Base.attachTmux()
 
 
