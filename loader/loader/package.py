@@ -76,7 +76,7 @@ class Package(object):
                 #returns controller
                 ctrl = Application.get_controller(app)
                 self.controllerNames.append(ctrl.getControllerName())
-                print(ctrl.getControllerName())
+                #print(ctrl.getControllerName())
 
                 for n in nodes:
                     if n not in self.controllers:

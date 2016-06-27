@@ -61,6 +61,30 @@ class Base(object):
         "{ \"id\": process-uuid, \"pid\": process-id }"
         raise NotImplementedError()
 
+class RyuShim(Base):
+    def start(self):
+        base = ["ryu-manager"]
+        
+        y = yaml.load(open("commands.yml"))
+        ryuCommands = y['ryu_shim']
+
+        v = os.environ.copy()
+        v.update(ryuCommands["variables"])
+        
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+        
+        if [ sessionExists != 0 ]:        
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
+            time.sleep(1)
+        
+        cmd = util.tmux_line(ryuCommands)
+        
+        call(['tmux', 'new-window', '-n', "RyuShim"])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py', 'C-m'])
+        
+        
+        
+    
 class Ryu(Base):
     appNames = []
     
@@ -105,7 +129,7 @@ class Ryu(Base):
             appPath = os.path.join(a.path, a.entrypoint)
 
             #check with list window if exists
-            windowNames = self.getWindowList()
+            #windowNames = self.getWindowList()
             
             call(['tmux', 'new-window', '-n', a.appName])
             call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
@@ -125,6 +149,7 @@ class Ryu(Base):
                 
     
     def start(self):
+        
         pass
 #===============================================================================
 #         base = [ "ryu-manager" ]
@@ -251,6 +276,18 @@ class FloodLight(Base):
         # Start floodlight
         cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
         return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
+
+class Core(Base):
+    def start(self):
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+        
+        if [ sessionExists != 0 ]:        
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"])
+            time.sleep(1)
+            
+        call(['tmux', 'new-window', '-n', "Core"])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "~/apache-karaf-3.0.6/bin/karaf", 'C-m'])
+        time.sleep(20)
 
 class ODL(Base):
     # TODO:

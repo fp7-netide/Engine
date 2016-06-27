@@ -60,6 +60,8 @@ from loader.controllers import ODL
 from subprocess import call
 from loader.controllers import Base
 from loader.controllers import Mininet
+from loader.controllers import RyuShim
+from loader.controllers import Core
 import time
 
 # TODO: store {pids,logs} somewhere in /var/{run,log}
@@ -81,8 +83,14 @@ def set_extraction_path(args):
     return 0;
 
 def start_package(args):
-
-    ODL("").start()
+    Core("").start()
+    
+    if args.serverController == "ODL" or args.serverController == "":
+        ODL("").start()
+        
+    if args.serverController == "ryu_shim":
+        RyuShim("").start()
+    
     p = Package(args.package, dataroot)
 
     for c in p.controllers_for_node().items():
@@ -90,7 +98,7 @@ def start_package(args):
         c[1].startNew()
    
     time.sleep(2)
-    Mininet("").start()
+  #  Mininet("").start()
     
     attach("")
         
@@ -332,6 +340,7 @@ if __name__ == "__main__":
     
     parser_startTest = subparsers.add_parser("startPackage", description="Load a NetIDE package and start its applications")
     parser_startTest.add_argument("package", type=str, help="Package to load")
+    parser_startTest.add_argument("--serverController", type=str, help="Choose one of {ODL, ryu_shim}")
 
     parser_startTest.set_defaults(func=start_package, mode="all")
     

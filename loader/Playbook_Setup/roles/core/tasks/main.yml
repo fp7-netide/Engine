@@ -11,6 +11,6 @@
         (karaf_path.stat.isdir is defined and karaf_path.stat.isdir == True) == False 
   register: core_out
   
-- debug: var=core_out.stdout_lines
+
 
 ...

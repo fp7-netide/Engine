@@ -16,3 +16,9 @@ ryu:
      PYTHONPATH: PYTHONPATH:$HOME/netide/ryu:/usr/local/lib/python2.7/dist-packages/ryu
   commands:
     - ryu-manager
+
+ryu_shim:
+  variables:
+     PYTHONPATH: PYTHONPATH:$HOME/netide/Engine/ryu-shim
+  commands:
+    - ryu-manager
