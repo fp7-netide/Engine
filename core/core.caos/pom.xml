@@ -117,6 +117,7 @@
                         <Embed-Transitive>true</Embed-Transitive>
                         <Import-Package>
                             org.osgi.framework,
+                            org.onlab.packet,
                             eu.netide.core.api,
                             eu.netide.lib.netip,
                             javax.xml.bind,
