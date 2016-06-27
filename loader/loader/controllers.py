@@ -286,7 +286,8 @@ class Core(Base):
             time.sleep(1)
             
         call(['tmux', 'new-window', '-n', "Core"])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "~/apache-karaf-3.0.6/bin/karaf", 'C-m'])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "cd ~/apache-karaf-3.0.7/bin/", 'C-m'])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "./karaf", 'C-m'])
         time.sleep(20)
 
 class ODL(Base):

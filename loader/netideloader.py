@@ -85,11 +85,13 @@ def set_extraction_path(args):
 def start_package(args):
     Core("").start()
     
-    if args.serverController == "ODL" or args.serverController == "":
-        ODL("").start()
+
         
     if args.serverController == "ryu_shim":
         RyuShim("").start()
+    else:
+
+        ODL("").start()
     
     p = Package(args.package, dataroot)
 
