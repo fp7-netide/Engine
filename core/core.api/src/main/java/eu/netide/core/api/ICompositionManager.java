@@ -1,4 +1,4 @@
-package eu.netide.core.caos;
+package eu.netide.core.api;
 
 import eu.netide.lib.netip.Message;
 
