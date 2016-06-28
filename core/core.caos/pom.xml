@@ -31,7 +31,7 @@
             <groupId>org.onosproject</groupId>
             <artifactId>onlab-misc</artifactId>
             <version>${onos.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
@@ -104,7 +104,7 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
-                <version>2.5.4</version>
+                <version>${maven.bundle.version}</version>
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
@@ -117,6 +117,7 @@
                         <Embed-Transitive>true</Embed-Transitive>
                         <Import-Package>
                             org.osgi.framework,
+                            org.onlab.packet,
                             eu.netide.core.api,
                             eu.netide.lib.netip,
                             javax.xml.bind,

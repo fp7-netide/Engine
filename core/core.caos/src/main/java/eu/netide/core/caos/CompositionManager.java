@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
@@ -138,7 +139,9 @@ public class CompositionManager implements ICompositionManager {
             if (correctlyConfigured) {
                 status = FlowExecutors.SEQUENTIAL.executeFlow(status, compositionSpecification.getComposition().stream(), shimManager, backendManager);
 
-                logger.info("Flow execution finished.");
+                final int[] numMessages = {0};
+                status.getResultMessages().forEach((aLong, messages) -> numMessages[0] += messages.size());
+                logger.info("Composition finished {} messages for {} switches", numMessages, status.getResultMessages().size());
 
                 List<Message> results = new ArrayList<Message>();
                 status.getResultMessages().values().forEach(results::addAll);

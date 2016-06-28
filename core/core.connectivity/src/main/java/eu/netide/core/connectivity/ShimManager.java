@@ -38,6 +38,16 @@ public class ShimManager implements IShimManager, IConnectorListener {
 
     @Override
     public boolean sendMessage(Message message) {
+        try {
+            listenerLock.acquire();
+            for (IShimMessageListener listener : shimMessageListeners) {
+                pool.submit(() -> listener.OnOutgoingShimMessage(message));
+            }
+        } catch (InterruptedException e) {
+            logger.error("", e);
+        } finally {
+            listenerLock.release();
+        }
         return connector.SendData(message.toByteRepresentation());
     }
 

@@ -3,6 +3,7 @@ package eu.netide.core.logpub;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import eu.netide.core.api.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZFrame;
@@ -187,6 +188,18 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void OnShimMessage(Message message, String originId) {
 		log.debug("Received shim message");
 		OnShimAndBackendMessage(message, "1", originId);
+	}
+
+	// TODO: Kevin, check implementation
+	@Override
+	public void OnOutgoingBackendMessage(Message message, String backendId) {
+        OnShimAndBackendMessage(message, "out_" + backendId, backendId);
+	}
+
+    // TODO: Kevin, check implementation
+	@Override
+	public void OnOutgoingShimMessage(Message message) {
+        OnShimAndBackendMessage(message, "out_"+ Constants.SHIM, Constants.SHIM);
 	}
 
 	private void OnShimAndBackendMessage(Message message, String origin, String originId){
