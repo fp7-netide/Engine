@@ -14,7 +14,7 @@ public interface IShimMessageListener {
      * @param message The received message.
      * @param originId The id of the shim that sent the message.
      */
-    void OnShimMessage(Message message, String originId);
+    MessageHandlingResult OnShimMessage(Message message, String originId);
 
 
     /**

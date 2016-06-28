@@ -1,8 +1,8 @@
 package eu.netide.core.caos;
 
 import eu.netide.core.api.IBackendManager;
+import eu.netide.core.api.ICompositionManager;
 import eu.netide.core.api.IShimManager;
-import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.caos.composition.CompositionSpecification;
 import eu.netide.core.caos.composition.CompositionSpecificationLoader;
 import eu.netide.core.caos.composition.ExecutionFlowStatus;
@@ -21,9 +21,7 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**

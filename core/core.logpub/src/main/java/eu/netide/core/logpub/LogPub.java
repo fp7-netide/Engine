@@ -3,6 +3,7 @@ package eu.netide.core.logpub;
 import java.util.LinkedList;
 
 import eu.netide.core.api.Constants;
+import eu.netide.core.api.MessageHandlingResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZFrame;
@@ -154,15 +155,28 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 
 	@Override
+<<<<<<< HEAD
 	public void OnBackendMessage(Message message, String originId) {
 		log.debug("Received message from backend");
+=======
+	public MessageHandlingResult OnBackendMessage(Message message, String originId) {
+		log.debug("Received backend message");
+>>>>>>> 5cd7aabf12ecf0cdc2847afd31ddad8bf36a0508
 		OnShimAndBackendMessage(message, "0", originId);
+		return MessageHandlingResult.RESULT_PASS;
 	}
 
 	@Override
+<<<<<<< HEAD
 	public void OnShimMessage(Message message, String originId) {
 		log.debug("Received message from shim");
+=======
+	public MessageHandlingResult OnShimMessage(Message message, String originId) {
+		log.debug("Received shim message");
+>>>>>>> 5cd7aabf12ecf0cdc2847afd31ddad8bf36a0508
 		OnShimAndBackendMessage(message, "1", originId);
+		return MessageHandlingResult.RESULT_PASS;
+
 	}
 
 	@Override
