@@ -26,7 +26,9 @@ def extractPackage(path):
     #expect path to tar archive as args and extract content
     with tarfile.open(path) as tar:
         tar.extractall(tmpPath)
-        tmpPath = os.path.join(tmpPath, tar.getnames()[0])
+
+        tmpPath = os.path.join(tmpPath, tar.getnames()[0].split('/')[0])
+        
         
     print("Extracted to:" + tmpPath)
     return tmpPath
