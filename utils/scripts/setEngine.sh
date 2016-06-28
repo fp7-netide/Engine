@@ -85,6 +85,8 @@ fi
 echo "--"
 echo "-- Installing ONOS (1.4):"
 echo "--"
+sudo update-alternatives --set java /usr/lib/jvm/java-8-oracle/jre/bin/java
+sudo update-alternatives --set javac /usr/lib/jvm/java-8-oracle/bin/javac
 git clone https://gerrit.onosproject.org/onos
 if [ -d "onos" ]; then
 	cd onos
