@@ -155,28 +155,18 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 
 	@Override
-<<<<<<< HEAD
-	public void OnBackendMessage(Message message, String originId) {
-		log.debug("Received message from backend");
-=======
+		
 	public MessageHandlingResult OnBackendMessage(Message message, String originId) {
-		log.debug("Received backend message");
->>>>>>> 5cd7aabf12ecf0cdc2847afd31ddad8bf36a0508
+		log.debug("Received message from backend");
 		OnShimAndBackendMessage(message, "0", originId);
 		return MessageHandlingResult.RESULT_PASS;
 	}
 
 	@Override
-<<<<<<< HEAD
-	public void OnShimMessage(Message message, String originId) {
-		log.debug("Received message from shim");
-=======
 	public MessageHandlingResult OnShimMessage(Message message, String originId) {
-		log.debug("Received shim message");
->>>>>>> 5cd7aabf12ecf0cdc2847afd31ddad8bf36a0508
+		log.debug("Received message from shim");
 		OnShimAndBackendMessage(message, "1", originId);
 		return MessageHandlingResult.RESULT_PASS;
-
 	}
 
 	@Override
