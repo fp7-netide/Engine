@@ -321,7 +321,7 @@ class Mininet(Base):
             time.sleep(1)
             
         call(['tmux', 'new-window', '-n', "Mininet"])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo mn", 'C-m'])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py", 'C-m'])
         time.sleep(10) 
             
 

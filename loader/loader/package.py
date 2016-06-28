@@ -60,9 +60,10 @@ class Package(object):
                 
         logging.debug("Loading applications for host {}".format(platform.node()))
         p = os.path.join(self.path, "apps")
+        print(p)
         self.appNames = []
         for d in os.listdir(p):
-            if not d == ".DS_Store":
+            if not d.startswith('.'):
                 nodes = []
                 #print(self.config.get("clients", {}).items())
                 self.appNames.append(d)
