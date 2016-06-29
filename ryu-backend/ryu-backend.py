@@ -31,9 +31,11 @@ from eventlet.green import select
 from eventlet.green import threading
 from ryu.base import app_manager
 from ryu.controller import ofp_event
-from ryu.controller import dpset
+from ryu.lib.packet import packet
 from ryu.controller import controller
 from ryu.ofproto import ofproto_parser
+from ryu.lib.packet import ethernet
+from ryu.lib.packet import ether_types
 from ryu.ofproto import ofproto_common
 from ryu.ofproto import ofproto_v1_0, ofproto_v1_0_parser
 from ryu.ofproto import ofproto_v1_2, ofproto_v1_2_parser
@@ -48,7 +50,7 @@ NETIDE_CORE_PORT = 5555
 HEARTBEAT_TIMEOUT = 5 #5 seconds
 
 logger = logging.getLogger('ryu-backend')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class BackendDatapath(controller.Datapath):
@@ -131,13 +133,22 @@ class BackendDatapath(controller.Datapath):
             ev = ofp_event.ofp_msg_to_ev(msg)
             event_observers = self.ofp_brick.get_observers(ev,self.state)
             module_id = header[NetIDEOps.NetIDE_header['MOD_ID']]
+
+            # handling LLDP messages
+            ofproto = msg.datapath.ofproto
+            if msg_type == ofproto.OFPT_PACKET_IN:
+                pkt = packet.Packet(msg.data)
+                eth = pkt.get_protocol(ethernet.ethernet)
+                if eth.ethertype == ether_types.ETH_TYPE_LLDP:
+                    module_id = 0
+
             for key, value in self.channel.running_modules.iteritems():
-                if value == module_id and key in event_observers:
+                if (value == module_id or module_id == 0) and key in event_observers:
                     module_brick = ryu.base.app_manager.lookup_service_brick(key)
                     module_brick_handlers = module_brick.get_handlers(ev)
                     for handler in module_brick_handlers:
                         handler(ev)
-                    break
+                    #break
 
             # Sending the FENCE message to the Core only if self.netide_xid is not 0
             if self.netide_xid is not 0:
