@@ -130,21 +130,28 @@
                         </Bundle-Activator>
                         <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
-                        <Import-Package>
-                            org.osgi.framework,
-                            org.onlab.packet,
-                            eu.netide.core.api,
-                            eu.netide.lib.netip,
-                            javax.xml.bind,
-                            javax.xml.bind.helpers,
-                            org.slf4j,
-                            org.projectfloodlight.openflow.*
-                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-scr-plugin</artifactId>
+                <version>1.20.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-scr-srcdescriptor</id>
+                        <goals>
+                            <goal>scr</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>bundle</supportedProjectType>
+                    </supportedProjectTypes>
+                </configuration>
+            </plugin>
         </plugins>
-
     </build>
 
 </project>
