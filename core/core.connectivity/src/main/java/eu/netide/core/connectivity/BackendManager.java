@@ -70,8 +70,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return sendMessageToBackend(message, getBackend(message.getHeader().getModuleId()));
     }
 
-    private boolean sendMessageToBackend(Message message, String backendId)
-    {
+    private boolean sendMessageToBackend(Message message, String backendId) {
         try {
             listenerLock.acquire();
             // Notify listeners and send to shim
@@ -192,12 +191,11 @@ public class BackendManager implements IBackendManager, IConnectorListener {
 
     /* TODO: Probably more places to remove old backend */
     @Override
-    public void removeBackend(int id)
-    {
+    public void removeBackend(int id) {
         String backEndName = getBackend(id);
         logger.info("Removing backend %s", backEndName);
 
-        LinkedList<Integer> removedModules= new LinkedList<>();
+        LinkedList<Integer> removedModules = new LinkedList<>();
         moduleToBackendMappings.entrySet().forEach(
                 (modID) -> {
                     if (modID.getValue().equals(backEndName)) {
@@ -281,24 +279,38 @@ public class BackendManager implements IBackendManager, IConnectorListener {
             logger.info("Received unrequested ManagementMessage: '" + message.toString() + "'. Relaying to shim.");
             connector.SendData(message.toByteRepresentation(), Constants.SHIM);
         } else if (message instanceof FenceMessage) {
-            if (((FenceMessage) message).getHeader().getTransactionId()==0) {
+            if (((FenceMessage) message).getHeader().getTransactionId() == 0) {
                 logger.debug("FenceMessage with xid==0 makes no sense '" + message.toString() + "'. Dropping message");
-            } else{
+            } else {
                 logger.error("Received unrequested FenceMessage: '" + message.toString() + "'. Dropping message");
             }
         } else {
             logger.info("Received unrequested Message: '" + message.toString() + "'. Relaying to shim.");
             try {
                 listenerLock.acquire();
-                // Notify listeners and send to shim
-                for (IBackendMessageListener listener : backendMessageListeners) {
-                    pool.submit(() -> listener.OnBackendMessage(message, backendId));
-                }
+                IBackendMessageListener[] listenerCopy = backendMessageListeners.toArray(new IBackendMessageListener[backendMessageListeners.size()]);
+                listenerLock.release();
+
+                pool.submit(() -> {
+                    MessageHandlingResult totalRet = MessageHandlingResult.RESULT_PASS;
+                    // Notify listeners and send to shim
+                    for (IBackendMessageListener listener : listenerCopy) {
+                        MessageHandlingResult ret = listener.OnBackendMessage(message, backendId);
+                        if (ret != MessageHandlingResult.RESULT_PASS) {
+                            totalRet = ret;
+                        }
+
+                    }
+                    if (totalRet == MessageHandlingResult.RESULT_PASS) {
+                        for (IBackendMessageListener listener : listenerCopy) {
+                            listener.OnUnhandledBackendMessage(message, backendId);
+                        }
+                    }
+                });
                 connector.SendData(message.toByteRepresentation(), Constants.SHIM);
             } catch (InterruptedException e) {
                 logger.error("", e);
             } finally {
-                listenerLock.release();
             }
         }
     }

@@ -74,13 +74,25 @@ public class ShimManager implements IShimManager, IConnectorListener {
         }
         try {
             listenerLock.acquire();
-            for (IShimMessageListener listener : shimMessageListeners) {
-                pool.submit(() -> listener.OnShimMessage(message, originId));
-            }
+            IShimMessageListener[] shimListenerCopy = shimMessageListeners.toArray(new IShimMessageListener[shimMessageListeners.size()]);
+            listenerLock.release();
+
+            pool.submit(() -> {
+                MessageHandlingResult retTotal =MessageHandlingResult.RESULT_PASS;
+                for (IShimMessageListener listener : shimListenerCopy) {
+                    MessageHandlingResult ret = listener.OnShimMessage(message, originId);
+                    if (ret != MessageHandlingResult.RESULT_PASS)
+                        retTotal=ret;
+                }
+                if (retTotal == MessageHandlingResult.RESULT_PASS) {
+                    for (IShimMessageListener listener : shimListenerCopy) {
+                        listener.OnUnhandeldShimMessage(message, originId);
+                    }
+                }
+            });
         } catch (InterruptedException e) {
             logger.error("", e);
         } finally {
-            listenerLock.release();
         }
     }
 

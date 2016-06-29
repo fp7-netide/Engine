@@ -33,4 +33,14 @@ public interface IBackendMessageListener {
      * @param backendId Backend id the message was sent to.
      */
     void OnOutgoingBackendMessage(Message message, String backendId);
+
+    /**
+     * Called by the manager when a message from a backend was received and all
+     * listeners returned RESULT_PASS.
+     *
+     * @param message  The received message.
+     * @param originId The id of the backend that sent the message.
+     *
+     */
+    void OnUnhandledBackendMessage(Message message, String originId);
 }
