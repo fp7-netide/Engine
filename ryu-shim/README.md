@@ -81,11 +81,42 @@ ryu-manager --ofp-tcp-listen-port 7734 ryu-backend.py tests/firewall.py
 
 Within the Mininet CLI, a ```pingall``` command demonstrates what traffic is allowed and what is not, depending on the rules installed by the firewall application.
 
+## Composing server controller's modules
+
+SDN modules running on the server controller can be part of the global Network Application, as depicted in the following figure.
+
+![Alt text](detailed-architecture.png?raw=true " ")
+
+For Ryu, the following two steps are required:
+
+* adding the ryu-backend as an additional SBI for Ryu, so that it can interact with the Core as it was a client controller
+* intercepting the Ryu's internal event dispatching  mechanism in order to prevent the modules running on Ryu to interact by-passing the Core. To achieve this, we must modify the ```send_event_to_observers``` method in ```app_manager.py``` as follows:
+
+```
+def send_event_to_observers(self, ev, state=None):
+        for observer in self.get_observers(ev, state):
+            if observer is "RyuShim": # only the shim will receive the events
+                self.send_event(observer, ev, state)
+```
+
+For instance, the scenario presented in the Testing section above can be replicated by running all the modules directly on the server controller, i.e. without the need of running another instance of Ryu acting as client controller:
+
+```
+ ryu-manager ryu-shim.py ryu-backend.py tests/simple_switch.py tests/firewall.py
+```
+With this command we are running shim, backend, simple_switch and firewall within a single instance of Ryu. However, thanks to the modification applied to the ```send_event_to_observers``` method in ```app_manager.py```, the events are dispatched to the application modules based on the Core's logic instead of the Ryu's internal execution flow.
+
+Viceversa, as application modules only receive network events via Backend, they will only use the interfaces exposed by such a SBI to control the traffic.
+
 ## License
 
 See the LICENSE file.
 
 ## ChangeLog
+
+ryu-shim: 2016-07-03 Sun Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
+
+  * Added support for composition of server controller's application modules (shim 2.0)
 
 ryu-backend: 2015-11-11 Wed Roberto Doriguzzi Corin <roberto.doriguzzi@create-net.org>
 
