@@ -1,5 +1,6 @@
 package eu.netide.core.routing;
 
+import com.google.common.annotations.VisibleForTesting;
 import eu.netide.core.api.Constants;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.IBackendMessageListener;
@@ -52,6 +53,18 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private IShimManager shimManager;
+
+
+    @VisibleForTesting
+    void setShim(IShimManager shim) {
+        shimManager =shim;
+    }
+
+    @VisibleForTesting
+    void setBackend(IBackendManager backend)
+    {
+        backendManager = backend;
+    }
 
     static class Request implements OFRoutingRequest {
         @Override
@@ -141,7 +154,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
             for (OFType type : OFSyncResults) {
                 if (openFlowMessage.getType() == type) {
-                    handleResponse(openFlowMessage, message);
+                    handleResponse(openFlowMessage, (OpenFlowMessage) message);
                     return MessageHandlingResult.RESULT_PROCESSED;
                 }
 
@@ -202,13 +215,16 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
     }
 
-    private void handleResponse(OFMessage openFlowMessage, Message message) {
+    private void handleResponse(OFMessage openFlowMessage, OpenFlowMessage message) {
         long xid = openFlowMessage.getXid();
         Request req = shimXidToRequest.get(xid);
         if (req == null) {
             logger.info("Could not find response in Request table, elaying to ALL backends");
             backendManager.sendMessageAllBackends(message);
         } else {
+            OFMessage.Builder b = openFlowMessage.createBuilder();
+            b.setXid(req.backendXid);
+            message.setOfMessage(b.build());
             req.countResponse();
             message.getHeader().setModuleId(backendManager.getModuleId(req.backendID));
             backendManager.sendMessage(message);
