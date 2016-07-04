@@ -13,10 +13,12 @@ public interface IBackendMessageListener {
     /**
      * Called by the manager when a message from a backend was received.
      *
+     * @return If the message was process or not. Currently used to pass through unconsumed message
      * @param message  The received message.
      * @param originId The id of the backend that sent the message.
+     *
      */
-    void OnBackendMessage(Message message, String originId);
+    MessageHandlingResult OnBackendMessage(Message message, String originId);
 
     /**
      * Called *after* a backend has been removed

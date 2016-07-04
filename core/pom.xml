@@ -24,6 +24,7 @@
         <module>core.logpub</module>
         <module>core.branding</module>
         <module>core.globalfib</module>
+        <module>core.routing</module>
         <module>../libraries/netip/java</module>
         <module>features</module>
     </modules>
