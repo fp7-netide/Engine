@@ -1,6 +1,5 @@
 package eu.netide.core.routing;
 
-import com.google.common.annotations.VisibleForTesting;
 import eu.netide.core.api.Constants;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.IBackendMessageListener;
@@ -55,12 +54,10 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
     private IShimManager shimManager;
 
 
-    @VisibleForTesting
     void setShim(IShimManager shim) {
         shimManager =shim;
     }
 
-    @VisibleForTesting
     void setBackend(IBackendManager backend)
     {
         backendManager = backend;

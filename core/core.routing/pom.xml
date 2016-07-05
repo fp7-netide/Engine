@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
 
@@ -27,12 +26,6 @@
     </licenses>
 
     <dependencies>
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onlab-misc</artifactId>
-            <version>${onos.version}</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>eu.netide.core</groupId>
             <artifactId>core.api</artifactId>
@@ -97,26 +90,15 @@
         <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.9.12</version>
+            <version>1.9.6</version>
+            <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.scr.annotations</artifactId>
-            <version>1.9.12</version>
-        </dependency>
+
 
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.3</version>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -124,13 +106,22 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
+                        <Bundle-Activator>eu.netide.core.routing.Activator
+                        </Bundle-Activator>
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
-                        <Bundle-Activator>eu.netide.core.routing.Activator
-                        </Bundle-Activator>
-                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                        <Embed-Dependency>
+                            *;scope=compile|runtime
+                        </Embed-Dependency>
                         <Embed-Transitive>true</Embed-Transitive>
+                        <Import-Package>
+                            org.osgi.framework,
+                            eu.netide.core.api,
+                            eu.netide.lib.netip,
+                            org.slf4j,
+                            org.projectfloodlight.openflow.*
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

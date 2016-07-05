@@ -49,7 +49,7 @@
     </feature>
     <feature name="core-routing" version="@FEATURE-VERSION">
         <feature>core-api</feature>
-        <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
+        <bundle>mvn:eu.netide.core/core.routing/@CORE-VERSION</bundle>
     </feature>
 
     <feature name="core" version="@FEATURE-VERSION">

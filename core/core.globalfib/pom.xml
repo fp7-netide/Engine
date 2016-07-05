@@ -18,6 +18,13 @@
     <name>core.globalfib Bundle</name>
     <description>core.globalfib OSGi bundle project.</description>
 
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
     <dependencies>
         <dependency>
             <groupId>eu.netide.lib</groupId>
@@ -100,7 +107,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>${project.artifactId}
+                        </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                         <Embed-Dependency>
                             *;scope=compile|runtime
