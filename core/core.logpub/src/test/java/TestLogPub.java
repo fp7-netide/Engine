@@ -10,7 +10,7 @@ import org.zeromq.ZMsg;
  */
 public class TestLogPub {
 
-    @Test
+    @Test(timeOut = 10000)
     public void TestStartAndShutdown() {
         LogPub l = new LogPub();
         l.Start();
