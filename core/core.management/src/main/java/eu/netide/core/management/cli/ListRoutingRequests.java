@@ -19,7 +19,7 @@ public class ListRoutingRequests extends OsgiCommandSupport {
         IShimManager shimManager = getService(IShimManager.class);
         IOFRoutingManager routingManager = getService(IOFRoutingManager.class);
 
-        System.out.format("%5s %20s %5s %6s %10s %20s\n", "Shim", "Backend", "BXid", "#Resp", "Type", "Last message (s ago)");
+        System.out.format("%8s %17s %5s %6s %10s %20s\n", "Shim xid", "Backend", "B xid", "#Resp", "Type", "Last message (s ago)");
         long now = System.currentTimeMillis();
         routingManager.getRoutingRequestStatus().forEach(r -> {
 
@@ -27,8 +27,8 @@ public class ListRoutingRequests extends OsgiCommandSupport {
 
                                                              String lastMessage = String.format("%.2f", (now - r.getLastTimeActive()) / 1000f);
 
-                                                             System.out.format("%5d %20s %5s %6d %10s %20s\n", r.getShimXid(), backendname, r.getBackendID(),
-                                                                               r.getResponses(), r.getReqTypeString(), lastMessage);
+                                                             System.out.format("%5d %20s %d %6d %10s %20ss\n", r.getShimXid(), backendname,
+                                                                               r.getBackendXid(),  r.getResponses(), r.getReqTypeString(), lastMessage);
 
                                                          }
         );

@@ -11,7 +11,7 @@ import eu.netide.core.api.OFRoutingRequest;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
-import org.apache.commons.lang3.tuple.Pair;
+import org.javatuples.Pair;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by arne on 28.06.16.
@@ -34,6 +36,9 @@ import java.util.LinkedList;
 public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener, IBackendMessageListener {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenFlowRouting.class);
+
+    private static int REQUEST_TIMEOUT = 120;
+    private static final int CLEANUP_PERIOD = 60 * 1000;
 
 
     private static OFType OFSyncRequests[] = {OFType.ECHO_REQUEST, OFType.FEATURES_REQUEST,
@@ -45,6 +50,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
             OFType.GET_ASYNC_REPLY, OFType.GET_CONFIG_REPLY, OFType.QUEUE_GET_CONFIG_REPLY,
             OFType.STATS_REPLY
     };
+    private final Timer cleanupTimer;
 
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
@@ -61,6 +67,25 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
     void setBackend(IBackendManager backend)
     {
         backendManager = backend;
+    }
+
+
+    public OpenFlowRouting ()
+    {
+        cleanupTimer = new Timer("Routing request cleanup");
+        TimerTask cleanUpTask = new TimerTask() {
+            @Override
+            public void run() {
+                long now = System.currentTimeMillis();
+                for (Request r : backendXidToRequest.values()) {
+                    if (r.getLastTimeActive() < now + REQUEST_TIMEOUT * 1000) {
+                        backendXidToRequest.remove(Pair.with(r.getBackendXid(), r.getBackendID()));
+                        shimXidToRequest.remove(r.getNewShimXid());
+                    }
+                }
+            }
+        };
+        cleanupTimer.schedule(cleanUpTask, CLEANUP_PERIOD, CLEANUP_PERIOD);
     }
 
     static class Request implements OFRoutingRequest {
@@ -126,18 +151,17 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
         }
     }
 
+    private HashMap<Long, Request> shimXidToRequest = new LinkedHashMap<>();
+    private HashMap<Pair<Long, String>, Request> backendXidToRequest = new LinkedHashMap<>();
+
     @Override
     public Collection<? extends OFRoutingRequest> getRoutingRequestStatus() {
         return backendXidToRequest.values();
     }
 
-    private HashMap<Long, Request> shimXidToRequest = new LinkedHashMap<>();
-    private HashMap<Pair<Long, String>, Request> backendXidToRequest = new LinkedHashMap<>();
-
-
     @Override
-    public void sendRequest(Message m, int moduleId) {
-        // TODO: Implement
+    public void sendRequest(OpenFlowMessage m, String moduleId) {
+        handleRequest(m.getOfMessage(), m, moduleId);
     }
 
     @Override
@@ -200,7 +224,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
     }
 
     private Request getOrAddBackendRequest(long xid, String originId, OFType type) {
-        Pair<Long, String> key = Pair.of(xid, originId);
+        Pair<Long, String> key = Pair.with(xid, originId);
 
         if (!backendXidToRequest.containsKey(key)) {
             Request req = new Request(originId, xid, type);
@@ -216,7 +240,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
         long xid = openFlowMessage.getXid();
         Request req = shimXidToRequest.get(xid);
         if (req == null) {
-            logger.info("Could not find response in Request table, elaying to ALL backends");
+            logger.info("Could not find response in Request table, elaying to ALL backends: {}", message);
             backendManager.sendMessageAllBackends(message);
         } else {
             OFMessage.Builder b = openFlowMessage.createBuilder();
