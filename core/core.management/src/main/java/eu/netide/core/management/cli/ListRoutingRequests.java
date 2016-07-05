@@ -3,8 +3,12 @@ package eu.netide.core.management.cli;
 import eu.netide.core.api.IBackendManager;
 import eu.netide.core.api.IOFRoutingManager;
 import eu.netide.core.api.IShimManager;
+import eu.netide.core.api.OFRoutingRequest;
 import org.apache.karaf.shell.commands.Command;
 import org.apache.karaf.shell.console.OsgiCommandSupport;
+
+import java.util.Collection;
+import java.util.Vector;
 
 /**
  * Created by arne on 04.02.16.
@@ -19,15 +23,18 @@ public class ListRoutingRequests extends OsgiCommandSupport {
         IShimManager shimManager = getService(IShimManager.class);
         IOFRoutingManager routingManager = getService(IOFRoutingManager.class);
 
-        System.out.format("%8s %17s %5s %6s %10s %20s\n", "Shim xid", "Backend", "B xid", "#Resp", "Type", "Last message (s ago)");
+        System.out.format("%8s %23s %6s %8s %10s %20s\n", "Shim xid", "Backend", "Bck xid", "#Resp", "Type", "Last message (s ago)");
         long now = System.currentTimeMillis();
-        routingManager.getRoutingRequestStatus().forEach(r -> {
+        Vector<? extends OFRoutingRequest> requestList = new Vector<>(routingManager.getRoutingRequestStatus());
+
+        requestList.stream().sorted((x,y) -> ( Long.compare(x.getLastTimeActive(),y.getLastTimeActive())))
+            .forEach(r -> {
 
                                                              String backendname = r.getBackendID();
 
                                                              String lastMessage = String.format("%.2f", (now - r.getLastTimeActive()) / 1000f);
 
-                                                             System.out.format("%5d %20s %d %6d %10s %20ss\n", r.getShimXid(), backendname,
+                                                             System.out.format("%8d %23s %6d %8d %10s %20ss\n", r.getShimXid(), backendname,
                                                                                r.getBackendXid(),  r.getResponses(), r.getReqTypeString(), lastMessage);
 
                                                          }

@@ -70,6 +70,11 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
         backendManager = backend;
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        cleanupTimer.cancel();
+    }
 
     public OpenFlowRouting ()
     {
@@ -79,7 +84,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
             public void run() {
                 long now = System.currentTimeMillis();
                 for (Request r : backendXidToRequest.values()) {
-                    if (r.getLastTimeActive() < now + REQUEST_TIMEOUT * 1000) {
+                    if (r.getLastTimeActive() < now - REQUEST_TIMEOUT * 1000) {
                         backendXidToRequest.remove(Pair.with(r.getBackendXid(), r.getBackendID()));
                         shimXidToRequest.remove(r.getNewShimXid());
                     }
