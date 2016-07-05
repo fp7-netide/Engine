@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by arne on 28.06.16.
@@ -151,8 +152,8 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
         }
     }
 
-    private HashMap<Long, Request> shimXidToRequest = new LinkedHashMap<>();
-    private HashMap<Pair<Long, String>, Request> backendXidToRequest = new LinkedHashMap<>();
+    private ConcurrentHashMap<Long, Request> shimXidToRequest = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Pair<Long, String>, Request> backendXidToRequest = new ConcurrentHashMap<>();
 
     @Override
     public Collection<? extends OFRoutingRequest> getRoutingRequestStatus() {
