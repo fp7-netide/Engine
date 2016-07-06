@@ -72,7 +72,7 @@ extractPath = os.path.join(dataroot, "extractPath.txt")
 logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=logging.DEBUG)
 
 def extract_package(args):
-    
+
     util.extractPackage(args.path)
     
     return 0
@@ -83,30 +83,32 @@ def set_extraction_path(args):
     return 0;
 
 def start_package(args):
-    Core("").start()
+    
+    p = Package(args.package, dataroot)
+    
+    Core(p.path).start()
     
 
         
-    if args.serverController == "ryu_shim":
+    if args.server == "shim":
         RyuShim("").start()
     else:
 
         ODL("").start()
     
-    p = Package(args.package, dataroot)
-
+    
     for c in p.controllers_for_node().items():
 
         c[1].startNew()
    
     time.sleep(2)
-  #  Mininet("").start()
+   
+    #Mininet("").start()
     
     attach("")
         
 
 def attach(args):
-
     Base.attachTmux()
 
 
@@ -250,7 +252,7 @@ def stop_controllers(args):
     sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
     if [ sessionExists != 0 ]:  
-        call(["tmux", "kill-session", "-t", "NetIDE"], shell=True)
+        call(["tmux", "kill-session", "-t", "NetIDE"], shell=False)
 
 
 #===============================================================================
@@ -340,9 +342,9 @@ if __name__ == "__main__":
     parser_attach.set_defaults(func=attach, mode="all")
     
     
-    parser_startTest = subparsers.add_parser("startPackage", description="Load a NetIDE package and start its applications")
+    parser_startTest = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
     parser_startTest.add_argument("package", type=str, help="Package to load")
-    parser_startTest.add_argument("--serverController", type=str, help="Choose one of {ODL, ryu_shim}")
+    parser_startTest.add_argument("--server", type=str, help="Choose one of {ODL, shim}")
 
     parser_startTest.set_defaults(func=start_package, mode="all")
     

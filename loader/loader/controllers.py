@@ -278,6 +278,10 @@ class FloodLight(Base):
         return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
 
 class Core(Base):
+    packagePath = ""
+    def __init__(self, path):
+        self.packagePath = path
+        
     def start(self):
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
@@ -287,8 +291,17 @@ class Core(Base):
             
         call(['tmux', 'new-window', '-n', "Core"])
         call(['tmux', 'send-keys', '-t', 'NetIDE' , "cd ~/apache-karaf-3.0.7/bin/", 'C-m'])
+        
+        compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
+        
         call(['tmux', 'send-keys', '-t', 'NetIDE' , "./karaf", 'C-m'])
-        time.sleep(20)
+        time.sleep(15)
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "netide:loadcomposition "+compositionPath, 'C-m'])
+        call(['tmux', 'send-keys', '-t', 'NetIDE' , "log:tail", 'C-m'])
+        #netide:loadcomposition /home/vagrant/Engine/loader/Demo/composition/composition.xml
+        #log:tail 
+        
+   
 
 class ODL(Base):
     # TODO:
