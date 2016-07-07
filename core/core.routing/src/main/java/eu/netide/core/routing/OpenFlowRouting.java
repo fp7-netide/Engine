@@ -11,6 +11,7 @@ import eu.netide.core.api.OFRoutingRequest;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
+import org.apache.felix.scr.annotations.Property;
 import org.javatuples.Pair;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
@@ -38,8 +39,11 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
     private static final Logger logger = LoggerFactory.getLogger(OpenFlowRouting.class);
 
-    private static int REQUEST_TIMEOUT = 120;
-    private static final int CLEANUP_PERIOD = 60 * 1000;
+    @Property(name = "requestPeriod", intValue = 120)
+    private int REQUEST_TIMEOUT = 120;
+
+    @Property(name = "cleanupPeriod", intValue = 60)
+    private int CLEANUP_PERIOD = 60;
 
 
     private static OFType OFSyncRequests[] = {OFType.ECHO_REQUEST, OFType.FEATURES_REQUEST,
@@ -91,7 +95,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
                 }
             }
         };
-        cleanupTimer.schedule(cleanUpTask, CLEANUP_PERIOD, CLEANUP_PERIOD);
+        cleanupTimer.schedule(cleanUpTask, CLEANUP_PERIOD*1000, CLEANUP_PERIOD*1000);
     }
 
     static class Request implements OFRoutingRequest {

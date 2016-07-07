@@ -23,7 +23,7 @@ public class ListRoutingRequests extends OsgiCommandSupport {
         IShimManager shimManager = getService(IShimManager.class);
         IOFRoutingManager routingManager = getService(IOFRoutingManager.class);
 
-        System.out.format("%8s %23s %6s %8s %10s %20s\n", "Shim xid", "Backend", "Bck xid", "#Resp", "Type", "Last message (s ago)");
+        System.out.format("%8s %23s %6s %8s %8s %-25s\n", "Shim xid", "Backend", "Bck xid", "#Resp", "LastMsg", "Type");
         long now = System.currentTimeMillis();
         Vector<? extends OFRoutingRequest> requestList = new Vector<>(routingManager.getRoutingRequestStatus());
 
@@ -34,8 +34,8 @@ public class ListRoutingRequests extends OsgiCommandSupport {
 
                                                              String lastMessage = String.format("%.2f", (now - r.getLastTimeActive()) / 1000f);
 
-                                                             System.out.format("%8d %23s %6d %8d %10s %20ss\n", r.getShimXid(), backendname,
-                                                                               r.getBackendXid(),  r.getResponses(), r.getReqTypeString(), lastMessage);
+                                                             System.out.format("%8d %23s %6d %8d %7ss %-25s\n", r.getShimXid(), backendname,
+                                                                               r.getBackendXid(),  r.getResponses(), lastMessage, r.getReqTypeString());
 
                                                          }
         );

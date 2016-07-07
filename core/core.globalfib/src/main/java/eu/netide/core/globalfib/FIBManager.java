@@ -109,7 +109,7 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
     public void handleResult(Message message) {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
-            if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD) {
+            if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD && ofMessage.getOfMessage().getVersion().getWireVersion() >= OFVersion.OF_13.getWireVersion()) {
                 globalFIB.addFlowMod(ofMessage);
             }
         }
