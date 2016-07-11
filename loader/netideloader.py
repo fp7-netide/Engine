@@ -13,28 +13,9 @@
 
  Authors:
      Gregor Best, gbe@mail.upb.de
+     Jan-Niclas Struewer, struewer@mail.upb.de
 """
 
-# TODO:
-# - [X] Read metadata
-# - [X] Collect Apps
-#   - Check parameter constraints (should always apply, but better be safe)
-# - [X] Determine App->Controller mappings
-# - [ ] For each app:
-#   - [ ] Check system requirements
-#     - [X] Hardware: CPU/RAM
-#     - [ ] Installed Software: Java version? Controller software? ...?
-
-# Package structure:
-# _apps         # Network applications
-#  \ _app1
-#  | _app2
-# _templates    # Templates for parameter and structure mapping
-#  \ _template1
-#  | _template2
-# _system_requirements.json
-# _topology_requirements.treq
-# _parameters.json
 
 import argparse
 import fcntl
@@ -99,11 +80,10 @@ def start_package(args):
     
     for c in p.controllers_for_node().items():
 
-        c[1].startNew()
+        c[1].start()
    
     time.sleep(2)
    
-    #Mininet("").start()
     
     attach("")
         
@@ -112,142 +92,10 @@ def attach(args):
     Base.attachTmux()
 
 
-#===============================================================================
-# def load_package(args):
-#     if args.mode == "appcontroller":
-#         p = Package(args.package, dataroot)
-#         if not p.applies():
-#             logging.error("There's something wrong with the package")
-#             return 2
-# 
-#         os.makedirs(dataroot, exist_ok=True)
-#         dp = os.path.join(dataroot, "controllers.json")
-# 
-#         with util.FLock(open(dp, "r"), shared=True) as f:
-#             try:
-#                 data  = json.load(f)
-#             except ValueError:
-#                 data = {}
-#             if data.get("cksum", "") != p.cksum:
-#                 logging.debug("{} != {}".format(data.get("cksum", ""), p.cksum))
-#                 logging.error("Package changed since installation. Re-run `install' with this package.")
-#                 # XXX
-#                 # return 1
-#         try:
-#             pids = p.start(data.get("controllers", {}))
-#             logging.info(pids)
-#             data["controllers"] = pids
-#             with util.FLock(open(dp, "w")) as f:
-#                 json.dump(data, f, indent=2)
-#         except Exception as err:
-#             logging.error(err)
-#             return 1
-#     else:
-#         #server install
-#         #feature:install odl-netide-rest // starts shim for odl
-#         #
-#         # TODO:
-#         # [X] Start server controller (if not already running)
-#         # [ ] Make sure NetIDE stuff is running in server controller
-#         # [X] Start NetIDE core (if not already running)
-#         # [X] Connect to application controllers:
-#         #   [X] Copy package to remote machine
-#         #   [X] Run `load' with --mode=appcontroller
-#         # [ ] Ping core about new composition
-# 
-#         with util.TempDir("netide-client-dispatch") as t:
-# 
-#             pkg = Package(args.package, t)
-#             clients = pkg.get_clients()
-# 
-#             util.write_ansible_hosts(pkg.get_clients(), os.path.join(t, "ansible-hosts"))
-# 
-#             vars = {"netide_karaf_bin":
-#                     "{{ansible_user_dir}}/karaf/apache-karaf-4.0.0/assemblies/apache-karaf/target/assembly/bin"}
-#             tasks = []
-#             tasks.append({
-#                 "name": "checking if Karaf (for NetIDE core) is running",
-#                 "shell": "bash ./client -r 2 logout",
-#                 "args": {"chdir": "{{netide_karaf_bin}}"},
-#                 "ignore_errors": True,
-#                 "register": "karaf_running"})
-#             tasks.append({
-#                 "name": "launching karaf (for NetIDE core)",
-#                 "shell": "bash ./start",
-#                 "args": {"chdir": "{{netide_karaf_bin}}"},
-#                 "when": "karaf_running.rc != 0"})
-# 
-#             ctasks = []
-#             ctasks.append({
-#                 "shell": "mktemp -d",
-#                 "register": "tmpdir"})
-#             src = os.path.join(os.getcwd(), args.package)
-#             ctasks.append({
-#                 "copy": {
-#                     "dest": "{{tmpdir.stdout}}",
-#                     "src": src}})
-# 
-#             ctasks.append({
-#                 "name": "loading package",
-#                 "shell": "nohup ./netideloader.py load --mode=appcontroller {{tmpdir.stdout}}/" + str(args.package),
-#                 "args": {"chdir": "~/netide-loader"}})
-# 
-#             playbook = [{"hosts": "localhost", "tasks": tasks, "vars": vars}, {"hosts": "clients", "tasks": ctasks}]
-#             with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
-#                 json.dump(playbook, ah, indent=2)
-#                
-#             util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-i", os.path.join(t, "ansible-hosts"), os.path.join(t, "a-playbook.yml")])
-# 
-#             # Make netip python library available. This has been installed here by installer.do_server_install()
-#             p = ["~", "Core", "libraries", "netip", "python"]
-#             sys.path.append(os.path.expanduser(os.path.join(*p)))
-#   
-#             from netip import NetIDEOps
-# 
-#             m = NetIDEOps.netIDE_encode(
-#                     NetIDEOps.NetIDE_type["NETIDE_MGMT"],
-#                     None,
-#                     None,
-#                     None,
-#                     json.dumps({"command": "update_composition", "parameters": {"composition": pkg.get_composition()}}).encode())
-# 
-#             with zmq.Context() as ctx, ctx.socket(zmq.REQ) as s:
-#                 s.connect("tcp://localhost:5555")
-#                 s.send(m)
-#     return 0
-# 
-# def list_controllers(args):
-#     if args.mode not in ["all", "appcontroller"]:
-#         logging.error("Unknown mode {}".format(args.mode))
-# 
-#     if args.mode == "appcontroller":
-#         if args.package is not None:
-#             logging.warning("Package argument only makes sense on the server controller")
-#         try:
-#             with util.FLock(open(os.path.join(dataroot, "controllers.json")), shared=True) as f:
-#                 d = { platform.node(): json.load(f) }
-#                 print(json.dumps(d, indent=2))
-#         except Exception as err:
-#             logging.error(err)
-#             return 1
-#     else:
-#         data = {}
-#         if args.package is None:
-#             logging.error("Package argument required")
-#             return 1
-#         with util.TempDir("netide-show") as t:
-#             pkg = Package(args.package, t)
-#             for c in pkg.get_clients():
-#                 ssh = util.build_ssh_commands(c)
-#                 cmd = "cd ~/netide-loader; ./netideloader.py list --mode=appcontroller"
-#                 try:
-#                     data.update(json.loads(sp.check_output(ssh + [cmd], stderr=sp.DEVNULL).strip().decode('utf-8')))
-#                 except sp.CalledProcessError as e:
-#                     logging.warning("Could not get list output from {}: {}".format(c[0], e))
-#         print(json.dumps(data, indent=2))
-#     return 0
-#===============================================================================
-
+def list_controllers(args):
+    for s in util.getWindowList():
+        print(s)
+    
 def stop_controllers(args):
     sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
@@ -255,51 +103,7 @@ def stop_controllers(args):
         call(["tmux", "kill-session", "-t", "NetIDE"], shell=False)
 
 
-#===============================================================================
-#     if args.mode not in ["all", "appcontroller"]:
-#         logging.error("Unknown stop mode {}, expected one of ['all', 'appcontroller']".format(args.mode))
-#         return 1
-# 
-#     if args.mode == "appcontroller":
-#         if args.package is not None:
-#             logging.error("Package argument is only meaningful on server controllers")
-#             return 1
-#         with util.FLock(open(os.path.join(dataroot, "controllers.json"), "r+")) as f:
-#             try:
-#                 d = json.load(f)
-#                 for c in d["controllers"]:
-#                     for pid in [p["pid"] for p in d["controllers"][c]["procs"]]:
-#                         try:
-#                             # TODO: gentler (controller specific) way of shutting down?
-#                             os.kill(pid, signal.SIGTERM)
-#                             logging.info("Sent a SIGTERM to process {} for controller {}".format(pid, c))
-#                             time.sleep(5)
-#                             os.kill(pid, signal.SIGKILL)
-#                             logging.info("Sent a SIGKILL to process {} for controller {}".format(pid, c))
-#                         except ProcessLookupError:
-#                             pass
-#                 f.seek(0)
-#                 f.truncate()
-#                 del d["controllers"]
-#                 json.dump(d, f)
-#             except KeyError:
-#                 logging.info("Nothing to stop")
-#             except Exception as err:
-#                 logging.error(err)
-#                 return 1
-#     else:
-#         if args.package is None:
-#             logging.error("Need a package to stop (for client host names, ports, ...)")
-#             return 1
-#         with util.TempDir("netide-stop") as t:
-#             pkg = Package(args.package, t)
-#             for c in pkg.get_clients():
-#                 ssh = util.build_ssh_commands(c)
-#                 logging.debug("SSH {}".format(ssh))
-# 
-#                 cmd = "cd ~/netide-loader; ./netideloader.py stop --mode=appcontroller"
-#                 util.spawn_logged(ssh + [cmd])
-#===============================================================================
+
     return 0
 
 def get_topology(args):
@@ -316,10 +120,7 @@ def install(args):
         logging.error("Unknown installation mode '{}'. Expected one of ['all', 'appcontroller']".format(args.mode))
         return 1
     if args.mode == "all":
-        # TODO:
-        # [ ] Prepare server controller
-        #     [ ] Run self with arguments ['install-servercontroller', args.package]
-        # [ ] Prepare application controllers
+
         try:
             installer.do_server_install(args.package)
         except installer.InstallException as e:
@@ -361,11 +162,11 @@ if __name__ == "__main__":
     #parser_load.add_argument("--mode", type=str, help="Loading mode, one of {appcontroller,all}")
     #parser_load.set_defaults(func=load_package, mode="all")
 
-    #parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
-    #parser_list.add_argument("--mode", type=str, help="List mode, one of {appcontroller,all}", default="all")
-    #parser_list.add_argument("package",
+    parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
+   # parser_list.add_argument("--mode", type=str, help="List mode, one of {appcontroller,all}", default="all")
+   # parser_list.add_argument("package",
     #    type=str, nargs="?", help="Package to list controllers of (only on server controller")
-    #parser_list.set_defaults(func=list_controllers)
+    parser_list.set_defaults(func=list_controllers)
 
     parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
    # parser_stop.add_argument("package", type=str, nargs="?", help="Package to stop (only on server controllers)")

@@ -7,6 +7,7 @@ import tarfile
 import yaml
 
 import subprocess as sp
+from subprocess import check_output, PIPE
 from functools import reduce
 
 
@@ -14,7 +15,30 @@ dataroot = "/tmp/netide"
 extractPath = os.path.join(dataroot, "extractPath.txt")
 
 
-def extractPackage(path):
+def getWindowList():
+    windowList = ""
+    try:
+        windowList = sp.check_output(['tmux', 'list-windows'])
+    except sp.CalledProcessError:
+        print("No active Session found.")
+        return 1
+    
+    windowList = windowList.decode("utf-8") 
+    
+    splitted = []
+    for s in windowList.split(":"):
+        splitted.append(s.split("("))
+    
+    name = []
+    for s in splitted:
+        name.append(s[0].replace("-", "").replace("*", "").lstrip().rstrip())
+    
+    del(name[0])
+    
+    
+    return name
+        
+def extractPackage(path):   
     os.makedirs(dataroot, exist_ok=True)
     
     if os.path.exists(extractPath):

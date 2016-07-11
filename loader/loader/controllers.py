@@ -78,10 +78,12 @@ class RyuShim(Base):
             time.sleep(1)
         
         cmd = util.tmux_line(ryuCommands)
-        
-        call(['tmux', 'new-window', '-n', "RyuShim"])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py', 'C-m'])
-        
+        list = util.getWindowList()
+        if "RyuShim" not in list:
+            call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py'])
+        #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py', 'C-m'])
+        else:
+            print("Ryu Shim already running")
         
         
     
@@ -102,7 +104,8 @@ class Ryu(Base):
         except FileNotFoundError:
             return None
     
-    def startNew(self):
+                
+    def start(self):
         base = ["ryu-manager"]
         
         y = yaml.load(open("commands.yml"))
@@ -129,94 +132,18 @@ class Ryu(Base):
             appPath = os.path.join(a.path, a.entrypoint)
 
             #check with list window if exists
-            #windowNames = self.getWindowList()
+            windowNames = util.getWindowList()
             
-            call(['tmux', 'new-window', '-n', a.appName])
-            call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
-
+            if a.appName not in windowNames:
+                call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=' + str(a.appPort), os.path.join(a.path, a.entrypoint)])
+                #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
+            else:
+                print("app " + a.appName + " already running")
 
             if "sleepafter" in ryuCommands:
                 time.sleep(ryuCommands["sleepafter"])
         
-        
 
-    def getWindowList(self):
-        windowList = call(['tmux', 'list-windows'])
-        print("window")
-        print(windowList)
-        
-
-                
-    
-    def start(self):
-        
-        pass
-#===============================================================================
-#         base = [ "ryu-manager" ]
-#         rv = []
-#         appidx = 0
-# 
-#         try:
-#             with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
-#                 data = json.load(fh)
-#         except Exception as err:
-#             logging.debug("{}: {}".format(type(err), err))
-#             data = {}
-#         logging.debug("{}".format(data))
-#         running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
-# 
-#         for a in self.applications:
-#             if not a.enabled:
-#                 logging.info("Skipping disabled application {}".format(a))
-#                 continue
-#             if str(a) in running_apps:
-#                 logging.info("App {} already running".format(a))
-#                 continue
-# 
-#             appidx += 1
-# 
-#             cmdline = base.copy()
-#             cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
-#             cmdline.append(os.path.expanduser("~/netide/Engine/ryu-backend/backend.py"))
-#             
-#             #String.format("ryu-manager --ofp-tcp-listen-port=%d ~/netide/apps/%s", port,
-#             #    getAppPath.removeFirstSegments(1))
-#             
-#             p = a.metadata.get("param", "")
-#             args = []
-#             def f(x):
-#                 pt = os.path.join(a.path, x)
-#                 if os.path.exists(pt):
-#                     return pt
-#                 return x
-#             if isinstance(p, list):
-#                 args.extend(map(f, p))
-#             else:
-#                 args.append(f(p))
-# 
-#             cmdline.extend(args)
-# 
-#             logging.debug('Launching "{}" now'.format(cmdline))
-#             env = os.environ.copy()
-#             ppath = [os.path.abspath(os.path.relpath(a.path))]
-#             if "PYTHONPATH" in env:
-#                 ppath.append(env["PYTHONPATH"])
-#             env["PYTHONPATH"] = ":".join(ppath)
-#             logging.debug(env["PYTHONPATH"])
-# 
-#             myid = str(uuid.uuid4())
-#             logdir = self.makelogdir(myid)
-# 
-#             serr = open(os.path.join(logdir, "stderr"), "w")
-#             sout = open(os.path.join(logdir, "stdout"), "w")
-# 
-#             rv.append({
-#                 "id": myid,
-#                 "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid,
-#                 "app": str(a)})
-# 
-#         return rv
-#===============================================================================
 
 class FloodLight(Base):
     @classmethod
@@ -288,42 +215,42 @@ class Core(Base):
         if [ sessionExists != 0 ]:        
             call(["tmux", "new-session", "-d", "-s", "NetIDE"])
             time.sleep(1)
+        list = util.getWindowList()
+        
+        if "Core" not in list:   
+
+            call(['tmux', 'new-window', '-n', "Core", '-t', 'NetIDE', "bash -c \'cd ~/apache-karaf-3.0.7/bin/ && ./karaf\'"])
+     
+            compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
+        
+    
+            time.sleep(20)
+            call(['tmux', 'send-keys', '-t', 'NetIDE' , "netide:loadcomposition "+compositionPath, 'C-m'])
+            #call(['tmux', 'send-keys', '-t', 'NetIDE' , "log:tail", 'C-m'])
             
-        call(['tmux', 'new-window', '-n', "Core"])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "cd ~/apache-karaf-3.0.7/bin/", 'C-m'])
-        
-        compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
-        
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "./karaf", 'C-m'])
-        time.sleep(15)
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "netide:loadcomposition "+compositionPath, 'C-m'])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "log:tail", 'C-m'])
-        #netide:loadcomposition /home/vagrant/Engine/loader/Demo/composition/composition.xml
-        #log:tail 
+        else:
+            print("Core already running")
         
    
 
 class ODL(Base):
-    # TODO:
-    # - determine canonical path to karaf
-    #   - require path specification
-    # - check version/state of karaf/bundles/features
-    # - install missing bundles/features?
-    #   - should be done automatically when installing/starting application bundle
-    # - start controller if not already done
-    # - install/start app bundle
+
     def start(self):
         
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
         if [ sessionExists != 0 ]:        
             call(["tmux", "new-session", "-d", "-s", "NetIDE"])
-            time.sleep(1)
+        
+        list = util.getWindowList()
+        
+        if "ODL" not in list:
+ 
+            call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf'])
             
-        call(['tmux', 'new-window', '-n', "ODL"])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf", 'C-m'])
-        time.sleep(10)
-
+            time.sleep(10)
+        else:
+            print("ODL already running")
 class Mininet(Base):
     def start(self):
         
@@ -332,10 +259,15 @@ class Mininet(Base):
         if [ sessionExists != 0 ]:        
             call(["tmux", "new-session", "-d", "-s", "NetIDE"])
             time.sleep(1)
+        
+        list = util.getWindowList()
             
-        call(['tmux', 'new-window', '-n', "Mininet"])
-        call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py", 'C-m'])
-        time.sleep(10) 
+        if Mininet not in list:    
+            call(['tmux', 'new-window', '-n', "Mininet", '-t', 'NetIDE', "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py"])
+            #call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py", 'C-m'])
+            time.sleep(10)
+        else:
+            print("Mininet already running") 
             
 
 class POX(Base):

@@ -37,7 +37,7 @@ class Package(object):
     def __init__(self, prefix, dataroot):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
-        
+        print(self.path)
         if os.path.isfile(self.path):
             if (tarfile.is_tarfile(self.path)):
            
@@ -52,9 +52,6 @@ class Package(object):
         
         with open(p) as f:
             self.config = json.load(f)
-           #     self.appNames = self.config.keys()
-            #    for key in self.appNames:
-             #        print(key)
 
 
                 
@@ -65,9 +62,9 @@ class Package(object):
         for d in os.listdir(p):
             if not d.startswith('.'):
                 nodes = []
-                #print(self.config.get("clients", {}).items())
+
                 self.appNames.append(d)
-                #nodes.append(d)  
+
                 for node, v in self.config.get("clients", {}).items():
                     nodes.append(node)
                     
@@ -77,7 +74,7 @@ class Package(object):
                 #returns controller
                 ctrl = Application.get_controller(app)
                 self.controllerNames.append(ctrl.getControllerName())
-                #print(ctrl.getControllerName())
+ 
 
                 for n in nodes:
                     if n not in self.controllers:
