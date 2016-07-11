@@ -59,9 +59,8 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
         log.info("FIBManager received message from shim: " + message.getHeader().toString());
 
         List<Message> backendResults = compositionManager.processShimMessage(message, originId);
-        for (Message result: backendResults) {
-            handleResult(result);
-        }
+        if (backendResults!=null)
+            backendResults.forEach(this::handleResult);
 
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
@@ -91,17 +90,26 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
                 ofParseError.printStackTrace();
             }
         }
-        return MessageHandlingResult.RESULT_PASS;
+        if (backendResults == null)
+            return MessageHandlingResult.RESULT_PASS;
+        else
+            return MessageHandlingResult.RESULT_PROCESSED;
     }
 
     @Override
     public void OnOutgoingShimMessage(Message message) {
     }
 
+    @Override
+    public void OnUnhandeldShimMessage(Message message, String originId) {
+        compositionManager.processUnhandledShimMessage(message, originId);
+
+    }
+
     public void handleResult(Message message) {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
-            if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD) {
+            if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD && ofMessage.getOfMessage().getVersion().getWireVersion() >= OFVersion.OF_13.getWireVersion()) {
                 globalFIB.addFlowMod(ofMessage);
             }
         }

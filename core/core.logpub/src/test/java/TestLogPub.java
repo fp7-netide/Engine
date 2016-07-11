@@ -10,9 +10,16 @@ import org.zeromq.ZMsg;
  */
 public class TestLogPub {
 
-    @Test
+    @Test(timeOut = 10000)
     public void TestStartAndShutdown() {
+
+        // Different ports to avoid conflicts with running instance
+        int testSubPort =63234;
+        int testPubPort =63235;
+
         LogPub l = new LogPub();
+        l.setSubPort(testSubPort);
+        l.setPubPort(testPubPort);
         l.Start();
         ZMQ.Context context = ZMQ.context(1);
         try {
@@ -40,7 +47,7 @@ public class TestLogPub {
     		zmq_message.add("Profiler");
     		zmq_message.add(m.toByteRepresentation());
     		ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
-    		sendSocket.connect("tcp://127.0.0.1:5558");
+    		sendSocket.connect("tcp://127.0.0.1:" + testSubPort);
     		zmq_message.send(sendSocket);
     		Thread.sleep(500);
     		sendSocket.close();

@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 /**
  * Class representing a NetIP header.
  */
-public class MessageHeader {
+public class MessageHeader implements Cloneable {
 
     /**
      * The length of a header in bytes.
@@ -22,6 +22,8 @@ public class MessageHeader {
     public MessageHeader() {
         this.netIDEProtocolVersion = NetIDEProtocolVersion.VERSION_1_3;
     }
+
+
 
     /**
      * Gets net iDE protocol version.

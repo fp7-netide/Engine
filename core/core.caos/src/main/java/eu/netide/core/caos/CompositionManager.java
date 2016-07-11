@@ -113,6 +113,7 @@ public class CompositionManager implements ICompositionManager {
         });
     }
 
+    @Override
     public List<Message> processShimMessage(Message message, String originId) {
         logger.info("CompositionManager received message from shim: " + message.toString());
         try {
@@ -148,34 +149,7 @@ public class CompositionManager implements ICompositionManager {
                 logger.error("Could not handle incoming message due to configuration error {}: {}", compositionNotReadyReason, message);
             }
         } catch (UnsupportedOperationException e) {
-            if (bypassUnsupportedMessages) {
-                boolean warn=true;
-                if (message instanceof OpenFlowMessage) {
-                    OFMessage openFlowMessage = ((OpenFlowMessage) message).getOfMessage();
-                    if (openFlowMessage instanceof OFEchoRequest ||
-                            openFlowMessage instanceof OFEchoReply)
-                        warn = false;
-                    else if (openFlowMessage instanceof OFFeaturesReply ||
-                            openFlowMessage instanceof OFFeaturesRequest)
-                        warn =false;
-                }
-
-                if (warn)
-                    logger.warn("Received unsupported message for composition, attempting to relay instead.", e);
-
-                try {
-                    if (message.getHeader().getModuleId() == 0) {
-                        logger.info("Message ID is 0 relaying to ALL backends");
-                        backendManager.sendMessageAllBackends(message);
-                    } else {
-                        backendManager.sendMessage(message);
-                    }
-                } catch (Throwable ex) {
-                    logger.error("Could not relay unsupported message.", ex);
-                }
-            } else {
-                logger.error("Received unsupported message for composition, bypass is not activated.", e);
-            }
+            return  null;
         } catch (Throwable e) {
             logger.error("An exception occurred while handling shim message.", e);
         } finally {
@@ -184,6 +158,37 @@ public class CompositionManager implements ICompositionManager {
         return null;
     }
 
+    @Override
+    public void processUnhandledShimMessage(Message message, String originId){
+        if (bypassUnsupportedMessages) {
+            boolean warn=true;
+            if (message instanceof OpenFlowMessage) {
+                OFMessage openFlowMessage = ((OpenFlowMessage) message).getOfMessage();
+                if (openFlowMessage instanceof OFEchoRequest ||
+                        openFlowMessage instanceof OFEchoReply)
+                    warn = false;
+                else if (openFlowMessage instanceof OFFeaturesReply ||
+                        openFlowMessage instanceof OFFeaturesRequest)
+                    warn =false;
+            }
+
+            if (warn)
+                logger.warn("Received unsupported message {} for composition from {}, attempting to relay instead.", message, originId);
+
+            try {
+                if (message.getHeader().getModuleId() == 0) {
+                    logger.info("Message ID is 0 relaying to ALL backends");
+                    backendManager.sendMessageAllBackends(message);
+                } else {
+                    backendManager.sendMessage(message);
+                }
+            } catch (Throwable ex) {
+                logger.error("Could not relay unsupported message.", ex);
+            }
+        } else {
+            logger.error("Received unsupported message {} from {} for composition, bypass is not activated.", message, originId);
+        }
+    }
     /**
      * Sets the shim manager.
      *

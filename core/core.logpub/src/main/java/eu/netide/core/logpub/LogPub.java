@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
 
 import eu.netide.core.api.IBackendManager;
@@ -69,12 +70,22 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void run() {
 		log.info("LogPub started.");
 		ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
+		try{
 		pubSocket.bind("tcp://*:" + (pubPort==0?DEFAULT_PUB_PORT:pubPort));
+		}catch(ZMQException e){
+			log.error("PUB address already in use!");
+			Stop();
+		}
 		log.info("Listening PUB queue on port " + (pubPort==0?DEFAULT_PUB_PORT:pubPort));
 
 		ZMQ.Socket subSocket = context.socket(ZMQ.ROUTER);
 		subSocket.setIdentity("logpub".getBytes(ZMQ.CHARSET));
+		try{
 		subSocket.bind("tcp://*:" + (subPort==0?DEFAULT_SUB_PORT:subPort));
+		}catch(ZMQException e){
+			log.error("PUB address already in use!");
+			Stop();
+		}
 		log.info("Listening SUB queue on port " + (subPort==0?DEFAULT_SUB_PORT:subPort));
 
 		ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
@@ -176,9 +187,19 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	}
 
 	@Override
+	public void OnUnhandledBackendMessage(Message message, String originId) {
+
+	}
+
+	@Override
 	public void OnOutgoingShimMessage(Message message) {
 		log.debug("Received message to shim");
 		OnShimAndBackendMessage(message, "3", Constants.SHIM);
+	}
+
+	@Override
+	public void OnUnhandeldShimMessage(Message message, String originId) {
+
 	}
 
 	private void OnShimAndBackendMessage(Message message, String origin, String originId){

@@ -5,5 +5,5 @@ package eu.netide.core.api;
  */
 public enum MessageHandlingResult {
     RESULT_PROCESSED, //! Message was handle
-    RESULT_PASS, //! Module ignores the message
+    RESULT_PASS, ret, //! Module ignores the message
 }
