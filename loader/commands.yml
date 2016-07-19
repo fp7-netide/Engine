@@ -22,3 +22,13 @@ ryu_shim:
      PYTHONPATH: PYTHONPATH:$HOME/netide/Engine/ryu-shim
   commands:
     - ryu-manager
+
+
+core: 
+  sleepafter: 10
+  
+odl:
+  sleepafter: 10
+  
+mininet: 
+  sleepafter: 5

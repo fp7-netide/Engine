@@ -89,6 +89,7 @@ def start_package(args):
         
 
 def attach(args):
+
     Base.attachTmux()
 
 
@@ -135,6 +136,11 @@ def install(args):
 
     return 0
 
+def generate(args):
+
+    p = Package(args.package, dataroot)
+    p.generateHandlebar()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
@@ -146,8 +152,11 @@ if __name__ == "__main__":
     parser_startTest = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
     parser_startTest.add_argument("package", type=str, help="Package to load")
     parser_startTest.add_argument("--server", type=str, help="Choose one of {ODL, shim}")
-
     parser_startTest.set_defaults(func=start_package, mode="all")
+    
+    parser_createHandlebars = subparsers.add_parser("generate", description="Generates the .params files for the applications.")
+    parser_createHandlebars.add_argument("package", type=str, help="Package to use")
+    parser_createHandlebars.set_defaults(func=generate, mode="all")
     
     parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")
     parser_extract.add_argument("path", type=str, help="Path to archive")

@@ -57,19 +57,26 @@ class Package(object):
                 
         logging.debug("Loading applications for host {}".format(platform.node()))
         p = os.path.join(self.path, "apps")
-        print(p)
+
         self.appNames = []
         for d in os.listdir(p):
             if not d.startswith('.'):
                 nodes = []
 
                 self.appNames.append(d)
+                app = os.path.join(p, d)
+                
+                appParamPath = os.path.join(app, d + '.params')
+
+                if not os.path.isfile(appParamPath):
+                    raise FileNotFoundError('Param file not found. Please use generate method first.')
+                    
 
                 for node, v in self.config.get("clients", {}).items():
                     nodes.append(node)
                     
                 logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
-                app = os.path.join(p, d)
+
                 
                 #returns controller
                 ctrl = Application.get_controller(app)
@@ -179,3 +186,11 @@ class Package(object):
                 clients.append(entry)
 
         return clients
+    
+    def generateHandlebar(self):
+
+        for name in self.appNames:
+            content = util.compileHandlebar(self.path, name)
+            print(content)
+            
+            #TODO: generate file

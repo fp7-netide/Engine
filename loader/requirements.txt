@@ -1,3 +1,4 @@
 requests
 pyzmq
 pyyaml
+pybars3

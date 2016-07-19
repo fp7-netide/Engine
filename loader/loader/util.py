@@ -5,11 +5,13 @@ import shutil
 import tempfile
 import tarfile
 import yaml
+import pybars
+import json
 
 import subprocess as sp
 from subprocess import check_output, PIPE
 from functools import reduce
-
+from pybars import Compiler
 
 dataroot = "/tmp/netide"
 extractPath = os.path.join(dataroot, "extractPath.txt")
@@ -64,6 +66,25 @@ def setExtractionPath(path):
         f.write(args.path)
     return 0
 
+def compileHandlebar(path, appName):
+    compiler = Compiler()
+
+    source = ""
+    templatePath = os.path.join(path, "templates/" + appName + "/src/config.py.hbs")
+
+    with open(templatePath, 'r') as myfile:
+        data=myfile.read()
+        template = compiler.compile(data)
+        
+    parameterPath = os.path.join(path, "parameters.json")
+   
+    with open(parameterPath, 'r') as parameterJson:
+        content = json.load(parameterJson)
+        appContent = content[appName]
+    
+    output = template(appContent)
+    print(output)
+    return output
 
 class Chdir(object):
     "Context manager for switching to a directory, doing something and switching back"
