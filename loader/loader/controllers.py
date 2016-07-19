@@ -152,57 +152,66 @@ class FloodLight(Base):
     
     @classmethod
     def version(cls):
-        v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
-        return v.decode("utf-8").split("-")[0].strip()
-
+        pass
+    
     def start(self):
-        # XXX: application modules are not copied into floodlight right now, they need to be copied manually
-        try:
-            with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
-                data = json.load(fh)
-        except Exception as err:
-            logging.debug("{}: {}".format(type(err), err))
-            data = {}
-        running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
-
-        for a in self.applications:
-            if not a.enabled:
-                logging.info("Skipping disabled application {}".format(a))
-                continue
-            if a in running_apps:
-                logging.info("App {} is already running".format(a))
-                continue
-
-            prefix = os.path.expanduser("~/floodlight/src/main/resources")
-
-            with open(os.path.join(prefix, "META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule"), "r+") as fh:
-                fh.write("{}\n".format(a.metadata.get("param", "")))
-
-            with open(os.path.join(prefix, "floodlightdefault.properties"), "r+") as fh:
-                lines = fh.readlines()
-                idx = 0
-                for l in lines:
-                    if not l.strip().endswith('\\'):
-                        break
-                    idx += 1
-                lines.insert(idx, "{}\n".format(a.metadata.get("param", "")))
-                fh.seek(0)
-                fh.truncate()
-                fh.writelines(lines)
-
-        myid = str(uuid.uuid4())
-        logdir = self.makelogdir(myid)
-
-        serr = open(os.path.join(logdir, "stderr"), "w")
-        sout = open(os.path.join(logdir, "stdout"), "w")
-
-        # Rebuild floodlight with ant
-        cmdline = ["cd ~/floodlight; ant"]
-        subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).wait() # TODO: check exit value?
-
-        # Start floodlight
-        cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
-        return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
+        pass
+    
+#===============================================================================
+#     @classmethod
+#     def version(cls):
+#         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
+#         return v.decode("utf-8").split("-")[0].strip()
+# 
+#     def start(self):
+#         # XXX: application modules are not copied into floodlight right now, they need to be copied manually
+#         try:
+#             with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
+#                 data = json.load(fh)
+#         except Exception as err:
+#             logging.debug("{}: {}".format(type(err), err))
+#             data = {}
+#         running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+# 
+#         for a in self.applications:
+#             if not a.enabled:
+#                 logging.info("Skipping disabled application {}".format(a))
+#                 continue
+#             if a in running_apps:
+#                 logging.info("App {} is already running".format(a))
+#                 continue
+# 
+#             prefix = os.path.expanduser("~/floodlight/src/main/resources")
+# 
+#             with open(os.path.join(prefix, "META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule"), "r+") as fh:
+#                 fh.write("{}\n".format(a.metadata.get("param", "")))
+# 
+#             with open(os.path.join(prefix, "floodlightdefault.properties"), "r+") as fh:
+#                 lines = fh.readlines()
+#                 idx = 0
+#                 for l in lines:
+#                     if not l.strip().endswith('\\'):
+#                         break
+#                     idx += 1
+#                 lines.insert(idx, "{}\n".format(a.metadata.get("param", "")))
+#                 fh.seek(0)
+#                 fh.truncate()
+#                 fh.writelines(lines)
+# 
+#         myid = str(uuid.uuid4())
+#         logdir = self.makelogdir(myid)
+# 
+#         serr = open(os.path.join(logdir, "stderr"), "w")
+#         sout = open(os.path.join(logdir, "stdout"), "w")
+# 
+#         # Rebuild floodlight with ant
+#         cmdline = ["cd ~/floodlight; ant"]
+#         subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).wait() # TODO: check exit value?
+# 
+#         # Start floodlight
+#         cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
+#         return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
+#===============================================================================
 
 class Core(Base):
     packagePath = ""
@@ -210,6 +219,10 @@ class Core(Base):
         self.packagePath = path
         
     def start(self):
+        
+        y = yaml.load(open("commands.yml"))
+        coreCommands = y['core']
+        
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
         if [ sessionExists != 0 ]:        
@@ -224,7 +237,8 @@ class Core(Base):
             compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
         
     
-            time.sleep(20)
+            time.sleep(coreCommands['sleepafter'])
+            
             call(['tmux', 'send-keys', '-t', 'NetIDE' , "netide:loadcomposition "+compositionPath, 'C-m'])
             #call(['tmux', 'send-keys', '-t', 'NetIDE' , "log:tail", 'C-m'])
             
@@ -237,6 +251,9 @@ class ODL(Base):
 
     def start(self):
         
+        y = yaml.load(open("commands.yml"))
+        odlCommands = y['odl']
+        
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
         if [ sessionExists != 0 ]:        
@@ -248,12 +265,15 @@ class ODL(Base):
  
             call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf'])
             
-            time.sleep(10)
+            time.sleep(odlCommands['sleepafter'])
         else:
             print("ODL already running")
+            
 class Mininet(Base):
     def start(self):
         
+        y = yaml.load(open("commands.yml"))
+        mininetCommands = y['mininet']
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
         
         if [ sessionExists != 0 ]:        
@@ -265,7 +285,7 @@ class Mininet(Base):
         if Mininet not in list:    
             call(['tmux', 'new-window', '-n', "Mininet", '-t', 'NetIDE', "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py"])
             #call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py", 'C-m'])
-            time.sleep(10)
+            time.sleep(mininetCommands['sleepafter'])
         else:
             print("Mininet already running") 
             
