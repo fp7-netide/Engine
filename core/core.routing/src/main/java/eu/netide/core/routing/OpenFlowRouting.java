@@ -8,23 +8,22 @@ import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.api.MessageHandlingResult;
 import eu.netide.core.api.OFRoutingRequest;
+import eu.netide.core.api.RoutingRequestCallback;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
-import org.apache.felix.scr.annotations.Property;
-import org.javatuples.Pair;
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
+import org.javatuples.Pair;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -99,6 +98,8 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
     }
 
     static class Request implements OFRoutingRequest {
+
+
         @Override
         public long getBackendXid() {
             return backendXid;
@@ -132,6 +133,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
         final long backendXid;
         final long shimXid;
+        private final RoutingRequestCallback callback;
         final String backendID;
         final OFType reqType;
 
@@ -139,8 +141,9 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
         int responses = 0;
         static long lastUsedShimXid = Constants.FIRST_SHIM_XID;
 
-        Request(String originId, long backendXid, OFType type) {
+        Request(String originId, RoutingRequestCallback callback, long backendXid, OFType type) {
             this.backendXid = backendXid;
+            this.callback = callback;
             backendID = originId;
             lastTimeActive = System.currentTimeMillis();
             shimXid = getNewShimXid();
@@ -170,9 +173,11 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
     }
 
     @Override
-    public void sendRequest(OpenFlowMessage m, String moduleId) {
-        handleRequest(m.getOfMessage(), m, moduleId);
+    public void sendRequest(OpenFlowMessage m, String moduleId, RoutingRequestCallback callback) {
+        handleRequest(m.getOfMessage(), m, moduleId, callback);
+
     }
+
 
     @Override
     public MessageHandlingResult OnShimMessage(Message message, String originId) {
@@ -208,7 +213,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
             for (OFType type : OFSyncRequests)
                 if (openFlowMessage.getType() == type) {
-                    handleRequest(openFlowMessage, message, originId);
+                    handleRequest(openFlowMessage, message, originId, null);
                     return MessageHandlingResult.RESULT_PROCESSED;
                 }
 
@@ -217,8 +222,8 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
     }
 
 
-    private void handleRequest(OFMessage openFlowMessage, Message message, String originId) {
-        Request request = getOrAddBackendRequest(openFlowMessage.getXid(), originId, openFlowMessage.getType());
+    private void handleRequest(OFMessage openFlowMessage, Message message, String originId, RoutingRequestCallback callback) {
+        Request request = getOrAddBackendRequest(openFlowMessage.getXid(), originId, callback, openFlowMessage.getType());
         OFMessage.Builder b = openFlowMessage.createBuilder();
         b.setXid(request.shimXid);
 
@@ -233,11 +238,11 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
 
     }
 
-    private Request getOrAddBackendRequest(long xid, String originId, OFType type) {
+    private Request getOrAddBackendRequest(long xid, String originId, RoutingRequestCallback callback, OFType type) {
         Pair<Long, String> key = Pair.with(xid, originId);
 
         if (!backendXidToRequest.containsKey(key)) {
-            Request req = new Request(originId, xid, type);
+            Request req = new Request(originId, callback, xid, type);
             backendXidToRequest.put(key, req);
             shimXidToRequest.put(req.shimXid, req);
         }
@@ -257,8 +262,13 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
             b.setXid(req.backendXid);
             message.setOfMessage(b.build());
             req.countResponse();
-            message.getHeader().setModuleId(backendManager.getModuleId(req.backendID));
-            backendManager.sendMessage(message);
+            if (req.backendID != null) {
+                message.getHeader().setModuleId(backendManager.getModuleId(req.backendID));
+                backendManager.sendMessage(message);
+            }
+            if (req.callback !=null ) {
+                req.callback.onResponseReceived(message);
+            }
         }
     }
 
