@@ -147,25 +147,23 @@ then
 #Start Mininet topology
 elif [ "$1" == "-m" ]
 then
-	echo "---- Mininet:" $2:$3"(protocol)":$4"(port) ----"
 	if [ "$2" == "netide-topo" ] || [ "$2" == "netide" ] || [ -z "$2" ]
 	then
+                if [ -z "$3" ]
+                then
+                        OF_VERSION=OpenFlow10 #default OpenFlow Version for Mininet
+                else
+                        OF_VERSION=$3
+                fi
 		if [ -z "$4" ]
 		then
 			PORT=6633 #default port for Mininet
 		else
 			PORT=$4
 		fi
+	        echo "--- Mininet $2 => Protocol: $OF_VERSION , Port: $PORT ---"
 		cd ryu-backend/tests
-		if [ "$3" == "of10" ] || [ -z "$3" ]
-		then
-			sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=$PORT
-		elif [ "$3" == "of13" ]
-		then
-			sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=$PORT --switch ovsk,protocols=OpenFlow13
-		else
-			echo "Error! Not such option" $3 "available... <choose type (of10,of13,etc.)>"
-		fi
+		sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=$PORT --switch ovsk,protocols=$OF_VERSION
 	else
 		echo "Error! Mininet test" $2 "not available... <choose type (netide-topo)>"
 	fi
