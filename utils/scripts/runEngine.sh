@@ -117,7 +117,7 @@ then
 		cd $NetIDE_DIR/apache-karaf-*
 		bin/start clean
 		echo -e "\nStarting Karaf..."
-		sleep 10
+		sleep 15
 		bin/client feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features
 		bin/client feature:install core
 		bin/client netide:loadcomposition DpidPartitionABCW.xml
