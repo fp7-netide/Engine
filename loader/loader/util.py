@@ -7,11 +7,13 @@ import tarfile
 import yaml
 import pybars
 import json
+import io
 
 import subprocess as sp
 from subprocess import check_output, PIPE
 from functools import reduce
 from pybars import Compiler
+
 
 dataroot = "/tmp/netide"
 extractPath = os.path.join(dataroot, "extractPath.txt")
@@ -83,8 +85,9 @@ def compileHandlebar(path, appName):
         appContent = content[appName]
     
     output = template(appContent)
-    print(output)
-    return output
+
+    return output.lower()
+
 
 class Chdir(object):
     "Context manager for switching to a directory, doing something and switching back"
@@ -212,7 +215,23 @@ def editPlaybookServer(conf):
     with open("Playbook_Setup/siteServer.yml", "w") as f:
         yaml.dump(currentContent, f, default_flow_style=False)
 
+def stripFileContent(path):
+        with open(path, 'r') as f:
 
+            s = io.StringIO()
+
+            st = reduce(lambda x, y: x + y, f)
+            f.seek(0)
+
+            enclosed = st.lstrip()[0] == "{"
+
+            if not enclosed: s.write("{")
+            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
+            if not enclosed: s.write("}")
+            
+            s.seek(0)   
+             
+            return s
 
 def tmux_line(c):
 

@@ -26,6 +26,7 @@ from yaml import load
 from loader import controllers
 from loader import environment
 from functools import reduce
+from loader import util
 
 class Application(object):
     metadata = {}
@@ -47,27 +48,12 @@ class Application(object):
     def loadSysreq(self, path):
         sysreqPath = os.path.basename(path) + ".sysreq"
        
-    
-        with open(os.path.join(path, sysreqPath)) as f:
             
-            s = io.StringIO()
-
-            st = reduce(lambda x, y: x + y, f)
-            f.seek(0)
-
-            enclosed = st.lstrip()[0] == "{"
-
-            if not enclosed: s.write("{")
-            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
-            if not enclosed: s.write("}")
+        y = load(util.stripFileContent(os.path.join(path, sysreqPath)))
             
-            s.seek(0)
-            
-            y = load(s)
-            
-            self.entrypoint = y.get("app").get("controller").get("entrypoint")
-            self.appName = y.get("app").get("name")
-            self.appPort = y.get("app").get("controller").get("port")   
+        self.entrypoint = y.get("app").get("controller").get("entrypoint")
+        self.appName = y.get("app").get("name")
+        self.appPort = y.get("app").get("controller").get("port")   
 
 
     def valid_requirements(self):

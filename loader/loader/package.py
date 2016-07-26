@@ -23,6 +23,8 @@ import tempfile
 import hashlib
 import tarfile
 
+import yaml
+
 from loader import controllers
 from loader import util
 from loader.application import Application
@@ -191,6 +193,36 @@ class Package(object):
 
         for name in self.appNames:
             content = util.compileHandlebar(self.path, name)
-            print(content)
+            self.generateParam(content, name)
+
+    def generateParam(self, content, appName):
+    
+
+        #gets dictionary from handlebars generated file
+        dict = {}
+        for line in content.split("\n"):
+            key, value = line.split("=")
+            key = key.rstrip()
+            value = value.rstrip()
+            dict [key] = value
+        
+        
             
-            #TODO: generate file
+        appPath = os.path.join(self.path, 'apps/' + appName + '/' + appName + '.params')            
+            
+        contentFile = yaml.load(util.stripFileContent(appPath))
+
+        for key, value in dict.items():
+            if key in contentFile['parameters']:
+                contentFileValue = contentFile['parameters'][key]
+                #get type of value
+                type = contentFileValue.split("=")[0]
+                result = type + " =" + value
+                result = result.replace("  ", " ")
+                contentFile['parameters'][key] = result
+        
+        with open(appPath, 'w') as paramFile:
+            json.dump(contentFile, paramFile, indent=2)
+        
+        
+        
