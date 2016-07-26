@@ -68,7 +68,8 @@ def setExtractionPath(path):
         f.write(args.path)
     return 0
 
-def compileHandlebar(path, appName):
+    
+def compileHandlebar(path, appName, paramPath=""):
     compiler = Compiler()
 
     source = ""
@@ -78,9 +79,12 @@ def compileHandlebar(path, appName):
         data=myfile.read()
         template = compiler.compile(data)
         
-    parameterPath = os.path.join(path, "parameters.json")
-   
-    with open(parameterPath, 'r') as parameterJson:
+    if paramPath == "": 
+       paramPath = os.path.join(path, "parameters.json")
+    
+    print(paramPath)
+    
+    with open(paramPath, 'r') as parameterJson:
         content = json.load(parameterJson)
         appContent = content[appName]
     

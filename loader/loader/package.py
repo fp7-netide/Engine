@@ -36,7 +36,7 @@ class Package(object):
     controllerNames = []
     controllerAppPath = {}
 
-    def __init__(self, prefix, dataroot):
+    def __init__(self, prefix, dataroot, paramPath=""):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         print(self.path)
@@ -72,6 +72,9 @@ class Package(object):
 
                 if not os.path.isfile(appParamPath):
                     raise FileNotFoundError('Param file not found. Please use generate method first.')
+                
+                content = util.compileHandlebar(self.path, d, paramPath)
+                self.generateParamFile(content, d)
                     
 
                 for node, v in self.config.get("clients", {}).items():
@@ -188,14 +191,16 @@ class Package(object):
                 clients.append(entry)
 
         return clients
-    
-    def generateHandlebar(self):
+
+                
+    def generateParam(self, paramPath=""):
 
         for name in self.appNames:
-            content = util.compileHandlebar(self.path, name)
-            self.generateParam(content, name)
+            
+            content = util.compileHandlebar(self.path, name, paramPath)
+            self.generateParamFile(content, name)
 
-    def generateParam(self, content, appName):
+    def generateParamFile(self, content, appName):
     
 
         #gets dictionary from handlebars generated file
@@ -222,6 +227,7 @@ class Package(object):
                 contentFile['parameters'][key] = result
         
         with open(appPath, 'w') as paramFile:
+            
             json.dump(contentFile, paramFile, indent=2)
         
         

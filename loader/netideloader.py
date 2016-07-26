@@ -65,10 +65,17 @@ def set_extraction_path(args):
 
 def start_package(args):
     
-    p = Package(args.package, dataroot)
+    if not args.param == None:  
+        p = Package(args.package, dataroot, args.param)
+        
+    else:
+        p = Package(args.package, dataroot)
+        
+
     
     Core(p.path).start()
     
+
 
         
     if args.server == "shim":
@@ -139,7 +146,7 @@ def install(args):
 def generate(args):
 
     p = Package(args.package, dataroot)
-    p.generateHandlebar()
+    p.generateParam()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
@@ -149,10 +156,11 @@ if __name__ == "__main__":
     parser_attach.set_defaults(func=attach, mode="all")
     
     
-    parser_startTest = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
-    parser_startTest.add_argument("package", type=str, help="Package to load")
-    parser_startTest.add_argument("--server", type=str, help="Choose one of {ODL, shim}")
-    parser_startTest.set_defaults(func=start_package, mode="all")
+    parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
+    parser_start.add_argument("package", type=str, help="Package to load")
+    parser_start.add_argument("--server", type=str, help="Choose one of {ODL, shim}")
+    parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
+    parser_start.set_defaults(func=start_package, mode="all")
     
     parser_createHandlebars = subparsers.add_parser("generate", description="Generates the .params files for the applications.")
     parser_createHandlebars.add_argument("package", type=str, help="Package to use")
