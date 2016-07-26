@@ -22,7 +22,7 @@ import shutil
 import tempfile
 import hashlib
 import tarfile
-
+import re
 import yaml
 
 from loader import controllers
@@ -216,12 +216,38 @@ class Package(object):
         appPath = os.path.join(self.path, 'apps/' + appName + '/' + appName + '.params')            
             
         contentFile = yaml.load(util.stripFileContent(appPath))
+        
+        types = {}
+        if 'types' in contentFile:
+            type = contentFile['types']
 
+            for key, value in type.items():
+                key = key.rstrip().lstrip()
+             
+                types[key] = value
+                
+        
         for key, value in dict.items():
             if key in contentFile['parameters']:
+
+                    
                 contentFileValue = contentFile['parameters'][key]
                 #get type of value
                 type = contentFileValue.split("=")[0]
+                type= type.rstrip().lstrip()
+
+           
+                if type in types:
+                
+                    reg = re.compile(types[type]['regex'].replace('"', ""))
+                   
+                    value = value.rstrip().lstrip()
+                    value = value.split("'")[1]
+                    match = reg.match(value)
+                    
+                    if not match:
+                        raise TypeError('Value does not match expected type. Please check and rerun.')
+                
                 result = type + " =" + value
                 result = result.replace("  ", " ")
                 contentFile['parameters'][key] = result

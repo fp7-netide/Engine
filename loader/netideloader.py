@@ -45,7 +45,6 @@ from loader.controllers import RyuShim
 from loader.controllers import Core
 import time
 
-# TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
 os.environ["ANSIBLE_HOST_KEY_CHECKING"] = "False"
 extractPath = os.path.join(dataroot, "extractPath.txt")
@@ -72,11 +71,8 @@ def start_package(args):
         p = Package(args.package, dataroot)
         
 
-    
     Core(p.path).start()
     
-
-
         
     if args.server == "shim":
         RyuShim("").start()
@@ -144,7 +140,6 @@ def install(args):
     return 0
 
 def generate(args):
-
     p = Package(args.package, dataroot)
     p.generateParam()
 
@@ -174,20 +169,13 @@ if __name__ == "__main__":
     parser_extract_path.add_argument("path", type=str, help="Path to store extracted package")
     parser_extract_path.set_defaults(func=set_extraction_path, mode="all")
 
-    #parser_load = subparsers.add_parser("load", description="Load a NetIDE package and start its applications")
-    #parser_load.add_argument("package", type=str, help="Package to load")
-    #parser_load.add_argument("--mode", type=str, help="Loading mode, one of {appcontroller,all}")
-    #parser_load.set_defaults(func=load_package, mode="all")
+
 
     parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
-   # parser_list.add_argument("--mode", type=str, help="List mode, one of {appcontroller,all}", default="all")
-   # parser_list.add_argument("package",
-    #    type=str, nargs="?", help="Package to list controllers of (only on server controller")
     parser_list.set_defaults(func=list_controllers)
 
     parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
-   # parser_stop.add_argument("package", type=str, nargs="?", help="Package to stop (only on server controllers)")
-    #parser_stop.add_argument("--mode", type=str, default="all", help="Stop mode, one of {appcontroller,all}, defaults to all")
+
     parser_stop.set_defaults(func=stop_controllers)
 
    # parser_topology = subparsers.add_parser("gettopology", description="Show network topology")

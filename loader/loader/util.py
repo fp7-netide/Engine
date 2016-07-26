@@ -82,7 +82,7 @@ def compileHandlebar(path, appName, paramPath=""):
     if paramPath == "": 
        paramPath = os.path.join(path, "parameters.json")
     
-    print(paramPath)
+
     
     with open(paramPath, 'r') as parameterJson:
         content = json.load(parameterJson)
