@@ -48,6 +48,7 @@ class SimpleSwitch(app_manager.RyuApp):
             priority=ofproto.OFP_DEFAULT_PRIORITY,
             flags=ofproto.OFPFF_SEND_FLOW_REM, actions=actions)
         datapath.send_msg(mod)
+	print "<< SW - FLOW_MOD SENDED"
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
@@ -56,6 +57,7 @@ class SimpleSwitch(app_manager.RyuApp):
         ofproto = datapath.ofproto
         pkt = packet.Packet(msg.data)
         eth = pkt.get_protocol(ethernet.ethernet)
+        self.logger.info("SW - PACKET IN RECEIVED >> %s ", pkt)
 
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
@@ -65,7 +67,7 @@ class SimpleSwitch(app_manager.RyuApp):
 
         dpid = datapath.id
         self.mac_to_port.setdefault(dpid, {})
-        self.logger.info("packet in %s %s %s %s", dpid, src, dst, msg.in_port)
+        #self.logger.info("packet in %s %s %s %s", dpid, src, dst, msg.in_port)
 
         # learn a mac address to avoid FLOOD next time.
         self.mac_to_port[dpid][src] = msg.in_port
@@ -88,7 +90,8 @@ class SimpleSwitch(app_manager.RyuApp):
         out = datapath.ofproto_parser.OFPPacketOut(
             datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port,
             actions=actions, data=data)
-        datapath.send_msg(out)
+	print "<< SW - PACKET OUT CANCELLED >>"
+        #datapath.send_msg(out)
 
     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)
     def _port_status_handler(self, ev):

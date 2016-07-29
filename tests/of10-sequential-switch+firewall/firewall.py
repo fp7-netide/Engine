@@ -124,8 +124,8 @@ class Firewall(app_manager.RyuApp):
     def _packet_in_handler(self, ev):
         msg = ev.msg
         datapath = msg.datapath
-
         pkt = packet.Packet(msg.data)
+        self.logger.info("FW - PACKET IN RECEIVED >> %s ", pkt)
         self.Configure_stateful_FW(msg)
 
 
