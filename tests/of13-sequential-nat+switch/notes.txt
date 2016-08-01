@@ -1,0 +1,2 @@
+sudo python simple-topo.py
+ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py simple_switch_13.py nat_13.py
