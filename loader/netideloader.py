@@ -140,8 +140,14 @@ def install(args):
     return 0
 
 def generate(args):
-    p = Package(args.package, dataroot)
-    p.generateParam()
+    #generate param will be called during the init method
+    if not args.param == None:  
+
+                p = Package(args.package, dataroot, args.param)
+
+        
+    else:
+        p = Package(args.package, dataroot)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
@@ -159,6 +165,7 @@ if __name__ == "__main__":
     
     parser_createHandlebars = subparsers.add_parser("generate", description="Generates the .params files for the applications.")
     parser_createHandlebars.add_argument("package", type=str, help="Package to use")
+    parser_createHandlebars.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_createHandlebars.set_defaults(func=generate, mode="all")
     
     parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")

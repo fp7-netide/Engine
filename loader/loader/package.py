@@ -235,18 +235,19 @@ class Package(object):
                 #get type of value
                 type = contentFileValue.split("=")[0]
                 type= type.rstrip().lstrip()
-
-           
+                
+            
                 if type in types:
                 
                     reg = re.compile(types[type]['regex'].replace('"', ""))
-                   
+
                     value = value.rstrip().lstrip()
-                    value = value.split("'")[1]
+                    if "'" in value: 
+                        value = value.split("'")[1]
                     match = reg.match(value)
                     
                     if not match:
-                        raise TypeError('Value does not match expected type. Please check and rerun.')
+                        raise TypeError('Value', value, ' does not match expected type', type ,'. Please check and rerun.')
                 
                 result = type + " =" + value
                 result = result.replace("  ", " ")
