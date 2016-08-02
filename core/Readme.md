@@ -64,7 +64,7 @@ The external tools (like the Logger) will subscribe to that queue.
 	- The output shold indicate that the core is waiting for the shim to connect.
 6. Load a composition specification with netide:loadcomposition, for example the Minimal Specification
 ```
-karaf@root()>  netide:loadcomposition /Users/arne/software/netide-engine/core/specifications/OneSimpleSwitch.xml
+karaf@root()>  netide:loadcomposition /Users/arne/software/netide-engine/core/specification/OneSimpleSwitch.xml
 ```
 7. Run now Mininet, the shim and finally the backend (Note: If you are using the example composition file, you should use the Ryu `simple_switch.py` application)
  
