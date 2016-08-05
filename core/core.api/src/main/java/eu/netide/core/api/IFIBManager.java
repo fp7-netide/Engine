@@ -1,6 +1,5 @@
 package eu.netide.core.api;
 
-import eu.netide.lib.netip.Message;
 import org.onosproject.net.flow.FlowEntry;
 
 import java.util.List;

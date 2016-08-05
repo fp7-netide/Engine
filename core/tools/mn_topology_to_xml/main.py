@@ -1,5 +1,7 @@
 import argparse
 import logging
+import re
+
 import mininet.topo
 import mininet.topolib
 import mininet.util
@@ -26,18 +28,19 @@ def generate_xml_file(topology, output_path, print_output=False):
     :return:
     """
     root = ET.Element("Topology")
+    root.set("xmlns", "http://netide.eu/schemas/topologyspecification/v1")
     hosts = ET.SubElement(root, "Hosts")
     switches = ET.SubElement(root, "Switches")
     links = ET.SubElement(root, "Links")
 
     for host in topology.hosts():
-        host_info = topology.nodeInfo(host)
-        elem = ET.SubElement(hosts, "Host", id=host, ip=host_info["IP"])
-        if "MAC" in host_info:
-            elem.set("mac", host_info["MAC"])
+        node_info = topology.nodeInfo(host)
+        # TODO: convert all MACs into colon-separated notation xx:xx:xx:xx:xx:xx
+        ET.SubElement(hosts, "Host", id=host, mac=node_info["mac"], ip=node_info["ip"])
 
     for switch in topology.switches():
-        ET.SubElement(switches, "Switch", id=switch)
+        node_info = topology.nodeInfo(switch)
+        ET.SubElement(switches, "Switch", id=switch, dpid=node_info["dpid"])
 
     for link in topology.links():
         src = link[0]
@@ -89,10 +92,15 @@ def get_topology(topology_string, customs):
     if not topology:
         raise Exception("Topology class %s not found." % class_name)
 
+    # Assign IP to host if necessary
     assign_ip_address = False
     for host in topology.hosts():
-        host_info = topology.nodeInfo(host)
-        if "IP" not in host_info:
+        node_info = topology.nodeInfo(host)
+        if "mac" not in node_info:
+            logging.warning("Not all hosts have been explicitly assigned a MAC address. "
+                            "Aborting.")
+            raise Exception("No MAC address specified")
+        if "ip" not in node_info:
             logging.warning("Not all hosts have been explicitly assigned an IP address. "
                             "Using MiniNet default assignment. This may lead to errors.")
             assign_ip_address = True
@@ -105,9 +113,24 @@ def get_topology(topology_string, customs):
             ip = mininet.util.ipAdd(host_index, prefixLen=prefix_len, ipBaseNum=ip_base)
             host_index += 1
 
-            host_info = topology.nodeInfo(host)
-            host_info["IP"] = ip
-            topology.setNodeInfo(host, host_info)
+            node_info = topology.nodeInfo(host)
+            node_info["ip"] = ip
+            topology.setNodeInfo(host, node_info)
+
+    # Assign DPID to switch if necessary
+    dpid_assigned = False
+    for node in topology.switches():
+        node_info = topology.nodeInfo(node)
+        if "dpid" not in node_info:
+            dpid_assigned = True
+            nums = re.findall(r'\d+', node)
+            if nums:
+                dpid = hex(int(nums[ 0 ]))[2:]
+            node_info["dpid"] = '0' * (16 - len(dpid)) + dpid
+            topology.setNodeInfo(node, node_info)
+    if dpid_assigned:
+        logging.warning("Not all switches have been explicitly assigned a DPID. "
+                        "Using MiniNet default assignment. This may lead to errors.")
 
     return topology
 
