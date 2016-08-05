@@ -4,52 +4,48 @@ import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.caos.ICompositionManager;
+import eu.netide.core.globalfib.topology.TopologySpecification;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
-import org.apache.felix.scr.annotations.*;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.onosproject.net.flow.FlowEntry;
+import org.onosproject.net.topology.TopologyService;
+import org.osgi.framework.BundleContext;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
 import org.projectfloodlight.openflow.protocol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.StringReader;
 import java.util.List;
 
-@Component(immediate=true)
-@Service
-public class FIBManager implements IFIBManager, IShimMessageListener {
+public class FIBManager implements IShimMessageListener, IFIBManager {
     private final OFMessageReader<OFMessage> reader;
-    private final GlobalFIB globalFIB;
 
     private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
 
-    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private IGlobalFIB globalFIB;
+
     private ICompositionManager compositionManager;
 
-    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private IShimManager shimManager;
 
-    //@Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
-    //private TopologyService topologyService;
+    private String topologySpecificationXML;
 
-    public FIBManager()
-    {
+    public FIBManager() {
         reader = OFFactories.getGenericReader();
-        globalFIB = new GlobalFIB();
     }
 
-    @Activate
-    public void Start()
-    {
+    public void Start() {
         log.info("FIBManager started.");
     }
 
-    @Deactivate
-    public void Stop()
-    {
+    public void Stop() {
         log.info("FIBManager stopped.");
     }
 
@@ -58,7 +54,7 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
         log.info("FIBManager received message from shim: " + message.getHeader().toString());
 
         List<Message> backendResults = compositionManager.processShimMessage(message, originId);
-        for (Message result: backendResults) {
+        for (Message result : backendResults) {
             handleResult(result);
         }
 
@@ -76,7 +72,8 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
                     OFFlowAdd ofFlowAdd = (OFFlowAdd) ofmessage;
 
                     //globalFIB.addFlowMod(ofFlowAdd, datapathId);
-                } if (ofmessage instanceof OFPacketIn) {
+                }
+                if (ofmessage instanceof OFPacketIn) {
                     globalFIB.handlePacketIn((OFPacketIn) ofmessage, datapathId);
                 }
             } catch (OFParseError ofParseError) {
@@ -96,12 +93,31 @@ public class FIBManager implements IFIBManager, IShimMessageListener {
         shimManager.sendMessage(message);
     }
 
-    public void bindShimManager(IShimManager shimManager) {
-        this.shimManager = shimManager;
-    }
-
     @Override
     public List<FlowEntry> getFlowMods() {
         return globalFIB.getFlowEntries();
+    }
+
+    public void setShimManager(IShimManager shimManager) {
+        this.shimManager = shimManager;
+    }
+
+    public void setGlobalFIB(IGlobalFIB globalFIB) {
+        this.globalFIB = globalFIB;
+    }
+
+    public void setCompositionManager(ICompositionManager compositionManager) {
+        this.compositionManager = compositionManager;
+    }
+
+    public void setTopologySpecificationXML(String topologySpecificationXML) throws JAXBException {
+        this.topologySpecificationXML = topologySpecificationXML;
+
+        TopologySpecification topologySpecification = TopologySpecification.topologySpecification(topologySpecificationXML);
+        globalFIB.setTopologySpecification(topologySpecification);
+    }
+
+    public void bindShimManager(IShimManager shimManager) {
+        this.shimManager = shimManager;
     }
 }

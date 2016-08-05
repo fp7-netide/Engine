@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
+    <cm:property-placeholder persistent-id="eu.netide.core.globalfib"
+                             update-strategy="reload">
+        <cm:default-properties>
+            <cm:property name="topologySpecification" value=""/>
+        </cm:default-properties>
+    </cm:property-placeholder>
+
+    <reference id="shimmanager"
+               interface="eu.netide.core.api.IShimManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
+    <reference id="compositionmanager"
+               interface="eu.netide.core.caos.ICompositionManager"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
+    <reference id="globalfib"
+               interface="eu.netide.core.globalfib.IGlobalFIB"
+               availability="mandatory"
+               activation="eager"
+               timeout="1500"/>
+
+    <bean id="fibManager"
+          class="eu.netide.core.globalfib.FIBManager"
+          activation="eager"
+          init-method="Start"
+          destroy-method="Stop">
+        <property name="shimManager" ref="shimmanager"/>
+        <property name="compositionManager" ref="compositionmanager"/>
+        <property name="globalFIB" ref="globalfib"/>
+        <property name="topologySpecificationXML" value="${topologySpecification}"/>
+    </bean>
+
+    <service ref="fibManager"
+             interface="eu.netide.core.api.IFIBManager"/>
+</blueprint>

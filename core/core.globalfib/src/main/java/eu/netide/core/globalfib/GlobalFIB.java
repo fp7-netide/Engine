@@ -1,8 +1,15 @@
 package eu.netide.core.globalfib;
 
 import eu.netide.core.globalfib.flow.FlowEntryBuilder;
+import eu.netide.core.globalfib.topology.TopologyManager;
+import eu.netide.core.globalfib.topology.TopologySpecification;
 import eu.netide.lib.netip.OpenFlowMessage;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.Service;
 import org.onosproject.net.flow.*;
+import org.onosproject.net.topology.TopologyService;
 import org.onosproject.openflow.controller.Dpid;
 import org.projectfloodlight.openflow.protocol.*;
 import org.slf4j.Logger;
@@ -13,14 +20,19 @@ import java.util.*;
 /**
  * Created by arne on 25.08.15.
  */
-
-public class GlobalFIB {
+@Component(immediate=true)
+@Service
+public class GlobalFIB implements IGlobalFIB {
     private static final Logger logger = LoggerFactory.getLogger(GlobalFIB.class);
 
     private List<FlowEntry> flowEntries = new LinkedList<>();
 
     private HashMap<Long, Vector<OFFlowMod>> individualSwitchFlowMap = new HashMap<>();
 
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    private TopologyService topologyService;
+
+    @Override
     public void addFlowMod(OpenFlowMessage ofMessage) {
         // The FlowEntryBuilder currently does only support OF version >= 1.3
         if (ofMessage.getOfMessage().getVersion().getWireVersion() < OFVersion.OF_13.getWireVersion()) {
@@ -38,6 +50,7 @@ public class GlobalFIB {
         }
     }
 
+    @Override
     public boolean handlePacketIn(OFPacketIn packetIn, long datapathId) {
         if (!(packetIn.getVersion().getWireVersion() >= OFVersion.OF_13.wireVersion))
             throw new RuntimeException("Only 1.3+ supported at the moment");
@@ -59,7 +72,14 @@ public class GlobalFIB {
         return null;
     }
 
+    @Override
     public List<FlowEntry> getFlowEntries() {
         return flowEntries;
+    }
+
+    @Override
+    public void setTopologySpecification(TopologySpecification topologySpecification) {
+        // TODO: catch exception, if another class implements the interface (e.g. from onos)
+        ((TopologyManager) topologyService).setTopologySpecification(topologySpecification);
     }
 }

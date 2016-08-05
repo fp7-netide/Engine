@@ -102,6 +102,7 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Bundle-Activator>eu.netide.core.globalfib.Activator</Bundle-Activator>
                         <Embed-Dependency>
                             *;scope=compile|runtime
                         </Embed-Dependency>

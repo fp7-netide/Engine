@@ -48,14 +48,14 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private Random random = new Random();
 
     /**
-     * Called by Apache Aries on startup (configured in blueprint.xml)
+     * Called by Apache Aries on startup (configured in OSGI-INF.xml)
      */
     public void Start() {
         logger.debug("BackendManager started.");
     }
 
     /**
-     * Called by Apache Aries on shutdown (configured in blueprint.xml)
+     * Called by Apache Aries on shutdown (configured in OSGI-INF.xml)
      */
     public void Stop() {
         logger.debug("BackendManager stopped.");
