@@ -20,3 +20,10 @@ vendor lock-in in SDN*,” in Network Softwarization (NetSoft), 2015 1st
 IEEE Conference on, 2015.
 
 ![Alt text](/NetIDE-architecture.png?raw=true " ")
+
+
+The Network Engine in action (from the *NetIDE Project* Youtube channel):
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=LnWXqXyoEEk
+" target="_blank"><img src="http://img.youtube.com/vi/LnWXqXyoEEk/0.jpg"
+alt="IMAGE ALT TEXT HERE" width="480" height="320" border="10" /></a>
