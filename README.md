@@ -14,10 +14,9 @@ communicates with both Shim and Backend using the same NetIDE Intermediate Proto
 
 This repository contains source code and documentation of the Core, Shim (implemented for OpenDaylight, ONOS and Ryu) and Backend (implemented for Ryu and Floodlight), plus some utilities for testing the Network Engine.
 
-![Alt text](/NetIDE-architecture.png?raw=true " ")
-
-
 [1] R. Doriguzzi-Corin, E. Salvadori, P. A. A. Gutiérrez, C. Stritzke,
 A. Leckey, K. Phemius, E. Rojas, and C. Guerrero, “*NetIDE: Removing
 vendor lock-in in SDN*,” in Network Softwarization (NetSoft), 2015 1st
 IEEE Conference on, 2015.
+
+![Alt text](/NetIDE-architecture.png?raw=true " ")
