@@ -1,14 +1,23 @@
 # The NetIDE Network Engine
-NetIDE foresees three different environments (sketched in
-the Figure below): (i) tools like topology editor, code editors, debuggers in the **Integrated Development Environment** (IDE), (ii) the **Application Repository** which stores simple modules and composed applications, and (iii) the **Network Engine** where the network applications are executed.
+The **Network Engine** provides to unmodified SDN applications (called Modules in the Figure below) the runtime they expect. Additionally it implements a composition
+mechanism to create new applications from previously implemented modules and to make them cooperating with modules running on top of the operator’s controller (represented by the
+Server Controller in the Figure), effectively building a single Network Application.
 
-The **IDE** includes editors supporting network programming languages and a graphical editor to specify topologies. It reads and writes modules and applications from and to the repository, composing them into new applications, and deploys them on the Network Engine for execution.
+The Network Engine follows the layered SDN controller approach proposed by the Open Networking Foundation. It comprises a client controller layer that executes the modules network applications are composed of and a server SDN controller layer that drives the underlying infrastructure.
 
-The **Network Engine** follows the layered SDN controller approach proposed by the Open Networking Foundation. It comprises a client controller layer that executes the modules network applications are composed of and a server SDN controller layer that drives the underlying infrastructure.
+The challenge is to integrate client and server controllers.
+To maximize reuse, we use separate adaptors for the Southbound Interface (SBI), called Backend, and for the Northbound Interface (NBI), called Shim. This separation imposes a protocol between them, the NetIDE Intermediate
+Protocol (see the full protocol specification in libraries/netip/docs).
+In our first implementations [1] we have proved that the Shim/Backend structure connected by an intermediate protocol is feasible and sensible. However, they still left the fundamental component in these modules: the composition logic. This implied that it needed to be reimplemented for each controller framework we wanted to support. To overcome
+this shortcoming, we introduce an intermediate layer, the Core: it hosts all logic and data structures that are independent of the particular controller frameworks and
+communicates with both Shim and Backend using the same NetIDE Intermediate Protocol. The Core makes both Shim and Backend light-weight and easier to implement for new controllers.
 
-The challenge is to integrate client and server controllers. A first idea is to connect a client’s South-bound Interface (SBI) to a server’s North-bound Interface (NBI). But as these interfaces do not match, adaptation is necessary. This adaptation has to cater for the idiosyncrasies of the controller frameworks and has to be implemented for each single one.
-For maximal reuse, we use separate adaptors for the clients’SBI – the Backend – and the server’s NBI – the Shim. This separation necessitates a protocol between them, the NetIDE
-Intermediate Protocol.
-While such a shim/backend structure connected by an intermediate protocol is feasible, it would still leave substantial adaptation logic in these modules. To overcome this shortcoming, we introduce a further intermediate layer, the Core: it hosts all logic and data structures that are independent of the particular controller frameworks and communicates with both shim and backend using the same NetIDE intermediate protocol. The core makes both shim and backend light-weight and easier to implement for new controllers. Moreover, it provides a convenient place to connect additional run-time tools using a standardized interface. The core introduces some overhead but makes the architecture much more flexible; for production, faster, tightly integrated implementations are easily conceivable.
+This repository contains source code and documentation of the Core, Shim (implemented for OpenDaylight, ONOS and Ryu) and Backend (implemented for Ryu and Floodlight), plus some utilities for testing the Network Engine.
 
 ![Alt text](/NetIDE-architecture.png?raw=true " ")
+
+
+[1] R. Doriguzzi-Corin, E. Salvadori, P. A. A. Gutiérrez, C. Stritzke,
+A. Leckey, K. Phemius, E. Rojas, and C. Guerrero, “*NetIDE: Removing
+vendor lock-in in SDN*,” in Network Softwarization (NetSoft), 2015 1st
+IEEE Conference on, 2015.
