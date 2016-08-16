@@ -29,21 +29,32 @@ from loader import controllers
 from loader import util
 from loader.application import Application
 
+
 class Package(object):
     config = {}
     controllers = {}
     cleanup = False
     controllerNames = []
     controllerAppPath = {}
+    hasBeenExtracted = False
+    extractPath = ""
+
 
     def __init__(self, prefix, dataroot, paramPath=""):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         print(self.path)
-        if os.path.isfile(self.path):
-            if (tarfile.is_tarfile(self.path)):
+        
+        
+        if not Package.hasBeenExtracted:
            
-               self.path = util.extractPackage(self.path)
+            if os.path.isfile(self.path):
+                if (tarfile.is_tarfile(self.path)):    
+                   self.path = util.extractPackage(self.path)
+                   Package.extractPath = self.path
+                   Package.hasBeenExtracted = True
+        else:
+            self.path = Package.extractPath
         
 
         p = os.path.join(self.path, "controllers.json")
@@ -71,6 +82,7 @@ class Package(object):
                 appParamPath = os.path.join(app, d + '.params')
 
                 if not os.path.isfile(appParamPath):
+                    print(appParamPath)
                     raise FileNotFoundError('Param file not found. Please use generate method first.')
                 
                 content = util.compileHandlebar(self.path, d, paramPath)
@@ -205,11 +217,13 @@ class Package(object):
 
         #gets dictionary from handlebars generated file
         dict = {}
+     
         for line in content.split("\n"):
-            key, value = line.split("=")
-            key = key.rstrip()
-            value = value.rstrip()
-            dict [key] = value
+            if "=" in line:
+                key, value = line.split("=")
+                key = key.rstrip()
+                value = value.rstrip()
+                dict [key] = value
         
         
             
@@ -256,6 +270,15 @@ class Package(object):
         with open(appPath, 'w') as paramFile:
             
             json.dump(contentFile, paramFile, indent=2)
+    
         
+    @classmethod
+    def getHasBeenExtracted(cls):
+        return cls.hasBeenExtracted
+    
+    @classmethod
+    def getExtractionPath(cls):
+        return cls.extractPath
+    
         
         

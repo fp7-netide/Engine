@@ -1,0 +1,11 @@
+{
+  "mac_learner" : {
+    "idle_timeout" : "5"
+  },
+  "firewall" : {
+    "host_web" : "10.0.0.10",
+    "port_dns" : "53",
+    "port_web" : "80",
+    "stateful_idle_timeout" : "15"
+  }
+}

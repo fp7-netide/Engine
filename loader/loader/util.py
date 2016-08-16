@@ -8,6 +8,7 @@ import yaml
 import pybars
 import json
 import io
+import random
 
 import subprocess as sp
 from subprocess import check_output, PIPE
@@ -45,20 +46,81 @@ def getWindowList():
 def extractPackage(path):   
     os.makedirs(dataroot, exist_ok=True)
     
+    
+    
     if os.path.exists(extractPath):
         if os.path.isfile(extractPath): 
             f = open(extractPath)
             tmpPath = f.read()
     else:
-        tmpPath = dataroot     
-    #expect path to tar archive as args and extract content
-    with tarfile.open(path) as tar:
-        tar.extractall(tmpPath)
+        tmpPath = dataroot   
+    
+    print(tmpPath)  
 
-        tmpPath = os.path.join(tmpPath, tar.getnames()[0].split('/')[0])
+    with tarfile.open(path) as tar:
+        
+        members = tar.getmembers()
+        
+        #extracts the top level folder 
+        prefix = []
+        for m in members:
+            if "/" in m.name: 
+                tmpPrefix = m.name.split("/")[0]
+                prefix.append(tmpPrefix)
+        
+        noTopArchive = False
+        
+        #checks if the package content is in an top folder or directly in the archive
+        for pre in prefix:
+            if pre == "apps" or pre == "composition" or pre == "templates":
+                noTopArchive = True
+        
+        topLevelFolderName = ""
+       
+       
+        if noTopArchive:
+            print("no top level folder was found in archive.")
+            
+            #sets top level folder name to archive name
+            if "tar.gz" in path:
+                archiveName = os.path.splitext(path)[0]
+                archiveName = os.path.splitext(archiveName)[0]
+
+            else:
+                archiveName = os.path.splitext(path)[0]
+            
+            topLevelFolderName = os.path.basename(archiveName)    
+        
+        #if there is a top level folder the data will be extracted there
+        else:
+            topLevelFolderName = os.path.commonprefix(tar.getnames())
+        
+        folderPath = os.path.join(tmpPath, topLevelFolderName)
+            
         
         
-    print("Extracted to:" + tmpPath)
+        if os.path.exists(folderPath):
+            numberOfCopys = 1
+            higherCopyNumberNeeded = True
+            
+            while higherCopyNumberNeeded:
+                tmpLevelFolderName = topLevelFolderName + "_copy(" + str(numberOfCopys) +")"
+                copyPath = os.path.join(tmpPath, tmpLevelFolderName)
+                numberOfCopys = numberOfCopys +1
+                if not os.path.exists(copyPath):
+                    higherCopyNumberNeeded = False
+                    tmpPath = copyPath
+        else:
+            tmpPath = folderPath
+            
+        os.makedirs(tmpPath)
+            
+        tar.extractall(tmpPath)    
+                
+    if not noTopArchive:
+        tmpPath = os.path.join(tmpPath, topLevelFolderName)
+        
+    print("Extracted to: " + tmpPath)
     return tmpPath
 
 def setExtractionPath(path):
