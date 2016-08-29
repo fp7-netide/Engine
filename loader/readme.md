@@ -20,11 +20,11 @@ Available Commands
 
 Every command is used through the `startLoader.sh`. 
 Currently there are the following commands available:
-`install /path/to/package/Demo` used to setup the chosen package for running.
-`run /path/to/Package/Demo --server --param` runs the given package. Server is optional, choose from ODL and shim. Default is ODL. Param is optional, a parameter file can be specified with a configuration used for this run.
-`extractionPath /path/to/extract` defines a path to which packages should be extracted.
-`extractArchive /path/to/Archive` used to extract the given archive to the extraction path. Default is /tmp/netide
-`generate /path/to/package --param` generates the param configuration specified in the file given with --param.
-`list` lists all running NetIDE controllers.
-`stop` stops all running NetIDE controllers.
-`attach` the packages are started in tmux sessions. If there are any detached sessions available this command attaches them.
+- `install /path/to/package/Demo` used to setup the chosen package for running.
+- `run /path/to/Package/Demo --server --param` runs the given package. Server is optional, choose from ODL and shim. Default is ODL. Param is optional, a parameter file can be specified with a configuration used for this run.
+- `extractionPath /path/to/extract` defines a path to which packages should be extracted.
+- `extractArchive /path/to/Archive` used to extract the given archive to the extraction path. Default is /tmp/netide
+- `generate /path/to/package --param` generates the param configuration specified in the file given with --param.
+- `list` lists all running NetIDE controllers.
+- `stop` stops all running NetIDE controllers.
+- `attach` the packages are started in tmux sessions. If there are any detached sessions available this command attaches them.
