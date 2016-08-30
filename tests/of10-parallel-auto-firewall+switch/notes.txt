@@ -1,2 +1,4 @@
 sudo mn --custom simple-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6633 --switch ovsk,protocols=OpenFlow10
 ryu-manager --ofp-tcp-listen-port 7733 ryu-backend.py simple_switch.py firewall.py
+
+*** The Firewall App has been modified to send a Flow_Mod message with drop as an action to block illegitimate traffic ***
