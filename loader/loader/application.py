@@ -70,40 +70,58 @@ class Application(object):
             self.appPort = y.get("app").get("controller").get("port")   
 
 
-    def valid_requirements(self):
-        reqs = self.metadata.get("requirements", {})
+    def valid_requirements(self,path):
+        ###
+        print "\n--------------------------------------------------------------\n"
 
-        # Return True if all requirements are met
-        # Check Controllers
+    print "System Requirements:"
+    print "CPU: " + ver.get_arch(path)
+    print "RAM:"
+    print ver.get_RAM_size(path)
+    print "OS: " + ver.get_OS(path)
+    print "Network Protocol: " + ver.get_netProt_type(path)
+    #print "Version: " + ver.get_netProt_ver(path)
+    sw_req = ver.get_softReq(path)
+    print sw_req
+    print "----------------------------------------------------------------"
+    print "Actual System:"
+    #print "CPU: " + platform.node()
+    print "CPU: " + str(cpuinfo.get_cpu_info()['hz_actual_raw'][0]/1e6)
+    print "RAM:"
+    print (virtual_memory().total/(1024*1024))
+    op_sys = sys.platform
+    if 'linux' in op_sys:
+        op_sys = 'linux'
+    print "OS: " + op_sys
+    d = dict(os.environ)
+    path = d['PATH'].split(':')
+    for route in path:
         try:
-            environment.check_controllers(reqs.get("Software", {}).get("Controllers", {}))
-        except environment.ControllerCheckException as e:
-            logging.error("Controller check failed: {}".format(str(e)))
-            return False
+            ls_result = subprocess.check_output(["ls", route])
+        except subprocess.CalledProcessError as e:
+            print e.output
+            #return False
+        if 'ovs-vsctl' in ls_result:
+            print 'ovs-vsctl in ' + route
+    ovs = subprocess.check_output(["ovs-vsctl", "--version"])
+    ovs = ovs.split('\n')[0]
+    ovs = ovs.split(' ')
+    print "OVS Version: " + ovs[len(ovs) - 1]
 
-        # TODO: Check libraries
-        try:
-            environment.check_languages(reqs.get("Software", {}).get("Languages", {}))
-        except environment.LanguageCheckException as e:
-            logging.error("Missing depency: {}".format(str(e)))
-            return False
+    for sw in sw_req:
+        print sw_req[sw]
 
-        try:
-            environment.check_hardware(reqs.get("Hardware", {}))
-        except environment.HardwareCheckException as e:
-            logging.error("Hardware configuration mismatch: {}".format(str(e)))
-            return False
-        # TODO: Check network
-        return True
+    #sp = subprocess.Popen(["java", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #jv = sp.communicate()
 
     @classmethod
-    def get_controller_name(cls, path):
-        test = os.path.basename(path) + ".sysreq"
+    def parse_sysreq(cls, path):
+        sysreqPath = os.path.basename(path) + ".sysreq"
        
     
-        with open(os.path.join(path, test)) as f:
+        with open(os.path.join(path, sysreqPath)) as f:
             
-            s = io.StringIO()
+            s = io.BytesIO()
 
             st = reduce(lambda x, y: x + y, f)
             f.seek(0)
@@ -111,39 +129,107 @@ class Application(object):
             enclosed = st.lstrip()[0] == "{"
 
             if not enclosed: s.write("{")
-            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
+            prev_line = ''
+            sw_count = 0
+            for line in f:
+                if prev_line == '':
+                    new_line = "app\n"
+                else:
+                    new_line = line.replace(" '", ": '").replace("\t", "  ")
+
+                if "software\n" in prev_line:
+                    prev_line = prev_line.replace("\n", str(sw_count)+"\n")
+                    sw_count += 1
+
+                if '{' in new_line:
+                    prev_line= prev_line.replace("\n", ":\n")
+                elif (prev_line != '' and '{' not in prev_line) and '}' not in new_line:
+                    prev_line = prev_line.replace("\n", ",\n")
+                #print prev_line
+                s.write(prev_line)
+                prev_line = new_line
+            s.write(prev_line)
             if not enclosed: s.write("}")
             
             s.seek(0)
             
             y = load(s)
+
+            return y
+
+    @classmethod
+    def get_controller_name(self, path):
+            
+            y = self.parse_sysreq(path)
             
             c = y.get("app").get("controller").get("name")
             
             return c
 
     @classmethod
-    def get_controller(cls, path):
-        sysreqPath = os.path.basename(path) + ".sysreq"
-       
-    
-        with open(os.path.join(path, sysreqPath)) as f:
+    def get_controller(self, path):
             
-            s = io.StringIO()
-
-            st = reduce(lambda x, y: x + y, f)
-            f.seek(0)
-
-            enclosed = st.lstrip()[0] == "{"
-
-            if not enclosed: s.write("{")
-            for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
-            if not enclosed: s.write("}")
-            
-            s.seek(0)
-            
-            y = load(s)
+            y = self.parse_sysreq(path)
             
             c = y.get("app").get("controller").get("name")
 
             return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
+
+    @classmethod
+    def get_arch(self, path):
+            
+            y = self.parse_sysreq(path)
+            
+            c = y.get("app").get("hardwareReq").get("CPU")
+
+            return c
+
+    @classmethod
+    def get_RAM_size(self, path):
+            
+            y = self.parse_sysreq(path)
+            
+            c = y.get("app").get("hardwareReq").get("RAM")
+
+            return c
+
+    @classmethod
+    def get_OS(self, path):
+            
+            y = self.parse_sysreq(path)
+            
+            c = y.get("app").get("hardwareReq").get("OS")
+
+            if "linux" in c:
+                c = "linux"
+
+            return c
+
+    @classmethod
+    def get_netProt_type(self, path):
+            
+            y = self.parse_sysreq(path)
+            
+            c = y.get("app").get("networkReq").get("protocolType")
+
+            return c
+
+    @classmethod
+    def get_netProt_ver(self, path):
+            
+            y = self.parse_sysreq(path)
+            
+            c = y.get("app").get("networkReq").get("Version")
+
+            return c
+
+
+    @classmethod
+    def get_softReq(self, path):
+            
+            y = self.parse_sysreq(path)
+            
+            c = y.get("app").get("softwareReq")
+
+            return c
+

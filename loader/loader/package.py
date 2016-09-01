@@ -115,7 +115,11 @@ class Package(object):
 
         for c in self.controllers_for_node():
             for a in c.applications:
-                if not a.valid_requirements():
+
+
+                #path = os.path.join(dataroot, "controllers.json")
+
+                if not a.valid_requirements(path):
                     logging.error("Requirements for application {} not met".format(a))
                     return False
 
