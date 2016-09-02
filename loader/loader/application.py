@@ -71,48 +71,61 @@ class Application(object):
 
 
     def valid_requirements(self,path):
-        ###
-        print "\n--------------------------------------------------------------\n"
-
-    print "System Requirements:"
-    print "CPU: " + ver.get_arch(path)
-    print "RAM:"
-    print ver.get_RAM_size(path)
-    print "OS: " + ver.get_OS(path)
-    print "Network Protocol: " + ver.get_netProt_type(path)
-    #print "Version: " + ver.get_netProt_ver(path)
-    sw_req = ver.get_softReq(path)
-    print sw_req
-    print "----------------------------------------------------------------"
-    print "Actual System:"
-    #print "CPU: " + platform.node()
-    print "CPU: " + str(cpuinfo.get_cpu_info()['hz_actual_raw'][0]/1e6)
-    print "RAM:"
-    print (virtual_memory().total/(1024*1024))
-    op_sys = sys.platform
-    if 'linux' in op_sys:
-        op_sys = 'linux'
-    print "OS: " + op_sys
-    d = dict(os.environ)
-    path = d['PATH'].split(':')
-    for route in path:
+        #System requirements
+        cpu_req = self.get_cpu(path)
+        ram_req = self.get_RAM_size(path)
+        os_req = self.get_OS(path)
+ 
+        #Actual system
+       real_cpu = scpuinfo.get_cpu_info()['hz_actual_raw'][0]/1e6
+       if cpu_req < real_cpu:
+        return False
+       real_RAM = virtual_memory().total/(1024*1024)
+       if ram_req < real_RAM:
+        return False
+       real_op_sys = sys.platform
+       if 'linux' in op_sys:
+        real_op_sys = 'linux'
+       if (os_req!= 'any') and (os_req != real_op_sys):
+        return False
+       d = dict(os.environ)
+       path = d['PATH'].split(':')
+       for route in path:
+        try:
+             ls_result = subprocess.check_output(["ls", route])
+        except subprocess.CalledProcessError as e:
+             #print e.output
+             return False
+        if 'ovs-vsctl' in ls_result:
+            ovs = subprocess.check_output(["ovs-vsctl", "--version"])
+            ovs = ovs.split('\n')[0]
+            ovs = ovs.split(' ')
+            #TODO compare ovs version to of version required
+       #TODO possible NETCONF requirement
+       for sw in sw_req:
+        flag = False
+        for route in path:
         try:
             ls_result = subprocess.check_output(["ls", route])
         except subprocess.CalledProcessError as e:
-            print e.output
-            #return False
-        if 'ovs-vsctl' in ls_result:
-            print 'ovs-vsctl in ' + route
-    ovs = subprocess.check_output(["ovs-vsctl", "--version"])
-    ovs = ovs.split('\n')[0]
-    ovs = ovs.split(' ')
-    print "OVS Version: " + ovs[len(ovs) - 1]
-
-    for sw in sw_req:
-        print sw_req[sw]
-
-    #sp = subprocess.Popen(["java", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    #jv = sp.communicate()
+            #print e.output
+            return False
+        if sw_req[sw] in ls_result:
+         if flag:
+          print "Several versions of software: " + sw_req[sw]
+         flag = True
+         #TODO check if sw version fulfills the requirements
+         #try:
+              #version = subprocess.Popen([sw_req[sw], "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+         #except subprocess.CalledProcessError as e:
+              #print e.output
+         #try:
+              #version = subprocess.Popen([sw_req[sw], "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+         #except subprocess.CalledProcessError as e:
+              #print e.output
+        if flag == False:
+         return False
+       return True
 
     @classmethod
     def parse_sysreq(cls, path):
@@ -176,7 +189,7 @@ class Application(object):
             return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
 
     @classmethod
-    def get_arch(self, path):
+    def get_cpu(self, path):
             
             y = self.parse_sysreq(path)
             
@@ -203,7 +216,7 @@ class Application(object):
             if "linux" in c:
                 c = "linux"
 
-            return c
+            return c.lower()
 
     @classmethod
     def get_netProt_type(self, path):
