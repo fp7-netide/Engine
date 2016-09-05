@@ -97,6 +97,7 @@ class RyuShim(Base):
 
 class Ryu(Base):
     appNames = []
+    ryubackendport = 7733
 
     @classmethod
     def getControllerName(cls):
@@ -111,6 +112,7 @@ class Ryu(Base):
             return None
         except FileNotFoundError:
             return None
+
 
 
     def start(self):
@@ -143,7 +145,12 @@ class Ryu(Base):
             windowNames = util.getWindowList()
 
             if a.appName not in windowNames:
-                call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=' + str(a.appPort), os.path.join(a.path, a.entrypoint)])
+
+                ryubackendpath = "bash -c \' cd ~/netide/Engine/ryu-backend/ && " + cmd + " --ofp-tcp-listen-port=" + str(Ryu.ryubackendport) + " ryu-backend.py " + os.path.join(a.path, a.entrypoint) + "\' "
+
+                call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', ryubackendpath])
+            
+                Ryu.ryubackendport = Ryu.ryubackendport + 1
                 #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
             else:
                 print("app " + a.appName + " already running")

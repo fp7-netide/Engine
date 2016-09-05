@@ -35,7 +35,7 @@ class Application(object):
         self.path = prefix
         self.files = []
         self.entrypoint = ""
-        
+
         for dirname, dirs, files in os.walk(self.path):
             for f in files:
                 self.files.append(os.path.join(os.path.abspath(dirname), f))
@@ -44,19 +44,19 @@ class Application(object):
 
     def __str__(self):
         return os.path.basename(self.path)
-    
+
     def loadSysreq(self, path):
         sysreqPath = os.path.basename(path) + ".sysreq"
        
-            
+
         y = load(util.stripFileContent(os.path.join(path, sysreqPath)))
-            
+
         self.entrypoint = y.get("app").get("controller").get("entrypoint")
         self.appName = y.get("app").get("name")
-        self.appPort = y.get("app").get("controller").get("port")   
-        
+        self.appPort = y.get("app").get("controller").get("port")
+
         if Application.get_controller_name(path) == "Ryu":
-        	if self.entrypoint == None: 
+        	if self.entrypoint == None:
         		raise Exception("No entrypoint found. Please specify an entrypoint in the app's .sysreq file.")
 
 
@@ -89,10 +89,10 @@ class Application(object):
     @classmethod
     def get_controller_name(cls, path):
         test = os.path.basename(path) + ".sysreq"
-       
-    
+
+
         with open(os.path.join(path, test)) as f:
-            
+
             s = io.StringIO()
 
             st = reduce(lambda x, y: x + y, f)
@@ -103,22 +103,22 @@ class Application(object):
             if not enclosed: s.write("{")
             for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
             if not enclosed: s.write("}")
-            
+
             s.seek(0)
-            
+
             y = load(s)
-            
+
             c = y.get("app").get("controller").get("name")
-            
+
             return c
 
     @classmethod
     def get_controller(cls, path):
         sysreqPath = os.path.basename(path) + ".sysreq"
-       
-    
+
+
         with open(os.path.join(path, sysreqPath)) as f:
-            
+
             s = io.StringIO()
 
             st = reduce(lambda x, y: x + y, f)
@@ -129,11 +129,11 @@ class Application(object):
             if not enclosed: s.write("{")
             for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
             if not enclosed: s.write("}")
-            
+
             s.seek(0)
-            
+
             y = load(s)
-            
+
             c = y.get("app").get("controller").get("name")
 
             return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
