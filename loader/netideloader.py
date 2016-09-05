@@ -54,7 +54,7 @@ logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=l
 def extract_package(args):
 
     util.extractPackage(args.path)
-    
+
     return 0
 
 def set_extraction_path(args):
@@ -63,33 +63,33 @@ def set_extraction_path(args):
     return 0;
 
 def start_package(args):
-    
-    if not args.param == None:  
+
+    if not args.param == None:
         p = Package(args.package, dataroot, args.param)
-        
+
     else:
         p = Package(args.package, dataroot)
-        
+
 
     Core(p.path).start()
-    
-        
-    if args.server == "shim":
+
+
+    if args.server == "ryu":
         RyuShim("").start()
     else:
 
         ODL("").start()
-    
-    
+
+
     for c in p.controllers_for_node().items():
 
         c[1].start()
-   
+
     time.sleep(2)
-   
-    
+
+
     attach("")
-        
+
 
 def attach(args):
 
@@ -99,11 +99,11 @@ def attach(args):
 def list_controllers(args):
     for s in util.getWindowList():
         print(s)
-    
+
 def stop_controllers(args):
     sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-    if [ sessionExists != 0 ]:  
+
+    if [ sessionExists != 0 ]:
         call(["tmux", "kill-session", "-t", "NetIDE"], shell=False)
 
 
@@ -141,37 +141,37 @@ def install(args):
 
 def generate(args):
     #generate param will be called during the init method
-    if not args.param == None:  
+    if not args.param == None:
 
                 p = Package(args.package, dataroot, args.param)
 
-        
+
     else:
         p = Package(args.package, dataroot)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
-    
+
     parser_attach = subparsers.add_parser("attach", description="If possible attaches tmux session")
     parser_attach.set_defaults(func=attach, mode="all")
-    
-    
+
+
     parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
     parser_start.add_argument("package", type=str, help="Package to load")
-    parser_start.add_argument("--server", type=str, help="Choose one of {ODL, shim}")
+    parser_start.add_argument("--server", type=str, help="Choose one of {ODL, ryu}")
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_start.set_defaults(func=start_package, mode="all")
-    
+
     parser_createHandlebars = subparsers.add_parser("generate", description="Generates the .params files for the applications.")
     parser_createHandlebars.add_argument("package", type=str, help="Package to use")
     parser_createHandlebars.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_createHandlebars.set_defaults(func=generate, mode="all")
-    
+
     parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")
     parser_extract.add_argument("path", type=str, help="Path to archive")
     parser_extract.set_defaults(func=extract_package, mode="all")
-    
+
     parser_extract_path = subparsers.add_parser("extractionPath", description ="Set the extraction path to the given argument")
     parser_extract_path.add_argument("path", type=str, help="Path to store extracted package")
     parser_extract_path.set_defaults(func=set_extraction_path, mode="all")
