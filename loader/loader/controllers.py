@@ -232,7 +232,7 @@ class Core(Base):
         
         if "Core" not in list:   
 
-            call(['tmux', 'new-window', '-n', "Core", '-t', 'NetIDE', "bash -c \'cd ~/apache-karaf-3.0.7/bin/ && ./karaf\'"])
+            call(['tmux', 'new-window', '-n', "Core", '-t', 'NetIDE', "bash -c \'cd ~/apache-karaf-3.0.8/bin/ && ./karaf\'"])
      
             compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
         
