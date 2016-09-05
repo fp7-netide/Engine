@@ -54,6 +54,10 @@ class Application(object):
         self.entrypoint = y.get("app").get("controller").get("entrypoint")
         self.appName = y.get("app").get("name")
         self.appPort = y.get("app").get("controller").get("port")   
+        
+        if Application.get_controller_name(path) == "Ryu":
+        	if self.entrypoint == None: 
+        		raise Exception("No entrypoint found. Please specify an entrypoint in the app's .sysreq file.")
 
 
     def valid_requirements(self):
