@@ -62,6 +62,10 @@ class Base(object):
         raise NotImplementedError()
 
 class RyuShim(Base):
+
+    def __init__(self, ofport="6633"):
+        self.port = ofport
+
     def start(self):
         base = ["ryu-manager"]
 
@@ -82,8 +86,10 @@ class RyuShim(Base):
         list = util.getWindowList()
 
         if "RyuShim" not in list:
-            call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=1234', '/home/vagrant/netide/Engine/ryu-shim/ryu-shim.py'])
-        #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py', 'C-m'])
+            #6633 default for port listening
+            newCmd = "bash -c \'cd ~/netide/Engine/ryu-shim/ && " + cmd + " --ofp-tcp-listen-port=" + self.port + " ryu-shim.py\'"
+            call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', newCmd])
+
         else:
             print("Ryu Shim already running")
 

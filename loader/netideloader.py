@@ -75,7 +75,10 @@ def start_package(args):
 
 
     if args.server == "ryu":
-        RyuShim("").start()
+        if args.ofport == None:
+            RyuShim().start()
+        else:
+            RyuShim(args.ofport).start()
     else:
 
         ODL("").start()
@@ -160,6 +163,7 @@ if __name__ == "__main__":
     parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
     parser_start.add_argument("package", type=str, help="Package to load")
     parser_start.add_argument("--server", type=str, help="Choose one of {ODL, ryu}")
+    parser_start.add_argument("--ofport", type=str, help="Choose port for of.")
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_start.set_defaults(func=start_package, mode="all")
 
