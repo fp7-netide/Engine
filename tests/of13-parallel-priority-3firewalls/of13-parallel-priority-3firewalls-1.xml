@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<CompositionSpecification
+        xmlns="http://netide.eu/schemas/compositionspecification/v1">
+    <Modules>
+        <Module id="Firewall_1" loaderIdentification="firewall_13-1.py" noFenceSupport="false">
+            <CallCondition events="packetIn" datapaths="1"/>
+        </Module>
+        <Module id="Firewall_2" loaderIdentification="firewall_13-2.py" noFenceSupport="false">
+            <CallCondition events="packetIn" datapaths="1"/>
+        </Module>
+        <Module id="Firewall_3" loaderIdentification="firewall_13-3.py" noFenceSupport="false">
+            <CallCondition events="packetIn" datapaths="1"/>
+        </Module>
+    </Modules>
+    <Composition>
+        <ParallelCall resolutionPolicy="priority">
+            <ModuleCall module="Firewall_1" priority="3"/>
+            <ModuleCall module="Firewall_2" priority="2"/>
+            <ModuleCall module="Firewall_3" priority="1"/>
+        </ParallelCall>
+    </Composition>
+</CompositionSpecification>
