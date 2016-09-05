@@ -37,16 +37,16 @@ class Base(object):
         d = os.path.join(self.dataroot, "logs", myid)
         os.makedirs(d, exist_ok=True)
         return d
-    
+
     @classmethod
     def attachTmux(cls):
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-        if [ sessionExists != 0 ]:  
+
+        if [ sessionExists != 0 ]:
             call("tmux attach -t NetIDE", shell=True)
         else:
             print("Tmux Session NetIDE was not found!")
-    
+
     @classmethod
     def getControllerName(cls):
         "Returns the name of the controller"
@@ -64,36 +64,38 @@ class Base(object):
 class RyuShim(Base):
     def start(self):
         base = ["ryu-manager"]
-        
+
         y = yaml.load(open("commands.yml"))
         ryuCommands = y['ryu_shim']
 
         v = os.environ.copy()
         v.update(ryuCommands["variables"])
-        
+
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-        if [ sessionExists != 0 ]:        
+
+        if [ sessionExists != 0 ]:
             call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
             time.sleep(1)
-        
+
         cmd = util.tmux_line(ryuCommands)
+
         list = util.getWindowList()
+
         if "RyuShim" not in list:
-            call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py'])
+            call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=1234', '/home/vagrant/netide/Engine/ryu-shim/ryu-shim.py'])
         #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=1234 ~/netide/Engine/ryu-shim/ryu-shim.py', 'C-m'])
         else:
             print("Ryu Shim already running")
-        
-        
-    
+
+
+
 class Ryu(Base):
     appNames = []
-    
+
     @classmethod
     def getControllerName(cls):
         return "ryu"
-    
+
     @classmethod
     def version(cls):
         try:
@@ -103,29 +105,29 @@ class Ryu(Base):
             return None
         except FileNotFoundError:
             return None
-    
-                
+
+
     def start(self):
         base = ["ryu-manager"]
-        
+
         y = yaml.load(open("commands.yml"))
         ryuCommands = y['ryu']
 
         v = os.environ.copy()
         v.update(ryuCommands["variables"])
-        
+
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-        if [ sessionExists != 0 ]:        
+
+        if [ sessionExists != 0 ]:
             call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
             time.sleep(1)
-        
+
         cmd = util.tmux_line(ryuCommands)
-        
+
 
 
         for a in self.applications:
-            
+
 
             self.appNames.append(a.appName)
 
@@ -133,7 +135,7 @@ class Ryu(Base):
 
             #check with list window if exists
             windowNames = util.getWindowList()
-            
+
             if a.appName not in windowNames:
                 call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', cmd, '--ofp-tcp-listen-port=' + str(a.appPort), os.path.join(a.path, a.entrypoint)])
                 #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
@@ -142,27 +144,27 @@ class Ryu(Base):
 
             if "sleepafter" in ryuCommands:
                 time.sleep(ryuCommands["sleepafter"])
-        
+
 
 
 class FloodLight(Base):
     @classmethod
     def getControllerName(cls):
         return "floodlight"
-    
+
     @classmethod
     def version(cls):
         pass
-    
+
     def start(self):
         pass
-    
+
 #===============================================================================
 #     @classmethod
 #     def version(cls):
 #         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
 #         return v.decode("utf-8").split("-")[0].strip()
-# 
+#
 #     def start(self):
 #         # XXX: application modules are not copied into floodlight right now, they need to be copied manually
 #         try:
@@ -172,7 +174,7 @@ class FloodLight(Base):
 #             logging.debug("{}: {}".format(type(err), err))
 #             data = {}
 #         running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
-# 
+#
 #         for a in self.applications:
 #             if not a.enabled:
 #                 logging.info("Skipping disabled application {}".format(a))
@@ -180,12 +182,12 @@ class FloodLight(Base):
 #             if a in running_apps:
 #                 logging.info("App {} is already running".format(a))
 #                 continue
-# 
+#
 #             prefix = os.path.expanduser("~/floodlight/src/main/resources")
-# 
+#
 #             with open(os.path.join(prefix, "META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule"), "r+") as fh:
 #                 fh.write("{}\n".format(a.metadata.get("param", "")))
-# 
+#
 #             with open(os.path.join(prefix, "floodlightdefault.properties"), "r+") as fh:
 #                 lines = fh.readlines()
 #                 idx = 0
@@ -197,17 +199,17 @@ class FloodLight(Base):
 #                 fh.seek(0)
 #                 fh.truncate()
 #                 fh.writelines(lines)
-# 
+#
 #         myid = str(uuid.uuid4())
 #         logdir = self.makelogdir(myid)
-# 
+#
 #         serr = open(os.path.join(logdir, "stderr"), "w")
 #         sout = open(os.path.join(logdir, "stdout"), "w")
-# 
+#
 #         # Rebuild floodlight with ant
 #         cmdline = ["cd ~/floodlight; ant"]
 #         subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).wait() # TODO: check exit value?
-# 
+#
 #         # Start floodlight
 #         cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
 #         return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
@@ -217,78 +219,78 @@ class Core(Base):
     packagePath = ""
     def __init__(self, path):
         self.packagePath = path
-        
+
     def start(self):
-        
+
         y = yaml.load(open("commands.yml"))
         coreCommands = y['core']
-        
+
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-        if [ sessionExists != 0 ]:        
+
+        if [ sessionExists != 0 ]:
             call(["tmux", "new-session", "-d", "-s", "NetIDE"])
             time.sleep(1)
         list = util.getWindowList()
-        
-        if "Core" not in list:   
+
+        if "Core" not in list:
 
             call(['tmux', 'new-window', '-n', "Core", '-t', 'NetIDE', "bash -c \'cd ~/netide/core-karaf/bin/ && ./karaf\'"])
-     
+
             compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
-        
-    
+
+
             time.sleep(coreCommands['sleepafter'])
-            
+
             call(['tmux', 'send-keys', '-t', 'NetIDE' , "netide:loadcomposition "+compositionPath, 'C-m'])
             #call(['tmux', 'send-keys', '-t', 'NetIDE' , "log:tail", 'C-m'])
-            
+
         else:
             print("Core already running")
-        
-   
+
+
 
 class ODL(Base):
 
     def start(self):
-        
+
         y = yaml.load(open("commands.yml"))
         odlCommands = y['odl']
-        
+
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-        if [ sessionExists != 0 ]:        
+
+        if [ sessionExists != 0 ]:
             call(["tmux", "new-session", "-d", "-s", "NetIDE"])
-        
+
         list = util.getWindowList()
-        
+
         if "ODL" not in list:
- 
+
             call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf'])
-            
+
             time.sleep(odlCommands['sleepafter'])
         else:
             print("ODL already running")
-            
+
 class Mininet(Base):
     def start(self):
-        
+
         y = yaml.load(open("commands.yml"))
         mininetCommands = y['mininet']
         sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-        if [ sessionExists != 0 ]:        
+
+        if [ sessionExists != 0 ]:
             call(["tmux", "new-session", "-d", "-s", "NetIDE"])
             time.sleep(1)
-        
+
         list = util.getWindowList()
-            
-        if Mininet not in list:    
+
+        if Mininet not in list:
             call(['tmux', 'new-window', '-n', "Mininet", '-t', 'NetIDE', "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py"])
             #call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py", 'C-m'])
             time.sleep(mininetCommands['sleepafter'])
         else:
-            print("Mininet already running") 
-            
+            print("Mininet already running")
+
 
 class POX(Base):
     pass
