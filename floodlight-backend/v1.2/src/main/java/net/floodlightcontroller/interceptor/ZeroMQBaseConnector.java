@@ -120,7 +120,7 @@ public class ZeroMQBaseConnector implements Runnable {
                     } else if (msg instanceof ModuleAcknowledgeMessage) {
                         int moduleId = ((ModuleAcknowledgeMessage) msg).getHeader().getModuleId();
                         String moduleName = ((ModuleAcknowledgeMessage) msg).getModuleName();
-                        LOG.info("Module Announcement received. ModuleName: " + moduleName + "ModuleId: " + moduleId);
+                        LOG.info("Module Announcement received. ModuleName: " + moduleName + " ModuleId: " + moduleId);
                         moduleListener.onModuleAckMessage(moduleName, moduleId);
                     }
                 }
