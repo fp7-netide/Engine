@@ -188,7 +188,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 	@Override
 	public void OnUnhandledBackendMessage(Message message, String originId) {
-
 	}
 
 	@Override
@@ -199,7 +198,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 	@Override
 	public void OnUnhandeldShimMessage(Message message, String originId) {
-
 	}
 
 	private void OnShimAndBackendMessage(Message message, String origin, String originId){
