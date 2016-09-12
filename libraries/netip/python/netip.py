@@ -81,8 +81,8 @@ class NetIDEOps:
         'NETIDE_FENCE'          : 0x08,
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
-        'NETIDE_OPFLEX'     : OPFLEX_PROTO
-        'NETIDE_OFCONFIG'   : OFCONFIG_PROTO
+        'NETIDE_OPFLEX'     : OPFLEX_PROTO,
+        'NETIDE_OFCONFIG'   : OFCONFIG_PROTO,
         'NETIDE_OTHER'      : OTHER_PROTO
     }
 
