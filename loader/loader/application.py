@@ -92,12 +92,12 @@ class Application(object):
        path = d['PATH'].split(':')
        for route in path:
         try:
-             ls_result = subprocess.check_output(["ls", route])
+             ls_result = subprocess.check_output(["ls", route]).decode('utf-8')
         except subprocess.CalledProcessError as e:
              #print e.output
              return False
         if 'ovs-vsctl' in ls_result:
-            ovs = subprocess.check_output(["ovs-vsctl", "--version"])
+            ovs = subprocess.check_output(["ovs-vsctl", "--version"]).decode('utf-8')
             ovs = ovs.split('\n')[0]
             ovs = ovs.split(' ')
             #TODO compare ovs version to of version required
@@ -105,24 +105,24 @@ class Application(object):
        for sw in sw_req:
         flag = False
         for route in path:
-        try:
-            ls_result = subprocess.check_output(["ls", route])
-        except subprocess.CalledProcessError as e:
-            #print e.output
-            return False
-        if sw_req[sw] in ls_result:
-         if flag:
-          print "Several versions of software: " + sw_req[sw]
-         flag = True
-         #TODO check if sw version fulfills the requirements
-         #try:
-              #version = subprocess.Popen([sw_req[sw], "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-         #except subprocess.CalledProcessError as e:
-              #print e.output
-         #try:
-              #version = subprocess.Popen([sw_req[sw], "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-         #except subprocess.CalledProcessError as e:
-              #print e.output
+         try:
+             ls_result = subprocess.check_output(["ls", route]).decode('utf-8')
+         except subprocess.CalledProcessError as e:
+             #print e.output
+             return False
+         if sw_req[sw]["name"] in ls_result:
+          if flag:
+           print "Several versions of software: " + sw_req[sw]
+          flag = True
+          #TODO check if sw version fulfills the requirements
+          #try:
+               #version = subprocess.Popen([sw_req[sw], "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          #except subprocess.CalledProcessError as e:
+               #print e.output
+          #try:
+               #version = subprocess.Popen([sw_req[sw], "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+          #except subprocess.CalledProcessError as e:
+               #print e.output
         if flag == False:
          return False
        return True
@@ -134,7 +134,7 @@ class Application(object):
     
         with open(os.path.join(path, sysreqPath)) as f:
             
-            s = io.BytesIO()
+            s = io.StringIO()
 
             st = reduce(lambda x, y: x + y, f)
             f.seek(0)
@@ -145,31 +145,24 @@ class Application(object):
             prev_line = ''
             sw_count = 0
             for line in f:
-                if prev_line == '':
-                    new_line = "app\n"
-                else:
-                    new_line = line.replace(" '", ": '").replace("\t", "  ")
+                
+                new_line = line.replace("\t", "  ").replace(":\"", ": ")
 
-                if "software\n" in prev_line:
-                    prev_line = prev_line.replace("\n", str(sw_count)+"\n")
+                if "software:" in prev_line:
+                    prev_line = prev_line.replace("software:", "software" + str(sw_count) + ":")
                     sw_count += 1
 
-                if '{' in new_line:
-                    prev_line= prev_line.replace("\n", ":\n")
-                elif (prev_line != '' and '{' not in prev_line) and '}' not in new_line:
-                    prev_line = prev_line.replace("\n", ",\n")
-                #print prev_line
+                #print(prev_line)
                 s.write(prev_line)
                 prev_line = new_line
             s.write(prev_line)
             if not enclosed: s.write("}")
             
             s.seek(0)
-            
+            #print(s.getvalue())
             y = load(s)
 
             return y
-
     @classmethod
     def get_controller_name(self, path):
             
