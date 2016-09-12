@@ -1,3 +1,5 @@
-parameters: {
-	idle_timeout: Integer
+{
+  "parameters": {
+    "idle_timeout": "Integer = 5"
+  }
 }

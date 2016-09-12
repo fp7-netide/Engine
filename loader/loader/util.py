@@ -27,60 +27,60 @@ def getWindowList():
     except sp.CalledProcessError:
         print("No active Session found.")
         return 1
-    
-    windowList = windowList.decode("utf-8") 
-    
+
+    windowList = windowList.decode("utf-8")
+
     splitted = []
     for s in windowList.split(":"):
         splitted.append(s.split("("))
-    
+
     name = []
     for s in splitted:
         name.append(s[0].replace("-", "").replace("*", "").lstrip().rstrip())
-    
+
     del(name[0])
-    
-    
+
+
     return name
-        
-def extractPackage(path):   
+
+def extractPackage(path):
     os.makedirs(dataroot, exist_ok=True)
-    
-    
-    
+
+
+
     if os.path.exists(extractPath):
-        if os.path.isfile(extractPath): 
+        if os.path.isfile(extractPath):
             f = open(extractPath)
             tmpPath = f.read()
     else:
-        tmpPath = dataroot   
-    
-    print(tmpPath)  
+        tmpPath = dataroot
+
+    print(tmpPath)
 
     with tarfile.open(path) as tar:
-        
+
         members = tar.getmembers()
-        
-        #extracts the top level folder 
+
+        #extracts the top level folder
         prefix = []
         for m in members:
-            if "/" in m.name: 
+            if "/" in m.name:
                 tmpPrefix = m.name.split("/")[0]
                 prefix.append(tmpPrefix)
-        
+
         noTopArchive = False
-        
+
         #checks if the package content is in an top folder or directly in the archive
         for pre in prefix:
             if pre == "apps" or pre == "composition" or pre == "templates":
                 noTopArchive = True
-        
+
         topLevelFolderName = ""
-       
-       
+
+
         if noTopArchive:
             print("no top level folder was found in archive.")
-            
+
             #sets top level folder name to archive name
             if "tar.gz" in path:
                 archiveName = os.path.splitext(path)[0]
@@ -88,21 +88,21 @@ def extractPackage(path):
 
             else:
                 archiveName = os.path.splitext(path)[0]
-            
-            topLevelFolderName = os.path.basename(archiveName)    
-        
+
+            topLevelFolderName = os.path.basename(archiveName)
+
         #if there is a top level folder the data will be extracted there
         else:
             topLevelFolderName = os.path.commonprefix(tar.getnames())
-        
+
         folderPath = os.path.join(tmpPath, topLevelFolderName)
-            
-        
-        
+
+
+
         if os.path.exists(folderPath):
             numberOfCopys = 1
             higherCopyNumberNeeded = True
-            
+
             while higherCopyNumberNeeded:
                 tmpLevelFolderName = topLevelFolderName + "_copy(" + str(numberOfCopys) +")"
                 copyPath = os.path.join(tmpPath, tmpLevelFolderName)
@@ -112,25 +112,41 @@ def extractPackage(path):
                     tmpPath = copyPath
         else:
             tmpPath = folderPath
-            
+
         os.makedirs(tmpPath)
-            
-        tar.extractall(tmpPath)    
-                
+
+        tar.extractall(tmpPath)
+
     if not noTopArchive:
         tmpPath = os.path.join(tmpPath, topLevelFolderName)
-        
+
     print("Extracted to: " + tmpPath)
     return tmpPath
 
 def setExtractionPath(path):
     os.makedirs(dataroot, exist_ok=True)
-    
+
     with open(extractPath, 'w') as f:
         f.write(args.path)
     return 0
 
-    
+def createParamFile(path, name):
+
+    appPath = os.path.join(path, name)
+    appParamPath = os.path.join(appPath, name + '.params')
+    paramDict = {}
+    with open(appParamPath, 'r') as appParamFile:
+        print(appParamPath)
+        content = json.load(appParamFile)
+
+        for key, value in content["parameters"].items():
+            newVaue = value.split("=")[0].lstrip().rstrip()
+
+            paramDict[key] = newVaue
+
+        return paramDict
+
+
 def compileHandlebar(path, appName, paramPath=""):
     compiler = Compiler()
 
@@ -140,16 +156,16 @@ def compileHandlebar(path, appName, paramPath=""):
     with open(templatePath, 'r') as myfile:
         data=myfile.read()
         template = compiler.compile(data)
-        
-    if paramPath == "": 
-       paramPath = os.path.join(path, "parameters.json")
-    
 
-    
+    if paramPath == "":
+       paramPath = os.path.join(path, "parameters.json")
+
+
+
     with open(paramPath, 'r') as parameterJson:
         content = json.load(parameterJson)
         appContent = content[appName]
-    
+
     output = template(appContent)
 
     return output.lower()
@@ -247,21 +263,21 @@ def write_ansible_hosts(clients, path):
             if len(c) >= 4:
                 ah.write(" ansible_ssh_private_key_file={}".format(c[3]))
             ah.write("\n")
-            
+
 def editPlaybookClient(package):
-     
+
     open("Playbook_Setup/siteClient.yml", 'w').close()
-        
-    currentContent = []    
-    
+
+    currentContent = []
+
     nameSet = set(package.controllerNames)
     names = []
     for name in nameSet:
         names.append(name)
         print(name)
-    
+
     currentContent.append({'name' : 'install client localhost', 'hosts' : 'localhost', 'roles' : names})
-        
+
 
     with open("Playbook_Setup/siteClient.yml", "w") as f:
         yaml.dump(currentContent, f, default_flow_style=False)
@@ -269,13 +285,13 @@ def editPlaybookClient(package):
 
 def editPlaybookServer(conf):
     open("Playbook_Setup/siteServer.yml", 'w').close()
-    
+
     currentContent = []
 
-        
-    currentContent.append({'name' : 'install server', 'hosts' : conf["host"], 'roles' : ["prereq", "engine", "core", "mininet", conf['type']]}) 
-        
-    
+
+    currentContent.append({'name' : 'install server', 'hosts' : conf["host"], 'roles' : ["prereq", "engine", "core", "mininet", conf['type']]})
+
+
 
 
     with open("Playbook_Setup/siteServer.yml", "w") as f:
@@ -294,9 +310,9 @@ def stripFileContent(path):
             if not enclosed: s.write("{")
             for line in f: s.write(line.replace("\t", "  ").replace(":\"", ": "))
             if not enclosed: s.write("}")
-            
-            s.seek(0)   
-             
+
+            s.seek(0)
+
             return s
 
 def tmux_line(c):
