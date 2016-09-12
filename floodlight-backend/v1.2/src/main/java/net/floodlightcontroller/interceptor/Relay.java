@@ -28,7 +28,7 @@ public class Relay {
         OpenFlowMessage ofMessage = new OpenFlowMessage();
         ofMessage.getHeader().setDatapathId(datapathId);
         ofMessage.getHeader().setTransactionId((int) msg.getXid());
-        ofMessage.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_2);
+        ofMessage.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_3);
         ofMessage.getHeader().setModuleId(moduleId);
         ChannelBuffer dcb = ChannelBuffers.dynamicBuffer();
         msg.writeTo(dcb);

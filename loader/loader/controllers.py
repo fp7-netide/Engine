@@ -145,11 +145,11 @@ class Ryu(Base):
             windowNames = util.getWindowList()
 
             if a.appName not in windowNames:
-
+                print(a.path)
                 ryubackendpath = "bash -c \' cd ~/netide/Engine/ryu-backend/ && " + cmd + " --ofp-tcp-listen-port=" + str(Ryu.ryubackendport) + " ryu-backend.py " + os.path.join(a.path, a.entrypoint) + "\' "
 
                 call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', ryubackendpath])
-            
+
                 Ryu.ryubackendport = Ryu.ryubackendport + 1
                 #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
             else:

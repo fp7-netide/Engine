@@ -17,12 +17,14 @@
 ################################################################################
 import struct
 
-NETIDE_VERSION = 0x04
+NETIDE_VERSION = 0x05
 NetIDE_Header_Format = '!BBHIIQ'
 
 OPENFLOW_PROTO = 0x11
 NETCONF_PROTO = 0x12
 OPFLEX_PROTO = 0x13
+OFCONFIG_PROTO = 0x14
+OTHER_PROTO = 0xFF
 OPENFLOW_10 = 0x01
 OPENFLOW_11 = 0x02
 OPENFLOW_12 = 0x03
@@ -80,6 +82,8 @@ class NetIDEOps:
         'NETIDE_OPENFLOW'   : OPENFLOW_PROTO,
         'NETIDE_NETCONF'    : NETCONF_PROTO,
         'NETIDE_OPFLEX'     : OPFLEX_PROTO
+        'NETIDE_OFCONFIG'   : OFCONFIG_PROTO
+        'NETIDE_OTHER'      : OTHER_PROTO
     }
 
  #Encode a message in the NetIDE protocol format

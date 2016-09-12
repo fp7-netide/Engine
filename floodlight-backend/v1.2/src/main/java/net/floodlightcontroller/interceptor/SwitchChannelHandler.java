@@ -16,7 +16,7 @@ import org.jboss.netty.channel.SimpleChannelHandler;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
 import org.projectfloodlight.openflow.protocol.OFExperimenter;
 import org.projectfloodlight.openflow.protocol.OFFactories;
-import org.projectfloodlight.openflow.protocol.OFGetConfigRequest.Builder;
+import org.projectfloodlight.openflow.protocol.*;
 import org.projectfloodlight.openflow.protocol.OFMessage;
 import org.projectfloodlight.openflow.protocol.OFNiciraControllerRoleRequest;
 import org.projectfloodlight.openflow.protocol.OFType;
@@ -61,6 +61,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 
         try {
             OFMessage msg = OFFactories.getGenericReader().readFrom(buf);
+            logger.debug("Message received channel handler: " + msg.getType().toString() + " switch datapathID: " + dummySwitch.getDatapathId());
             handleMessage(msg);
         } catch (OFParseError e1) {
             // TODO Auto-generated catch block
@@ -78,7 +79,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
         } else if (msg.getType().equals(OFType.FEATURES_REQUEST)) {
             Relay.sendToController(future, dummySwitch.getFeatures());
         } else if (msg.getType().equals(OFType.SET_CONFIG)) {
-            Builder configReqBuilder = OFFactories.getFactory(msg.getVersion()).buildGetConfigRequest();
+            OFGetConfigRequest.Builder configReqBuilder = OFFactories.getFactory(msg.getVersion()).buildGetConfigRequest();
             configReqBuilder.setXid(msg.getXid());
             Relay.sendToCore(coreConnector, configReqBuilder.build(), dummySwitch.getDatapathId(),
                     moduleHandler.getModuleId(-1, moduleName));

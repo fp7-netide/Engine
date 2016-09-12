@@ -49,12 +49,24 @@ public class DummySwitch implements IOFSwitch {
     private long datapathId;
     private OFFeaturesReply features;
     private boolean handshakeCompleted = false;
-
+    private boolean statsReplyReceived = false;
+    
+    public String switchState = "waitConfigReply";
+    public long lastXid = -1;
+    
     public DummySwitch(long _datapathId, OFFeaturesReply features) {
         datapathId = _datapathId;
         this.features = features;
     }
+    
+    public boolean isStatsReplyReceived() {
+        return statsReplyReceived;
+    }
 
+    public void setStatsReplyReceived(boolean value) {
+    	statsReplyReceived = value;
+    }
+    
     public boolean isHandshakeCompleted() {
         return handshakeCompleted;
     }

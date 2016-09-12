@@ -7,6 +7,7 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import eu.netide.lib.netip.FenceMessage;
 import eu.netide.lib.netip.HeartbeatMessage;
 import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.NetIDEProtocolVersion;
@@ -31,6 +32,8 @@ import net.floodlightcontroller.core.module.FloodlightModuleContext;
 import net.floodlightcontroller.core.module.FloodlightModuleException;
 import net.floodlightcontroller.core.module.IFloodlightModule;
 import net.floodlightcontroller.core.module.IFloodlightService;
+import net.floodlightcontroller.packetstreamer.thrift.OFMessageType;
+
 import org.javatuples.Pair;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelFactory;
@@ -64,13 +67,13 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     private Map<Long, DummySwitch> managedSwitches = new HashMap<Long, DummySwitch>();
     private int xId = 1;
     private boolean handshake = false;
-    private NetIDEProtocolVersion netIpVersion = NetIDEProtocolVersion.VERSION_1_2;
+    private NetIDEProtocolVersion netIpVersion = NetIDEProtocolVersion.VERSION_1_3;
     private Pair<Protocol, ProtocolVersions> protocolMatched;
     private Thread helloThread = new Thread(this);
     private final String moduleName = "floodlight-backend";
     private final int heartbeatTimeout = 5000;
     private final OFType[] handshakeMessages = { OFType.HELLO, OFType.FEATURES_REPLY, OFType.GET_CONFIG_REPLY,
-            OFType.STATS_REPLY, OFType.ROLE_REPLY, OFType.ECHO_REPLY, OFType.ECHO_REQUEST };
+    		OFType.STATS_REPLY, OFType.ROLE_REPLY, OFType.ECHO_REPLY, OFType.ECHO_REQUEST };
 
     private int getXId() {
         int current = xId;
@@ -125,11 +128,20 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-        logger.info("Message received from controller in receive: " + msg.getType());
+        logger.info("Message received from controller: " + msg.getType());
 
         if (!sw.getStatus().equals(SwitchStatus.HANDSHAKE)) {
             managedSwitches.get(sw.getId().getLong()).setHandshakeCompleted(true);
         }
+        if (msg.getType().equals(OFMessageType.FLOW_MOD) || msg.getType().equals(OFMessageType.PACKET_OUT)){
+        	FenceMessage fence = new FenceMessage();
+            fence.getHeader().setNetIDEProtocolVersion(netIpVersion);
+            fence.getHeader().setModuleId(moduleHandler.getModuleId(-1, moduleName));
+            fence.getHeader().setPayloadLength((short) 0);
+            fence.getHeader().setDatapathId(-1);
+            coreConnector.SendData(fence.toByteRepresentation());
+        }
+        
         return Command.CONTINUE;
     }
 
@@ -297,7 +309,10 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId) {
+    	
+    	//logger.debug(msg.toString());
         if (!(managedSwitches.containsKey(datapathId)) || msg.getType().equals(OFType.FEATURES_REPLY)) {
+        	logger.debug("Adding switch datapathID: " + datapathId.toString());
             OFFeaturesReply features = null;
             if (msg.getType().equals(OFType.FEATURES_REPLY)) {
                 features = (OFFeaturesReply) msg;
@@ -308,39 +323,16 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 
         } else if (managedSwitches.get(datapathId).isHandshakeCompleted()
                 || Arrays.asList(handshakeMessages).contains(msg.getType())) {
-            String moduleIdString = "";
-            //TODO: We need a method to get the module ID from the moduleRegistry in ModuleHandlerImpl.java
-            // If no module or moduleId = -1 then return an empty String
-            // getModuleStringFromID(moduleId);
-            Relay.sendToController(switchProvider.getSwitch(DatapathId.of(datapathId));, msg, moduleIdString);
+        	logger.debug("message received from the core for switch DataPathID: " + 
+                datapathId.toString() + " Type: " + msg.getType().toString() + "XID: " + msg.getXid());
+        	if (msg.getXid() != managedSwitches.get(datapathId).lastXid){
+        		Relay.sendToController(managedSwitchesChannel.get(datapathId), msg);
+        		managedSwitches.get(datapathId).lastXid = msg.getXid();
+        	}
+        	
         }
     }
-    
-    private void sendToController(IOFSwitch sw, OFMessage message, String moduleId){
-        // SEND PACKETS DIRECTLY TO THE PIPELINE
-        FloodlightContext context = new FloodlightContext();
-        if(moduleId.isEmpty()){
-            // send to all modules
-            context=null;
-            floodlightProvider.handleMessage(sw,message,context);
-        }else{
-            // NetIDE composition, send to a specific module
-            List<IOFMessageListener> listeners = null;
-            Map<OFType,List<IOFMessageListener>> messageListeners = floodlightProvider.getListeners();
-            if (messageListeners.containsKey(message.getType())) {
-                listeners = messageListeners.get(message.getType());
-            }
-            for (IOFMessageListener listener : listeners) {
-                if (moduleId.equals(listener.getName())) {
-                    listener.receive(sw, message, context);
-                    // TODO : the code for sending the FENCE should go here
-                } else {
-                    // TODO : the backend asked for an unknown application. Send an error?
-                }
-            }
-        }
-    }
-    
+
     private void addNewSwitch(DummySwitch dummySwitch) {
         final SwitchChannelHandler switchHandler = new SwitchChannelHandler(coreConnector, aggreedVersion);
         switchHandler.setDummySwitch(dummySwitch); // CONTAINS ALL THE INFO
