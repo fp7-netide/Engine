@@ -100,28 +100,28 @@ def extractPackage(path):
 
 
         if os.path.exists(folderPath):
-            numberOfCopys = 1
-            higherCopyNumberNeeded = True
+            # numberOfCopys = 1
+            # higherCopyNumberNeeded = True
+            #
+            # while higherCopyNumberNeeded:
+            #     tmpLevelFolderName = topLevelFolderName + "_copy(" + str(numberOfCopys) +")"
+            #     copyPath = os.path.join(tmpPath, tmpLevelFolderName)
+            #     numberOfCopys = numberOfCopys +1
+            #     if not os.path.exists(copyPath):
+            #         higherCopyNumberNeeded = False
+            #         tmpPath = copyPath
+            shutil.rmtree(folderPath)
 
-            while higherCopyNumberNeeded:
-                tmpLevelFolderName = topLevelFolderName + "_copy(" + str(numberOfCopys) +")"
-                copyPath = os.path.join(tmpPath, tmpLevelFolderName)
-                numberOfCopys = numberOfCopys +1
-                if not os.path.exists(copyPath):
-                    higherCopyNumberNeeded = False
-                    tmpPath = copyPath
-        else:
-            tmpPath = folderPath
 
-        os.makedirs(tmpPath)
+        os.makedirs(folderPath)
 
-        tar.extractall(tmpPath)
+        tar.extractall(folderPath)
 
     if not noTopArchive:
-        tmpPath = os.path.join(tmpPath, topLevelFolderName)
+        folderPath = os.path.join(folderPath, topLevelFolderName)
 
-    print("Extracted to: " + tmpPath)
-    return tmpPath
+    print("Extracted to: " + folderPath)
+    return folderPath
 
 def setExtractionPath(path):
     os.makedirs(dataroot, exist_ok=True)
