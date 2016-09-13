@@ -62,6 +62,10 @@ def set_extraction_path(args):
 
     return 0;
 
+def createParam(args):
+    p = Package(args.package, dataroot)
+    p.createParamFile(args.fp)
+
 def start_package(args):
 
     if not args.param == None:
@@ -69,7 +73,7 @@ def start_package(args):
 
     else:
         p = Package(args.package, dataroot)
-
+    p.load_apps_and_controller()
 
     Core(p.path).start()
 
@@ -143,14 +147,12 @@ def install(args):
     return 0
 
 def generate(args):
-    #generate param will be called during the init method
+
     if not args.param == None:
-
-                p = Package(args.package, dataroot, args.param)
-
-
+        p = Package(args.package, dataroot, args.param)
     else:
         p = Package(args.package, dataroot)
+    p.load_apps_and_controller()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
@@ -159,6 +161,10 @@ if __name__ == "__main__":
     parser_attach = subparsers.add_parser("attach", description="If possible attaches tmux session")
     parser_attach.set_defaults(func=attach, mode="all")
 
+    parser_createParam = subparsers.add_parser("createParam", description="Generates an empty parameters.json file.")
+    parser_createParam.add_argument("package", type=str, help="Package for which the param file will be generated")
+    parser_createParam.add_argument("--fp", type=str, help="Path where the param file will be saved.")
+    parser_createParam.set_defaults(func=createParam, mode="all")
 
     parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
     parser_start.add_argument("package", type=str, help="Package to load")
@@ -167,7 +173,7 @@ if __name__ == "__main__":
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_start.set_defaults(func=start_package, mode="all")
 
-    parser_createHandlebars = subparsers.add_parser("generate", description="Generates the .params files for the applications.")
+    parser_createHandlebars = subparsers.add_parser("loadParamConfig", description="Generates the .params files for the applications.")
     parser_createHandlebars.add_argument("package", type=str, help="Package to use")
     parser_createHandlebars.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_createHandlebars.set_defaults(func=generate, mode="all")

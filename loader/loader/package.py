@@ -44,7 +44,7 @@ class Package(object):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         print(self.path)
-
+        self.paramPath = paramPath
 
         if not Package.hasBeenExtracted:
 
@@ -69,11 +69,10 @@ class Package(object):
 
 
         logging.debug("Loading applications for host {}".format(platform.node()))
-        p = os.path.join(self.path, "apps")
-        self.appFolderPath = p
+        self.appFolderPath = os.path.join(self.path, "apps")
         self.appNames = []
 
-        for d in os.listdir(p):
+        for d in os.listdir(self.appFolderPath):
             if not d.startswith('.'):
                 self.appNames.append(d)
 
@@ -83,12 +82,22 @@ class Package(object):
                 raise FileNotFoundError('Param file was not found. An empty file was created at ' + os.path.join(self.path, "parameters.json") + ' Please insert the needed data and rerun.')
 
 
+        hash = hashlib.sha1()
+        for (dirpath, dirnames, filenames) in os.walk(self.path):
+            for f in filenames:
+                hash.update(bytes(f, 'utf-8'))
+                with open(os.path.join(dirpath, f), 'rb') as fh:
+                    hash.update(fh.read())
+        self.cksum = hash.hexdigest()
+
+
+    def load_apps_and_controller(self):
 
         for d in self.appNames:
                 nodes = []
 
 
-                app = os.path.join(p, d)
+                app = os.path.join(self.appFolderPath, d)
 
                 appParamPath = os.path.join(app, d + '.params')
 
@@ -97,7 +106,7 @@ class Package(object):
                         print(appParamPath)
                         raise FileNotFoundError('Param file not found. Please use generate method first.')
 
-                content = util.compileHandlebar(self.path, d, paramPath)
+                content = util.compileHandlebar(self.path, d, self.paramPath)
                 self.generateParamFile(content, d)
 
 
@@ -117,19 +126,9 @@ class Package(object):
                         self.controllers[n] = {}
 
                     if ctrl not in self.controllers[n]:
-                        self.controllers[n][ctrl] = ctrl(dataroot)
+                        self.controllers[n][ctrl] = ctrl(self.dataroot)
 
                     self.controllers[n][ctrl].applications.append(Application(app))
-
-
-
-        hash = hashlib.sha1()
-        for (dirpath, dirnames, filenames) in os.walk(self.path):
-            for f in filenames:
-                hash.update(bytes(f, 'utf-8'))
-                with open(os.path.join(dirpath, f), 'rb') as fh:
-                    hash.update(fh.read())
-        self.cksum = hash.hexdigest()
 
 
     def __del__(self):
@@ -217,13 +216,19 @@ class Package(object):
 
         return clients
 
-    def createParamFile(self):
+    def createParamFile(self, paramPath=""):
         paramDict = {}
 
         for appName in self.appNames:
             paramDict[appName] = util.createParamFile(self.appFolderPath, appName)
 
-        with open(os.path.join(self.path, "parameters.json"), 'w') as paramFile:
+        if paramPath == "":
+            paramPath = os.path.join(self.path, "parameters.json")
+        else:
+            if os.path.isdir(paramPath):
+                paramPath = os.path.join(paramPath, "parameters.json")
+
+        with open(paramPath, 'w') as paramFile:
             json.dump(paramDict, paramFile, indent=2)
 
     def generateParam(self, paramPath=""):

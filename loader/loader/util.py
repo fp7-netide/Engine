@@ -136,11 +136,12 @@ def createParamFile(path, name):
     appParamPath = os.path.join(appPath, name + '.params')
     paramDict = {}
     with open(appParamPath, 'r') as appParamFile:
-        print(appParamPath)
+
         content = json.load(appParamFile)
 
         for key, value in content["parameters"].items():
-            newVaue = value.split("=")[0].lstrip().rstrip()
+            newVaue = "<" + value.split("=")[0].lstrip().rstrip().upper() + ">"
+
 
             paramDict[key] = newVaue
 
