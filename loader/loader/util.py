@@ -164,7 +164,13 @@ def compileHandlebar(path, appName, paramPath=""):
 
 
     with open(paramPath, 'r') as parameterJson:
+        #check if template is filled with actual data
         content = json.load(parameterJson)
+        for key,value in content.items():
+            for kkey, vvalue in value.items():
+                if "<" in vvalue or ">" in vvalue:
+                    raise ValueError ("The chosen param file does not contain all needed values.")
+
         appContent = content[appName]
 
     output = template(appContent)

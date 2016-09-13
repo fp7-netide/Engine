@@ -222,8 +222,8 @@ class Package(object):
         for appName in self.appNames:
             paramDict[appName] = util.createParamFile(self.appFolderPath, appName)
 
-        if paramPath == "":
-            paramPath = os.path.join(self.path, "parameters.json")
+        if paramPath == "" or paramPath == None:
+            paramPath = os.path.join(os.getcwd(), "parameters.json")
         else:
             if os.path.isdir(paramPath):
                 paramPath = os.path.join(paramPath, "parameters.json")
