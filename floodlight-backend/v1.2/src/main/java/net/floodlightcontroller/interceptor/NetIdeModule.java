@@ -74,7 +74,9 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     private final int heartbeatTimeout = 5000;
     private final OFType[] handshakeMessages = { OFType.HELLO, OFType.FEATURES_REPLY, OFType.GET_CONFIG_REPLY,
     		OFType.STATS_REPLY, OFType.ROLE_REPLY, OFType.ECHO_REPLY, OFType.ECHO_REQUEST };
-
+    
+    private List<String> modules;
+    
     private int getXId() {
         int current = xId;
         xId++;
@@ -133,12 +135,14 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         if (!sw.getStatus().equals(SwitchStatus.HANDSHAKE)) {
             managedSwitches.get(sw.getId().getLong()).setHandshakeCompleted(true);
         }
+        
         if (msg.getType().equals(OFMessageType.FLOW_MOD) || msg.getType().equals(OFMessageType.PACKET_OUT)){
         	FenceMessage fence = new FenceMessage();
             fence.getHeader().setNetIDEProtocolVersion(netIpVersion);
             fence.getHeader().setModuleId(moduleHandler.getModuleId(-1, moduleName));
             fence.getHeader().setPayloadLength((short) 0);
             fence.getHeader().setDatapathId(-1);
+            fence.getHeader().setTransactionId(Relay.getNetIpID());
             coreConnector.SendData(fence.toByteRepresentation());
         }
         
@@ -254,8 +258,16 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         floodlightProvider = context.getServiceImpl(IFloodlightProviderService.class);
         logger = LoggerFactory.getLogger(NetIdeModule.class);
         coreConnector = new ZeroMQBaseConnector(supportedProtocols);
-        coreConnector.setAddress("127.0.0.1");
-        coreConnector.setPort(5555);
+        String coreIp = context.getConfigParams(this).getOrDefault("coreIp","127.0.0.1");
+        coreConnector.setAddress(coreIp);
+        int corePort;
+        try{
+        	corePort = Integer.valueOf(context.getConfigParams(this).getOrDefault("corePort", "5555"));
+        }catch(java.lang.NumberFormatException e){
+        	corePort = 5555;
+        }
+        
+        coreConnector.setPort(corePort);
         coreConnector.RegisterCoreListener(this);
         moduleHandler = new ModuleHandlerImpl(coreConnector);
         coreConnector.RegisterModuleListener(moduleHandler);
@@ -270,11 +282,16 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void startUp(FloodlightModuleContext context) throws FloodlightModuleException {
+    	modules = new ArrayList<>();
+    	modules.addAll(0, 
+    			Arrays.asList(context.getConfigParams(this).getOrDefault("modules", "floodlight-backend").split(",")));
         initListeners();
-        logger.info("Send module announcement for floodlight-backend");
-        moduleHandler.obtainModuleId(getXId(), moduleName);
-        logger.info("Send module announcement for SimpleSwitch");
-        moduleHandler.obtainModuleId(getXId(), "SimpleSwitch");
+        
+        for (String module : modules){
+        	
+        	moduleHandler.obtainModuleId(getXId(), module);
+        }
+        
         helloThread.start();
     }
 
@@ -309,8 +326,6 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId) {
-    	
-    	//logger.debug(msg.toString());
         if (!(managedSwitches.containsKey(datapathId)) || msg.getType().equals(OFType.FEATURES_REPLY)) {
         	logger.debug("Adding switch datapathID: " + datapathId.toString());
             OFFeaturesReply features = null;
@@ -323,13 +338,21 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 
         } else if (managedSwitches.get(datapathId).isHandshakeCompleted()
                 || Arrays.asList(handshakeMessages).contains(msg.getType())) {
-        	logger.debug("message received from the core for switch DataPathID: " + 
-                datapathId.toString() + " Type: " + msg.getType().toString() + "XID: " + msg.getXid());
-        	if (msg.getXid() != managedSwitches.get(datapathId).lastXid){
+        	if (msg.getXid() == managedSwitches.get(datapathId).nextXid || managedSwitches.get(datapathId).isHandshakeCompleted()){
+        		logger.debug("Message received from the core for switch DataPathID: " + 
+                        datapathId.toString() + " Type: " + msg.getType().toString() + "XID: " + msg.getXid());
         		Relay.sendToController(managedSwitchesChannel.get(datapathId), msg);
         		managedSwitches.get(datapathId).lastXid = msg.getXid();
+        		managedSwitches.get(datapathId).nextXid = -1;
+        	}else {
+        		logger.debug("Unexpected message received from the core for switch DataPathID: " + 
+                        datapathId.toString() + " Type: " + msg.getType().toString() + " XID: " + msg.getXid() +
+                        " Dropping it.");
         	}
-        	
+        }else{
+        	logger.debug("Unexpected message received from the core for switch DataPathID: " + 
+                    datapathId.toString() + " Type: " + msg.getType().toString() + " XID: " + msg.getXid() +
+                    " Dropping it.");
         }
     }
 
@@ -389,7 +412,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     public void run() {
         try {
             startNetIpHandshake();
-            sendHeartbeat();
+//            /sendHeartbeat();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -404,9 +427,9 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         msg.getHeader().setPayloadLength((short) 0);
         msg.getHeader().setDatapathId(-1);
         while (true) {
-            msg.getHeader().setTransactionId(getXId());
+            msg.getHeader().setTransactionId(Relay.getNetIpID());
             coreConnector.SendData(msg.toByteRepresentation());
-            Thread.sleep(heartbeatTimeout);
+            Thread.sleep(heartbeatTimeout); 
         }
     }
 
@@ -419,7 +442,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         hello.setSupportedProtocols(supportedProtocols);
         boolean version_agreed = false;
         while (!version_agreed) {
-            hello.getHeader().setTransactionId(getXId());
+            hello.getHeader().setTransactionId(Relay.getNetIpID());
             coreConnector.SendData(hello.toByteRepresentation());
             Thread.sleep(3000);
             if (handshake)

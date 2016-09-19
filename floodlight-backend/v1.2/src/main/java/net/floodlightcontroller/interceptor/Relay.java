@@ -23,11 +23,30 @@ import org.slf4j.LoggerFactory;
 public class Relay {
 
     protected static Logger logger = LoggerFactory.getLogger(NetIdeModule.class);;
-
+    
+    protected static int lastXID = 0;
+    
+    public static int getNetIpID(){
+    	lastXID +=1;
+    	return lastXID;
+    }
+    
     public static void sendToCore(ZeroMQBaseConnector coreConnector, OFMessage msg, long datapathId, int moduleId) {
+    	int netIpID = -1;
+    	
+    	// if OF XID is less than last seen NetIPID
+    	// set the NetIpID = to last seen NetIpID + 1
+    	// otherwise netIpID = to OF XID
+    	if (msg.getXid() < lastXID){
+    		netIpID = lastXID + 1;
+    	}else{
+    		netIpID = (int) msg.getXid();
+    		lastXID = netIpID;
+    	}
+    	
         OpenFlowMessage ofMessage = new OpenFlowMessage();
         ofMessage.getHeader().setDatapathId(datapathId);
-        ofMessage.getHeader().setTransactionId((int) msg.getXid());
+        ofMessage.getHeader().setTransactionId(netIpID);
         ofMessage.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_3);
         ofMessage.getHeader().setModuleId(moduleId);
         ChannelBuffer dcb = ChannelBuffers.dynamicBuffer();

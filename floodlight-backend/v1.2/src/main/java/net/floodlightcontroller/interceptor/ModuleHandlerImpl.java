@@ -43,7 +43,7 @@ public class ModuleHandlerImpl implements IModuleHandler {
         ModuleAnnouncementMessage msg = new ModuleAnnouncementMessage();
         msg.getHeader().setDatapathId(-1);
         msg.getHeader().setModuleId(-1);
-        msg.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_2);
+        msg.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_3);
         msg.getHeader().setTransactionId(xId);
         msg.setModuleName(moduleName);
         sendToCore(msg);
@@ -59,6 +59,7 @@ public class ModuleHandlerImpl implements IModuleHandler {
 
     @Override
     public void onModuleAckMessage(String moduleName, int moduleId) {
+    	LOG.debug("Module name : " + moduleName + " ModuleId: " + moduleId);
         moduleRegistry.put(moduleName, moduleId);
     }
 

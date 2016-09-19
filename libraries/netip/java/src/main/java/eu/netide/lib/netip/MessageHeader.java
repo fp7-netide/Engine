@@ -23,8 +23,6 @@ public class MessageHeader implements Cloneable {
         this.netIDEProtocolVersion = NetIDEProtocolVersion.VERSION_1_3;
     }
 
-
-
     /**
      * Gets net iDE protocol version.
      *

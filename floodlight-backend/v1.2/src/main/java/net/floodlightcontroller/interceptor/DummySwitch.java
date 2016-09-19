@@ -54,6 +54,8 @@ public class DummySwitch implements IOFSwitch {
     public String switchState = "waitConfigReply";
     public long lastXid = -1;
     
+    public long nextXid = -1;
+    
     public DummySwitch(long _datapathId, OFFeaturesReply features) {
         datapathId = _datapathId;
         this.features = features;
