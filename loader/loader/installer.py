@@ -41,10 +41,13 @@ def do_server_install(pkg):
 
     with util.TempDir("netide-server-install") as t:
         p = Package(pkg, t)
+        if not p.load_apps_and_controller():
+            logging.error("There's something wrong with the package")
+            return 2
 
         call(["./virtualEnv_Ansible_Install.sh"])
 
-   
+
         if "server" not in p.config:
             raise InstallException('"server" section missing from configuration!')
 
@@ -52,10 +55,10 @@ def do_server_install(pkg):
         util.editPlaybookServer(conf)
         if "host" in conf and platform.node() != conf["host"] and conf["host"] != "localhost":
             raise InstallException("Attempted server installation on host {} (!= {})".format(platform.node(), conf["host"]))
-  
+
        # with open("Playbook_Setup/sever.yml", "w") as serverYml:
         #    serverYml.write("--- \n - name: install prereq for all hosts \n hosts: localhost \n roles: - prereq - core \n ...")
-        
+
         #install core and engine on server (usually localhost)
         #read p.config[server] and add server to site.yml
         call(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "siteServer.yml")])
@@ -67,6 +70,9 @@ def do_client_installs(pkgpath, dataroot):
 
     with util.TempDir("netide-client-installs") as t:
         pkg = Package(pkgpath, t)
+        if not pkg.load_apps_and_controller():
+            logging.error("There's something wrong with the package")
+            return 2
         clients = pkg.get_clients()
         #controller = pkg.controllers
         #print("controller: ")
@@ -76,22 +82,22 @@ def do_client_installs(pkgpath, dataroot):
         #    print(n)
         #    for i in controller[n]:
         #        print(i)
-        
+
         util.editPlaybookClient(pkg)
         util.spawn_logged(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "siteClient.yml")])
-        
+
 #===============================================================================
 #         util.write_ansible_hosts(clients, os.path.join(t, "ansible-hosts"))
-# 
+#
 #         tasks = []
-# 
+#
 #         # Can't use `synchronize' here because that doesn't play nice with ssh options
 #         tasks.append({
 #             "name": "Copy NetIDE loader",
 #             "copy": {
 #                 "dest": '{{ansible_user_dir}}/netide-loader-tmp',
 #                 "src" : os.getcwd()}})
-# 
+#
 #         # We need to do this dance because `copy' copies to a subdir unless
 #         # `src' ends with a '/', in which case it doesn't work at all (tries
 #         # to write to '/' instead)
@@ -100,12 +106,12 @@ def do_client_installs(pkgpath, dataroot):
 #             "args": {"creates": "{{ansible_user_dir}}/netide-loader"}})
 #         tasks.append({"file": {"path": "{{ansible_user_dir}}/netide-loader-tmp", "state": "absent"}})
 #         tasks.append({"file": {"path": "{{ansible_user_dir}}/netide-loader/netideloader.py", "mode": "ugo+rx"}})
-# 
+#
 #         tasks.append({
 #             "name": "Bootstrap NetIDE loader",
 #             "shell": "bash ./setup.sh",
 #             "args": { "chdir": "{{ansible_user_dir}}/netide-loader" }})
-# 
+#
 #         #is already cloned...
 #         tasks.append({
 #             "name": "Clone IDE repository",
@@ -113,7 +119,7 @@ def do_client_installs(pkgpath, dataroot):
 #                 "repo": "http://github.com/fp7-netide/IDE.git",
 #                 "dest": "{{ansible_user_dir}}/IDE",
 #                 "version": "development"}})
-# 
+#
 #         #has been done in setup server
 #         tasks.append({
 #             "name": "Install Engine",
@@ -123,20 +129,20 @@ def do_client_installs(pkgpath, dataroot):
 #             "file": {
 #                 "path": dataroot,
 #                 "state": "directory"}})
-# 
+#
 #         tasks.append({
 #             "name": "Register Package checksum",
 #             "copy": {
 #                 "content": json.dumps({"cksum": pkg.cksum}, indent=2),
 #                 "dest": os.path.join(dataroot, "controllers.json")}})
-# 
+#
 #         playbook = [{"hosts": "clients", "tasks": tasks}]
-# 
+#
 #         #use new role system here !
 #         for c in clients:
-#         
+#
 #             ctasks = []
-# 
+#
 #             apps = []
 #             # Collect controllers per client machine and collect applications
 #             for con in pkg.controllers_for_node(c[0]):
@@ -144,21 +150,21 @@ def do_client_installs(pkgpath, dataroot):
 #                 cname = con.__name__.lower()
 #                 if cname not in ["ryu", "floodlight", "odl", "pox", "pyretic"]:
 #                     raise InstallException("Don't know how to install controller {}".format(cname))
-# 
+#
 #                 script = ["{{ansible_user_dir}}", "IDE", "plugins", "eu.netide.configuration.launcher", "scripts"]
 #                 script.append("install_{}.sh".format(cname))
-# 
+#
 #                 ctasks.append({
 #                     "name": "install controller {}".format(cname),
 #                     "shell": "bash {}".format(os.path.join(*script)),
 #                     "args": {"chdir": "{{ansible_user_dir}}"}})
-# 
+#
 #             # Install application dependencies
 #             # XXX: ugly :/
 #             # XXX: libraries
 #             for a in apps:
 #                 reqs = a.metadata.get("requirements", {}).get("Software", {})
-# 
+#
 #                 # Languages
 #                 for l in reqs.get("Languages", {}):
 #                     if l["name"] == "python":
@@ -173,12 +179,12 @@ def do_client_installs(pkgpath, dataroot):
 #                             l["name"] = "openjdk-8-jdk"
 #                         else:
 #                             l["name"] = "openjdk-6-jdk"
-# 
+#
 #                     ctasks.append({
 #                         "name": "install {} (for app {})".format(l["name"], str(a)),
 #                         "apt": {"pkg": "{}={}*".format(l["name"], l["version"])}})
 #             playbook.append({"hosts": c[0], "tasks": ctasks})
-#         
+#
 #         # A valid JSON-document is also valid YAML, so we can take a small shortcut here
 #         with open(os.path.join(t, "a-playbook.yml"), "w") as ah:
 #             json.dump(playbook, ah, indent=2)

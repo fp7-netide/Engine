@@ -1,14 +1,18 @@
-types : {
-	IP : String ["regex:\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b"]
-},
-
-parameters : {
-	host_web : IP,
-	port_dns : Integer = 53,
-	port_web : Integer = 80,
-	/**
-	 * Idle timeout in seconds. 0 for indefinite.
-	 */
-	stateful_idle_timeout : Integer
-	
+{
+  "types": {
+    "Integer": {
+      "regex": "^[0-9]+$",
+      "type": "Integer"
+    },
+    "IP": {
+      "regex": "\"\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b\"",
+      "type": "String"
+    }
+  },
+  "parameters": {
+    "host_web": "IP =10.0.0.10",
+    "port_web": "Integer =80",
+    "port_dns": "Integer =53",
+    "stateful_idle_timeout": "Integer =5"
+  }
 }

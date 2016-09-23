@@ -45,7 +45,6 @@ from loader.controllers import RyuShim
 from loader.controllers import Core
 import time
 
-# TODO: store {pids,logs} somewhere in /var/{run,log}
 dataroot = "/tmp/netide"
 os.environ["ANSIBLE_HOST_KEY_CHECKING"] = "False"
 extractPath = os.path.join(dataroot, "extractPath.txt")
@@ -55,7 +54,7 @@ logging.basicConfig(format="%(asctime)-15s %(levelname)-7s %(message)s", level=l
 def extract_package(args):
 
     util.extractPackage(args.path)
-    
+
     return 0
 
 def set_extraction_path(args):
@@ -63,43 +62,57 @@ def set_extraction_path(args):
 
     return 0;
 
-def start_package(args):
-    
+def createParam(args):
     p = Package(args.package, dataroot)
-    
-    Core(p.path).start()
-    
+    p.createParamFile(args.fp)
 
-        
-    if args.server == "shim":
-        RyuShim("").start()
+def start_package(args):
+
+    if not args.param == None:
+        p = Package(args.package, dataroot, args.param)
+
+    else:
+        p = Package(args.package, dataroot)
+    if not p.load_apps_and_controller():
+        logging.error("There's something wrong with the package")
+        return 2
+
+    Core(p.path).start()
+
+
+    if args.server == "ryu":
+        if args.ofport == None:
+            RyuShim().start()
+        else:
+            RyuShim(args.ofport).start()
     else:
 
         ODL("").start()
-    
-    
+
+
     for c in p.controllers_for_node().items():
 
         c[1].start()
-   
+
     time.sleep(2)
-   
-    
+
+
     attach("")
-        
+
 
 def attach(args):
+
     Base.attachTmux()
 
 
 def list_controllers(args):
     for s in util.getWindowList():
         print(s)
-    
+
 def stop_controllers(args):
     sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
-        
-    if [ sessionExists != 0 ]:  
+
+    if [ sessionExists != 0 ]:
         call(["tmux", "kill-session", "-t", "NetIDE"], shell=False)
 
 
@@ -135,42 +148,55 @@ def install(args):
 
     return 0
 
+def generate(args):
+
+    if not args.param == None:
+        p = Package(args.package, dataroot, args.param)
+    else:
+        p = Package(args.package, dataroot)
+    if not p.load_apps_and_controller():
+        logging.error("There's something wrong with the package")
+        return 2
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
-    
+
     parser_attach = subparsers.add_parser("attach", description="If possible attaches tmux session")
     parser_attach.set_defaults(func=attach, mode="all")
-    
-    
-    parser_startTest = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
-    parser_startTest.add_argument("package", type=str, help="Package to load")
-    parser_startTest.add_argument("--server", type=str, help="Choose one of {ODL, shim}")
 
-    parser_startTest.set_defaults(func=start_package, mode="all")
-    
+    parser_createParam = subparsers.add_parser("createParam", description="Generates an empty parameters.json file.")
+    parser_createParam.add_argument("package", type=str, help="Package for which the param file will be generated")
+    parser_createParam.add_argument("--fp", type=str, help="Path where the param file will be saved.")
+    parser_createParam.set_defaults(func=createParam, mode="all")
+
+    parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
+    parser_start.add_argument("package", type=str, help="Package to load")
+    parser_start.add_argument("--server", type=str, help="Choose one of {ODL, ryu}")
+    parser_start.add_argument("--ofport", type=str, help="Choose port for of.")
+    parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
+    parser_start.set_defaults(func=start_package, mode="all")
+
+    parser_createHandlebars = subparsers.add_parser("loadParamConfig", description="Generates the .params files for the applications.")
+    parser_createHandlebars.add_argument("package", type=str, help="Package to use")
+    parser_createHandlebars.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
+    parser_createHandlebars.set_defaults(func=generate, mode="all")
+
     parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")
     parser_extract.add_argument("path", type=str, help="Path to archive")
     parser_extract.set_defaults(func=extract_package, mode="all")
-    
+
     parser_extract_path = subparsers.add_parser("extractionPath", description ="Set the extraction path to the given argument")
     parser_extract_path.add_argument("path", type=str, help="Path to store extracted package")
     parser_extract_path.set_defaults(func=set_extraction_path, mode="all")
 
-    #parser_load = subparsers.add_parser("load", description="Load a NetIDE package and start its applications")
-    #parser_load.add_argument("package", type=str, help="Package to load")
-    #parser_load.add_argument("--mode", type=str, help="Loading mode, one of {appcontroller,all}")
-    #parser_load.set_defaults(func=load_package, mode="all")
+
 
     parser_list = subparsers.add_parser("list", description="List currently running NetIDE controllers")
-   # parser_list.add_argument("--mode", type=str, help="List mode, one of {appcontroller,all}", default="all")
-   # parser_list.add_argument("package",
-    #    type=str, nargs="?", help="Package to list controllers of (only on server controller")
     parser_list.set_defaults(func=list_controllers)
 
     parser_stop = subparsers.add_parser("stop", description="Stop all currently runnning NetIDE controllers")
-   # parser_stop.add_argument("package", type=str, nargs="?", help="Package to stop (only on server controllers)")
-    #parser_stop.add_argument("--mode", type=str, default="all", help="Stop mode, one of {appcontroller,all}, defaults to all")
+
     parser_stop.set_defaults(func=stop_controllers)
 
    # parser_topology = subparsers.add_parser("gettopology", description="Show network topology")

@@ -8,5 +8,19 @@ app: {
 		entrypoint: "src/firewall.py",
 		port: 2222,
 	},
-
+	hardwareReq: {
+		CPU: '1',
+		RAM: '1000',
+		OS: 'ANY'
+	},
+	networkReq: {
+		protocolType: 'OpenFlow',
+		switchType: 'OpenFlow'
+	},
+	softwareReq: {
+		software: {
+			name: 'python',
+			version: '3'
+		}
+	}
 }

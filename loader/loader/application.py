@@ -27,6 +27,14 @@ from loader import controllers
 from loader import environment
 from functools import reduce
 
+import sys
+import platform
+from psutil import virtual_memory
+from loader import util
+import os
+import multiprocessing
+
+
 class Application(object):
     metadata = {}
 
@@ -69,63 +77,59 @@ class Application(object):
             self.appName = y.get("app").get("name")
             self.appPort = y.get("app").get("controller").get("port")   
 
-
-    def valid_requirements(self,path):
+    @classmethod
+    def valid_requirements(cls,path):
+        #logging.debug("Entered valid_requirements")
         #System requirements
-        cpu_req = self.get_cpu(path)
-        ram_req = self.get_RAM_size(path)
-        os_req = self.get_OS(path)
+        cpu_req = Application.get_cpu(path)
+        ram_req = Application.get_RAM_size(path)
+        os_req = Application.get_OS(path)
+        netProt_req = Application.get_netProt_type(path)
+        sw_req = Application.get_softReq(path)
  
         #Actual system
-       real_cpu = scpuinfo.get_cpu_info()['hz_actual_raw'][0]/1e6
-       if cpu_req < real_cpu:
-        return False
-       real_RAM = virtual_memory().total/(1024*1024)
-       if ram_req < real_RAM:
-        return False
-       real_op_sys = sys.platform
-       if 'linux' in op_sys:
-        real_op_sys = 'linux'
-       if (os_req!= 'any') and (os_req != real_op_sys):
-        return False
-       d = dict(os.environ)
-       path = d['PATH'].split(':')
-       for route in path:
-        try:
-             ls_result = subprocess.check_output(["ls", route]).decode('utf-8')
-        except subprocess.CalledProcessError as e:
-             #print e.output
-             return False
-        if 'ovs-vsctl' in ls_result:
-            ovs = subprocess.check_output(["ovs-vsctl", "--version"]).decode('utf-8')
-            ovs = ovs.split('\n')[0]
-            ovs = ovs.split(' ')
-            #TODO compare ovs version to of version required
-       #TODO possible NETCONF requirement
-       for sw in sw_req:
-        flag = False
-        for route in path:
-         try:
-             ls_result = subprocess.check_output(["ls", route]).decode('utf-8')
-         except subprocess.CalledProcessError as e:
-             #print e.output
-             return False
-         if sw_req[sw]["name"] in ls_result:
-          if flag:
-           print "Several versions of software: " + sw_req[sw]
-          flag = True
-          #TODO check if sw version fulfills the requirements
-          #try:
-               #version = subprocess.Popen([sw_req[sw], "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-          #except subprocess.CalledProcessError as e:
-               #print e.output
-          #try:
-               #version = subprocess.Popen([sw_req[sw], "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-          #except subprocess.CalledProcessError as e:
-               #print e.output
-        if flag == False:
+
+        #Hardware
+        real_cpu = multiprocessing.cpu_count()
+        if real_cpu < cpu_req:
+         logging.debug("CPU requirement not met")
          return False
-       return True
+        real_RAM = virtual_memory().total/(1024*1024)
+        if real_RAM < ram_req:
+         logging.debug("RAM requirement not met")
+         return False
+        real_op_sys = sys.platform
+        if 'linux' in real_op_sys:
+         real_op_sys = 'linux'
+        if (os_req!= 'any') and (os_req != real_op_sys):
+         logging.debug("OS requirement not met")
+         return False
+
+        #Netework Protocol
+        if netProt_req == "openflow":
+            if not util.is_sw_installed("ovs-vsctl"):
+                logging.debug("Network Protocol requirement not met")
+                return False
+        #TODO possible NETCONF requirement
+
+        #Software
+        for sw in sw_req:
+            if not util.is_sw_installed(sw_req[sw]["name"]):
+                logging.debug("Software requirements not met")
+                return False
+                        #TODO check if sw version fulfills the requirements
+           #try:
+                #version = subprocess.Popen([sw_req[sw], "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+           #except subprocess.CalledProcessError as e:
+                #print e.output
+           #try:
+                #version = subprocess.Popen([sw_req[sw], "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+           #except subprocess.CalledProcessError as e:
+                #print e.output
+
+
+        #If everything's correct
+        return True
 
     @classmethod
     def parse_sysreq(cls, path):
@@ -163,46 +167,47 @@ class Application(object):
             y = load(s)
 
             return y
+
     @classmethod
-    def get_controller_name(self, path):
+    def get_controller_name(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("controller").get("name")
             
             return c
 
     @classmethod
-    def get_controller(self, path):
+    def get_controller(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("controller").get("name")
 
             return {k.lower(): v for k, v in inspect.getmembers(controllers)}.get(c.lower())
 
     @classmethod
-    def get_cpu(self, path):
+    def get_cpu(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("hardwareReq").get("CPU")
 
-            return c
+            return int(c)
 
     @classmethod
-    def get_RAM_size(self, path):
+    def get_RAM_size(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("hardwareReq").get("RAM")
 
-            return c
+            return float(c)
 
     @classmethod
-    def get_OS(self, path):
+    def get_OS(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("hardwareReq").get("OS")
 
@@ -212,18 +217,18 @@ class Application(object):
             return c.lower()
 
     @classmethod
-    def get_netProt_type(self, path):
+    def get_netProt_type(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("networkReq").get("protocolType")
 
-            return c
+            return c.lower()
 
     @classmethod
-    def get_netProt_ver(self, path):
+    def get_netProt_ver(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("networkReq").get("Version")
 
@@ -231,9 +236,9 @@ class Application(object):
 
 
     @classmethod
-    def get_softReq(self, path):
+    def get_softReq(cls, path):
             
-            y = self.parse_sysreq(path)
+            y = Application.parse_sysreq(path)
             
             c = y.get("app").get("softwareReq")
 
