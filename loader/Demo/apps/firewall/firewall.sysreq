@@ -19,8 +19,12 @@ app: {
 	},
 	softwareReq: {
 		software: {
-			name: 'python',
-			version: '3'
+			name: 'java',
+			version: '1.8'
+		},
+		software: {
+			name: 'ovs-vsctl',
+			version: '1.9'
 		}
 	}
 }

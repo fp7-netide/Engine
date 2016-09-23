@@ -9,6 +9,7 @@ import pybars
 import json
 import io
 import random
+import re
 
 import subprocess as sp
 from subprocess import check_output, PIPE
@@ -344,6 +345,45 @@ def is_sw_installed(sw):
             logging.warning(e.output)
         if sw in ls_result:
             if flag:
-                logging.warning("Several versions of software: " + sw_req[sw])
+                logging.warning("Several versions of software: " + sw)
             flag = True
     return flag
+
+def check_sw_version(sw_name, req_version):
+
+    req_version = req_version.split('.')
+    try:
+        stream = open("known_software.yaml", 'r')
+    except:
+        stream = open("loader/known_software.yaml", 'r')
+
+    try:
+        known_sw = yaml.load(stream)["software"]
+    except yaml.YAMLError as exc:
+        logging.error(exc)
+        return False
+
+    sw_struct = None
+    for sw in known_sw:
+        if sw["name"] == sw_name:
+            sw_struct = sw
+
+    if sw_struct == None:
+        logging.warning("could not verify software version for {}".format(sw_name))
+        return True
+
+    version_output = sp.check_output(sw_struct["command"].split(' '), stderr=sp.STDOUT).decode('utf-8')
+
+    act_version = re.search(sw_struct["regex"], version_output).group(0).split('.')
+
+    for i in list(range(0,len(req_version))):
+        #if the actual version is greater than the required one, it fulfills the reqquirement
+        if int(req_version[i]) < int(act_version[i]):
+             return True
+        #if the required version is greater than the actual one, it doesn't fulfill the requirement
+        if int(req_version[i]) > int(act_version[i]):
+             return False
+        #if they're the same check subversion
+
+    #At this point the actual version is greateror equal to the requirement 
+    return True

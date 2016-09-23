@@ -115,17 +115,12 @@ class Application(object):
         #Software
         for sw in sw_req:
             if not util.is_sw_installed(sw_req[sw]["name"]):
-                logging.debug("Software requirements not met")
+                logging.debug("Software {} is not installed".format(sw_req[sw]["name"]))
                 return False
-                        #TODO check if sw version fulfills the requirements
-           #try:
-                #version = subprocess.Popen([sw_req[sw], "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-           #except subprocess.CalledProcessError as e:
-                #print e.output
-           #try:
-                #version = subprocess.Popen([sw_req[sw], "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-           #except subprocess.CalledProcessError as e:
-                #print e.output
+            #Check if sw version fulfills the requirements
+            if not util.check_sw_version(sw_req[sw]["name"], sw_req[sw]["version"]):
+                logging.error("Software version requirement for {} not met".format(sw_req[sw]["name"]))
+                return False
 
 
         #If everything's correct
