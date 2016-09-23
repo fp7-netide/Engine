@@ -161,9 +161,9 @@ if __name__ == "__main__":
     parser_attach = subparsers.add_parser("attach", description="If possible attaches tmux session")
     parser_attach.set_defaults(func=attach, mode="all")
 
-    parser_createParam = subparsers.add_parser("createParam", description="Generates an empty parameters.json file.")
+    parser_createParam = subparsers.add_parser("createconf", description="Generates an empty parameters.json file.")
     parser_createParam.add_argument("package", type=str, help="Package for which the param file will be generated")
-    parser_createParam.add_argument("--fp", type=str, help="Path where the param file will be saved.")
+    parser_createParam.add_argument("--file", type=str, help="Path where the param file will be saved.")
     parser_createParam.set_defaults(func=createParam, mode="all")
 
     parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
@@ -173,12 +173,12 @@ if __name__ == "__main__":
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_start.set_defaults(func=start_package, mode="all")
 
-    parser_createHandlebars = subparsers.add_parser("loadParamConfig", description="Generates the .params files for the applications.")
+    parser_createHandlebars = subparsers.add_parser("genconfig", description="Generates application configurations from a parameter file.")
     parser_createHandlebars.add_argument("package", type=str, help="Package to use")
     parser_createHandlebars.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_createHandlebars.set_defaults(func=generate, mode="all")
 
-    parser_extract = subparsers.add_parser("extractArchive", description ="extractsArchive")
+    parser_extract = subparsers.add_parser("extractarchive", description ="extractsArchive")
     parser_extract.add_argument("path", type=str, help="Path to archive")
     parser_extract.set_defaults(func=extract_package, mode="all")
 
