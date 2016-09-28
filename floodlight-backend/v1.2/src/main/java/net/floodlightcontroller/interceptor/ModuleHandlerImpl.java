@@ -37,6 +37,15 @@ public class ModuleHandlerImpl implements IModuleHandler {
 
         return -1;
     }
+    
+    @Override
+    public String getModuleName(int moduleID){
+    	for (String moduleName : moduleRegistry.keySet()){
+    		if (moduleRegistry.get(moduleName) == moduleID)
+    			return moduleName;
+    	}
+    	return null;
+    }
 
     @Override
     public void obtainModuleId(int xId, String moduleName) {

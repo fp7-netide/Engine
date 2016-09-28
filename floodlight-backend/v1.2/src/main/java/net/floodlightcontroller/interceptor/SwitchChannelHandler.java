@@ -24,6 +24,9 @@ import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.netide.lib.netip.NetIDEProtocolVersion;
+import net.floodlightcontroller.core.IFloodlightProviderService;
+
 /**
  * @author giuseppex.petralia@intel.com
  *
@@ -38,7 +41,17 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     private ClientBootstrap bootstrap;
     private OFVersion agreedVersion;
     private final String moduleName = "floodlight-backend";
-
+    private IFloodlightProviderService floodlightProvider;
+    private NetIDEProtocolVersion netIpVersion;
+    
+    public void setNetIDEProtocolVersion (NetIDEProtocolVersion netIpVersion) {
+        this.netIpVersion = netIpVersion;
+    }
+    
+    public void setFloodlightProviderService (IFloodlightProviderService floodlightProvider) {
+        this.floodlightProvider = floodlightProvider;
+    }
+    
     public void setModuleHandler(IModuleHandler moduleHandler) {
         this.moduleHandler = moduleHandler;
     }

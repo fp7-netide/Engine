@@ -130,22 +130,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
      */
     @Override
     public Command receive(IOFSwitch sw, OFMessage msg, FloodlightContext cntx) {
-        logger.info("Message received from controller: " + msg.getType());
-
-        if (!sw.getStatus().equals(SwitchStatus.HANDSHAKE)) {
-            managedSwitches.get(sw.getId().getLong()).setHandshakeCompleted(true);
-        }
-        
-        if (msg.getType().equals(OFMessageType.FLOW_MOD) || msg.getType().equals(OFMessageType.PACKET_OUT)){
-        	FenceMessage fence = new FenceMessage();
-            fence.getHeader().setNetIDEProtocolVersion(netIpVersion);
-            fence.getHeader().setModuleId(moduleHandler.getModuleId(-1, moduleName));
-            fence.getHeader().setPayloadLength((short) 0);
-            fence.getHeader().setDatapathId(-1);
-            fence.getHeader().setTransactionId(Relay.getNetIpID());
-            coreConnector.SendData(fence.toByteRepresentation());
-        }
-        
+        logger.info("Message received from controller: " + msg.getType());        
         return Command.CONTINUE;
     }
 
@@ -334,6 +319,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
             }
             aggreedVersion = msg.getVersion();
             DummySwitch dummySwitch = new DummySwitch(datapathId, features);
+            
             addNewSwitch(dummySwitch);
 
         } else if (managedSwitches.get(datapathId).isHandshakeCompleted()
@@ -341,7 +327,12 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         	if (msg.getXid() == managedSwitches.get(datapathId).nextXid || managedSwitches.get(datapathId).isHandshakeCompleted()){
         		logger.debug("Message received from the core for switch DataPathID: " + 
                         datapathId.toString() + " Type: " + msg.getType().toString() + "XID: " + msg.getXid());
-        		Relay.sendToController(managedSwitchesChannel.get(datapathId), msg);
+        		if (moduleId == -1 || moduleId == moduleHandler.getModuleId(-1, moduleName) )
+        			Relay.sendToController(managedSwitchesChannel.get(datapathId), msg);
+        		else
+        			Relay.sendToController(netIpVersion,  coreConnector, 
+        	    		floodlightProvider, managedSwitches.get(datapathId), msg, moduleHandler.getModuleName(moduleId), 
+        	    		moduleId);
         		managedSwitches.get(datapathId).lastXid = msg.getXid();
         		managedSwitches.get(datapathId).nextXid = -1;
         	}else {
@@ -360,7 +351,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
         final SwitchChannelHandler switchHandler = new SwitchChannelHandler(coreConnector, aggreedVersion);
         switchHandler.setDummySwitch(dummySwitch); // CONTAINS ALL THE INFO
                                                    // ABOUT THIS SWITCH
-
+        switchHandler.setFloodlightProviderService(floodlightProvider);
         ChannelFactory factory = new NioClientSocketChannelFactory(Executors.newCachedThreadPool(),
                 Executors.newCachedThreadPool());
         ClientBootstrap bootstrap = new ClientBootstrap(factory);

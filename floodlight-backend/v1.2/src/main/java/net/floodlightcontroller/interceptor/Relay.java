@@ -7,12 +7,23 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import eu.netide.lib.netip.ErrorMessage;
+import eu.netide.lib.netip.FenceMessage;
 import eu.netide.lib.netip.NetIDEProtocolVersion;
 import eu.netide.lib.netip.OpenFlowMessage;
+import net.floodlightcontroller.core.FloodlightContext;
+import net.floodlightcontroller.core.IFloodlightProviderService;
+import net.floodlightcontroller.core.IOFMessageListener;
+import net.floodlightcontroller.core.IOFSwitch;
+
+import java.util.List;
+import java.util.Map;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelFuture;
 import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,6 +75,45 @@ public class Relay {
             future.getChannel().write(dcb);
         } catch (Exception e) {
             logger.error(e.getMessage());
+        }
+    }
+    
+    public static void sendToController(NetIDEProtocolVersion netIpVersion, ZeroMQBaseConnector coreConnector, 
+    		IFloodlightProviderService floodlightProvider, IOFSwitch sw, OFMessage message, String moduleName, 
+    		int moduleId){
+        // SEND PACKETS DIRECTLY TO THE PIPELINE
+        FloodlightContext context = new FloodlightContext();
+        if(moduleName == null || moduleName.isEmpty()){
+            // send to all modules
+            // context=null;
+            floodlightProvider.handleMessage(sw,message,context);
+        }else{
+            // NetIDE composition, send to a specific module
+            List<IOFMessageListener> listeners = null;
+            Map<OFType,List<IOFMessageListener>> messageListeners = floodlightProvider.getListeners();
+            if (messageListeners.containsKey(message.getType())) {
+                listeners = messageListeners.get(message.getType());
+            }
+            for (IOFMessageListener listener : listeners) {
+                if (moduleName.equals(listener.getName())) {
+                    listener.receive(sw, message, context);
+                    FenceMessage fence = new FenceMessage();
+                    fence.getHeader().setNetIDEProtocolVersion(netIpVersion);
+                    fence.getHeader().setModuleId(moduleId);
+                    fence.getHeader().setPayloadLength((short) 0);
+                    fence.getHeader().setDatapathId(-1);
+                    fence.getHeader().setTransactionId(Relay.getNetIpID());
+                    coreConnector.SendData(fence.toByteRepresentation());
+                } else {
+                    ErrorMessage error = new ErrorMessage();
+                    error.getHeader().setNetIDEProtocolVersion(netIpVersion);
+                    error.getHeader().setModuleId(moduleId);
+                    error.getHeader().setPayloadLength((short) 0);
+                    error.getHeader().setDatapathId(-1);
+                    error.getHeader().setTransactionId(Relay.getNetIpID());
+                    coreConnector.SendData(error.toByteRepresentation());
+                }
+            }
         }
     }
 

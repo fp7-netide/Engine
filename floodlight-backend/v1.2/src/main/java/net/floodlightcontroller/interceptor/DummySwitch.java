@@ -23,6 +23,7 @@ import net.floodlightcontroller.core.SwitchDescription;
 import org.projectfloodlight.openflow.protocol.OFActionType;
 import org.projectfloodlight.openflow.protocol.OFCapabilities;
 import org.projectfloodlight.openflow.protocol.OFControllerRole;
+import org.projectfloodlight.openflow.protocol.OFFactories;
 import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
@@ -59,6 +60,11 @@ public class DummySwitch implements IOFSwitch {
     public DummySwitch(long _datapathId, OFFeaturesReply features) {
         datapathId = _datapathId;
         this.features = features;
+    }
+    
+    @Override
+    public OFFactory getOFFactory(){
+    	return OFFactories.getFactory(features.getVersion());
     }
     
     public boolean isStatsReplyReceived() {
@@ -428,17 +434,6 @@ public class DummySwitch implements IOFSwitch {
      */
     @Override
     public Object removeAttribute(String name) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see net.floodlightcontroller.core.IOFSwitch#getOFFactory()
-     */
-    @Override
-    public OFFactory getOFFactory() {
         // TODO Auto-generated method stub
         return null;
     }
