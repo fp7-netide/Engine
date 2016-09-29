@@ -52,7 +52,7 @@ public class ModuleHandlerImpl implements IModuleHandler {
         ModuleAnnouncementMessage msg = new ModuleAnnouncementMessage();
         msg.getHeader().setDatapathId(-1);
         msg.getHeader().setModuleId(-1);
-        msg.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_3);
+        msg.getHeader().setNetIDEProtocolVersion(NetIDEProtocolVersion.VERSION_1_4);
         msg.getHeader().setTransactionId(xId);
         msg.setModuleName(moduleName);
         sendToCore(msg);
