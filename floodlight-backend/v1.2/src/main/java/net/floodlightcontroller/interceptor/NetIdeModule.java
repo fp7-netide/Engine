@@ -67,7 +67,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
     private Map<Long, DummySwitch> managedSwitches = new HashMap<Long, DummySwitch>();
     private int xId = 1;
     private boolean handshake = false;
-    private NetIDEProtocolVersion netIpVersion = NetIDEProtocolVersion.VERSION_1_3;
+    private NetIDEProtocolVersion netIpVersion = NetIDEProtocolVersion.VERSION_1_4;
     private Pair<Protocol, ProtocolVersions> protocolMatched;
     private Thread helloThread = new Thread(this);
     private final String moduleName = "floodlight-backend";
