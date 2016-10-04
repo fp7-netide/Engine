@@ -108,8 +108,8 @@ public class ShimLayer {
         //OFDevice initialization
         ofDeviceListener = new NetIDEDeviceListener(controller, shimLayer);
         controller.addListener(ofDeviceListener);
-        controller.monitorAllEvents(true);
         controller.addEventListener(ofDeviceListener);
+        controller.addPacketListener(15, ofDeviceListener);
 
         //TODO: This is not the best way to do it, but NetIDE protocol do not handle different OF versions together
         for (OpenFlowSwitch sw : controller.getSwitches()) {
@@ -130,6 +130,7 @@ public class ShimLayer {
         flowRuleService.removeFlowRulesById(appId);
         controller.removeListener(ofDeviceListener);
         controller.removeEventListener(ofDeviceListener);
+        controller.removePacketListener(ofDeviceListener);
         ofDeviceListener = null;
         log.info("Stopped");
     }
