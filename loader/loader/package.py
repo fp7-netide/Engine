@@ -116,6 +116,12 @@ class Package(object):
                 logging.debug("Loading app metadata for {} on {}".format(d, platform.node()))
 
 
+                #Check system requirements
+                logging.debug("Checking system requirements for {}".format(d))
+                if not Application.valid_requirements(app):
+                    logging.error("Requirements for application {} not met".format(d))
+                    return False           
+
                 #returns controller
                 ctrl = Application.get_controller(app)
                 self.controllerNames.append(ctrl.getControllerName())
@@ -130,6 +136,17 @@ class Package(object):
 
                     self.controllers[n][ctrl].applications.append(Application(app))
 
+        return True
+
+    def check_sysreq(self):
+        for d in self.appNames:
+                app = os.path.join(self.appFolderPath, d)
+                #Check system requirements
+                logging.debug("Checking system requirements for {}".format(d))
+                if not Application.valid_requirements(app):
+                    logging.error("Requirements for application {} not met".format(d))
+                    return False  
+        return True
 
     def __del__(self):
         if self.cleanup:

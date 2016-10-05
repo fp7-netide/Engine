@@ -73,7 +73,9 @@ def start_package(args):
 
     else:
         p = Package(args.package, dataroot)
-    p.load_apps_and_controller()
+    if not p.load_apps_and_controller():
+        logging.error("There's something wrong with the package")
+        return 2
 
     Core(p.path).start()
 
@@ -152,7 +154,20 @@ def generate(args):
         p = Package(args.package, dataroot, args.param)
     else:
         p = Package(args.package, dataroot)
-    p.load_apps_and_controller()
+    if not p.load_apps_and_controller():
+        logging.error("There's something wrong with the package")
+        return 2
+
+def check(args):
+
+     with util.TempDir("netide-client-installs") as t:
+        p = Package(args.package, t)
+
+     if not p.check_sysreq():
+        logging.error("There's something wrong with the package")
+        return 2
+     else:
+        logging.debug("System requirements met for package {}".format(args.package))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
@@ -206,6 +221,11 @@ if __name__ == "__main__":
             type=str, help="Installation mode, one of {appcontroller,all}, defaults to all")
     parser_install.add_argument("package", type=str, help="Package to prepare for")
     parser_install.set_defaults(func=install, mode="all")
+
+    parser_check = subparsers.add_parser("check",
+            description="Check system requirements for each application in `package'")
+    parser_check.add_argument("package", type=str, help="Package to check")
+    parser_check.set_defaults(func=check)
 
     args = parser.parse_args()
     if 'func' not in vars(args):

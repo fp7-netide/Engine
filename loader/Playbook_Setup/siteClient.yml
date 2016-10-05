@@ -1,10 +1,4 @@
----
-
-- name: install server
-  hosts: localhost
-  
+- hosts: localhost
+  name: install client localhost
   roles:
-    - prereq
-    - core
-
-...
+  - ryu

@@ -8,5 +8,23 @@ app: {
 		entrypoint: "src/firewall.py",
 		port: 2222,
 	},
-
+	hardwareReq: {
+		CPU: '1',
+		RAM: '1000',
+		OS: 'ANY'
+	},
+	networkReq: {
+		protocolType: 'OpenFlow',
+		switchType: 'OpenFlow'
+	},
+	softwareReq: {
+		software: {
+			name: 'java',
+			version: '1.8'
+		},
+		software: {
+			name: 'ovs-vsctl',
+			version: '1.9'
+		}
+	}
 }

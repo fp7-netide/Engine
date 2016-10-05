@@ -41,7 +41,9 @@ def do_server_install(pkg):
 
     with util.TempDir("netide-server-install") as t:
         p = Package(pkg, t)
-        p.load_apps_and_controller()
+        if not p.load_apps_and_controller():
+            logging.error("There's something wrong with the package")
+            return 2
 
         call(["./virtualEnv_Ansible_Install.sh"])
 
@@ -68,7 +70,9 @@ def do_client_installs(pkgpath, dataroot):
 
     with util.TempDir("netide-client-installs") as t:
         pkg = Package(pkgpath, t)
-        p.load_apps_and_controller()
+        if not pkg.load_apps_and_controller():
+            logging.error("There's something wrong with the package")
+            return 2
         clients = pkg.get_clients()
         #controller = pkg.controllers
         #print("controller: ")

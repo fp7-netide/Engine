@@ -1,10 +1,8 @@
----
-
-- name: install server
-  hosts: localhost
-  
+- hosts: localhost
+  name: install server
   roles:
-    - prereq
-    - core
-
-...
+  - prereq
+  - engine
+  - core
+  - mininet
+  - odl
