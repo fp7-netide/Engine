@@ -158,6 +158,17 @@ def generate(args):
         logging.error("There's something wrong with the package")
         return 2
 
+def check(args):
+
+     with util.TempDir("netide-client-installs") as t:
+        p = Package(args.package, t)
+
+     if not p.check_sysreq():
+        logging.error("There's something wrong with the package")
+        return 2
+     else:
+        logging.debug("System requirements met for package {}".format(args.package))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage NetIDE packages")
     subparsers = parser.add_subparsers()
@@ -210,6 +221,11 @@ if __name__ == "__main__":
             type=str, help="Installation mode, one of {appcontroller,all}, defaults to all")
     parser_install.add_argument("package", type=str, help="Package to prepare for")
     parser_install.set_defaults(func=install, mode="all")
+
+    parser_check = subparsers.add_parser("check",
+            description="Check system requirements for each application in `package'")
+    parser_check.add_argument("package", type=str, help="Package to check")
+    parser_check.set_defaults(func=check)
 
     args = parser.parse_args()
     if 'func' not in vars(args):

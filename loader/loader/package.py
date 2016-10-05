@@ -138,6 +138,15 @@ class Package(object):
 
         return True
 
+    def check_sysreq(self):
+        for d in self.appNames:
+                app = os.path.join(self.appFolderPath, d)
+                #Check system requirements
+                logging.debug("Checking system requirements for {}".format(d))
+                if not Application.valid_requirements(app):
+                    logging.error("Requirements for application {} not met".format(d))
+                    return False  
+        return True
 
     def __del__(self):
         if self.cleanup:

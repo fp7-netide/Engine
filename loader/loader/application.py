@@ -79,6 +79,9 @@ class Application(object):
 
     @classmethod
     def valid_requirements(cls,path):
+
+        requirements_met = True
+
         #logging.debug("Entered valid_requirements")
         #System requirements
         cpu_req = Application.get_cpu(path)
@@ -93,38 +96,38 @@ class Application(object):
         real_cpu = multiprocessing.cpu_count()
         if real_cpu < cpu_req:
          logging.error("CPU requirement not met")
-         return False
+         requirements_met = False
         real_RAM = virtual_memory().total/(1024*1024)
         if real_RAM < ram_req:
          logging.error("RAM requirement not met")
-         return False
+         requirements_met = False
         real_op_sys = sys.platform
         if 'linux' in real_op_sys:
          real_op_sys = 'linux'
         if (os_req!= 'any') and (os_req != real_op_sys):
          logging.error("OS requirement not met")
-         return False
+         requirements_met = False
 
         #Netework Protocol
         if netProt_req == "openflow":
             if not util.is_sw_installed("ovs-vsctl"):
                 logging.error("Network Protocol requirement not met")
-                return False
+                requirements_met = False
         #TODO possible NETCONF requirement
 
         #Software
         for sw in sw_req:
             if not util.is_sw_installed(sw_req[sw]["name"]):
                 logging.error("Software {} is not installed".format(sw_req[sw]["name"]))
-                return False
+                requirements_met = False
             #Check if sw version fulfills the requirements
-            if not util.check_sw_version(sw_req[sw]["name"], sw_req[sw]["version"]):
+            elif not util.check_sw_version(sw_req[sw]["name"], sw_req[sw]["version"]):
                 logging.error("Software version requirement for {} not met".format(sw_req[sw]["name"]))
-                return False
+                requirements_met = False
 
 
         #If everything's correct
-        return True
+        return requirements_met
 
     @classmethod
     def parse_sysreq(cls, path):
