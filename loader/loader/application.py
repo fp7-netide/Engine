@@ -92,30 +92,30 @@ class Application(object):
         #Hardware
         real_cpu = multiprocessing.cpu_count()
         if real_cpu < cpu_req:
-         logging.debug("CPU requirement not met")
+         logging.error("CPU requirement not met")
          return False
         real_RAM = virtual_memory().total/(1024*1024)
         if real_RAM < ram_req:
-         logging.debug("RAM requirement not met")
+         logging.error("RAM requirement not met")
          return False
         real_op_sys = sys.platform
         if 'linux' in real_op_sys:
          real_op_sys = 'linux'
         if (os_req!= 'any') and (os_req != real_op_sys):
-         logging.debug("OS requirement not met")
+         logging.error("OS requirement not met")
          return False
 
         #Netework Protocol
         if netProt_req == "openflow":
             if not util.is_sw_installed("ovs-vsctl"):
-                logging.debug("Network Protocol requirement not met")
+                logging.error("Network Protocol requirement not met")
                 return False
         #TODO possible NETCONF requirement
 
         #Software
         for sw in sw_req:
             if not util.is_sw_installed(sw_req[sw]["name"]):
-                logging.debug("Software {} is not installed".format(sw_req[sw]["name"]))
+                logging.error("Software {} is not installed".format(sw_req[sw]["name"]))
                 return False
             #Check if sw version fulfills the requirements
             if not util.check_sw_version(sw_req[sw]["name"], sw_req[sw]["version"]):
