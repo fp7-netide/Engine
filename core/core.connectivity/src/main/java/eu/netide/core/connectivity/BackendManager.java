@@ -21,7 +21,8 @@ import java.util.stream.Stream;
 public class BackendManager implements IBackendManager, IConnectorListener {
 
     private static final Logger logger = LoggerFactory.getLogger(BackendManager.class);
-
+    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final Map<Pair<Integer, Integer>, PendingRequest> requests = new Hashtable<>();
     private IBackendConnector connector;
     private List<IBackendMessageListener> backendMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
@@ -29,24 +30,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private Map<Integer, String> moduleToBackendMappings = new HashMap<>();
     private Map<Integer, String> moduleToNameMappings = new HashMap<>();
     private Map<Integer, Long> moduleLastMessage = new HashMap<>();
-
     private OpenFlowRequestHandler reqHandler = new OpenFlowRequestHandler();
-
-    private final ExecutorService pool = Executors.newCachedThreadPool();
-
-
-    static class PendingRequest {
-        private final Semaphore lock;
-        private final RequestResult result;
-
-        PendingRequest(RequestResult requestResult, Semaphore sem) {
-            result = requestResult;
-            lock = sem;
-        }
-    }
-
-    private final Map<Pair<Integer, Integer>, PendingRequest> requests = new Hashtable<>();
-
     private Random random = new Random();
 
     /**
@@ -85,17 +69,26 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return connector.SendData(message.toByteRepresentation(), backendId);
     }
 
-
     @Override
-    public boolean sendMessageAllBackends(Message message) {
-        boolean success = true;
+    public boolean sendMessageToAllModules(Message message) {
+        final boolean[] success = {true};
         logger.info("Sending message '" + message.toString() + "' to  all backends ");
-        for (String backendId : backendIds)
-            success = sendMessageToBackend(message, backendId) && success;
 
-        return success;
+
+        moduleToBackendMappings.forEach((modid, backendId) ->
+                                        {
+                                            try {
+                                                MessageHeader h = message.getHeader().clone();
+                                                h.setModuleId(modid);
+                                                Message m = new Message(h, message.getPayload());
+                                                success[0] = sendMessageToBackend(m, backendId) && success[0];
+
+                                            } catch (CloneNotSupportedException e) {
+                                                success[0] = false;
+                                            }
+                                        });
+        return success[0];
     }
-
 
     @Override
     public RequestResult sendRequest(Message message) {
@@ -369,5 +362,15 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         listenerLock.acquire();
         this.backendMessageListeners = backendMessageListeners == null ? new ArrayList<>() : backendMessageListeners;
         listenerLock.release();
+    }
+
+    static class PendingRequest {
+        private final Semaphore lock;
+        private final RequestResult result;
+
+        PendingRequest(RequestResult requestResult, Semaphore sem) {
+            result = requestResult;
+            lock = sem;
+        }
     }
 }
