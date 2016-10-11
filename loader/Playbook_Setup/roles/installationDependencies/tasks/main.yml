@@ -1,0 +1,38 @@
+---
+
+- name: Check if ~/netide/Engine exits
+  stat: path=~/netide/Engine
+  register: engine_path
+
+- debug: msg="Path ~/netide/Engine doesn't exist"
+  when: engine_path.stat.isdir is defined and engine_path.stat.isdir == False
+  
+- name: Check if netip is installed (maven)
+  stat: path=~/.m2/repository/eu/netide/lib/netip/
+  register: netip_path
+  
+- debug: msg="netip installation at ~/.m2/repository/eu/netide/lib/netip/1.1.0-SNAPSHOT/ missing"
+  when: netip_path.stat.isdir is defined and netip_path.stat.isdir == False
+
+- name: Check if core is installed (maven)
+  stat: path=~/.m2/repository/eu/netide/core/
+  register: core_path
+  
+- debug: msg="core installation at ~/.m2/repository/eu/netide/core/"
+  when: core_path.stat.isdir is defined and core_path.stat.isdir == False
+  
+- name: Check if tools are installed (maven)
+  stat: path=~/.m2/repository/eu/netide/emulator/
+  register: tools_path
+
+- debug: msg="tools installation at ~/.m2/repository/eu/netide/emulator/ missing"
+  when: tools_path.stat.isdir is defined and tools_path.stat.isdir == False
+
+- name: Check if Karaf is installed
+  stat: path=~/apache-karaf-3.0.6/
+  register: karaf_path
+
+- debug: msg="karaf installation at /apache-karaf-3.0.6 is missing"
+  when: karaf_path.stat.isdir is defined and karaf_path.stat.isdir == False
+
+...

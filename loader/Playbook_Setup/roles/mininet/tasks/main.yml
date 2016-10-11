@@ -1,0 +1,6 @@
+---
+
+- name: install Mininet
+  script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_mininet.sh
+
+...

@@ -1,0 +1,5 @@
+{
+  "parameters": {
+    "idle_timeout": "Integer = 5"
+  }
+}

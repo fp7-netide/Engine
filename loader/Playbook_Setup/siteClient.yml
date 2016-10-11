@@ -1,0 +1,4 @@
+- hosts: localhost
+  name: install client localhost
+  roles:
+  - ryu
