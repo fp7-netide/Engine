@@ -87,7 +87,6 @@ class Application(object):
         cpu_req = Application.get_cpu(path)
         ram_req = Application.get_RAM_size(path)
         os_req = Application.get_OS(path)
-        netProt_req = Application.get_netProt_type(path)
         sw_req = Application.get_softReq(path)
  
         #Actual system
@@ -107,13 +106,6 @@ class Application(object):
         if (os_req!= 'any') and (os_req != real_op_sys):
          logging.error("OS requirement not met")
          requirements_met = False
-
-        #Netework Protocol
-        if netProt_req == "openflow":
-            if not util.is_sw_installed("ovs-vsctl"):
-                logging.error("Network Protocol requirement not met")
-                requirements_met = False
-        #TODO possible NETCONF requirement
 
         #Software
         for sw in sw_req:
