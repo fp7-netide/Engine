@@ -24,6 +24,9 @@ import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import eu.netide.lib.netip.NetIDEProtocolVersion;
+import net.floodlightcontroller.core.IFloodlightProviderService;
+
 /**
  * @author giuseppex.petralia@intel.com
  *
@@ -38,13 +41,23 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     private ClientBootstrap bootstrap;
     private OFVersion agreedVersion;
     private final String moduleName = "floodlight-backend";
-
+    private IFloodlightProviderService floodlightProvider;
+    private NetIDEProtocolVersion netIpVersion;
+    
+    public void setNetIDEProtocolVersion (NetIDEProtocolVersion netIpVersion) {
+        this.netIpVersion = netIpVersion;
+    }
+    
+    public void setFloodlightProviderService (IFloodlightProviderService floodlightProvider) {
+        this.floodlightProvider = floodlightProvider;
+    }
+    
     public void setModuleHandler(IModuleHandler moduleHandler) {
         this.moduleHandler = moduleHandler;
     }
 
     public void registerSwitchConnection(ChannelFuture connection, ClientBootstrap bootstrap) {
-        future = connection;
+        this.future = connection;
         this.bootstrap = bootstrap;
     }
 
@@ -61,7 +74,7 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
 
         try {
             OFMessage msg = OFFactories.getGenericReader().readFrom(buf);
-            logger.debug("Message received channel handler: " + msg.getType().toString() + " switch datapathID: " + dummySwitch.getDatapathId());
+            /*logger.debug("Message received channel handler: " + msg.getType().toString() + " switch datapathID: " + dummySwitch.getDatapathId());*/
             handleMessage(msg);
         } catch (OFParseError e1) {
             // TODO Auto-generated catch block
@@ -73,6 +86,17 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
     }
 
     private void handleMessage(OFMessage msg) {
+    	
+    	if (dummySwitch.nextXid == -1 && 
+    			!msg.getType().equals(OFType.HELLO) && 
+    			!msg.getType().equals(OFType.EXPERIMENTER) && 
+    			!msg.getType().equals(OFType.FEATURES_REQUEST) && 
+    			!msg.getType().equals(OFType.ECHO_REQUEST))
+    		dummySwitch.nextXid = msg.getXid();
+    	else 
+    		dummySwitch.nextXid = -1;
+    		
+    	
         if (msg.getType().equals(OFType.HELLO)) {
             Relay.sendToController(future,
                     OFFactories.getFactory(agreedVersion).buildHello().setXid(msg.getXid()).build());
@@ -93,11 +117,15 @@ public class SwitchChannelHandler extends SimpleChannelHandler {
                         .setXid(roleRequest.getXid()).setRole(roleRequest.getRole()).build());
                 dummySwitch.setHandshakeCompleted(true);
             }
-        } else if (msg.getType().equals(OFType.FLOW_MOD)) {
+        } else if (msg.getType().equals(OFType.FLOW_MOD) || msg.getType().equals(OFType.PACKET_OUT)) {
             dummySwitch.setHandshakeCompleted(true);
             Relay.sendToCore(coreConnector, msg, dummySwitch.getDatapathId(),
                     moduleHandler.getModuleId(-1, moduleName));
+        } else if (msg.getType().equals(OFType.ECHO_REQUEST)) {
+        	Relay.sendToController(future, OFFactories.getFactory(msg.getVersion()).buildEchoReply()
+                    .setXid(msg.getXid()).setData(((OFEchoRequest) msg).getData()).build());
         } else {
+        	logger.debug("Message received channel handler: " + msg.getType().toString() + " switch datapathID: " + dummySwitch.getDatapathId());
             Relay.sendToCore(coreConnector, msg, dummySwitch.getDatapathId(),
                     moduleHandler.getModuleId(-1, moduleName));
         }

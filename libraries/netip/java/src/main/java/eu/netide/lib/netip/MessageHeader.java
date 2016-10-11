@@ -20,10 +20,8 @@ public class MessageHeader implements Cloneable {
     private long datapathId;
 
     public MessageHeader() {
-        this.netIDEProtocolVersion = NetIDEProtocolVersion.VERSION_1_3;
+        this.netIDEProtocolVersion = NetIDEProtocolVersion.VERSION_1_4;
     }
-
-
 
     /**
      * Gets net iDE protocol version.
@@ -32,6 +30,11 @@ public class MessageHeader implements Cloneable {
      */
     public NetIDEProtocolVersion getNetIDEProtocolVersion() {
         return netIDEProtocolVersion;
+    }
+
+    @Override
+    public MessageHeader clone() throws CloneNotSupportedException {
+        return (MessageHeader) super.clone();
     }
 
     /**

@@ -69,7 +69,7 @@ public class RoutingTest {
         }
 
         @Override
-        public boolean sendMessageAllBackends(Message message) {
+        public boolean sendMessageToAllModules(Message message) {
             allBackendMessage = message;
             return true;
         }

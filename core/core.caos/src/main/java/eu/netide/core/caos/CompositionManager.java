@@ -178,7 +178,7 @@ public class CompositionManager implements ICompositionManager {
             try {
                 if (message.getHeader().getModuleId() == 0) {
                     logger.info("Message ID is 0 relaying to ALL backends");
-                    backendManager.sendMessageAllBackends(message);
+                    backendManager.sendMessageToAllModules(message);
                 } else {
                     backendManager.sendMessage(message);
                 }
