@@ -63,6 +63,11 @@ def do_server_install(pkg):
         #read p.config[server] and add server to site.yml
         call(["ansibleEnvironment/bin/ansible-playbook", "-v", os.path.join("Playbook_Setup", "siteServer.yml")])
 
+        #Check the rest of system requirements
+        logging.debug("Checking system requirements for {}".format(pkg))
+        if not p.check_no_hw_sysreq():
+            logging.error("Requirements for package {} not met".format(pkg))
+            return 2
 
 def do_client_installs(pkgpath, dataroot):
     "Dispatches installation requests to client machines after gaining a foothold on them. Requires passwordless SSH access to \

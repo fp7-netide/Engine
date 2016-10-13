@@ -78,20 +78,13 @@ class Application(object):
             self.appPort = y.get("app").get("controller").get("port")   
 
     @classmethod
-    def valid_requirements(cls,path):
-
+    def check_hw_requirements(cls,path):
         requirements_met = True
-
-        #logging.debug("Entered valid_requirements")
         #System requirements
         cpu_req = Application.get_cpu(path)
         ram_req = Application.get_RAM_size(path)
         os_req = Application.get_OS(path)
-        sw_req = Application.get_softReq(path)
- 
         #Actual system
-
-        #Hardware
         real_cpu = multiprocessing.cpu_count()
         if real_cpu < cpu_req:
          logging.error("CPU requirement not met")
@@ -106,8 +99,27 @@ class Application(object):
         if (os_req!= 'any') and (os_req != real_op_sys):
          logging.error("OS requirement not met")
          requirements_met = False
+        return requirements_met
 
-        #Software
+    @classmethod
+    def check_net_requirements(cls,path):
+        requirements_met = True
+        #System requirements
+        netProt_req = Application.get_netProt_type(path)
+        #Actual system
+        if netProt_req == "openflow":
+            if not util.is_sw_installed("ovs-vsctl"):
+                logging.error("Network Protocol requirement not met")
+                requirements_met = False
+        #TODO possible NETCONF requirement
+        return requirements_met
+
+    @classmethod
+    def check_sw_requirements(cls,path):
+        requirements_met = True
+        #System requirements
+        sw_req = Application.get_softReq(path)
+        #Actual system
         for sw in sw_req:
             if not util.is_sw_installed(sw_req[sw]["name"]):
                 logging.error("Software {} is not installed".format(sw_req[sw]["name"]))
@@ -116,11 +128,20 @@ class Application(object):
             elif not util.check_sw_version(sw_req[sw]["name"], sw_req[sw]["version"]):
                 logging.error("Software version requirement for {} not met".format(sw_req[sw]["name"]))
                 requirements_met = False
-
-
-        #If everything's correct
         return requirements_met
 
+    @classmethod
+    def valid_requirements(cls,path):
+
+        #Hardware
+        hw_requirements = Application.check_hw_requirements(path)
+        #Network Protocol
+        net_requirements = Application.check_net_requirements(path)
+        #Software
+        sw_requirements = Application.check_sw_requirements(path)
+
+        requirements_met = hw_requirements and net_requirements and sw_requirements
+        return requirements_met
     @classmethod
     def parse_sysreq(cls, path):
         sysreqPath = os.path.basename(path) + ".sysreq"
