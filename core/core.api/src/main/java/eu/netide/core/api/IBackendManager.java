@@ -27,7 +27,7 @@ public interface IBackendManager {
      * @param message The message to send.
      * @return True, if sending was successful. False otherwise.
      */
-    boolean sendMessageAllBackends(Message message);
+    boolean sendMessageToAllModules(Message message);
 
     /**
      * Sends a request as specified in the given message and waits for the execution results.

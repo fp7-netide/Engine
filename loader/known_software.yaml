@@ -1,0 +1,7 @@
+software: 
+- name    : java
+  command : java -version 
+  regex   : (?<=").....
+- name    : ovs-vsctl
+  command : ovs-vsctl --version
+  regex   : (?<=\) ).....

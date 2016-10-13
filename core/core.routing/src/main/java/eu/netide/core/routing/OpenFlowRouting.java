@@ -256,7 +256,7 @@ public class OpenFlowRouting implements IOFRoutingManager, IShimMessageListener,
         Request req = shimXidToRequest.get(xid);
         if (req == null) {
             logger.info("Could not find response in Request table, elaying to ALL backends: {}", message);
-            backendManager.sendMessageAllBackends(message);
+            backendManager.sendMessageToAllModules(message);
         } else {
             OFMessage.Builder b = openFlowMessage.createBuilder();
             b.setXid(req.backendXid);

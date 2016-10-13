@@ -1,0 +1,6 @@
+---
+
+- name: install Engine
+  script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_engine.sh
+
+...

@@ -32,6 +32,11 @@ public class MessageHeader implements Cloneable {
         return netIDEProtocolVersion;
     }
 
+    @Override
+    public MessageHeader clone() throws CloneNotSupportedException {
+        return (MessageHeader) super.clone();
+    }
+
     /**
      * Sets net iDE protocol version.
      *
