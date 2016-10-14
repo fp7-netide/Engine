@@ -17,8 +17,12 @@
     <feature name="${project.artifactId}" version="${project.version}"
              description="${project.description}">
         <!--<bundle>mvn:io.netty/netty/3.9.2.Final</bundle>-->
+        <feature>onos-api</feature>
         <bundle>wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"</bundle>
         <bundle>wrap:mvn:org.zeromq/jeromq/0.3.4$Bundle-SymbolicName=zeromq&amp;Bundle-Version=0.3.4&amp;Export-Package=org.zeromq;version="0.3.4"</bundle>
+        <bundle>mvn:org.onosproject/openflowj/0.9.5.onos</bundle>
+        <bundle>mvn:org.onosproject/onos-protocols-openflow-api/1.7.0</bundle>
+        <bundle>mvn:org.onosproject/onos-protocols-openflow-ctl/1.7.0</bundle>
         <bundle>mvn:eu.netide.lib/netip/1.1.0-SNAPSHOT</bundle>
         <bundle>mvn:eu.netide/onos-app-shim/${project.version}</bundle>
     </feature>

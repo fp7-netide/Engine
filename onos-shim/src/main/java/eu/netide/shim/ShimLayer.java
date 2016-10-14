@@ -32,8 +32,10 @@ import org.onosproject.net.packet.PacketContext;
 import org.onosproject.net.packet.PacketPriority;
 import org.onosproject.net.packet.PacketProcessor;
 import org.onosproject.net.packet.PacketService;
+import org.onosproject.openflow.controller.Dpid;
 import org.onosproject.openflow.controller.OpenFlowController;
 import org.onosproject.openflow.controller.OpenFlowSwitch;
+import org.onosproject.openflow.controller.RoleState;
 import org.osgi.service.component.ComponentContext;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFVersion;
@@ -47,6 +49,7 @@ import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.onlab.util.Tools.get;
+import static org.onosproject.openflow.controller.Dpid.dpid;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -109,10 +112,13 @@ public class ShimLayer {
         ofDeviceListener = new NetIDEDeviceListener(controller, shimLayer);
         controller.addListener(ofDeviceListener);
         controller.addEventListener(ofDeviceListener);
+        controller.addMessageListener(ofDeviceListener);
         controller.addPacketListener(15, ofDeviceListener);
 
         //TODO: This is not the best way to do it, but NetIDE protocol do not handle different OF versions together
         for (OpenFlowSwitch sw : controller.getSwitches()) {
+            Dpid dpid = new Dpid(sw.getId());
+            controller.setRole(dpid, RoleState.MASTER);
             OFVersion version = sw.factory().getVersion();
             Integer ofVersion = version.getWireVersion();
             shimLayer.setSupportedProtocol(ofVersion.byteValue());
@@ -130,6 +136,7 @@ public class ShimLayer {
         flowRuleService.removeFlowRulesById(appId);
         controller.removeListener(ofDeviceListener);
         controller.removeEventListener(ofDeviceListener);
+        controller.removeMessageListener(ofDeviceListener);
         controller.removePacketListener(ofDeviceListener);
         ofDeviceListener = null;
         log.info("Stopped");
