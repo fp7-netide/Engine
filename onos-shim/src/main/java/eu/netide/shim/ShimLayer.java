@@ -63,6 +63,8 @@ public class ShimLayer {
 
     private final Logger log = getLogger(getClass());
 
+    private static int xId = 1;
+
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     protected OpenFlowController controller;
 
@@ -147,6 +149,13 @@ public class ShimLayer {
         // TODO revoke unnecessary packet requests when config being modified
         readComponentConfiguration(context, true);
     }
+
+    public static int getXId() {
+        int current = xId;
+        xId++;
+        return current;
+    }
+
 
     /**
      * Extracts properties from the component configuration context.

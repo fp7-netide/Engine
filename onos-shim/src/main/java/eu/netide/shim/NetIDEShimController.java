@@ -20,6 +20,7 @@ import eu.netide.lib.netip.HelloMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.NetIPUtils;
+import eu.netide.lib.netip.OpenFlowMessage;
 import eu.netide.lib.netip.Protocol;
 import eu.netide.lib.netip.ProtocolVersions;
 import io.netty.buffer.ByteBuf;
@@ -77,10 +78,13 @@ public class NetIDEShimController implements ICoreListener {
 
     private HashMap<Long, Integer> xids;
 
+    private Map<Dpid,NetIDESwitch> switchMap;
+
     public NetIDEShimController (ZeroMQBaseConnector connector, OpenFlowController controller) {
         coreConnector = connector;
         this.controller = controller;
         this.xids = Maps.newHashMap();
+        this.switchMap = Maps.newHashMap();
     }
 
     public Pair<Protocol, ProtocolVersions> getSupportedProtocol() {
@@ -107,6 +111,11 @@ public class NetIDEShimController implements ICoreListener {
         Dpid dpid = new Dpid(datapathId);
         log.debug("Dpid {}", dpid);
         OpenFlowSwitch sw = controller.getSwitch(dpid);
+
+        if (sw == null) {
+            log.error("Switch {} disconnected", dpid);
+            return;
+        }
 
         ChannelBuffer buffer = ChannelBuffers.copiedBuffer(msg.array());
         OFMessageReader<OFMessage> reader = OFFactories.getGenericReader();
@@ -138,6 +147,7 @@ public class NetIDEShimController implements ICoreListener {
                             //Save the xid
                             xids.put(message.getXid(), moduleId);
                             sw.sendMsg(message);
+                            break;
                     }
                     break;
 
@@ -247,8 +257,9 @@ public class NetIDEShimController implements ICoreListener {
         ChannelBuffer buf = ChannelBuffers.dynamicBuffer();
         msg.writeTo(buf);
         byte[] payload = buf.array();
-        Message message = new Message(NetIPUtils.StubHeaderFromPayload(payload), payload);
-        message.getHeader().setMessageType(MessageType.OPENFLOW);
+        OpenFlowMessage message = new OpenFlowMessage();
+        message.getHeader().setPayloadLength((short)payload.length);
+        message.setOfMessage(msg);
         message.getHeader().setDatapathId(datapathId);
         message.getHeader().setModuleId(moduleId);
         message.getHeader().setTransactionId((int) xId);

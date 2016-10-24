@@ -150,7 +150,7 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
 
         switch (msg.getType()) {
             case PACKET_IN:
-                shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
+                shimController.sendOpenFlowMessageToCore(msg, ShimLayer.getXId(), dpid.value(), 0);
                 break;
             case FLOW_REMOVED:
                 shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
