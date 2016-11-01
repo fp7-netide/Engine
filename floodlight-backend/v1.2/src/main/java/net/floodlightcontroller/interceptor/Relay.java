@@ -15,6 +15,7 @@ import net.floodlightcontroller.core.FloodlightContext;
 import net.floodlightcontroller.core.IFloodlightProviderService;
 import net.floodlightcontroller.core.IOFMessageListener;
 import net.floodlightcontroller.core.IOFSwitch;
+import net.floodlightcontroller.packet.Ethernet;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelFuture;
 import org.projectfloodlight.openflow.protocol.OFMessage;
+import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,8 +83,17 @@ public class Relay {
     public static void sendToController(NetIDEProtocolVersion netIpVersion, ZeroMQBaseConnector coreConnector, 
     		IFloodlightProviderService floodlightProvider, IOFSwitch sw, OFMessage message, String moduleName, 
     		int moduleId){
-        // SEND PACKETS DIRECTLY TO THE PIPELINE
+        
+    	// SEND PACKETS DIRECTLY TO THE PIPELINE
         FloodlightContext context = new FloodlightContext();
+        
+        //TEMP FIX for apps that retrieve payload from FloodlightContext object, eg, Learning Switch 
+        if (message instanceof OFPacketIn) {
+        	Ethernet eth = new Ethernet();
+        	eth.deserialize(((OFPacketIn)message).getData(), 0, ((OFPacketIn)message).getData().length);
+        	IFloodlightProviderService.bcStore.put(context, IFloodlightProviderService.CONTEXT_PI_PAYLOAD, eth);
+        }
+   
         if(moduleName == null || moduleName.isEmpty()){
             // send to all modules
             // context=null;
