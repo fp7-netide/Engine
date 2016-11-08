@@ -20,36 +20,23 @@ import org.apache.felix.scr.annotations.Modified;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
-import org.onlab.packet.Ethernet;
 import org.onosproject.cfg.ComponentConfigService;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
-import org.onosproject.net.PortNumber;
-import org.onosproject.net.flow.DefaultTrafficSelector;
 import org.onosproject.net.flow.FlowRuleService;
-import org.onosproject.net.flow.TrafficSelector;
-import org.onosproject.net.packet.PacketContext;
-import org.onosproject.net.packet.PacketPriority;
-import org.onosproject.net.packet.PacketProcessor;
-import org.onosproject.net.packet.PacketService;
 import org.onosproject.openflow.controller.Dpid;
 import org.onosproject.openflow.controller.OpenFlowController;
 import org.onosproject.openflow.controller.OpenFlowSwitch;
 import org.onosproject.openflow.controller.RoleState;
 import org.osgi.service.component.ComponentContext;
-import org.projectfloodlight.openflow.protocol.OFPacketIn;
 import org.projectfloodlight.openflow.protocol.OFVersion;
-import org.projectfloodlight.openflow.types.OFBufferId;
 import org.slf4j.Logger;
 
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Objects;
-import java.util.Optional;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static org.onlab.util.Tools.get;
-import static org.onosproject.openflow.controller.Dpid.dpid;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -113,9 +100,8 @@ public class ShimLayer {
         //OFDevice initialization
         ofDeviceListener = new NetIDEDeviceListener(controller, shimLayer);
         controller.addListener(ofDeviceListener);
-        controller.addEventListener(ofDeviceListener);
         controller.addMessageListener(ofDeviceListener);
-        controller.addPacketListener(15, ofDeviceListener);
+        controller.addPacketListener(1, ofDeviceListener);
 
         //TODO: This is not the best way to do it, but NetIDE protocol do not handle different OF versions together
         for (OpenFlowSwitch sw : controller.getSwitches()) {
@@ -137,7 +123,6 @@ public class ShimLayer {
         cfgService.unregisterProperties(getClass(), false);
         flowRuleService.removeFlowRulesById(appId);
         controller.removeListener(ofDeviceListener);
-        controller.removeEventListener(ofDeviceListener);
         controller.removeMessageListener(ofDeviceListener);
         controller.removePacketListener(ofDeviceListener);
         ofDeviceListener = null;

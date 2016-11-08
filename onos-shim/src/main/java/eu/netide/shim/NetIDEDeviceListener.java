@@ -14,45 +14,29 @@
 
 package eu.netide.shim;
 
-import com.google.common.collect.Maps;
-import org.onosproject.net.packet.PacketContext;
-import org.onosproject.net.packet.PacketProcessor;
 import org.onosproject.openflow.controller.Dpid;
 import org.onosproject.openflow.controller.OpenFlowController;
-import org.onosproject.openflow.controller.OpenFlowEventListener;
 import org.onosproject.openflow.controller.OpenFlowMessageListener;
 import org.onosproject.openflow.controller.OpenFlowPacketContext;
 import org.onosproject.openflow.controller.OpenFlowSwitch;
 import org.onosproject.openflow.controller.OpenFlowSwitchListener;
 import org.onosproject.openflow.controller.PacketListener;
 import org.onosproject.openflow.controller.RoleState;
-import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
-import org.projectfloodlight.openflow.protocol.OFPacketIn;
-import org.projectfloodlight.openflow.protocol.OFPacketInReason;
-import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFPortDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFVersion;
-import org.projectfloodlight.openflow.protocol.match.Match;
-import org.projectfloodlight.openflow.protocol.match.MatchField;
-import org.projectfloodlight.openflow.types.OFBufferId;
-import org.projectfloodlight.openflow.types.OFPort;
-import org.projectfloodlight.openflow.types.TableId;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
-import static org.onosproject.openflow.controller.Dpid.dpid;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Created by antonio on 08/02/16.
  */
-public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEventListener, OpenFlowMessageListener, PacketListener {
+public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowMessageListener, PacketListener {
 
     private final Logger log = getLogger(getClass());
 
@@ -108,40 +92,10 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
 
     }
 
-    //TODO: handle multimodule case
-    @Override
-    public void handleMessage(Dpid dpid, OFMessage msg) {
-
-    }
-
     @Override
     public void handlePacket(OpenFlowPacketContext openFlowPacketContext) {
 
-/*        OpenFlowSwitch sw = controller.getSwitch(openFlowPacketContext.dpid());
-        OFFactory factory = sw.factory();
-
-        OFPacketIn.Builder packetInBuilder = factory.buildPacketIn();
-
-        packetInBuilder.setXid(0)
-                .setReason(OFPacketInReason.ACTION)
-                .setData(openFlowPacketContext.unparsed())
-                .setBufferId(OFBufferId.NO_BUFFER);
-        if (factory.getVersion() == OFVersion.OF_10) {
-            packetInBuilder.setInPort(OFPort.of(openFlowPacketContext.inPort()))
-                    .setTotalLen(openFlowPacketContext.unparsed().length);
-        } else if (factory.getVersion() == OFVersion.OF_13){
-            Match.Builder matchBuilder = factory.buildMatch();
-            matchBuilder.setExact(MatchField.IN_PORT, OFPort.of(openFlowPacketContext.inPort()));
-            Match match = matchBuilder.build();
-            packetInBuilder.setMatch(match)
-                    .setTotalLen(openFlowPacketContext.unparsed().length)
-                    .setTableId(TableId.NONE);
-        }
-        OFPacketIn packetIn = packetInBuilder.build();
-
-        log.debug("PacketIn {}", packetIn);
-
-        shimController.sendOpenFlowMessageToCore(packetIn, packetIn.getXid(), openFlowPacketContext.dpid().value(), 0);*/
+        openFlowPacketContext.block();
 
     }
 
