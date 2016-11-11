@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<Topology xmlns="http://netide.eu/schemas/topologyspecification/v1">
+	<Hosts>
+		<Host id="h1" ip="10.0.0.1" mac="00:00:00:00:00:01"/>
+		<Host id="h2" ip="10.0.0.2" mac="00:00:00:00:00:02"/>
+		<Host id="h3" ip="10.0.0.3" mac="00:00:00:00:00:03"/>
+		<Host id="h4" ip="10.0.0.4" mac="00:00:00:00:00:04"/>
+		<Host id="h5" ip="10.0.0.5" mac="00:00:00:00:00:05"/>
+		<Host id="h6" ip="10.0.0.6" mac="00:00:00:00:00:06"/>
+		<Host id="h7" ip="10.0.0.7" mac="00:00:00:00:00:07"/>
+		<Host id="h8" ip="10.0.0.8" mac="00:00:00:00:00:08"/>
+	</Hosts>
+	<Switches>
+		<Switch dpid="0000000000000001" id="s1"/>
+		<Switch dpid="0000000000000002" id="s2"/>
+		<Switch dpid="0000000000000003" id="s3"/>
+		<Switch dpid="0000000000000004" id="s4"/>
+		<Switch dpid="0000000000000005" id="s5"/>
+		<Switch dpid="0000000000000006" id="s6"/>
+		<Switch dpid="0000000000000007" id="s7"/>
+	</Switches>
+	<Links>
+		<Link dst="s4" dst_port="2" src="h8" src_port="0"/>
+		<Link dst="s1" dst_port="2" src="h2" src_port="0"/>
+		<Link dst="s2" dst_port="1" src="h3" src_port="0"/>
+		<Link dst="s5" dst_port="1" src="s1" src_port="3"/>
+		<Link dst="s1" dst_port="1" src="h1" src_port="0"/>
+		<Link dst="s3" dst_port="2" src="h6" src_port="0"/>
+		<Link dst="s4" dst_port="1" src="h7" src_port="0"/>
+		<Link dst="s2" dst_port="2" src="h4" src_port="0"/>
+		<Link dst="s3" dst_port="1" src="h5" src_port="0"/>
+		<Link dst="s6" dst_port="1" src="s3" src_port="3"/>
+		<Link dst="s7" dst_port="1" src="s5" src_port="3"/>
+		<Link dst="s5" dst_port="2" src="s2" src_port="3"/>
+		<Link dst="s7" dst_port="2" src="s6" src_port="3"/>
+		<Link dst="s6" dst_port="2" src="s4" src_port="3"/>
+	</Links>
+</Topology>
