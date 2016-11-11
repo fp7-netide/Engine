@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Set;
 
 /**
  * Created by msp on 7/11/16.
@@ -120,5 +121,22 @@ public class TopologyTest {
         Assert.assertNotNull(host1);
         Assert.assertEquals(host1.ipAddresses().iterator().next(), IpAddress.valueOf("10.0.0.1"));
         Assert.assertEquals(host1.location().deviceId(), (DeviceId.deviceId("of:0000000000000003")));
+    }
+
+    /**
+     * Tests the getPath function of the TopologyManager
+     */
+    @Test(dependsOnMethods = {"TestTopologySpecification"})
+    public void TestGetPath() throws JAXBException, IOException {
+        Path path = Paths.get("core.globalfib/src/test/test_topology_big.xml").toAbsolutePath();
+        String specificationXML = new String(Files.readAllBytes(path));
+        TopologySpecification specification = TopologySpecification.topologySpecification(specificationXML);
+        TopologyManager topologyManager = new TopologyManager();
+        topologyManager.setTopologySpecification(specification);
+
+        DeviceId src = DeviceId.deviceId("of:0000000000000001");
+        DeviceId dst = DeviceId.deviceId("of:0000000000000004");
+        Set<org.onosproject.net.Path> paths = topologyManager.getPaths(topologyManager.currentTopology(), src, dst);
+        Assert.assertNotEquals(paths.size(), 0);
     }
 }

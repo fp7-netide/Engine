@@ -1,6 +1,9 @@
 package eu.netide.core.globalfib.topology;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.felix.scr.annotations.*;
+import org.onlab.graph.DijkstraGraphSearch;
+import org.onlab.graph.GraphPathSearch;
 import org.onosproject.common.DefaultTopology;
 import org.onosproject.common.DefaultTopologyGraph;
 import org.onosproject.net.*;
@@ -18,14 +21,9 @@ import java.util.*;
 public class TopologyManager implements TopologyService {
 
     /**
-     * The graph containing the imported topology.
-     */
-    private TopologyGraph topologyGraph;
-
-    /**
      * Current topology. This object is just a dummy and never actually used.
      */
-    private Topology topology;
+    private DefaultTopology topology;
 
     public TopologyManager() {
         GraphDescription graphDescription = new DefaultGraphDescription(
@@ -42,13 +40,22 @@ public class TopologyManager implements TopologyService {
      * @param topologySpecification TopologySpecifiaction to use.
      */
     public void setTopologySpecification(TopologySpecification topologySpecification) {
-        Map<String, TopologyVertex> vertices = new HashMap<>();
-        Set<TopologyEdge> edges = new HashSet<>();
+        Map<String, Device> vertices = new HashMap<>();
+
+        List<Device> devices = new LinkedList<>();
+        List<Link> links = new LinkedList<>();
 
         for (Switch sw : topologySpecification.getSwitches()) {
+            Device device = new DefaultDevice(
+                    ProviderId.NONE,
+                    DeviceId.deviceId("of:" + sw.getDpid()),
+                    Device.Type.SWITCH,
+                    null, null, null, null, null);
+            devices.add(device);
+
             TopologyVertex vertex = new DefaultTopologyVertex(
                     DeviceId.deviceId("of:" + sw.getDpid()));
-            vertices.put(sw.getId(), vertex);
+            vertices.put(sw.getId(), device);
         }
         for (eu.netide.core.globalfib.topology.Link link : topologySpecification.getLinks()) {
             // Ignore edge links
@@ -57,20 +64,27 @@ public class TopologyManager implements TopologyService {
             }
 
             ConnectPoint src = new ConnectPoint(
-                    vertices.get(link.getSource()).deviceId(),
+                    vertices.get(link.getSource()).id(),
                     PortNumber.portNumber(link.getSourcePort()));
             ConnectPoint dst = new ConnectPoint(
-                    vertices.get(link.getDestination()).deviceId(),
+                    vertices.get(link.getDestination()).id(),
                     PortNumber.portNumber(link.getDestinationPort()));
 
-            Link newLink = new DefaultLink(ProviderId.NONE, src, dst,
+            // Add directed links in both directions
+            Link newLink1 = new DefaultLink(ProviderId.NONE, src, dst,
                     Link.Type.DIRECT, Link.State.ACTIVE, true);
-            TopologyEdge edge = new DefaultTopologyEdge(
-                    vertices.get(link.getSource()), vertices.get(link.getDestination()),
-                    newLink);
-            edges.add(edge);
+            Link newLink2 = new DefaultLink(ProviderId.NONE, dst, src,
+                    Link.Type.DIRECT, Link.State.ACTIVE, true);
+            links.add(newLink1);
+            links.add(newLink2);
         }
-        topologyGraph = new DefaultTopologyGraph(new HashSet<>(vertices.values()), edges);
+        GraphDescription graphDescription = new DefaultGraphDescription(
+                System.nanoTime(),
+                System.currentTimeMillis(),
+                devices,
+                links
+        );
+        topology = new DefaultTopology(ProviderId.NONE, graphDescription);
     }
 
     @Override
@@ -85,7 +99,7 @@ public class TopologyManager implements TopologyService {
 
     @Override
     public TopologyGraph getGraph(Topology topology) {
-        return topologyGraph;
+        return ((DefaultTopology) topology).getGraph();
     }
 
     @Override
@@ -110,7 +124,12 @@ public class TopologyManager implements TopologyService {
 
     @Override
     public Set<Path> getPaths(Topology topology, DeviceId src, DeviceId dst) {
-        return null;
+        if (! (topology instanceof DefaultTopology)) {
+            return null;
+        }
+
+        DefaultTopology defaultTopology = (DefaultTopology) topology;
+        return defaultTopology.getPaths(src, dst);
     }
 
     @Override

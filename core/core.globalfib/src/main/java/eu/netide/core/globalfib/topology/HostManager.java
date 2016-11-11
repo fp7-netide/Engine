@@ -1,5 +1,7 @@
 package eu.netide.core.globalfib.topology;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.onlab.packet.IpAddress;
 import org.onlab.packet.MacAddress;
 import org.onlab.packet.VlanId;
@@ -17,6 +19,8 @@ import java.util.Set;
 /**
  * Created by msp on 7/11/16.
  */
+@Component(immediate = true)
+@Service
 public class HostManager implements HostService {
 
     private Map<HostId, Host> hosts;
