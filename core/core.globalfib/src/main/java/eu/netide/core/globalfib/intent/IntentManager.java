@@ -5,8 +5,6 @@ import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
 import org.apache.felix.scr.annotations.Service;
-import org.onosproject.common.DefaultTopology;
-import org.onosproject.common.DefaultTopologyGraph;
 import org.onosproject.net.*;
 import org.onosproject.net.host.HostService;
 import org.onosproject.net.provider.ProviderId;
@@ -20,10 +18,7 @@ import org.projectfloodlight.openflow.protocol.match.MatchField;
 import org.projectfloodlight.openflow.types.OFPort;
 import org.projectfloodlight.openflow.types.MacAddress;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by msp on 9/15/16.
@@ -39,6 +34,16 @@ public class IntentManager implements IntentService {
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private HostService hostService;
+
+    /**
+     * A set of FlowModEntries together with the time they were added to the set.
+     */
+    private Set<Map.Entry<FlowModEntry, Long>> unassignedFlowModEntries = new HashSet<>();
+
+    /**
+     * The timeout for unassigned FlowModEntries in ms.
+     */
+    private static final long unassignedFlowModEntryTimeout = 10000;
 
     @Override
     public void process(FlowModEntry flowModEntry) {
@@ -61,13 +66,36 @@ public class IntentManager implements IntentService {
                 return;
             } else {
                 newIntent.addFlowModEntry(flowModEntry);
-                // TODO: Check if any stored unassociated FlowEntry matches the new intent.
                 intents.add(newIntent);
+
+                // Check if any currently unassigned FlowEntries match the new intent
+                Iterator<Map.Entry<FlowModEntry, Long>> iterator = unassignedFlowModEntries.iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<FlowModEntry, Long> entry = iterator.next();
+                    FlowModEntry storedFlowModEntry = entry.getKey();
+                    Long entryTime = entry.getValue();
+                    if (flowModEntryMatchesIntent(newIntent, storedFlowModEntry)) {
+                        newIntent.addFlowModEntry(storedFlowModEntry);
+                        iterator.remove();
+                    } else {
+                        // Remove entry if could not be assigned and timed out.
+                        if (entryTime - System.currentTimeMillis() > unassignedFlowModEntryTimeout) {
+                            iterator.remove();
+                        }
+                    }
+                }
             }
         } else { // Else, add FlowMod to all intents that match
 
             // Add FlowMod to all intents it applies to
             Set<Intent> matchingIntents = findMatchingIntents(flowModEntry);
+            if (matchingIntents.isEmpty()) {
+                // Store FlowModEntry for later
+                Map.Entry<FlowModEntry, Long> entry = new AbstractMap.SimpleEntry<FlowModEntry, Long>(
+                        flowModEntry, System.currentTimeMillis());
+                unassignedFlowModEntries.add(entry);
+                return;
+            }
             for (Intent intent : matchingIntents) {
                 if (!(intent instanceof HostToHostIntent)) {
                     continue;
@@ -123,50 +151,63 @@ public class IntentManager implements IntentService {
     /**
      * Find all intents that match the FlowEntry.
      *
-     * @param flowEntry FlowEntry to match against.
+     * @param flowModEntry FlowModEntry to match against.
      * @return Set of intents matching the FlowEntry.
      */
-    public Set<Intent> findMatchingIntents(FlowModEntry flowEntry) {
-        OFFlowMod flowMod = flowEntry.getFlowMod();
+    public Set<Intent> findMatchingIntents(FlowModEntry flowModEntry) {
         Set<Intent> matchingIntents = new HashSet<>();
         for (Intent intent : intents) {
-            HostToHostIntent hintent = (HostToHostIntent) intent;
-
-            // Check if destination matches
-            byte[] mac = flowMod.getMatch().get(MatchField.ETH_DST).getBytes();
-            MacAddress macAddress = flowMod.getMatch().get(MatchField.ETH_DST);
-            if (!hintent.getDestination().mac().equals(onosMacAddress(macAddress))) {
-                continue;
-            }
-
-            // Check if module id matches
-            if (intent.getModuleId() != flowEntry.getModuleId()) {
-                continue;
-            }
-
-            DeviceId deviceId = onosDeviceId(flowEntry.getDpid());
-            PortNumber outputPort = null;
-            for (OFAction action : flowMod.getActions()) {
-                if (action.getType() == OFActionType.OUTPUT) {
-                    outputPort = PortNumber.portNumber(((OFActionOutput) action).getPort().getPortNumber());
-                    break;
-                }
-            }
-
-            // Check if flow mod lies on path through topology
-            Path path = getIntentPath(intent);
-            for (Link link : path.links()) {
-                // Ignore link from source host to first switch
-                if (link.src().elementId() instanceof HostId) {
-                    continue;
-                }
-                if (link.src().deviceId().equals(deviceId) && link.src().port().equals(outputPort)) {
-                    matchingIntents.add(intent);
-                    break;
-                }
+            if (flowModEntryMatchesIntent(intent, flowModEntry)) {
+                matchingIntents.add(intent);
             }
         }
         return matchingIntents;
+    }
+
+    /**
+     * Tests if a FlowModEntry matches the given Intent.
+     *
+     * @param intent       Intent to check.
+     * @param flowModEntry FlowModEntry to check.
+     * @return true, if flowModEntry matches intent.
+     */
+    private boolean flowModEntryMatchesIntent(Intent intent, FlowModEntry flowModEntry) {
+        OFFlowMod flowMod = flowModEntry.getFlowMod();
+        HostToHostIntent hintent = (HostToHostIntent) intent;
+
+        // Check if destination matches
+        byte[] mac = flowMod.getMatch().get(MatchField.ETH_DST).getBytes();
+        MacAddress macAddress = flowMod.getMatch().get(MatchField.ETH_DST);
+        if (!hintent.getDestination().mac().equals(onosMacAddress(macAddress))) {
+            return false;
+        }
+
+        // Check if module id matches
+        if (intent.getModuleId() != flowModEntry.getModuleId()) {
+            return false;
+        }
+
+        DeviceId deviceId = onosDeviceId(flowModEntry.getDpid());
+        PortNumber outputPort = null;
+        for (OFAction action : flowMod.getActions()) {
+            if (action.getType() == OFActionType.OUTPUT) {
+                outputPort = PortNumber.portNumber(((OFActionOutput) action).getPort().getPortNumber());
+                break;
+            }
+        }
+
+        // Check if flow mod lies on path through topology
+        Path path = getIntentPath(intent);
+        for (Link link : path.links()) {
+            // Ignore link from source host to first switch
+            if (link.src().elementId() instanceof HostId) {
+                continue;
+            }
+            if (link.src().deviceId().equals(deviceId) && link.src().port().equals(outputPort)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
