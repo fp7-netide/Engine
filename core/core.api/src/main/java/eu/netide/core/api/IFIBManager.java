@@ -1,8 +1,8 @@
 package eu.netide.core.api;
 
-import org.onosproject.net.flow.FlowEntry;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Created by msp on 1/13/16.
@@ -14,5 +14,5 @@ public interface IFIBManager {
      *
      * @return The list of FlowMods.
      */
-    List<FlowEntry> getFlowMods();
+    Set<OFFlowMod> getFlowMods();
 }

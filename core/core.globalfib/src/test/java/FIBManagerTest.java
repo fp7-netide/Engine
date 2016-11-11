@@ -31,47 +31,52 @@ public class FIBManagerTest {
     }
 
     /**
-     * Tests adding FlowMods to the FIBManager.
+     * Tests handling of FlowAdd messages.
      *
-     * Adds FlowMods allowing bidirectional communication between 00:00:00:00:00:01 and 00:00:00:00:00:0a.
+     * Data taken from OFFlowAdd captured during operation.
      */
     @Test
-    public void TestAddFlowMod() {
-        final int inPort = 1;
-        final int outPort = 2;
-
+    public void TestFlowAdd() {
         OFFactory fact = OFFactories.getFactory(OFVersion.OF_13);
 
-        Match match1 = fact.buildMatch()
+        Match match = fact.buildMatch()
                 .setExact(MatchField.ETH_TYPE, EthType.IPv4)
-                .setExact(MatchField.IN_PORT, OFPort.of(inPort))
-                .setExact(MatchField.ETH_SRC, MacAddress.of("00:00:00:00:00:01"))
-                .setExact(MatchField.ETH_DST, MacAddress.of("00:00:00:00:00:0a")).build();
-        // Note: 0xffef is the maximum value for this field
-        OFAction action1 = fact.actions().output(OFPort.of(outPort), 0xffef);
-        OFFlowMod offm1 = fact.buildFlowAdd()
-                .setActions(Stream.of(action1).collect(Collectors.toList()))
-                .setMatch(match1)
+                .setExact(MatchField.IN_PORT, OFPort.of(1))
+                .setExact(MatchField.ETH_DST, MacAddress.of("3e:d7:00:b9:ca:db")).build();
+        OFAction action = fact.actions().output(OFPort.of(2), 65509);
+        OFFlowAdd flowAdd = fact.buildFlowAdd()
+                .setXid(19)
+                .setIdleTimeout(5)
+                .setPriority(10)
+                .setBufferId(OFBufferId.of(268))
+                .setMatch(match)
+                .setActions(Stream.of(action).collect(Collectors.toList()))
                 .build();
-        OpenFlowMessage message1 = messageFromOFMessage(offm1);
 
-        Match match2 = fact.buildMatch()
-                .setExact(MatchField.ETH_TYPE, EthType.IPv4)
-                .setExact(MatchField.IN_PORT, OFPort.of(outPort))
-                .setExact(MatchField.ETH_SRC, MacAddress.of("00:00:00:00:00:0a"))
-                .setExact(MatchField.ETH_DST, MacAddress.of("00:00:00:00:00:01")).build();
-        // Note: 0xffef is the maximum value for this field
-        OFAction action2 = fact.actions().output(OFPort.of(inPort), 0xffef);
-        OFFlowMod offm2 = fact.buildFlowAdd()
-                .setActions(Stream.of(action2).collect(Collectors.toList()))
-                .setMatch(match2)
-                .build();
-        OpenFlowMessage message2 = messageFromOFMessage(offm2);
-
-        fibManager.handleResult(message1);
-        fibManager.handleResult(message2);
+        OpenFlowMessage message = messageFromOFMessage(flowAdd);
+        fibManager.handleResult(message);
     }
 
+    /**
+     * Tests handling of PacketOut messages.
+     *
+     * Data taken from OFPacketOut captured during operation.
+     */
+    @Test
+    public void TestPacketOut() {
+        OFFactory fact = OFFactories.getFactory(OFVersion.OF_13);
+
+        OFAction action = fact.actions().output(OFPort.FLOOD, 65509);
+        OFPacketOut packetOut = fact.buildPacketOut()
+                .setXid(36)
+                .setBufferId(OFBufferId.of(285))
+                .setInPort(OFPort.of(2))
+                .setActions(Stream.of(action).collect(Collectors.toList()))
+                .build();
+
+        OpenFlowMessage message = messageFromOFMessage(packetOut);
+        fibManager.handleResult(message);
+    }
 
     private static OpenFlowMessage messageFromOFMessage(OFMessage ofMessage) {
         OpenFlowMessage newMessage = new OpenFlowMessage();

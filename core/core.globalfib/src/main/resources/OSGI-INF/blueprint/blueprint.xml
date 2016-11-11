@@ -39,4 +39,6 @@
 
     <service ref="fibManager"
              interface="eu.netide.core.api.IFIBManager"/>
+    <service ref="fibManager"
+             interface="eu.netide.core.api.IShimMessageListener"/>
 </blueprint>

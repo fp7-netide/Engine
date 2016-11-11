@@ -4,6 +4,9 @@ import eu.netide.core.api.IFIBManager;
 import org.apache.karaf.shell.commands.Command;
 import org.apache.karaf.shell.console.OsgiCommandSupport;
 import org.onosproject.net.flow.FlowEntry;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
+
+import java.util.Iterator;
 
 /**
  * Created by msp on 5/4/16.
@@ -15,7 +18,7 @@ public class ListFlowMods extends OsgiCommandSupport {
     protected Object doExecute() throws Exception {
         IFIBManager fibManager = getService(IFIBManager.class);
 
-        for (FlowEntry flowMod : fibManager.getFlowMods()) {
+        for (OFFlowMod flowMod : fibManager.getFlowMods()) {
             System.out.format("%s\n", flowMod.toString());
         }
         return null;

@@ -10,19 +10,15 @@ import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
-import org.onosproject.net.flow.FlowEntry;
-import org.onosproject.net.topology.TopologyService;
-import org.osgi.framework.BundleContext;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
 import org.projectfloodlight.openflow.protocol.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.StringReader;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class FIBManager implements IShimMessageListener, IFIBManager {
     private final OFMessageReader<OFMessage> reader;
@@ -68,11 +64,6 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
             try {
                 OFMessage ofmessage = reader.readFrom(bb);
                 long datapathId = message.getHeader().getDatapathId();
-                if (ofmessage instanceof OFFlowAdd) {
-                    OFFlowAdd ofFlowAdd = (OFFlowAdd) ofmessage;
-
-                    //globalFIB.addFlowMod(ofFlowAdd, datapathId);
-                }
                 if (ofmessage instanceof OFPacketIn) {
                     globalFIB.handlePacketIn((OFPacketIn) ofmessage, datapathId);
                 }
@@ -82,6 +73,11 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
         }
     }
 
+    /**
+     * Handles answers from the CompositionManager.
+     *
+     * @param message Message from the CompositionManager.
+     */
     public void handleResult(Message message) {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
@@ -94,8 +90,12 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
     }
 
     @Override
-    public List<FlowEntry> getFlowMods() {
-        return globalFIB.getFlowEntries();
+    public Set<OFFlowMod> getFlowMods() {
+        Set<OFFlowMod> flowMods = new HashSet<>();
+        for(FlowModEntry flowModEntry : globalFIB.getFlowModEntries()) {
+            flowMods.add(flowModEntry.getFlowMod());
+        }
+        return flowMods;
     }
 
     public void setShimManager(IShimManager shimManager) {
