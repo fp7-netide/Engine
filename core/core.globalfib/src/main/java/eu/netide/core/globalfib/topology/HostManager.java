@@ -25,15 +25,12 @@ public class HostManager implements HostService {
 
     private Map<HostId, Host> hosts;
 
-    public HostManager() {
-        hosts = new HashMap<>();
-    }
-
     /**
      * Reads hosts and connection points from the given TopologySpecification.
      * @param topologySpecification TopologySpecifiaction to use.
      */
     public void setTopologySpecification(TopologySpecification topologySpecification) {
+        hosts = new HashMap<>();
         for (eu.netide.core.globalfib.topology.Host host : topologySpecification.getHosts()) {
             MacAddress macAddress = MacAddress.valueOf(host.getMac());
             HostId hostId = HostId.hostId(macAddress);
