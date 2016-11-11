@@ -35,8 +35,17 @@ def generate_xml_file(topology, output_path, print_output=False):
 
     for host in topology.hosts():
         node_info = topology.nodeInfo(host)
-        # TODO: convert all MACs into colon-separated notation xx:xx:xx:xx:xx:xx
-        ET.SubElement(hosts, "Host", id=host, mac=node_info["mac"], ip=node_info["ip"])
+        mac_str = ""
+        if ":" in node_info["mac"]:
+            mac_str = node_info["mac"]
+        else:
+            i = 0
+            for c in node_info["mac"]:
+                mac_str += c
+                if i % 2 == 1 and i < len(node_info["mac"]) - 1:
+                    mac_str += ":"
+                i += 1
+        ET.SubElement(hosts, "Host", id=host, mac=mac_str, ip=node_info["ip"])
 
     for switch in topology.switches():
         node_info = topology.nodeInfo(switch)
@@ -86,6 +95,8 @@ def get_topology(topology_string, customs):
     topology = None
     if class_name in customs:
         topology = mininet.util.buildTopo(customs, topology_string)
+    elif class_name in customs["topos"]:
+        topology = mininet.util.buildTopo(customs["topos"], topology_string)
     elif class_name in BUILTIN_TOPOLOGIES:
         topology = mininet.util.buildTopo(BUILTIN_TOPOLOGIES, topology_string)
 
