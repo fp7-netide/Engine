@@ -112,6 +112,9 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
 
     public void setTopologySpecificationXML(String topologySpecificationXML) throws JAXBException {
         this.topologySpecificationXML = topologySpecificationXML;
+        if (this.topologySpecificationXML.isEmpty()) {
+            return;
+        }
 
         TopologySpecification topologySpecification = TopologySpecification.topologySpecification(topologySpecificationXML);
         globalFIB.setTopologySpecification(topologySpecification);

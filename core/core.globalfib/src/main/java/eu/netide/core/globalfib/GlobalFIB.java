@@ -37,6 +37,8 @@ public class GlobalFIB implements IGlobalFIB {
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private HostService hostService;
 
+    private boolean isTopologyInitialized = false;
+
     @Override
     public void addFlowMod(OpenFlowMessage ofMessage) {
         if (ofMessage.getOfMessage().getType() != OFType.FLOW_MOD) {
@@ -48,7 +50,9 @@ public class GlobalFIB implements IGlobalFIB {
                 ofMessage.getHeader().getModuleId());
         flowModEntries.add(flowModEntry);
 
-        intentService.process(flowModEntry);
+        if (isTopologyInitialized) {
+            intentService.process(flowModEntry);
+        }
     }
 
     @Override
@@ -69,5 +73,6 @@ public class GlobalFIB implements IGlobalFIB {
         // TODO: catch exception, if another class implements the interface (e.g. from onos)
         ((TopologyManager) topologyService).setTopologySpecification(topologySpecification);
         ((HostManager) hostService).setTopologySpecification(topologySpecification);
+        isTopologyInitialized = true;
     }
 }
