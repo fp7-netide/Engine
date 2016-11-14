@@ -33,6 +33,14 @@ public class HostToHostIntent extends Intent {
     }
 
     @Override
+    public String toString() {
+        String srcMacStr = source.mac().toString();
+        String dstMacStr = destination.mac().toString();
+        String str = "HostToHost (" + srcMacStr + " -> " + dstMacStr + ")";
+        return str;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;

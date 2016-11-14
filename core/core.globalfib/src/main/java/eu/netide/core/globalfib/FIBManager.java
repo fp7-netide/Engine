@@ -4,6 +4,8 @@ import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
 import eu.netide.core.caos.ICompositionManager;
+import eu.netide.core.globalfib.intent.Intent;
+import eu.netide.core.globalfib.intent.IntentService;
 import eu.netide.core.globalfib.topology.TopologySpecification;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
@@ -96,6 +98,16 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
             flowMods.add(flowModEntry.getFlowMod());
         }
         return flowMods;
+    }
+
+    @Override
+    public Set<String> getIntentStrings() {
+        Set<String> result = new HashSet<>();
+        for (Intent intent: globalFIB.getIntents()) {
+            result.add(intent.toString());
+        }
+
+        return result;
     }
 
     public void setShimManager(IShimManager shimManager) {

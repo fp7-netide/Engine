@@ -1,6 +1,7 @@
 package eu.netide.core.globalfib;
 
 import eu.netide.core.globalfib.flow.FlowModBuilder;
+import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.intent.IntentService;
 import eu.netide.core.globalfib.topology.HostManager;
 import eu.netide.core.globalfib.topology.TopologyManager;
@@ -66,6 +67,11 @@ public class GlobalFIB implements IGlobalFIB {
     @Override
     public Set<FlowModEntry> getFlowModEntries() {
         return flowModEntries;
+    }
+
+    @Override
+    public Set<Intent> getIntents() {
+        return intentService.getIntents();
     }
 
     @Override

@@ -15,4 +15,11 @@ public interface IFIBManager {
      * @return The list of FlowMods.
      */
     Set<OFFlowMod> getFlowMods();
+
+    /**
+     * Returns a string representation of all every intent.
+     *
+     * @return Set of Strings representing intents.
+     */
+    Set<String> getIntentStrings();
 }

@@ -32,9 +32,6 @@ public abstract class Intent {
         flowModEntries.add(flowMod);
     }
 
-    @Override
-    public abstract boolean equals(Object obj);
-
     public Set<FlowModEntry> getFlowModEntries() {
         return flowModEntries;
     }
@@ -42,4 +39,10 @@ public abstract class Intent {
     public int getModuleId() {
         return moduleId;
     }
+
+    @Override
+    public abstract String toString();
+
+    @Override
+    public abstract boolean equals(Object obj);
 }

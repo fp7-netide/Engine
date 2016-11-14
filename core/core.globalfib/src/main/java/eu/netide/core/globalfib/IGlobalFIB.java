@@ -1,5 +1,6 @@
 package eu.netide.core.globalfib;
 
+import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.topology.TopologySpecification;
 import eu.netide.lib.netip.OpenFlowMessage;
 import org.onosproject.net.flow.FlowEntry;
@@ -18,6 +19,8 @@ public interface IGlobalFIB {
     void addFlowMod(OpenFlowMessage ofMessage);
 
     Set<FlowModEntry> getFlowModEntries();
+
+    Set<Intent> getIntents();
 
     void setTopologySpecification(TopologySpecification topologySpecification);
 }

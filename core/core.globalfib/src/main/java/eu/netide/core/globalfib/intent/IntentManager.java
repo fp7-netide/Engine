@@ -234,6 +234,7 @@ public class IntentManager implements IntentService {
         this.topologyService = topologyService;
     }
 
+    @Override
     public Set<Intent> getIntents() {
         return intents;
     }
