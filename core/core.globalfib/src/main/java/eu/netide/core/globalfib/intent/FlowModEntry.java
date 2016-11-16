@@ -1,4 +1,4 @@
-package eu.netide.core.globalfib;
+package eu.netide.core.globalfib.intent;
 
 import org.onosproject.net.DeviceId;
 import org.onosproject.openflow.controller.Dpid;

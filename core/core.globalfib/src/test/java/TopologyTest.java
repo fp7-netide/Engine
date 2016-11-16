@@ -77,7 +77,7 @@ public class TopologyTest {
 
         TopologyGraph topologyGraph = topologyManager.getGraph(topology);
         Assert.assertEquals(topologyGraph.getVertexes().size(), 2);
-        Assert.assertEquals(topologyGraph.getEdges().size(), 1);
+        Assert.assertEquals(topologyGraph.getEdges().size(), 2);
 
         TopologyVertex s3 = (TopologyVertex) topologyGraph.getVertexes().toArray()[0];
         Assert.assertTrue(s3.deviceId().equals(
