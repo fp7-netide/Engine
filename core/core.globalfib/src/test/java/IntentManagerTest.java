@@ -126,6 +126,38 @@ public class IntentManagerTest {
     }
 
     /**
+     * Make sure that intents don't add duplicate FlowMods.
+     */
+    @Test
+    public void TestDuplicateFlowMods() {
+        IntentManager intentManager = new IntentManager();
+        intentManager.bindHostService(hostManager);
+        intentManager.bindTopologyService(topologyManager);
+
+        int moduleId = 1;
+        String dstMac = "00:00:00:00:00:06";
+
+        // Create new intent
+        OFFlowMod flowMod1 = createFlowMod(dstMac, 1, 3);
+        FlowModEntry flowModEntry1 = new FlowModEntry(flowMod1, 1, moduleId);
+        intentManager.process(flowModEntry1);
+
+        OFFlowMod flowMod2 = createFlowMod(dstMac, 1, 3);
+        FlowModEntry flowModEntry2 = new FlowModEntry(flowMod2, 5, moduleId);
+        intentManager.process(flowModEntry2);
+
+        // Add duplicate of flowMod2
+        OFFlowMod flowMod2dup = createFlowMod(dstMac, 1, 3);
+        FlowModEntry flowModEntry2dup = new FlowModEntry(flowMod2dup, 5, moduleId);
+        intentManager.process(flowModEntry2dup);
+
+        Assert.assertEquals(intentManager.getIntents().size(), 1);
+        Intent intent = intentManager.getIntents().iterator().next();
+
+        Assert.assertEquals(intent.getFlowModEntries().size(), 2);
+    }
+
+    /**
      * Test a sequence of FlowMods for the host to host intent h1->h6 (h1-s1-s5-s7-s6-s3-h6) where the order of
      * FlowMods is not in correctly ordered. This is to test the storing of unassociated FlowMods and assigning them
      * to an intent later.

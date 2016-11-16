@@ -195,17 +195,26 @@ public class IntentManager implements IntentService {
                 break;
             }
         }
+        PortNumber inputPort = onosPortNumber(flowMod.getMatch().get(MatchField.IN_PORT));
 
         // Check if flow mod lies on path through topology
         Path path = getIntentPath(intent);
-        for (Link link : path.links()) {
+        Iterator<Link> iterator = path.links().iterator();
+        Link lastLink = null;
+        while (iterator.hasNext()) {
+            Link link = iterator.next();
+
             // Ignore link from source host to first switch
             if (link.src().elementId() instanceof HostId) {
+                lastLink = link;
                 continue;
             }
-            if (link.src().deviceId().equals(deviceId) && link.src().port().equals(outputPort)) {
+            if (link.src().deviceId().equals(deviceId)
+                    && link.src().port().equals(outputPort)
+                    && lastLink.dst().port().equals(inputPort)){
                 return true;
             }
+            lastLink = link;
         }
         return false;
     }

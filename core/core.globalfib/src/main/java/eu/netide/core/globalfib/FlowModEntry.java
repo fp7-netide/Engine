@@ -1,7 +1,6 @@
 package eu.netide.core.globalfib;
 
 import org.onosproject.net.DeviceId;
-import org.onosproject.net.PortNumber;
 import org.onosproject.openflow.controller.Dpid;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
 
@@ -31,6 +30,29 @@ public class FlowModEntry {
 
     public OFFlowMod getFlowMod() {
         return flowMod;
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) (moduleId * dpid * flowMod.getMatch().hashCode());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj instanceof FlowModEntry) {
+            FlowModEntry other = (FlowModEntry) obj;
+            if (other.dpid != dpid || other.moduleId != moduleId) {
+                return false;
+            }
+            if (other.flowMod.getMatch().equals(flowMod.getMatch())
+                    && other.flowMod.getActions().equals(flowMod.getActions())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

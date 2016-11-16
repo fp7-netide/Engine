@@ -20,10 +20,6 @@ public abstract class Intent {
      */
     private Set<FlowModEntry> flowModEntries = new HashSet<>();
 
-    protected Intent() {
-        moduleId = -1;
-    }
-
     protected Intent(int moduleId) {
         this.moduleId = moduleId;
     }
