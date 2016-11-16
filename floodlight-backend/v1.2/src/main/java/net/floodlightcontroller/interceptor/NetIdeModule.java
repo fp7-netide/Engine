@@ -288,9 +288,9 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 			DummySwitch dummySwitch = new DummySwitch(datapathId, features, moduleName, coreConnector, moduleHandler);
 			addNewSwitch(dummySwitch);
 
-		} else if ((managedSwitches.containsKey(datapathId) && managedSwitches.get(datapathId).isHandshakeCompleted())
+		} else if (managedSwitches.containsKey(datapathId) && ((managedSwitches.get(datapathId).isHandshakeCompleted())
 				|| (managedSwitches.get(datapathId).isConnectionHandshakeCompleted()
-						&& Arrays.asList(handshakeMessages).contains(msg.getType()))) {
+						&& Arrays.asList(handshakeMessages).contains(msg.getType())))) {
 
 			if (msg.getType().equals(OFType.ECHO_REQUEST)) {
 				Relay.sendToCore(coreConnector, OFFactories.getFactory(msg.getVersion()).buildEchoReply()
