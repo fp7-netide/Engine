@@ -1,11 +1,9 @@
 package eu.netide.core.globalfib;
 
+import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.topology.TopologySpecification;
 import eu.netide.lib.netip.OpenFlowMessage;
-import org.onosproject.net.flow.FlowEntry;
-import org.projectfloodlight.openflow.protocol.OFFlowAdd;
-import org.projectfloodlight.openflow.protocol.OFFlowMod;
 import org.projectfloodlight.openflow.protocol.OFPacketIn;
 
 import java.util.Set;

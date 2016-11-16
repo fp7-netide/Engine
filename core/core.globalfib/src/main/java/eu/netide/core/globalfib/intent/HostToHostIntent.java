@@ -1,13 +1,6 @@
 package eu.netide.core.globalfib.intent;
 
-import org.onlab.packet.MacAddress;
 import org.onosproject.net.Host;
-import org.onosproject.net.flow.FlowEntry;
-import org.onosproject.net.flow.criteria.Criterion;
-import org.onosproject.net.flow.criteria.EthCriterion;
-import org.projectfloodlight.openflow.protocol.OFFlowMod;
-import org.projectfloodlight.openflow.protocol.match.MatchField;
-import org.projectfloodlight.openflow.protocol.match.MatchFields;
 
 /**
  * Created by msp on 9/14/16.

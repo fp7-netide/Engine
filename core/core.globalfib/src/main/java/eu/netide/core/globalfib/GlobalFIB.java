@@ -1,6 +1,6 @@
 package eu.netide.core.globalfib;
 
-import eu.netide.core.globalfib.flow.FlowModBuilder;
+import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.intent.IntentService;
 import eu.netide.core.globalfib.topology.HostManager;
@@ -14,8 +14,6 @@ import org.apache.felix.scr.annotations.Service;
 import org.onosproject.net.host.HostService;
 import org.onosproject.net.topology.TopologyService;
 import org.projectfloodlight.openflow.protocol.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -25,8 +23,6 @@ import java.util.*;
 @Component(immediate=true)
 @Service
 public class GlobalFIB implements IGlobalFIB {
-    private static final Logger logger = LoggerFactory.getLogger(GlobalFIB.class);
-
     private Set<FlowModEntry> flowModEntries = new HashSet<>();
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)

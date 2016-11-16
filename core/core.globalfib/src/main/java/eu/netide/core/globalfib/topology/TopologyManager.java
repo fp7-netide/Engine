@@ -1,11 +1,7 @@
 package eu.netide.core.globalfib.topology;
 
-import com.google.common.collect.ImmutableSet;
 import org.apache.felix.scr.annotations.*;
-import org.onlab.graph.DijkstraGraphSearch;
-import org.onlab.graph.GraphPathSearch;
 import org.onosproject.common.DefaultTopology;
-import org.onosproject.common.DefaultTopologyGraph;
 import org.onosproject.net.*;
 import org.onosproject.net.Link;
 import org.onosproject.net.provider.ProviderId;

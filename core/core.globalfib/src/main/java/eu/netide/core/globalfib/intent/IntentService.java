@@ -1,7 +1,5 @@
 package eu.netide.core.globalfib.intent;
 
-import eu.netide.core.globalfib.FlowModEntry;
-
 import java.util.Set;
 
 /**

@@ -1,8 +1,5 @@
 package eu.netide.core.globalfib.intent;
 
-import eu.netide.core.globalfib.FlowModEntry;
-import org.projectfloodlight.openflow.protocol.OFFlowMod;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,6 +35,9 @@ public abstract class Intent {
 
     @Override
     public abstract String toString();
+
+    @Override
+    public abstract int hashCode();
 
     @Override
     public abstract boolean equals(Object obj);

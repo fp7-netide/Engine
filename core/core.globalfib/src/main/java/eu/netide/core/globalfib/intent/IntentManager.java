@@ -1,6 +1,5 @@
 package eu.netide.core.globalfib.intent;
 
-import eu.netide.core.globalfib.FlowModEntry;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -235,17 +234,17 @@ public class IntentManager implements IntentService {
         return null;
     }
 
+    @Override
+    public Set<Intent> getIntents() {
+        return intents;
+    }
+
     public void bindHostService(HostService hostService) {
         this.hostService = hostService;
     }
 
     public void bindTopologyService(TopologyService topologyService) {
         this.topologyService = topologyService;
-    }
-
-    @Override
-    public Set<Intent> getIntents() {
-        return intents;
     }
 
     private static PortNumber onosPortNumber(OFPort port) {

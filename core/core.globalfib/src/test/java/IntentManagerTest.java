@@ -1,4 +1,4 @@
-import eu.netide.core.globalfib.FlowModEntry;
+import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.HostToHostIntent;
 import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.intent.IntentManager;
