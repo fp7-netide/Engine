@@ -15,8 +15,8 @@ public class ListFlowMods extends OsgiCommandSupport {
     protected Object doExecute() throws Exception {
         IFIBManager fibManager = getService(IFIBManager.class);
 
-        for (OFFlowMod flowMod : fibManager.getFlowMods()) {
-            System.out.format("%s\n", flowMod.toString());
+        for (String flowModString : fibManager.getFlowModStrings()) {
+            System.out.format("%s\n", flowModString);
         }
         return null;
     }

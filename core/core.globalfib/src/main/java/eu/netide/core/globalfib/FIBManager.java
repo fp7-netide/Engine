@@ -92,12 +92,12 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
     }
 
     @Override
-    public Set<OFFlowMod> getFlowMods() {
-        Set<OFFlowMod> flowMods = new HashSet<>();
+    public Set<String> getFlowModStrings() {
+        Set<String> result = new HashSet<>();
         for(FlowModEntry flowModEntry : globalFIB.getFlowModEntries()) {
-            flowMods.add(flowModEntry.getFlowMod());
+            result.add(flowModEntry.toString());
         }
-        return flowMods;
+        return result;
     }
 
     @Override

@@ -10,11 +10,11 @@ import java.util.Set;
 public interface IFIBManager {
 
     /**
-     * Returns a list of installed FlowMods.
+     * Returns a string representation of all installed FlowMods.
      *
-     * @return The list of FlowMods.
+     * @return Set of Strings representing FlowMods.
      */
-    Set<OFFlowMod> getFlowMods();
+    Set<String> getFlowModStrings();
 
     /**
      * Returns a string representation of all every intent.

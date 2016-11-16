@@ -4,9 +4,6 @@ import org.onosproject.net.DeviceId;
 import org.onosproject.net.PortNumber;
 import org.onosproject.openflow.controller.Dpid;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
-import org.projectfloodlight.openflow.protocol.match.MatchField;
-import org.projectfloodlight.openflow.types.MacAddress;
-import org.projectfloodlight.openflow.types.OFPort;
 
 /**
  * Created by msp on 9/28/16.
@@ -34,5 +31,16 @@ public class FlowModEntry {
 
     public OFFlowMod getFlowMod() {
         return flowMod;
+    }
+
+    @Override
+    public String toString() {
+        String result = "Device: ";
+        result += DeviceId.deviceId(Dpid.uri(dpid));
+        result += ", ModuleID: ";
+        result += moduleId;
+        result += ", ";
+        result += flowMod.toString();
+        return result;
     }
 }
