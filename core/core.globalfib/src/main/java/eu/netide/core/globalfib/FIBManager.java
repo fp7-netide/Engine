@@ -84,7 +84,11 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
             if (ofMessage.getOfMessage().getType() == OFType.FLOW_MOD) {
-                globalFIB.addFlowMod(ofMessage);
+                try {
+                    globalFIB.addFlowMod(ofMessage);
+                } catch (Exception e) {
+                    log.error("GlobalFIB failed to add FlowMod", e);
+                }
             }
         }
         log.info("Relaying message to shim.");
@@ -127,6 +131,7 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
         if (this.topologySpecificationXML.isEmpty()) {
             return;
         }
+        log.info("Setting Topology Specification: " + this.topologySpecificationXML);
 
         TopologySpecification topologySpecification = TopologySpecification.topologySpecification(topologySpecificationXML);
         globalFIB.setTopologySpecification(topologySpecification);

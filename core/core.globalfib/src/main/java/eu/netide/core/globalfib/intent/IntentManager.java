@@ -115,33 +115,42 @@ public class IntentManager implements IntentService {
         DeviceId srcSwitch = ((HostToHostIntent) intent).getSource().location().deviceId();
         DeviceId dstSwitch = ((HostToHostIntent) intent).getDestination().location().deviceId();
 
-        Set<Path> topologyPaths = topologyService.getPaths(
-                topologyService.currentTopology(), srcSwitch, dstSwitch);
-        Path path = topologyPaths.iterator().next();
+        Link srcLink = new DefaultLink(
+                ProviderId.NONE,
+                new ConnectPoint(((HostToHostIntent) intent).getSource().id(), PortNumber.portNumber(0)),
+                ((HostToHostIntent) intent).getSource().location(),
+                Link.Type.EDGE,
+                Link.State.ACTIVE,
+                true);
+        Link dstLink = new DefaultLink(
+                ProviderId.NONE,
+                ((HostToHostIntent) intent).getDestination().location(),
+                new ConnectPoint(((HostToHostIntent) intent).getDestination().id(), PortNumber.portNumber(0)),
+                Link.Type.EDGE,
+                Link.State.ACTIVE,
+                true);
 
-        // Manually add links between src/dst hosts and switches
-        if (path != null) {
-            Link srcLink = new DefaultLink(
-                    ProviderId.NONE,
-                    new ConnectPoint(((HostToHostIntent) intent).getSource().id(), PortNumber.portNumber(0)),
-                    ((HostToHostIntent) intent).getSource().location(),
-                    Link.Type.EDGE,
-                    Link.State.ACTIVE,
-                    true);
-            Link dstLink = new DefaultLink(
-                    ProviderId.NONE,
-                    ((HostToHostIntent) intent).getDestination().location(),
-                    new ConnectPoint(((HostToHostIntent) intent).getDestination().id(), PortNumber.portNumber(0)),
-                    Link.Type.EDGE,
-                    Link.State.ACTIVE,
-                    true);
+        Path path = null;
+        if (srcSwitch.equals(dstSwitch)) {
+            // Src and dst hosts connected to the same switch
+            List<Link> links = new LinkedList<>();
+            links.add(srcLink);
+            links.add(dstLink);
 
+            path = new DefaultPath(ProviderId.NONE, links, 0);
+        } else {
+            // Else find a path
+            Set<Path> topologyPaths = topologyService.getPaths(
+                    topologyService.currentTopology(), srcSwitch, dstSwitch);
+            Path firstPath = topologyPaths.iterator().next();
+
+            // Manually add links between src/dst hosts and switches
             List<Link> newLinks = new LinkedList<>();
             newLinks.add(srcLink);
-            newLinks.addAll(path.links());
+            newLinks.addAll(firstPath.links());
             newLinks.add(dstLink);
 
-            return new DefaultPath(ProviderId.NONE, newLinks, path.cost());
+            path = new DefaultPath(ProviderId.NONE, newLinks, firstPath.cost());
         }
 
         return path;

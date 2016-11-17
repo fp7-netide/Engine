@@ -250,4 +250,27 @@ public class IntentManagerTest {
         Set<Intent> matches4 = intentManager.findMatchingIntents(matchingEntry4);
         Assert.assertEquals(matches4.size(), 0);
     }
+
+    /**
+     * Test intent with src and dst connected to the same switch
+     */
+    @Test
+    public void TestHostsSameSwitch() {
+        IntentManager intentManager = new IntentManager();
+        intentManager.bindHostService(hostManager);
+        intentManager.bindTopologyService(topologyManager);
+
+        int moduleId = 1;
+        String dstMac = "00:00:00:00:00:02";
+
+        // Path looks like this (<n> means port n)
+        //      h1 --<1> s1 <2>-- h2
+        OFFlowMod flowMod = createFlowMod(dstMac, 1, 2);
+        FlowModEntry flowModEntry = new FlowModEntry(flowMod, 1, moduleId);
+        intentManager.process(flowModEntry);
+        Assert.assertEquals(intentManager.getIntents().size(), 1);
+
+        Intent intent = intentManager.getIntents().iterator().next();
+        Assert.assertEquals(intent.getFlowModEntries().size(), 1);
+    }
 }
