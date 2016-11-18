@@ -3,10 +3,11 @@ package eu.netide.core.globalfib;
 import eu.netide.core.api.IFIBManager;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
-import eu.netide.core.caos.ICompositionManager;
 import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.topology.TopologySpecification;
+import eu.netide.core.api.ICompositionManager;
+import eu.netide.core.api.MessageHandlingResult;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
@@ -48,7 +49,7 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
     }
 
     @Override
-    public void OnShimMessage(Message message, String originId) {
+    public MessageHandlingResult OnShimMessage(Message message, String originId) {
         log.info("FIBManager received message from shim: " + message.getHeader().toString());
 
         List<Message> backendResults = compositionManager.processShimMessage(message, originId);
@@ -59,7 +60,8 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
             OpenFlowMessage ofMessage = (OpenFlowMessage) message;
             if (ofMessage.getOfMessage().getType() == OFType.ECHO_REQUEST) {
-                return;
+                return MessageHandlingResult.RESULT_PASS;
+
             }
 
             ChannelBuffer bb = ChannelBuffers.copiedBuffer(message.getPayload());
@@ -68,11 +70,31 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
                 long datapathId = message.getHeader().getDatapathId();
                 if (ofmessage instanceof OFPacketIn) {
                     globalFIB.handlePacketIn((OFPacketIn) ofmessage, datapathId);
+
+                    // TODO: Change if method above actually handles the packet
+                    //return MessageHandlingResult.RESULT_PROCESSED;
+                    return MessageHandlingResult.RESULT_PASS;
+
+
                 }
             } catch (OFParseError ofParseError) {
                 ofParseError.printStackTrace();
             }
         }
+        if (backendResults == null)
+            return MessageHandlingResult.RESULT_PASS;
+        else
+            return MessageHandlingResult.RESULT_PROCESSED;
+    }
+
+    @Override
+    public void OnOutgoingShimMessage(Message message) {
+    }
+
+    @Override
+    public void OnUnhandeldShimMessage(Message message, String originId) {
+        compositionManager.processUnhandledShimMessage(message, originId);
+
     }
 
     /**
@@ -91,7 +113,7 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
                 }
             }
         }
-        log.info("Relaying message to shim.");
+        log.info("Relaying message to shim: {}", message);
         shimManager.sendMessage(message);
     }
 

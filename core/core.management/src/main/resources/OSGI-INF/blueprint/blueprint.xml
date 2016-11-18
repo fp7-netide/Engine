@@ -49,6 +49,9 @@
         <command>
             <action class="eu.netide.core.management.cli.ListIntents" />
         </command>
+        <command>
+            <action class="eu.netide.core.management.cli.ListRoutingRequests" />
+        </command>
     </command-bundle>
 
 </blueprint>

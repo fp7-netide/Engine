@@ -115,20 +115,20 @@ public class IntentManager implements IntentService {
         DeviceId srcSwitch = ((HostToHostIntent) intent).getSource().location().deviceId();
         DeviceId dstSwitch = ((HostToHostIntent) intent).getDestination().location().deviceId();
 
-        Link srcLink = new DefaultLink(
-                ProviderId.NONE,
-                new ConnectPoint(((HostToHostIntent) intent).getSource().id(), PortNumber.portNumber(0)),
-                ((HostToHostIntent) intent).getSource().location(),
-                Link.Type.EDGE,
-                Link.State.ACTIVE,
-                true);
-        Link dstLink = new DefaultLink(
-                ProviderId.NONE,
-                ((HostToHostIntent) intent).getDestination().location(),
-                new ConnectPoint(((HostToHostIntent) intent).getDestination().id(), PortNumber.portNumber(0)),
-                Link.Type.EDGE,
-                Link.State.ACTIVE,
-                true);
+        Link srcLink = DefaultLink.builder()
+                .providerId(ProviderId.NONE)
+                .src(new ConnectPoint(((HostToHostIntent) intent).getSource().id(), PortNumber.portNumber(0)))
+                .dst(((HostToHostIntent) intent).getSource().location())
+                .type(Link.Type.EDGE)
+                .state(Link.State.ACTIVE)
+                .build();
+        Link dstLink = DefaultLink.builder()
+                .providerId(ProviderId.NONE)
+                .src(((HostToHostIntent) intent).getDestination().location())
+                .dst(new ConnectPoint(((HostToHostIntent) intent).getDestination().id(), PortNumber.portNumber(0)))
+                .type(Link.Type.EDGE)
+                .state(Link.State.ACTIVE)
+                .build();
 
         Path path = null;
         if (srcSwitch.equals(dstSwitch)) {

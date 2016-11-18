@@ -8,15 +8,13 @@
         <bundle>
             wrap:mvn:org.javatuples/javatuples/1.2$Bundle-SymbolicName=javatuples&amp;Bundle-Version=1.2&amp;Export-Package=org.javatuples;version="1.2"
         </bundle>
-        <bundle>mvn:com.google.guava/guava/18.0</bundle>
+        <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
+        <bundle>mvn:com.google.guava/guava/19.0</bundle>
 
         <!-- Without onos-rest, onos-api will have dependency issuses, not needed otherwise -->
         <feature>onos-rest</feature>
         <feature>onos-api</feature>
         <bundle>mvn:org.onosproject/onos-of-api/@ONOS-VERSION</bundle>
-
-        <bundle>mvn:io.netty/netty/3.10.5.Final</bundle>
-        <bundle>mvn:com.google.guava/guava/18.0</bundle>
     </feature>
 
 
@@ -50,12 +48,18 @@
         <bundle>mvn:org.onosproject/onos-core-common/@ONOS-VERSION</bundle>
         <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
     </feature>
+    <feature name="core-routing" version="@FEATURE-VERSION">
+        <feature>core-api</feature>
+        <bundle>mvn:eu.netide.core/core.routing/@CORE-VERSION</bundle>
+    </feature>
+
     <feature name="core" version="@FEATURE-VERSION">
         <feature>core-api</feature>
         <feature>core-connectivity</feature>
         <feature>core-caos</feature>
         <feature>core-logpub</feature>
         <feature>core-globalfib</feature>
+        <feature>core-routing</feature>
         <feature>core-management</feature>
     </feature>
 </features>

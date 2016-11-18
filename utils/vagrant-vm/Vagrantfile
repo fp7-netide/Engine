@@ -1,0 +1,17 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.hostname = "NetIDE-Engine"
+  config.vm.box = "boxcutter/ubuntu1404-desktop"
+  config.vm.provision :shell, :path => "bootstrap.sh"
+  config.vm.provider :virtualbox do |vb|
+    vb.name = "NetIDE-Engine"
+    vb.gui = true
+    vb.customize ["modifyvm", :id, 
+                  "--memory", "4096",
+                  "--cpus", "4"]
+  end
+  config.ssh.forward_x11 = true
+end

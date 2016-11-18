@@ -1,0 +1,6 @@
+---
+
+- name: install tools
+  script: ~/netide/IDE/plugins/eu.netide.configuration.launcher/scripts/install_tools.sh
+
+...

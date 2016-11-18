@@ -22,10 +22,15 @@ public class LoadComposition extends OsgiCommandSupport {
 
     @Override
     protected Object doExecute() throws Exception {
-        Path path = Paths.get(compositionFile).toAbsolutePath();
-        String spec = new String(Files.readAllBytes(path));
 
-        ManagementHandler.setConfigurationValue("eu.netide.core.caos", "compositionSpecification", spec);
+        try {
+            Path path = Paths.get(compositionFile).toAbsolutePath();
+            String spec = new String(Files.readAllBytes(path));
+
+            ManagementHandler.setConfigurationValue("eu.netide.core.caos", "compositionSpecification", spec);
+        } catch (java.nio.file.NoSuchFileException nsf) {
+            System.out.printf("Composititon file %s not found.\n", compositionFile);
+        }
         return null;
     }
 

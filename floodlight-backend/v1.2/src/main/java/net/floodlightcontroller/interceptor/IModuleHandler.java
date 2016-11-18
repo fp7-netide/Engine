@@ -17,4 +17,6 @@ public interface IModuleHandler {
     void obtainModuleId(int xId, String moduleName);
 
     void onModuleAckMessage(String moduleName, int moduleId);
+    
+    String getModuleName(int moduleID);
 }

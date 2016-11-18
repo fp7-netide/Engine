@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CompositionSpecification xmlns="http://netide.eu/schemas/compositionspecification/v1">
+  <Modules>
+    <Module id="SimpleSwitchA" loaderIdentification="appA.py"/>
+  </Modules>
+  <Composition>
+    <ParallelCall resolutionPolicy="priority">
+      <ModuleCall module="SimpleSwitchA" priority="1"/>
+    </ParallelCall>
+  </Composition>
+</CompositionSpecification>

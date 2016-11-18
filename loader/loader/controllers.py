@@ -21,6 +21,9 @@ import subprocess
 import sys
 import time
 import uuid
+import yaml
+from functools import reduce
+from subprocess import call
 
 from loader import util
 
@@ -36,6 +39,19 @@ class Base(object):
         return d
 
     @classmethod
+    def attachTmux(cls):
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+
+        if [ sessionExists != 0 ]:
+            call("tmux attach -t NetIDE", shell=True)
+        else:
+            print("Tmux Session NetIDE was not found!")
+
+    @classmethod
+    def getControllerName(cls):
+        "Returns the name of the controller"
+        return None
+    @classmethod
     def version(cls):
         "Returns either the version of the controller as a string or None if the controller is not installed"
         return None
@@ -45,7 +61,48 @@ class Base(object):
         "{ \"id\": process-uuid, \"pid\": process-id }"
         raise NotImplementedError()
 
+class RyuShim(Base):
+
+    def __init__(self, ofport="6633"):
+        self.port = ofport
+
+    def start(self):
+        base = ["ryu-manager"]
+
+        y = yaml.load(open("commands.yml"))
+        ryuCommands = y['ryu_shim']
+
+        v = os.environ.copy()
+        v.update(ryuCommands["variables"])
+
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+
+        if [ sessionExists != 0 ]:
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
+            time.sleep(1)
+
+        cmd = util.tmux_line(ryuCommands)
+
+        list = util.getWindowList()
+
+        if "RyuShim" not in list:
+            #6633 default for port listening
+            newCmd = "bash -c \'cd ~/netide/Engine/ryu-shim/ && " + cmd + " --ofp-tcp-listen-port=" + self.port + " ryu-shim.py\'"
+            call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', newCmd])
+
+        else:
+            print("Ryu Shim already running")
+
+
+
 class Ryu(Base):
+    appNames = []
+    ryubackendport = 7733
+
+    @classmethod
+    def getControllerName(cls):
+        return "ryu"
+
     @classmethod
     def version(cls):
         try:
@@ -56,134 +113,197 @@ class Ryu(Base):
         except FileNotFoundError:
             return None
 
-    def start(self):
-        base = [ "ryu-manager" ]
-        rv = []
-        appidx = 0
 
-        try:
-            with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
-                data = json.load(fh)
-        except Exception as err:
-            logging.debug("{}: {}".format(type(err), err))
-            data = {}
-        logging.debug("{}".format(data))
-        running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+
+    def start(self):
+        base = ["ryu-manager"]
+
+        y = yaml.load(open("commands.yml"))
+        ryuCommands = y['ryu']
+
+        v = os.environ.copy()
+        v.update(ryuCommands["variables"])
+
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+
+        if [ sessionExists != 0 ]:
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"], env=v)
+            time.sleep(1)
+
+        cmd = util.tmux_line(ryuCommands)
+
+
 
         for a in self.applications:
-            if not a.enabled:
-                logging.info("Skipping disabled application {}".format(a))
-                continue
-            if str(a) in running_apps:
-                logging.info("App {} already running".format(a))
-                continue
 
-            appidx += 1
 
-            cmdline = base.copy()
-            cmdline.append("--ofp-tcp-listen-port={}".format(6633 + appidx))
-            cmdline.append(os.path.expanduser("~/Engine/ryu-backend/backend.py"))
+            self.appNames.append(a.appName)
 
-            p = a.metadata.get("param", "")
-            args = []
-            def f(x):
-                pt = os.path.join(a.path, x)
-                if os.path.exists(pt):
-                    return pt
-                return x
-            if isinstance(p, list):
-                args.extend(map(f, p))
+            appPath = os.path.join(a.path, a.entrypoint)
+
+            #check with list window if exists
+            windowNames = util.getWindowList()
+
+            if a.appName not in windowNames:
+                print(a.path)
+                ryubackendpath = "bash -c \' cd ~/netide/Engine/ryu-backend/ && " + cmd + " --ofp-tcp-listen-port=" + str(Ryu.ryubackendport) + " ryu-backend.py " + os.path.join(a.path, a.entrypoint) + "\' "
+
+                call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', ryubackendpath])
+
+                Ryu.ryubackendport = Ryu.ryubackendport + 1
+                #call(['tmux', 'send-keys', '-t', 'NetIDE' ,cmd, ' --ofp-tcp-listen-port=' +str(a.appPort) + " " + os.path.join(a.path, a.entrypoint), 'C-m'])
             else:
-                args.append(f(p))
+                print("app " + a.appName + " already running")
 
-            cmdline.extend(args)
+            if "sleepafter" in ryuCommands:
+                time.sleep(ryuCommands["sleepafter"])
 
-            logging.debug('Launching "{}" now'.format(cmdline))
-            env = os.environ.copy()
-            ppath = [os.path.abspath(os.path.relpath(a.path))]
-            if "PYTHONPATH" in env:
-                ppath.append(env["PYTHONPATH"])
-            env["PYTHONPATH"] = ":".join(ppath)
-            logging.debug(env["PYTHONPATH"])
 
-            myid = str(uuid.uuid4())
-            logdir = self.makelogdir(myid)
-
-            serr = open(os.path.join(logdir, "stderr"), "w")
-            sout = open(os.path.join(logdir, "stdout"), "w")
-
-            rv.append({
-                "id": myid,
-                "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, env=env).pid,
-                "app": str(a)})
-
-        return rv
 
 class FloodLight(Base):
     @classmethod
+    def getControllerName(cls):
+        return "floodlight"
+
+    @classmethod
     def version(cls):
-        v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
-        return v.decode("utf-8").split("-")[0].strip()
+        pass
 
     def start(self):
-        # XXX: application modules are not copied into floodlight right now, they need to be copied manually
-        try:
-            with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
-                data = json.load(fh)
-        except Exception as err:
-            logging.debug("{}: {}".format(type(err), err))
-            data = {}
-        running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+        pass
 
-        for a in self.applications:
-            if not a.enabled:
-                logging.info("Skipping disabled application {}".format(a))
-                continue
-            if a in running_apps:
-                logging.info("App {} is already running".format(a))
-                continue
+#===============================================================================
+#     @classmethod
+#     def version(cls):
+#         v = subprocess.check_output(["cd ~/floodlight; git describe; exit 0"], shell=True, stderr=subprocess.STDOUT)
+#         return v.decode("utf-8").split("-")[0].strip()
+#
+#     def start(self):
+#         # XXX: application modules are not copied into floodlight right now, they need to be copied manually
+#         try:
+#             with util.FLock(open(os.path.join(self.dataroot, "controllers.json"), "r"), shared=True) as fh:
+#                 data = json.load(fh)
+#         except Exception as err:
+#             logging.debug("{}: {}".format(type(err), err))
+#             data = {}
+#         running_apps = data.get("controllers", {}).get("Ryu", {}).get("apps", [])
+#
+#         for a in self.applications:
+#             if not a.enabled:
+#                 logging.info("Skipping disabled application {}".format(a))
+#                 continue
+#             if a in running_apps:
+#                 logging.info("App {} is already running".format(a))
+#                 continue
+#
+#             prefix = os.path.expanduser("~/floodlight/src/main/resources")
+#
+#             with open(os.path.join(prefix, "META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule"), "r+") as fh:
+#                 fh.write("{}\n".format(a.metadata.get("param", "")))
+#
+#             with open(os.path.join(prefix, "floodlightdefault.properties"), "r+") as fh:
+#                 lines = fh.readlines()
+#                 idx = 0
+#                 for l in lines:
+#                     if not l.strip().endswith('\\'):
+#                         break
+#                     idx += 1
+#                 lines.insert(idx, "{}\n".format(a.metadata.get("param", "")))
+#                 fh.seek(0)
+#                 fh.truncate()
+#                 fh.writelines(lines)
+#
+#         myid = str(uuid.uuid4())
+#         logdir = self.makelogdir(myid)
+#
+#         serr = open(os.path.join(logdir, "stderr"), "w")
+#         sout = open(os.path.join(logdir, "stdout"), "w")
+#
+#         # Rebuild floodlight with ant
+#         cmdline = ["cd ~/floodlight; ant"]
+#         subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).wait() # TODO: check exit value?
+#
+#         # Start floodlight
+#         cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
+#         return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
+#===============================================================================
 
-            prefix = os.path.expanduser("~/floodlight/src/main/resources")
+class Core(Base):
+    packagePath = ""
+    def __init__(self, path):
+        self.packagePath = path
 
-            with open(os.path.join(prefix, "META-INF/services/net.floodlightcontroller.core.module.IFloodlightModule"), "r+") as fh:
-                fh.write("{}\n".format(a.metadata.get("param", "")))
+    def start(self):
 
-            with open(os.path.join(prefix, "floodlightdefault.properties"), "r+") as fh:
-                lines = fh.readlines()
-                idx = 0
-                for l in lines:
-                    if not l.strip().endswith('\\'):
-                        break
-                    idx += 1
-                lines.insert(idx, "{}\n".format(a.metadata.get("param", "")))
-                fh.seek(0)
-                fh.truncate()
-                fh.writelines(lines)
+        y = yaml.load(open("commands.yml"))
+        coreCommands = y['core']
 
-        myid = str(uuid.uuid4())
-        logdir = self.makelogdir(myid)
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
 
-        serr = open(os.path.join(logdir, "stderr"), "w")
-        sout = open(os.path.join(logdir, "stdout"), "w")
+        if [ sessionExists != 0 ]:
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"])
+            time.sleep(1)
+        list = util.getWindowList()
 
-        # Rebuild floodlight with ant
-        cmdline = ["cd ~/floodlight; ant"]
-        subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).wait() # TODO: check exit value?
+        if "Core" not in list:
 
-        # Start floodlight
-        cmdline = ["cd ~/floodlight; java -jar floodlight/target/floodlight.jar"]
-        return [{ "id": myid, "pid": subprocess.Popen(cmdline, stderr=serr, stdout=sout, shell=True).id }]
+            call(['tmux', 'new-window', '-n', "Core", '-t', 'NetIDE', "bash -c \'cd ~/netide/core-karaf/bin/ && ./karaf\'"])
+
+            compositionPath = os.path.join(self.packagePath, "composition/composition.xml")
+
+
+            time.sleep(coreCommands['sleepafter'])
+
+            call(['tmux', 'send-keys', '-t', 'NetIDE' , "netide:loadcomposition "+compositionPath, 'C-m'])
+            #call(['tmux', 'send-keys', '-t', 'NetIDE' , "log:tail", 'C-m'])
+
+        else:
+            print("Core already running")
+
+
 
 class ODL(Base):
-    # TODO:
-    # - determine canonical path to karaf
-    #   - require path specification
-    # - check version/state of karaf/bundles/features
-    # - install missing bundles/features?
-    #   - should be done automatically when installing/starting application bundle
-    # - start controller if not already done
-    # - install/start app bundle
-    pass
+
+    def start(self):
+
+        y = yaml.load(open("commands.yml"))
+        odlCommands = y['odl']
+
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+
+        if [ sessionExists != 0 ]:
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"])
+
+        list = util.getWindowList()
+
+        if "ODL" not in list:
+
+            call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf'])
+
+            time.sleep(odlCommands['sleepafter'])
+        else:
+            print("ODL already running")
+
+class Mininet(Base):
+    def start(self):
+
+        y = yaml.load(open("commands.yml"))
+        mininetCommands = y['mininet']
+        sessionExists = call(["tmux", "has-session", "-t", "NetIDE"])
+
+        if [ sessionExists != 0 ]:
+            call(["tmux", "new-session", "-d", "-s", "NetIDE"])
+            time.sleep(1)
+
+        list = util.getWindowList()
+
+        if Mininet not in list:
+            call(['tmux', 'new-window', '-n', "Mininet", '-t', 'NetIDE', "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py"])
+            #call(['tmux', 'send-keys', '-t', 'NetIDE' , "sudo python ~/Engine/loader/Demo/gen/mininet/Demo_run.py", 'C-m'])
+            time.sleep(mininetCommands['sleepafter'])
+        else:
+            print("Mininet already running")
+
 
 class POX(Base):
     pass

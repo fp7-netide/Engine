@@ -1,12 +1,14 @@
 package eu.netide.core.logpub;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 
+import eu.netide.core.api.Constants;
+import eu.netide.core.api.MessageHandlingResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
+import org.zeromq.ZMQException;
 import org.zeromq.ZMsg;
 
 import eu.netide.core.api.IBackendManager;
@@ -14,7 +16,6 @@ import eu.netide.core.api.IBackendMessageListener;
 import eu.netide.core.api.IManagementMessageListener;
 import eu.netide.core.api.IShimManager;
 import eu.netide.core.api.IShimMessageListener;
-import eu.netide.lib.netip.ErrorMessage;
 import eu.netide.lib.netip.ManagementMessage;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.NetIPConverter;
@@ -23,15 +24,13 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 	private static final String STOP_COMMAND = "Control.STOP";
 	private static final String CONTROL_ADDRESS = "inproc://LogPubControl";
-    private static final int DEFAULT_PUB_PORT = 5557;
-    private static final int DEFAULT_SUB_PORT = 5558;
-    
+	private static final int DEFAULT_PUB_PORT = 5557;
+	private static final int DEFAULT_SUB_PORT = 5558;
+
 	private static final Logger log = LoggerFactory.getLogger(LogPub.class);
 
 	private int pubPort;
 	private int subPort;
-
-	private HashMap<HashMap<Integer,Integer>,String> hMap;
 
 	private IShimManager shimManager;
 	private IBackendManager backendManager;
@@ -46,7 +45,6 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void Start() {
 		log.info("LogPub Start().");
 		context = ZMQ.context(1);
-		hMap = new HashMap<>();
 		thread = new Thread(this);
 		thread.setName("LogPub Receive Loop");
 		thread.start();
@@ -72,12 +70,22 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 	public void run() {
 		log.info("LogPub started.");
 		ZMQ.Socket pubSocket = context.socket(ZMQ.PUB);
+		try{
 		pubSocket.bind("tcp://*:" + (pubPort==0?DEFAULT_PUB_PORT:pubPort));
+		}catch(ZMQException e){
+			log.error("PUB address already in use!");
+			Stop();
+		}
 		log.info("Listening PUB queue on port " + (pubPort==0?DEFAULT_PUB_PORT:pubPort));
 
 		ZMQ.Socket subSocket = context.socket(ZMQ.ROUTER);
 		subSocket.setIdentity("logpub".getBytes(ZMQ.CHARSET));
+		try{
 		subSocket.bind("tcp://*:" + (subPort==0?DEFAULT_SUB_PORT:subPort));
+		}catch(ZMQException e){
+			log.error("PUB address already in use!");
+			Stop();
+		}
 		log.info("Listening SUB queue on port " + (subPort==0?DEFAULT_SUB_PORT:subPort));
 
 		ZMQ.Socket controlSocket = context.socket(ZMQ.PULL);
@@ -95,41 +103,29 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 				if (poller.pollin(0)) {
 					ZMsg zmqMessage = ZMsg.recvMsg(subSocket);
 					String dst = null;
-					String src = null;
 					byte[] data = null;
 					try{
 						ZFrame header = zmqMessage.pop();
 						dst = zmqMessage.popString();
-						src = zmqMessage.popString();
 						data = zmqMessage.getLast().getData();
 						Message netideMessage = NetIPConverter.parseRawMessage(data);
-						log.debug("Data received in SUB queue: from "+src+" to "+dst+ ". (data:"+netideMessage.toByteRepresentation()+")");
-						HashMap<Integer,Integer> key = new HashMap<Integer,Integer>(){{
-							put(netideMessage.getHeader().getModuleId(),netideMessage.getHeader().getTransactionId());}};
-							if (hMap.containsKey(key)){
-								//this Tool already sent a message with this ModuleID/XID, treat as an error
-								ErrorMessage error = new ErrorMessage();
-								ZMsg PubMessage = new ZMsg();
-								PubMessage.add(src);
-								PubMessage.add(dst);
-								PubMessage.add(error.toByteRepresentation());
-								log.debug("Received message from "+src.substring(2)+" but it already sent a similar message (same Module_ID and XID)");
-								ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
-								sendSocket.connect(CONTROL_ADDRESS);
-								PubMessage.send(sendSocket);
-								sendSocket.close();
-							}else {
-								if (netideMessage.getHeader().getTransactionId() != 0)
-									hMap.put(key, src);
-								if (dst.startsWith("1_"))
-									// send message to shim
-									shimManager.sendMessage(netideMessage);
-								else if (dst.startsWith("0_"))
-									// send message to backend
-									backendManager.sendMessage(netideMessage);
-								else
-									log.error("Got unknown message in SUB queue:" + netideMessage.toString());
+						log.debug("Data received in SUB queue: to "+dst+ ". (data:"+netideMessage.toByteRepresentation()+")");
+						if (dst.startsWith("1_"))
+							// send message to shim
+							try{
+								shimManager.sendMessage(netideMessage);
+							}catch (NullPointerException e) {
+								log.error("shim manager not set");
 							}
+						else if (dst.startsWith("0_"))
+							// send message to backend
+							try{
+								backendManager.sendMessage(netideMessage);
+							}catch (NullPointerException e) {
+								log.error("backend manager not set");
+							}
+						else
+							log.error("Got unknown message in SUB queue:" + netideMessage.toString());
 					}catch(NullPointerException | IllegalArgumentException e){
 						log.error("Error in LogPub:");e.printStackTrace();
 					}
@@ -170,43 +166,56 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 
 	@Override
-	public void OnBackendMessage(Message message, String originId) {
-		log.debug("Received backend message");
+		
+	public MessageHandlingResult OnBackendMessage(Message message, String originId) {
+		log.debug("Received message from backend");
 		OnShimAndBackendMessage(message, "0", originId);
+		return MessageHandlingResult.RESULT_PASS;
 	}
 
 	@Override
-	public void OnShimMessage(Message message, String originId) {
-		log.debug("Received shim message");
+	public MessageHandlingResult OnShimMessage(Message message, String originId) {
+		log.debug("Received message from shim");
 		OnShimAndBackendMessage(message, "1", originId);
+		return MessageHandlingResult.RESULT_PASS;
+	}
+
+	@Override
+	public void OnOutgoingBackendMessage(Message message, String backendId) {
+		log.debug("Received message to backend");
+		OnShimAndBackendMessage(message, "2", backendId);
+	}
+
+	@Override
+	public void OnUnhandledBackendMessage(Message message, String originId) {
+	}
+
+	@Override
+	public void OnOutgoingShimMessage(Message message) {
+		log.debug("Received message to shim");
+		OnShimAndBackendMessage(message, "3", Constants.SHIM);
+	}
+
+	@Override
+	public void OnUnhandeldShimMessage(Message message, String originId) {
 	}
 
 	private void OnShimAndBackendMessage(Message message, String origin, String originId){
-		String dst = "";
-		HashMap key = new HashMap<Integer,Integer>(){{put(message.getHeader().getModuleId(),message.getHeader().getTransactionId());}};
-		if (hMap.containsKey(key)){
-			dst = hMap.get(key);
-			hMap.remove(key);
-		}
-		ZMsg zmq_message = new ZMsg();
-		zmq_message.add(dst.isEmpty()?"2_all":dst);
-		zmq_message.add(origin+"_"+originId);
-		zmq_message.add(message.toByteRepresentation());
-		log.debug("Received message to "+(dst.isEmpty()?"2_all":dst)+" from "+(origin.equals("0")?"backend":"shim")+":" + zmq_message.toString());
+		log.debug("Received message from "+origin+"_"+originId+":" + message.toString());
 		ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
 		sendSocket.connect(CONTROL_ADDRESS);
-		zmq_message.send(sendSocket);
+		sendSocket.sendMore("*"); // TODO : Add topic handling
+		sendSocket.sendMore(origin+"_"+originId);
+		sendSocket.send(message.toByteRepresentation());
 		sendSocket.close();
 	}
 
 	@Override
 	public void OnManagementMessage(ManagementMessage message) {
-		ZMsg zmq_message = new ZMsg();
-		zmq_message.add(message.getPayloadString());
-		log.debug("Received message from management:" + zmq_message.toString());
+		log.debug("Received message from management:" + message.toString());
 		ZMQ.Socket sendSocket = context.socket(ZMQ.PUSH);
 		sendSocket.connect(CONTROL_ADDRESS);
-		zmq_message.send(sendSocket);
+		sendSocket.send(message.getPayloadString());
 		sendSocket.close();
 	}
 	/**
@@ -249,7 +258,7 @@ public class LogPub implements IBackendMessageListener, IShimMessageListener, IM
 
 	@Override
 	public void OnBackendRemoved(String backEndName, LinkedList<Integer> removedModules) {
-		// TODO Auto-generated method stub
+		// TODO : Send message to the PUB queue?
 
 	}
 }

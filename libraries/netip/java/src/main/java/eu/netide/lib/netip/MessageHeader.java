@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 /**
  * Class representing a NetIP header.
  */
-public class MessageHeader {
+public class MessageHeader implements Cloneable {
 
     /**
      * The length of a header in bytes.
@@ -20,7 +20,7 @@ public class MessageHeader {
     private long datapathId;
 
     public MessageHeader() {
-        this.netIDEProtocolVersion = NetIDEProtocolVersion.VERSION_1_1;
+        this.netIDEProtocolVersion = NetIDEProtocolVersion.VERSION_1_4;
     }
 
     /**
@@ -30,6 +30,11 @@ public class MessageHeader {
      */
     public NetIDEProtocolVersion getNetIDEProtocolVersion() {
         return netIDEProtocolVersion;
+    }
+
+    @Override
+    public MessageHeader clone() throws CloneNotSupportedException {
+        return (MessageHeader) super.clone();
     }
 
     /**

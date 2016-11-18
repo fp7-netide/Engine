@@ -41,8 +41,35 @@ make
 
 ## Testing
 
-To test it, we will need the NetIDE Core and a Shim (ODL or Ryu shim)
+To test it:
 
+* Install and run odl shim:
+	```
+	wget https://nexus.opendaylight.org/content/repositories/opendaylight.release/org/opendaylight/integration/distribution-karaf/0.5.1-Boron-SR1/distribution-karaf-0.5.1-Boron-SR1.tar.gz
+	tar -xvf distribution-karaf-0.5.1-Boron-SR1.tar.gz
+	cd distribution-karaf-0.5.1-Boron-SR1/
+	cd etc/
+    ```
+	Edit org.apache.karaf.management.cfg file changing 1099 and 44444 to something different.
+	
+	Run Karaf and install netide feature:
+	```
+	cd ..
+	./bin/karaf
+	feature:install odl-netide-rest
+	```
+* Run Java Core
+* Run Floodlight 
+	```
+	./floodlight.sh
+	```
+* Run NetIDE topology OF1.3 under test folder 
+	```
+	 sudo mn --custom netide-topo_13.py --topo mytopo --controller=remote,ip=127.0.0.1,port=6644
+	 pingall
+	```
+
+	
 ### NetIDE Core
 To run the NetIDE core, please follow the procedure described in the README at [https://github.com/fp7-netide/Engine/tree/master/core]
 

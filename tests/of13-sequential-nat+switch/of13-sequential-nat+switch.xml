@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<CompositionSpecification
+        xmlns="http://netide.eu/schemas/compositionspecification/v1">
+    <Modules>
+        <Module id="NAT" loaderIdentification="nat_13.py" noFenceSupport="true">
+            <CallCondition events="packetIn" datapaths="1"/>
+        </Module>
+        <Module id="SimpleSwitch" loaderIdentification="simple_switch_13.py" noFenceSupport="true">
+            <CallCondition events="packetIn" datapaths="1"/>
+        </Module>
+    </Modules>
+    <Composition>
+        <ModuleCall module="NAT"/>
+        <ModuleCall module="SimpleSwitch"/>
+    </Composition>
+</CompositionSpecification>

@@ -24,6 +24,7 @@ import org.onlab.packet.MacAddress;
 import org.onlab.packet.MplsLabel;
 import org.onlab.packet.TpPort;
 import org.onlab.packet.VlanId;
+import org.onlab.packet.EthType;
 import org.onosproject.core.DefaultGroupId;
 import org.onosproject.net.DeviceId;
 import org.onosproject.net.Lambda;
@@ -347,7 +348,7 @@ public class FlowEntryBuilder {
                     break;
                 case POP_MPLS:
                     OFActionPopMpls popMpls = (OFActionPopMpls) act;
-                    builder.popMpls((short) popMpls.getEthertype().getValue());
+                    builder.popMpls(new EthType(popMpls.getEthertype().getValue()));
                     break;
                 case PUSH_MPLS:
                     builder.pushMpls();

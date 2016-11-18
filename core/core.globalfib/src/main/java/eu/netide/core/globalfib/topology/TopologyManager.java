@@ -67,10 +67,20 @@ public class TopologyManager implements TopologyService {
                     PortNumber.portNumber(link.getDestinationPort()));
 
             // Add directed links in both directions
-            Link newLink1 = new DefaultLink(ProviderId.NONE, src, dst,
-                    Link.Type.DIRECT, Link.State.ACTIVE, true);
-            Link newLink2 = new DefaultLink(ProviderId.NONE, dst, src,
-                    Link.Type.DIRECT, Link.State.ACTIVE, true);
+            Link newLink1 = DefaultLink.builder()
+                    .providerId(ProviderId.NONE)
+                    .src(src)
+                    .dst(dst)
+                    .type(Link.Type.DIRECT)
+                    .state(Link.State.ACTIVE)
+                    .build();
+            Link newLink2 = DefaultLink.builder()
+                    .providerId(ProviderId.NONE)
+                    .src(dst)
+                    .dst(src)
+                    .type(Link.Type.DIRECT)
+                    .state(Link.State.ACTIVE)
+                    .build();
             links.add(newLink1);
             links.add(newLink2);
         }

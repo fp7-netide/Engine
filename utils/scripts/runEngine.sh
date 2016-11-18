@@ -1,5 +1,5 @@
 #!/bin/bash
-#Runs the different parts of the Engine: 1 call = 1 item in the architecture (20/04/16)
+#Runs the different parts of the Engine: 1 call = 1 item in the architecture
 
 NetIDE_DIR="$HOME/NetIDE"
 EngineMixed_DIR="$NetIDE_DIR/Engine-mixed"
@@ -79,7 +79,7 @@ then
 		ryu-manager ryu-shim.py
 	elif [ "$2" == "ODL" ] || [ "$2" == "odl" ]
 	then
-		export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+		export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 		export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'
                 echo -e "\n> To install NetIDE shim:"
                 echo -e "feature:install odl-netide-rest\n"
@@ -114,10 +114,10 @@ then
 	echo "=> Core: $2"
 	if [ "$2" == "Java" ] || [ "$2" == "java" ]
 	then
-		cd $NetIDE_DIR/apache-karaf-3.0.5
+		cd $NetIDE_DIR/apache-karaf-*
 		bin/start clean
 		echo -e "\nStarting Karaf..."
-		sleep 10
+		sleep 15
 		bin/client feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features
 		bin/client feature:install core
 		bin/client netide:loadcomposition DpidPartitionABCW.xml
@@ -147,25 +147,23 @@ then
 #Start Mininet topology
 elif [ "$1" == "-m" ]
 then
-	echo "---- Mininet:" $2:$3"(protocol)":$4"(port) ----"
 	if [ "$2" == "netide-topo" ] || [ "$2" == "netide" ] || [ -z "$2" ]
 	then
+                if [ -z "$3" ]
+                then
+                        OF_VERSION=OpenFlow10 #default OpenFlow Version for Mininet
+                else
+                        OF_VERSION=$3
+                fi
 		if [ -z "$4" ]
 		then
 			PORT=6633 #default port for Mininet
 		else
 			PORT=$4
 		fi
+	        echo "--- Mininet $2 => Protocol: $OF_VERSION , Port: $PORT ---"
 		cd ryu-backend/tests
-		if [ "$3" == "of10" ] || [ -z "$3" ]
-		then
-			sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=$PORT
-		elif [ "$3" == "of13" ]
-		then
-			sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=$PORT --switch ovsk,protocols=OpenFlow13
-		else
-			echo "Error! Not such option" $3 "available... <choose type (of10,of13,etc.)>"
-		fi
+		sudo mn --custom netide-topo.py --topo mytopo --controller=remote,ip=127.0.0.1,port=$PORT --switch ovsk,protocols=$OF_VERSION
 	else
 		echo "Error! Mininet test" $2 "not available... <choose type (netide-topo)>"
 	fi

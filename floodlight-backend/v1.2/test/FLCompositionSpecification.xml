@@ -1,10 +1,9 @@
-<?xml version="1.0" ?> 
-<CompositionSpecification>
+<?xml version="1.0"  encoding="utf-8" ?> 
+<CompositionSpecification xmlns="http://netide.eu/schemas/compositionspecification/v1">
   <Modules>
-    <Module id="SimpleSwitch" loaderIdentification="simple_switch.py">
-			<CallCondition events="packetIn" datapaths="0x1 0x2 0x3 0xA"/>
-	</Module>
+    <Module id="SimpleSwitch" loaderIdentification="simple_switch.py" />
   </Modules>
   <Composition>
+    <ModuleCall module="SimpleSwitch" priority="1"/>
   </Composition>
 </CompositionSpecification>
