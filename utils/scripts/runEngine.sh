@@ -79,7 +79,7 @@ then
 		ryu-manager ryu-shim.py
 	elif [ "$2" == "ODL" ] || [ "$2" == "odl" ]
 	then
-		export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+		export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 		export MAVEN_OPTS='-Xmx1048m -XX:MaxPermSize=512m'
                 echo -e "\n> To install NetIDE shim:"
                 echo -e "feature:install odl-netide-rest\n"

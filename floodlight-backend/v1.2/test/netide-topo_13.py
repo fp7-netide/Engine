@@ -11,8 +11,6 @@ class MyTopo( Topo ):
 
         #F irewall
         s11 = self.addSwitch( 's11', dpid = '0000000000000004', protocols = 'OpenFlow13')
-        #s12 = self.addSwitch( 's12', dpid = '000000000000000B', protocols = 'OpenFlow10')
-        #s13 = self.addSwitch( 's13', dpid = '000000000000000C')
 
         #Learning Switches
         s21 = self.addSwitch( 's21', dpid = '0000000000000001', protocols = 'OpenFlow13')

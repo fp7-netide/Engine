@@ -125,7 +125,7 @@ then
 	cd $EngineMixed_DIR
 	git clone https://github.com/opendaylight/netide.git odl-shim
 	cd odl-shim
-	git checkout stable/beryllium
+	git checkout stable/boron
         echo "Current folder:"
         ls -alh $EngineMixed_DIR
         sleep 5
