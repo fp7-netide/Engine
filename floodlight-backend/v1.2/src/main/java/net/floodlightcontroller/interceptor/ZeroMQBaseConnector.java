@@ -116,7 +116,7 @@ public class ZeroMQBaseConnector implements Runnable {
 								((HelloMessage) msg).getHeader().getModuleId());
 					} else if (msg instanceof OpenFlowMessage) {
 						coreListener.onOpenFlowCoreMessage(msg.getHeader().getDatapathId(),
-								((OpenFlowMessage) msg).getOfMessage(), msg.getHeader().getModuleId());
+								((OpenFlowMessage) msg).getOfMessage(), msg.getHeader().getModuleId(), msg.getHeader().getTransactionId());
 					} else if (msg instanceof ModuleAcknowledgeMessage) {
 						int moduleId = ((ModuleAcknowledgeMessage) msg).getHeader().getModuleId();
 						String moduleName = ((ModuleAcknowledgeMessage) msg).getModuleName();

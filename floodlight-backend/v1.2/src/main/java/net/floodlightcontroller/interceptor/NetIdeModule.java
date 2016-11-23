@@ -277,7 +277,7 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 	 * java.lang.Long, io.netty.buffer.ByteBuf, int)
 	 */
 	@Override
-	public void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId) {
+	public void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId, int netIpID) {
 		if (!managedSwitches.containsKey(datapathId) && msg.getType().equals(OFType.FEATURES_REPLY)) {
 			logger.debug("Adding switch datapathID: " + datapathId.toString());
 			OFFeaturesReply features = null;
@@ -296,8 +296,18 @@ public class NetIdeModule implements IFloodlightModule, IOFSwitchListener, IOFMe
 				Relay.sendToCore(coreConnector, OFFactories.getFactory(msg.getVersion()).buildEchoReply()
 						.setXid(msg.getXid()).setData(((OFEchoRequest) msg).getData()).build(), datapathId, moduleId);
 			} else {
-				Relay.sendToController(netIpVersion, coreConnector, floodlightProvider, managedSwitches.get(datapathId),
-						msg, moduleHandler.getModuleName(moduleId), moduleId, managedSwitchesChannel.get(datapathId));
+				try{
+					Relay.sendToController(netIpVersion, coreConnector, floodlightProvider, managedSwitches.get(datapathId),
+							msg, moduleHandler.getModuleName(moduleId), moduleId, managedSwitchesChannel.get(datapathId), netIpID);
+				}catch(Exception e){
+					if(msg.getType().equals(OFType.FEATURES_REPLY)){
+						OFFeaturesReply features = (OFFeaturesReply) msg;
+						aggreedVersion = msg.getVersion();
+						DummySwitch dummySwitch = new DummySwitch(datapathId, features, moduleName, coreConnector, moduleHandler);
+						addNewSwitch(dummySwitch);
+					}
+				}
+				
 			}
 
 		} else {
