@@ -7,6 +7,7 @@
  */
 package net.floodlightcontroller.interceptor;
 
+import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -22,6 +23,9 @@ import org.projectfloodlight.openflow.protocol.OFType;
 import org.projectfloodlight.openflow.protocol.OFVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import eu.netide.lib.netip.NetIDEProtocolVersion;
+import net.floodlightcontroller.core.IFloodlightProviderService;
 
 /**
  * @author giuseppex.petralia@intel.com

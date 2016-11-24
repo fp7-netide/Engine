@@ -18,7 +18,7 @@ import org.projectfloodlight.openflow.protocol.OFMessage;
  *
  */
 public interface ICoreListener {
-    void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId);
+    void onOpenFlowCoreMessage(Long datapathId, OFMessage msg, int moduleId, int netIpID);
 
     void onHelloCoreMessage(List<Pair<Protocol, ProtocolVersions>> requiredVersion, int moduleId);
 

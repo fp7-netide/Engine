@@ -18,4 +18,11 @@ public interface ICompositionManager {
     List<Message> processShimMessage(Message message, String originId);
 
     void processUnhandledShimMessage(Message message, String originId);
+
+    /**
+     * Gets the current composition specification as XML string.
+     *
+     * @return composition specification xml
+     */
+    public String getCompositionSpecificationXml();
 }

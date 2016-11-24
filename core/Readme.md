@@ -53,7 +53,7 @@ The external tools (like the Logger) will subscribe to that queue.
 ### Core Deployment 
 1. Clone the *master* branch of the repository to your machine.
 2. Go to the *core* directory and run `mvn clean install -Dgpg.skip=true`. This will build the bundles and install them to your local Maven repository.
-3. Download [Apache Karaf](https://karaf.apache.org/index/community/download.html) v3.0.5
+3. Download [Apache Karaf](https://karaf.apache.org/download.html) v3.0.5
 	- Optional: Install the branding osgi packet to the lib directory of karaf
 	```cp core.branding/target/core.branding-1.1.0-SNAPSHOT.jar ~/dl/apache-karaf-3.0.5/lib/``
 4. Start Karaf by going into the downloaded folder and running `bin/karaf`.
