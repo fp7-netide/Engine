@@ -323,25 +323,6 @@ public class FlowEntryBuilder {
                     IPv4Address si = nwsrc.getNwAddr();
                     builder.setIpSrc(Ip4Address.valueOf(si.getInt()));
                     break;
-                case EXPERIMENTER:
-                    OFActionExperimenter exp = (OFActionExperimenter) act;
-                    if (exp.getExperimenter() == 0x80005A06 ||
-                            exp.getExperimenter() == 0x748771) {
-                        OFActionCircuit ct = (OFActionCircuit) exp;
-                        short lambda = ((OFOxmOchSigidBasic) ct.getField()).getValue().getChannelNumber();
-                        builder.add(Instructions.modL0Lambda(Lambda.indexedLambda(lambda)));
-                    }  else if (exp.getExperimenter() == 0x2320) {
-                        DriverHandler driver = getDriver(dpid);
-                        ExtensionTreatmentInterpreter interpreter = driver
-                                .behaviour(ExtensionTreatmentInterpreter.class);
-                        if (interpreter != null) {
-                            builder.extension(interpreter.mapAction(exp),
-                                              DeviceId.deviceId(Dpid.uri(dpid)));
-                        }
-                    } else {
-                        log.warn("Unsupported OFActionExperimenter {}", exp.getExperimenter());
-                    }
-                    break;
                 case SET_FIELD:
                     OFActionSetField setField = (OFActionSetField) act;
                     handleSetField(builder, setField);
