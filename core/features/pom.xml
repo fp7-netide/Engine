@@ -64,7 +64,7 @@
                             <value>${onos.version}</value>
                         </replacement>
                         <replacement>
-                            <token>$OPENFLOWJ-VERSION</token>
+                            <token>@OPENFLOWJ-VERSION</token>
                             <value>${openflowj.version}</value>
                         </replacement>
                     </replacements>

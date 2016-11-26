@@ -16,6 +16,7 @@
         <feature>onos-api</feature>
         <feature>management</feature>
         <feature>config</feature>
+        <bundle>mvn:org.onosproject/openflowj/@OPENFLOWJ-VERSION</bundle>
         <bundle>mvn:org.onosproject/onos-protocols-openflow-api/@ONOS-VERSION</bundle>
     </feature>
 
