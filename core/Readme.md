@@ -7,6 +7,8 @@ The core project is built on top of Apache Karaf and is therefore implemented as
 - core.caos
 - core.connectivity
 - core.management
+- core.logpub
+- core.globalfib
 
 The modules are built using Maven, the root pom.xml combines them into the core project.
 
@@ -36,6 +38,9 @@ It has a dependency on the core.api and org.apache.karaf.config.core bundles and
 This bundle contains the LogPub module of the core. It has a interprocess queue to receive the messages pushed by the core.connectivity and publish them to a PUB queue.
 The external tools (like the Logger) will subscribe to that queue.
 
+### Module core.globalfib
+This bundle implements a global flow table that stores results from the backends. It also tries to extract the high-level intents behind FlowMods.
+
 ## Used frameworks and technologies
 - JDK 8
 - Java NetIP library (see [lib](../lib) folder)
@@ -57,9 +62,9 @@ The external tools (like the Logger) will subscribe to that queue.
 	- Optional: Install the branding osgi packet to the lib directory of karaf
 	```cp core.branding/target/core.branding-1.1.0-SNAPSHOT.jar ~/dl/apache-karaf-3.0.5/lib/``
 4. Start Karaf by going into the downloaded folder and running `bin/karaf`.
-<p align="center">
-  <img src="https://raw.githubusercontent.com/fp7-netide/Engine/master/core/doc/branding.png" alt="Branding Apache Karaf"/>
-</p>
+    <p align="center">
+      <img src="https://raw.githubusercontent.com/fp7-netide/Engine/master/core/doc/branding.png" alt="Branding Apache Karaf"/>
+    </p>
 5. Install the *netide-core* feature by first adding the feature repository file via `feature:repo-add mvn:eu.netide.core/core.features/1.1.0-SNAPSHOT/xml/features` and then running `feature:install core`.
 	- The output shold indicate that the core is waiting for the shim to connect.
 6. Load a composition specification with netide:loadcomposition, for example the Minimal Specification
@@ -88,3 +93,26 @@ To make karaf reload changed bundles after a mvn install , tell karaf to watch t
    <img src="https://raw.githubusercontent.com/fp7-netide/Engine/master/core/doc/remote-debug.png" alt="IntelliJ Remote Deubg Config"/>
  </p>
 3. After the core has started run the remoteDebug configuration from IntelliJ and debug as usual.
+
+### Intent extraction
+The intent extraction of the core.globalfib module requires information about the topology which is currently supplied by a specification file, because there is no LLDP yet.
+The repository ships two example topologies, linear_4 and tree_8.
+
+1. Start Mininet with the corresponding custom topology (necessary, because Mininet assigns MAC addresses at random unless they are specified)
+```
+# mn --custom=/Users/arne/software/netide-engine/core/tools/mn_topology_to_xml/linear_4.py --topo=linear_4
+```
+2. Start the core as usual (see [Core Deployment](#core-deployment))
+3. Load the topology specification
+```
+karaf@root()>  netide:loadtopology /Users/arne/software/netide-engine/core/tools/mn_topology_to_xml/linear_4.xml
+```
+4. Create some traffic in Mininet (e.g. pingall)
+5. List the extracted intents
+```
+karaf@root()> netide:listintents
+HostToHost (00:00:00:00:00:02 -> 00:00:00:00:00:05)
+HostToHost (00:00:00:00:00:01 -> 00:00:00:00:00:03)
+HostToHost (00:00:00:00:00:03 -> 00:00:00:00:00:01)
+HostToHost (00:00:00:00:00:05 -> 00:00:00:00:00:02)
+```
