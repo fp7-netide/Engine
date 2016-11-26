@@ -1,12 +1,15 @@
 package eu.netide.core.globalfib.intent;
 
+import eu.netide.core.api.IFlowModEntry;
+import eu.netide.core.api.IIntent;
+
 import java.util.HashSet;
 import java.util.Set;
 
 /**
  * Created by msp on 9/14/16.
  */
-public abstract class Intent {
+public abstract class Intent implements IIntent {
     /**
      * moduleId of the module that issued this intent.
      */
@@ -15,20 +18,23 @@ public abstract class Intent {
     /**
      * Set of FlowMods used to implement this intent.
      */
-    private Set<FlowModEntry> flowModEntries = new HashSet<>();
+    private Set<IFlowModEntry> flowModEntries = new HashSet<>();
 
     protected Intent(int moduleId) {
         this.moduleId = moduleId;
     }
 
-    public void addFlowModEntry(FlowModEntry flowMod) {
+    @Override
+    public void addFlowModEntry(IFlowModEntry flowMod) {
         flowModEntries.add(flowMod);
     }
 
-    public Set<FlowModEntry> getFlowModEntries() {
+    @Override
+    public Set<IFlowModEntry> getFlowModEntries() {
         return flowModEntries;
     }
 
+    @Override
     public int getModuleId() {
         return moduleId;
     }

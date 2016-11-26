@@ -1,5 +1,6 @@
 package eu.netide.core.globalfib.intent;
 
+import eu.netide.core.api.IIntent;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -26,7 +27,7 @@ import java.util.*;
 @Service
 public class IntentManager implements IntentService {
 
-    private Set<Intent> intents = new HashSet<>();
+    private Set<IIntent> intents = new HashSet<>();
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private TopologyService topologyService;
@@ -87,7 +88,7 @@ public class IntentManager implements IntentService {
         } else { // Else, add FlowMod to all intents that match
 
             // Add FlowMod to all intents it applies to
-            Set<Intent> matchingIntents = findMatchingIntents(flowModEntry);
+            Set<IIntent> matchingIntents = findMatchingIntents(flowModEntry);
             if (matchingIntents.isEmpty()) {
                 // Store FlowModEntry for later
                 Map.Entry<FlowModEntry, Long> entry = new AbstractMap.SimpleEntry<FlowModEntry, Long>(
@@ -95,7 +96,7 @@ public class IntentManager implements IntentService {
                 unassignedFlowModEntries.add(entry);
                 return;
             }
-            for (Intent intent : matchingIntents) {
+            for (IIntent intent : matchingIntents) {
                 if (!(intent instanceof HostToHostIntent)) {
                     continue;
                 }
@@ -111,7 +112,7 @@ public class IntentManager implements IntentService {
      * @param intent Intent to find path for.
      * @return Path through topology.
      */
-    private Path getIntentPath(Intent intent) {
+    private Path getIntentPath(IIntent intent) {
         DeviceId srcSwitch = ((HostToHostIntent) intent).getSource().location().deviceId();
         DeviceId dstSwitch = ((HostToHostIntent) intent).getDestination().location().deviceId();
 
@@ -162,9 +163,9 @@ public class IntentManager implements IntentService {
      * @param flowModEntry FlowModEntry to match against.
      * @return Set of intents matching the FlowEntry.
      */
-    public Set<Intent> findMatchingIntents(FlowModEntry flowModEntry) {
-        Set<Intent> matchingIntents = new HashSet<>();
-        for (Intent intent : intents) {
+    public Set<IIntent> findMatchingIntents(FlowModEntry flowModEntry) {
+        Set<IIntent> matchingIntents = new HashSet<>();
+        for (IIntent intent : intents) {
             if (flowModEntryMatchesIntent(intent, flowModEntry)) {
                 matchingIntents.add(intent);
             }
@@ -179,7 +180,7 @@ public class IntentManager implements IntentService {
      * @param flowModEntry FlowModEntry to check.
      * @return true, if flowModEntry matches intent.
      */
-    private boolean flowModEntryMatchesIntent(Intent intent, FlowModEntry flowModEntry) {
+    private boolean flowModEntryMatchesIntent(IIntent intent, FlowModEntry flowModEntry) {
         OFFlowMod flowMod = flowModEntry.getFlowMod();
         HostToHostIntent hintent = (HostToHostIntent) intent;
 
@@ -244,7 +245,7 @@ public class IntentManager implements IntentService {
     }
 
     @Override
-    public Set<Intent> getIntents() {
+    public Set<IIntent> getIntents() {
         return intents;
     }
 

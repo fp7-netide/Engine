@@ -1,5 +1,7 @@
 package eu.netide.core.globalfib;
 
+import eu.netide.core.api.IFlowModEntry;
+import eu.netide.core.api.IIntent;
 import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.intent.IntentService;
@@ -23,7 +25,7 @@ import java.util.*;
 @Component(immediate=true)
 @Service
 public class GlobalFIB implements IGlobalFIB {
-    private Set<FlowModEntry> flowModEntries = new HashSet<>();
+    private Set<IFlowModEntry> flowModEntries = new HashSet<>();
 
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     private IntentService intentService;
@@ -61,12 +63,12 @@ public class GlobalFIB implements IGlobalFIB {
     }
 
     @Override
-    public Set<FlowModEntry> getFlowModEntries() {
+    public Set<IFlowModEntry> getFlowModEntries() {
         return flowModEntries;
     }
 
     @Override
-    public Set<Intent> getIntents() {
+    public Set<IIntent> getIntents() {
         return intentService.getIntents();
     }
 

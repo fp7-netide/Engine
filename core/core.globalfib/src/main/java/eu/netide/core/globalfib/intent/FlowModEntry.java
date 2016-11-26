@@ -1,5 +1,6 @@
 package eu.netide.core.globalfib.intent;
 
+import eu.netide.core.api.IFlowModEntry;
 import org.onosproject.net.DeviceId;
 import org.onosproject.openflow.controller.Dpid;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
@@ -7,7 +8,7 @@ import org.projectfloodlight.openflow.protocol.OFFlowMod;
 /**
  * Created by msp on 9/28/16.
  */
-public class FlowModEntry {
+public class FlowModEntry implements IFlowModEntry {
     private OFFlowMod flowMod;
 
     private long dpid;
@@ -20,14 +21,17 @@ public class FlowModEntry {
         this.moduleId = moduleId;
     }
 
+    @Override
     public int getModuleId() {
         return moduleId;
     }
 
+    @Override
     public long getDpid() {
         return dpid;
     }
 
+    @Override
     public OFFlowMod getFlowMod() {
         return flowMod;
     }
@@ -57,12 +61,14 @@ public class FlowModEntry {
 
     @Override
     public String toString() {
-        String result = "Device: ";
-        result += DeviceId.deviceId(Dpid.uri(dpid));
-        result += ", ModuleID: ";
-        result += moduleId;
-        result += ", ";
-        result += flowMod.toString();
-        return result;
+        String representation = "Dpid=";
+        representation += DeviceId.deviceId(Dpid.uri(getDpid()));
+        representation += ", [";
+        representation += getFlowMod().getType() + ", ";
+        representation += "xid=" + getFlowMod().getXid() + ", ";
+        representation += getFlowMod().getMatch() + ", ";
+        representation += getFlowMod().getActions();
+        representation += "]";
+        return representation;
     }
 }

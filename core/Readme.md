@@ -100,19 +100,20 @@ The repository ships two example topologies, linear_4 and tree_8.
 
 1. Start Mininet with the corresponding custom topology (necessary, because Mininet assigns MAC addresses at random unless they are specified)
 ```
-# mn --custom=/Users/arne/software/netide-engine/core/tools/mn_topology_to_xml/linear_4.py --topo=linear_4
+# mn --custom=/Users/arne/software/netide-engine/core/tools/mn_topology_to_xml/tree_8.py --topo=tree_8
 ```
 2. Start the core as usual (see [Core Deployment](#core-deployment))
 3. Load the topology specification
 ```
-karaf@root()>  netide:loadtopology /Users/arne/software/netide-engine/core/tools/mn_topology_to_xml/linear_4.xml
+karaf@root()>  netide:loadtopology /Users/arne/software/netide-engine/core/tools/mn_topology_to_xml/tree_8.xml
 ```
 4. Create some traffic in Mininet (e.g. pingall)
 5. List the extracted intents
 ```
 karaf@root()> netide:listintents
-HostToHost (00:00:00:00:00:02 -> 00:00:00:00:00:05)
-HostToHost (00:00:00:00:00:01 -> 00:00:00:00:00:03)
-HostToHost (00:00:00:00:00:03 -> 00:00:00:00:00:01)
-HostToHost (00:00:00:00:00:05 -> 00:00:00:00:00:02)
+ModuleID: 797
+        HostToHost (00:00:00:00:00:02 -> 00:00:00:00:00:05)
+        HostToHost (00:00:00:00:00:01 -> 00:00:00:00:00:03)
+        HostToHost (00:00:00:00:00:03 -> 00:00:00:00:00:01)
+        HostToHost (00:00:00:00:00:05 -> 00:00:00:00:00:02)
 ```

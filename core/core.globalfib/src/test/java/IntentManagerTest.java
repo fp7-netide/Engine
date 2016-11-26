@@ -1,3 +1,4 @@
+import eu.netide.core.api.IIntent;
 import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.HostToHostIntent;
 import eu.netide.core.globalfib.intent.Intent;
@@ -84,7 +85,7 @@ public class IntentManagerTest {
         intentManager.process(flowModEntry);
 
         // Get new intent
-        Intent intent = intentManager.getIntents().iterator().next();
+        IIntent intent = intentManager.getIntents().iterator().next();
         Assert.assertNotNull(intent);
         Assert.assertTrue(intent instanceof HostToHostIntent);
 
@@ -152,7 +153,7 @@ public class IntentManagerTest {
         intentManager.process(flowModEntry2dup);
 
         Assert.assertEquals(intentManager.getIntents().size(), 1);
-        Intent intent = intentManager.getIntents().iterator().next();
+        IIntent intent = intentManager.getIntents().iterator().next();
 
         Assert.assertEquals(intent.getFlowModEntries().size(), 2);
     }
@@ -223,31 +224,31 @@ public class IntentManagerTest {
         // Test matching FlowModEntry at s7
         OFFlowMod flowMod0 = createFlowMod("00:00:00:00:00:06", 1, 2);
         FlowModEntry matchingEntry0 = new FlowModEntry(flowMod0, 7, moduleId);
-        Set<Intent> matches0 = intentManager.findMatchingIntents(matchingEntry0);
+        Set<IIntent> matches0 = intentManager.findMatchingIntents(matchingEntry0);
         Assert.assertEquals(matches0.size(), 1);
 
         // Test matching FlowModEntry at s3 (output to host)
         OFFlowMod flowMod1 = createFlowMod("00:00:00:00:00:06", 3, 2);
         FlowModEntry matchingEntry1 = new FlowModEntry(flowMod1, 3, moduleId);
-        Set<Intent> matches1 = intentManager.findMatchingIntents(matchingEntry1);
+        Set<IIntent> matches1 = intentManager.findMatchingIntents(matchingEntry1);
         Assert.assertEquals(matches1.size(), 1);
 
         // Test FlowEntry with destination mac mismatch
         OFFlowMod flowMod2 = createFlowMod("00:00:00:00:00:07", 1, 2);
         FlowModEntry matchingEntry2 = new FlowModEntry(flowMod2, 7, moduleId);
-        Set<Intent> matches2 = intentManager.findMatchingIntents(matchingEntry2);
+        Set<IIntent> matches2 = intentManager.findMatchingIntents(matchingEntry2);
         Assert.assertEquals(matches2.size(), 0);
 
         // Test FlowEntry with moduleId mismatch
         OFFlowMod flowMod3 = createFlowMod("00:00:00:00:00:06", 1, 2);
         FlowModEntry matchingEntry3 = new FlowModEntry(flowMod3, 7, 2);
-        Set<Intent> matches3 = intentManager.findMatchingIntents(matchingEntry3);
+        Set<IIntent> matches3 = intentManager.findMatchingIntents(matchingEntry3);
         Assert.assertEquals(matches3.size(), 0);
 
         // Test FlowEntry not on intent's path (s6 <2>--<3> s4)
         OFFlowMod flowMod4 = createFlowMod("00:00:00:00:00:06", 2, 3);
         FlowModEntry matchingEntry4 = new FlowModEntry(flowMod4, 6, moduleId);
-        Set<Intent> matches4 = intentManager.findMatchingIntents(matchingEntry4);
+        Set<IIntent> matches4 = intentManager.findMatchingIntents(matchingEntry4);
         Assert.assertEquals(matches4.size(), 0);
     }
 
@@ -270,7 +271,7 @@ public class IntentManagerTest {
         intentManager.process(flowModEntry);
         Assert.assertEquals(intentManager.getIntents().size(), 1);
 
-        Intent intent = intentManager.getIntents().iterator().next();
+        IIntent intent = intentManager.getIntents().iterator().next();
         Assert.assertEquals(intent.getFlowModEntries().size(), 1);
     }
 }

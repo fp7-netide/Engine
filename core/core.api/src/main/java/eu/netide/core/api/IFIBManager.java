@@ -1,7 +1,9 @@
 package eu.netide.core.api;
 
+import org.javatuples.Pair;
 import org.projectfloodlight.openflow.protocol.OFFlowMod;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -10,16 +12,16 @@ import java.util.Set;
 public interface IFIBManager {
 
     /**
-     * Returns a string representation of all installed FlowMods.
+     * Returns all FlowModEntries stored in the GlobalFIB.
      *
-     * @return Set of Strings representing FlowMods.
+     * @return Set of FlowModEntries.
      */
-    Set<String> getFlowModStrings();
+    Set<IFlowModEntry> getFlowModEntries();
 
     /**
-     * Returns a string representation of all every intent.
+     * Returns all Intents identified by the GlobalFIB.
      *
-     * @return Set of Strings representing intents.
+     * @return Set of Intents.
      */
-    Set<String> getIntentStrings();
+    Set<IIntent> getIntents();
 }

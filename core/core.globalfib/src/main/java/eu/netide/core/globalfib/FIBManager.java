@@ -1,16 +1,13 @@
 package eu.netide.core.globalfib;
 
-import eu.netide.core.api.IFIBManager;
-import eu.netide.core.api.IShimManager;
-import eu.netide.core.api.IShimMessageListener;
+import eu.netide.core.api.*;
 import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.topology.TopologySpecification;
-import eu.netide.core.api.ICompositionManager;
-import eu.netide.core.api.MessageHandlingResult;
 import eu.netide.lib.netip.Message;
 import eu.netide.lib.netip.MessageType;
 import eu.netide.lib.netip.OpenFlowMessage;
+import org.javatuples.Pair;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.projectfloodlight.openflow.exceptions.OFParseError;
@@ -21,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import javax.xml.bind.JAXBException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class FIBManager implements IShimMessageListener, IFIBManager {
@@ -118,22 +116,13 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
     }
 
     @Override
-    public Set<String> getFlowModStrings() {
-        Set<String> result = new HashSet<>();
-        for(FlowModEntry flowModEntry : globalFIB.getFlowModEntries()) {
-            result.add(flowModEntry.toString());
-        }
-        return result;
+    public Set<IFlowModEntry> getFlowModEntries() {
+        return globalFIB.getFlowModEntries();
     }
 
     @Override
-    public Set<String> getIntentStrings() {
-        Set<String> result = new HashSet<>();
-        for (Intent intent: globalFIB.getIntents()) {
-            result.add(intent.toString());
-        }
-
-        return result;
+    public Set<IIntent> getIntents() {
+        return globalFIB.getIntents();
     }
 
     public void setShimManager(IShimManager shimManager) {

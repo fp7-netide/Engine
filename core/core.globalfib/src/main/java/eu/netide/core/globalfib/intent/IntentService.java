@@ -1,5 +1,7 @@
 package eu.netide.core.globalfib.intent;
 
+import eu.netide.core.api.IIntent;
+
 import java.util.Set;
 
 /**
@@ -8,5 +10,5 @@ import java.util.Set;
 public interface IntentService {
     void process(FlowModEntry flowModEntry);
 
-    Set<Intent> getIntents();
+    Set<IIntent> getIntents();
 }
