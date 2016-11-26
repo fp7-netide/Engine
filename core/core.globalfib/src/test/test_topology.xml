@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<Topology xmlns="http://netide.eu/schemas/topologyspecification/v1">
+	<Hosts>
+		<Host id="h1" ip="10.0.0.1" mac="00:00:00:00:00:01"/>
+		<Host id="h2" ip="10.0.0.2" mac="00:00:00:00:00:02"/>
+	</Hosts>
+	<Switches>
+		<Switch dpid="0000000000000003" id="s3"/>
+		<Switch dpid="0000000000000004" id="s4"/>
+	</Switches>
+	<Links>
+		<Link dst="s4" dst_port="1" src="s3" src_port="2"/>
+		<Link dst="h2" dst_port="0" src="s4" src_port="2"/>
+		<Link dst="s3" dst_port="1" src="h1" src_port="0"/>
+	</Links>
+</Topology>

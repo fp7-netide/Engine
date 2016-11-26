@@ -51,14 +51,14 @@ public class CompositionManager implements ICompositionManager {
     private String compositionNotReadyReason = "No composition file loaded";
 
     /**
-     * Called by blueprint on startup.
+     * Called by OSGI-INF on startup.
      */
     public void Start() {
         logger.debug("CompositionManager started.");
     }
 
     /**
-     * Called by blueprint on shutdown.
+     * Called by OSGI-INF on shutdown.
      */
     public void Stop() {
         logger.debug("CompositionManager stopped.");

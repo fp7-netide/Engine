@@ -47,6 +47,7 @@
     </feature>
     <feature name="core-globalfib" version="@FEATURE-VERSION">
         <feature>core-api</feature>
+        <bundle>mvn:org.onosproject/onos-core-common/@ONOS-VERSION</bundle>
         <bundle>mvn:eu.netide.core/core.globalfib/@CORE-VERSION</bundle>
     </feature>
     <feature name="core-routing" version="@FEATURE-VERSION">

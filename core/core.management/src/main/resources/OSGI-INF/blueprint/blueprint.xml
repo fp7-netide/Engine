@@ -38,10 +38,16 @@
             <!--<completer class="org.apache.karaf.shell.console.completer.FileCompleter"/>-->
         </command>
         <command>
+            <action class="eu.netide.core.management.cli.LoadTopology"/>
+        </command>
+        <command>
             <action class="eu.netide.core.management.cli.RemoveStaleBackends" />
         </command>
         <command>
             <action class="eu.netide.core.management.cli.ListFlowMods" />
+        </command>
+        <command>
+            <action class="eu.netide.core.management.cli.ListIntents" />
         </command>
         <command>
             <action class="eu.netide.core.management.cli.ListRoutingRequests" />
