@@ -1,7 +1,8 @@
+package eu.netide.core.globalfib.test;
+
 import eu.netide.core.api.IIntent;
 import eu.netide.core.globalfib.intent.FlowModEntry;
 import eu.netide.core.globalfib.intent.HostToHostIntent;
-import eu.netide.core.globalfib.intent.Intent;
 import eu.netide.core.globalfib.intent.IntentManager;
 import eu.netide.core.globalfib.topology.HostManager;
 import eu.netide.core.globalfib.topology.TopologyManager;
@@ -23,7 +24,6 @@ import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -38,13 +38,17 @@ public class IntentManagerTest {
     HostManager hostManager = new HostManager();
     TopologyManager topologyManager = new TopologyManager();
 
+
+
     @BeforeTest
     public void setup() throws IOException, JAXBException {
-        Path path = Paths.get("core.globalfib/src/test/test_topology_big.xml").toAbsolutePath();
-        String topologySpecificationXML = new String(Files.readAllBytes(path));
+        Path currentRelativePath = Paths.get("");
+        String s = currentRelativePath.toAbsolutePath().toString();
+        System.out.println("Current relative path is: " + s);
+
 
         TopologySpecification topologySpecification =
-                TopologySpecification.topologySpecification(topologySpecificationXML);
+                TopologySpecification.topologySpecification(TestTopologies.big);
         hostManager.setTopologySpecification(topologySpecification);
         topologyManager.setTopologySpecification(topologySpecification);
     }

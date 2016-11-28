@@ -1,3 +1,5 @@
+package eu.netide.core.globalfib.test;
+
 import eu.netide.core.globalfib.topology.*;
 import eu.netide.core.globalfib.topology.Host;
 import eu.netide.core.globalfib.topology.Link;
@@ -30,8 +32,7 @@ public class TopologyTest {
 
     @BeforeTest
     public void setup() throws IOException {
-        Path path = Paths.get("core.globalfib/src/test/test_topology.xml").toAbsolutePath();
-        topologySpecificationXML = new String(Files.readAllBytes(path));
+        topologySpecificationXML = TestTopologies.small;
     }
 
     /**
@@ -128,8 +129,7 @@ public class TopologyTest {
      */
     @Test(dependsOnMethods = {"TestTopologySpecification"})
     public void TestGetPath() throws JAXBException, IOException {
-        Path path = Paths.get("core.globalfib/src/test/test_topology_big.xml").toAbsolutePath();
-        String specificationXML = new String(Files.readAllBytes(path));
+        String specificationXML = TestTopologies.big;
         TopologySpecification specification = TopologySpecification.topologySpecification(specificationXML);
         TopologyManager topologyManager = new TopologyManager();
         topologyManager.setTopologySpecification(specification);
