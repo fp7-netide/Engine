@@ -14,6 +14,7 @@
 
 package eu.netide.shim;
 
+import org.onlab.packet.Ethernet;
 import org.onosproject.openflow.controller.Dpid;
 import org.onosproject.openflow.controller.OpenFlowController;
 import org.onosproject.openflow.controller.OpenFlowMessageListener;
@@ -95,8 +96,16 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowMes
     @Override
     public void handlePacket(OpenFlowPacketContext openFlowPacketContext) {
 
-        openFlowPacketContext.block();
+        if (!isControlPacket(openFlowPacketContext.parsed())) {
+            openFlowPacketContext.block();
+        }
 
+    }
+
+    // Indicates whether this is a control packet, e.g. LLDP, BDDP
+    private boolean isControlPacket(Ethernet eth) {
+        short type = eth.getEtherType();
+        return type == Ethernet.TYPE_LLDP || type == Ethernet.TYPE_BSN;
     }
 
     @Override
