@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -26,7 +27,7 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     private IBackendConnector connector;
     private List<IBackendMessageListener> backendMessageListeners;
     private Semaphore listenerLock = new Semaphore(1);
-    private List<String> backendIds = new ArrayList<>();
+    private List<String> backendIds = new CopyOnWriteArrayList<>();
     private Map<Integer, String> moduleToBackendMappings = new HashMap<>();
     private Map<Integer, String> moduleToNameMappings = new HashMap<>();
     private Map<Integer, Long> moduleLastMessage = new HashMap<>();

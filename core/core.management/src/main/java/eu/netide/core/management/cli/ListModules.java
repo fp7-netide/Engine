@@ -32,13 +32,14 @@ public class ListModules extends OsgiCommandSupport {
                                                   } else {
                                                       lastMessage = "-";
                                                   }
+                                                  String lastHBMessage;
                                                   System.out.format("%5d %20s %20s %20s\n", i, moduleName, backendname, lastMessage);
 
                                               }
         );
         String shimLastMessage = "-";
-        if (shimManager.getLastMessageTime()!= 0){
-            shimLastMessage = String.format("%.2f",(now - shimManager.getLastMessageTime())/1000f);
+        if (shimManager.getLastMessageTime() != 0) {
+            shimLastMessage = String.format("%.2f", (now - shimManager.getLastMessageTime()) / 1000f);
         }
         System.out.format("%5s %20s %20s %20s\n", "-", "shim", "-", shimLastMessage);
         return null;
