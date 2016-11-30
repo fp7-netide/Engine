@@ -41,7 +41,7 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
         int moduleId = backendManager.getModuleId(mc.getModule().getId());
         if (backendManager.isModuleDead(mc.getModule().getId(), mc.getModule().getDeadTimeOut())) {
             // Module is dead.
-            logger.info("Not sending Request to dead module '" + moduleId + "', assuming empty result set.");
+            logger.warn("Not sending Request to dead module '" + moduleId + "', assuming empty result set.");
             return ExecutionUtils.mergeMessagesIntoStatus(status, new Message[] {});
         }
 

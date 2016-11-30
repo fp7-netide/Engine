@@ -34,7 +34,7 @@ public class Module {
 
     protected boolean fenceSupport;
 
-    protected int deadTimeOut;
+    protected int deadTimeOut=-1;
 
     @XmlElement(name = "CallCondition", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
     public Condition getCallCondition() {
@@ -64,24 +64,28 @@ public class Module {
         this.loaderIdentification = value;
     }
 
-    @XmlAttribute(name = "noFenceSupport", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
+    @XmlAttribute(name = "noFenceSupport")
     public boolean getFenceSupport()
     {
         return fenceSupport;
     }
 
-    @XmlAttribute(name = "deadTimeOut", namespace = "http://netide.eu/schemas/compositionspecification/v1", required = false)
+    public void setFenceSupport(boolean value)
+    {
+        fenceSupport = ! value;
+    }
+
+
+    @XmlAttribute(name = "deadTimeOut")
     public int getDeadTimeOut()
     {
         return deadTimeOut;
     }
 
-
-
-    public void setFenceSupport(boolean value)
-    {
-        fenceSupport = ! value;
+    public void setDeadTimeOut(int timeOut) {
+        deadTimeOut=timeOut;
     }
+
 
     @Override
     public String toString() {

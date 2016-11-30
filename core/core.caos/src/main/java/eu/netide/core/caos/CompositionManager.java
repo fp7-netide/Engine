@@ -127,8 +127,14 @@ public class CompositionManager implements ICompositionManager {
 
             if (compQueueLen >= 1) {
                 for (Module module : compositionSpecification.getModules()) {
-                    if (!module.getFenceSupport() || getBackendManager().isModuleDead(module.getId(), module.getDeadTimeOut())) {
+                    if (!module.getFenceSupport()) {
                         int mId = getBackendManager().getModuleId(module.getId());
+
+                        getBackendManager().markModuleAllOutstandingRequestsAsFinished(mId);
+                    } else if (getBackendManager().isModuleDead(module.getId(), module.getDeadTimeOut())) {
+                        logger.error("Module {} has no responded for >{}s, module marked dead and autofenced!", module.getId(), module.getDeadTimeOut());
+                        int mId = getBackendManager().getModuleId(module.getId());
+
                         getBackendManager().markModuleAllOutstandingRequestsAsFinished(mId);
                     }
 
