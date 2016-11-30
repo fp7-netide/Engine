@@ -2,10 +2,10 @@ app: {
 	name: "Ryu IITS Netmanager",
 	version: "0.1",
 	controller:
-	{ 
+	{
 		name: "Ryu",
 		version: "3.30",
-		entrypoint: "src/iits_netmanager.py",
+		entrypoint: "src/IITS_NetManager.py",
 		port: 7733,
 	},
 	hardwareReq: {

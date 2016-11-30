@@ -63,7 +63,7 @@ class Base(object):
 
 class RyuShim(Base):
 
-    def __init__(self, ofport="6633"):
+    def __init__(self, ofport="6644"):
         self.port = ofport
 
     def start(self):
@@ -86,7 +86,7 @@ class RyuShim(Base):
         list = util.getWindowList()
 
         if "RyuShim" not in list:
-            #6633 default for port listening
+            #6644 default for port listening
             newCmd = "bash -c \'cd ~/netide/Engine/ryu-shim/ && " + cmd + " --ofp-tcp-listen-port=" + self.port + " ryu-shim.py\'"
             call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', newCmd])
 
@@ -136,7 +136,6 @@ class Ryu(Base):
 
         for a in self.applications:
 
-
             self.appNames.append(a.appName)
 
             appPath = os.path.join(a.path, a.entrypoint)
@@ -147,7 +146,7 @@ class Ryu(Base):
             if a.appName not in windowNames:
                 print(a.path)
                 ryubackendpath = "bash -c \' cd ~/netide/Engine/ryu-backend/ && " + cmd + " --ofp-tcp-listen-port=" + str(Ryu.ryubackendport) + " ryu-backend.py " + os.path.join(a.path, a.entrypoint) + "\' "
-
+    
                 call(['tmux', 'new-window', '-n', a.appName, '-t', 'NetIDE', ryubackendpath])
 
                 Ryu.ryubackendport = Ryu.ryubackendport + 1

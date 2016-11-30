@@ -120,7 +120,7 @@ class Package(object):
                 logging.debug("Checking hardware requirements for {}".format(d))
                 if not Application.check_hw_requirements(app):
                     logging.error("Requirements for application {} not met".format(d))
-                    return False  
+                    return False
 
                 #returns controller
                 ctrl = Application.get_controller(app)
@@ -145,7 +145,7 @@ class Package(object):
                 logging.debug("Checking system requirements for {}".format(d))
                 if not Application.valid_requirements(app):
                     logging.error("Requirements for application {} not met".format(d))
-                    return False  
+                    return False
         return True
 
     def check_no_hw_sysreq(self):
@@ -155,7 +155,7 @@ class Package(object):
                 logging.debug("Checking system requirements for {}".format(d))
                 if not (Application.check_net_requirements(app) and Application.check_sw_requirements(app)):
                     logging.error("Requirements for application {} not met".format(d))
-                    return False  
+                    return False
         return True
 
     def __del__(self):

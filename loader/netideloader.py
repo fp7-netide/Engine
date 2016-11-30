@@ -89,9 +89,17 @@ def start_package(args):
 
         ODL("").start()
 
+###### workaround for demo - dirty #######
+
+    mnpath = "bash -c \' sudo mn -c && cd " + p.path + "/Topology && sudo chmod +x UC2_IITSystem.py && sudo ./UC2_IITSystem.py $1 && cd ../ \' "
+
+    call(['tmux', 'new-window', '-n', "mn", '-t', 'NetIDE', mnpath])
+
+########
+    time.sleep(1)
 
     for c in p.controllers_for_node().items():
-
+        print(c)
         c[1].start()
 
     time.sleep(2)
