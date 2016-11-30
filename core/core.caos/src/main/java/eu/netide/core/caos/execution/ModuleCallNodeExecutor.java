@@ -38,6 +38,13 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
             return status;
         }
 
+        int moduleId = backendManager.getModuleId(mc.getModule().getId());
+        if (backendManager.isModuleDead(mc.getModule().getId(), mc.getModule().getDeadTimeOut())) {
+            // Module is dead.
+            logger.info("Not sending Request to dead module '" + moduleId + "', assuming empty result set.");
+            return ExecutionUtils.mergeMessagesIntoStatus(status, new Message[] {});
+        }
+
         MessageHeader header = new MessageHeader();
         header.setMessageType(MessageType.OPENFLOW);
         header.setTransactionId(status.getCurrentMessage().getHeader().getTransactionId());
@@ -45,7 +52,10 @@ public class ModuleCallNodeExecutor implements IFlowNodeExecutor {
 
         if (header.getTransactionId()==0)
             header.setTransactionId(++xid);
-        int moduleId = backendManager.getModuleId(mc.getModule().getId());
+
+
+
+
         header.setModuleId(moduleId);
 
         logger.info("Sending Request to module '" + moduleId + "'...");

@@ -164,6 +164,26 @@ public class BackendManager implements IBackendManager, IConnectorListener {
         return moduleLastMessage.get(moduleId);
     }
 
+
+    @Override
+    public boolean isModuleDead(String moduleID, int timeout) {
+
+        if (timeout <= 0) {
+            return false;
+        }
+        long now = System.currentTimeMillis();
+        int modId = getModuleId(moduleID);
+        if (now - moduleLastMessage.getOrDefault(modId, 0L) < timeout*1000)
+            return false;
+
+        int backEndId = getModuleId(moduleToBackendMappings.get(modId));
+        if (now - moduleLastMessage.getOrDefault(backEndId, 0L) < timeout*1000)
+            return false;
+
+        return true;
+
+    }
+
     public int getModuleId(String moduleName) {
         return moduleToNameMappings.keySet().stream().filter(key -> Objects.equals(moduleToNameMappings.get(key), moduleName)).findFirst().get();
     }
@@ -186,34 +206,39 @@ public class BackendManager implements IBackendManager, IConnectorListener {
     /* TODO: Probably more places to remove old backend */
     @Override
     public void removeBackend(int id) {
-        String backEndName = getBackend(id);
-        logger.info("Removing backend %s", backEndName);
-
-        LinkedList<Integer> removedModules = new LinkedList<>();
-        moduleToBackendMappings.entrySet().forEach(
-                (modID) -> {
-                    if (modID.getValue().equals(backEndName)) {
-                        moduleToNameMappings.remove(modID.getKey());
-                        moduleLastMessage.remove(modID.getKey());
-                        removedModules.add(modID.getKey());
-                    }
-                });
-
-        removedModules.forEach((key) -> {
-            moduleToBackendMappings.remove(key);
-            backendIds.remove(backEndName);
-        });
-
         try {
-            listenerLock.acquire();
-            // Notify listeners and send to shim
-            for (IBackendMessageListener listener : backendMessageListeners) {
-                pool.submit(() -> listener.OnBackendRemoved(backEndName, removedModules));
+            String backEndName = getBackend(id);
+            logger.info("Removing backend %s", backEndName);
+
+            LinkedList<Integer> removedModules = new LinkedList<>();
+            moduleToBackendMappings.entrySet().forEach(
+                    (modID) -> {
+                        if (modID.getValue().equals(backEndName)) {
+                            moduleToNameMappings.remove(modID.getKey());
+                            moduleLastMessage.remove(modID.getKey());
+                            removedModules.add(modID.getKey());
+                        }
+                    });
+
+            removedModules.forEach((key) -> {
+                moduleToBackendMappings.remove(key);
+                backendIds.remove(backEndName);
+            });
+
+            try {
+                listenerLock.acquire();
+                // Notify listeners and send to shim
+                for (IBackendMessageListener listener : backendMessageListeners) {
+                    pool.submit(() -> listener.OnBackendRemoved(backEndName, removedModules));
+                }
+            } catch (InterruptedException e) {
+                logger.error("", e);
+            } finally {
+                listenerLock.release();
             }
-        } catch (InterruptedException e) {
-            logger.error("", e);
-        } finally {
-            listenerLock.release();
+        } catch (ConcurrentModificationException e) {
+            e.printStackTrace();
+            throw e;
         }
     }
 

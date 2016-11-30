@@ -32,22 +32,20 @@ import java.util.stream.Collectors;
 public class CompositionManager implements ICompositionManager {
 
     private static final Logger logger = LoggerFactory.getLogger(CompositionManager.class);
-    private ExecutorService pool = Executors.newSingleThreadExecutor();
-
     // Settings
     private static String previousCompositionSpecificationXml = "";
+    private static ExecutionFlowStatus lastStatus = null;
+    private final Semaphore csLock = new Semaphore(1);
+    private ExecutorService pool = Executors.newSingleThreadExecutor();
     private String compositionSpecificationXml = "";
     private int maxModuleWaitSeconds = 600;
     private boolean bypassUnsupportedMessages = true;
-
     // Fields
     private IShimManager shimManager;
     private IBackendManager backendManager;
     private CompositionSpecification compositionSpecification = new CompositionSpecification();
-    private final Semaphore csLock = new Semaphore(1);
     private volatile boolean correctlyConfigured = false;
     private Future<?> reconfigurationFuture;
-    private static ExecutionFlowStatus lastStatus = null;
     private String compositionNotReadyReason = "No composition file loaded";
 
     /**
@@ -102,7 +100,8 @@ public class CompositionManager implements ICompositionManager {
                             return;
                         }
                     }
-                } while (modulesUnconnected.size() > 0 && !Thread.interrupted());
+                }
+                while (modulesUnconnected.size() > 0 && !Thread.interrupted());
                 correctlyConfigured = true;
                 logger.info("All required modules connected. Reconfiguration successful.");
             } catch (Exception ex) {
@@ -128,10 +127,11 @@ public class CompositionManager implements ICompositionManager {
 
             if (compQueueLen >= 1) {
                 for (Module module : compositionSpecification.getModules()) {
-                    if (!module.getFenceSupport()) {
+                    if (!module.getFenceSupport() || getBackendManager().isModuleDead(module.getId(), module.getDeadTimeOut())) {
                         int mId = getBackendManager().getModuleId(module.getId());
                         getBackendManager().markModuleAllOutstandingRequestsAsFinished(mId);
                     }
+
                 }
             }
             csLock.acquire(); // can only handle when not reconfiguring
@@ -149,7 +149,7 @@ public class CompositionManager implements ICompositionManager {
                 logger.error("Could not handle incoming message due to configuration error {}: {}", compositionNotReadyReason, message);
             }
         } catch (UnsupportedOperationException e) {
-            return  null;
+            return null;
         } catch (Throwable e) {
             logger.error("An exception occurred while handling shim message.", e);
         } finally {
@@ -159,21 +159,25 @@ public class CompositionManager implements ICompositionManager {
     }
 
     @Override
-    public void processUnhandledShimMessage(Message message, String originId){
+    public void processUnhandledShimMessage(Message message, String originId) {
         if (bypassUnsupportedMessages) {
-            boolean warn=true;
+            boolean warn = true;
             if (message instanceof OpenFlowMessage) {
                 OFMessage openFlowMessage = ((OpenFlowMessage) message).getOfMessage();
                 if (openFlowMessage instanceof OFEchoRequest ||
-                        openFlowMessage instanceof OFEchoReply)
+                        openFlowMessage instanceof OFEchoReply) {
                     warn = false;
-                else if (openFlowMessage instanceof OFFeaturesReply ||
-                        openFlowMessage instanceof OFFeaturesRequest)
-                    warn =false;
+                } else if (openFlowMessage instanceof OFFeaturesReply ||
+                        openFlowMessage instanceof OFFeaturesRequest) {
+                    warn = false;
+                }
             }
 
-            if (warn)
+            if (warn && message instanceof OpenFlowMessage) {
+                logger.warn("Received unsupported OpenFlow message (dpid={}) {} for composition from {}, attempting to relay instead.", message.getHeader().getDatapathId(), ((OpenFlowMessage) message).getOfMessage(), originId);
+            } else if (warn) {
                 logger.warn("Received unsupported message {} for composition from {}, attempting to relay instead.", message, originId);
+            }
 
             try {
                 if (message.getHeader().getModuleId() == 0) {
@@ -189,15 +193,6 @@ public class CompositionManager implements ICompositionManager {
             logger.error("Received unsupported message {} from {} for composition, bypass is not activated.", message, originId);
         }
     }
-    /**
-     * Sets the shim manager.
-     *
-     * @param manager the manager
-     */
-    public void setShimManager(IShimManager manager) {
-        shimManager = manager;
-        logger.info("ShimManager set.");
-    }
 
     /**
      * Gets the shim manager.
@@ -209,13 +204,13 @@ public class CompositionManager implements ICompositionManager {
     }
 
     /**
-     * Sets the backend manager.
+     * Sets the shim manager.
      *
      * @param manager the manager
      */
-    public void setBackendManager(IBackendManager manager) {
-        backendManager = manager;
-        logger.info("BackendManager set.");
+    public void setShimManager(IShimManager manager) {
+        shimManager = manager;
+        logger.info("ShimManager set.");
     }
 
     /**
@@ -225,6 +220,16 @@ public class CompositionManager implements ICompositionManager {
      */
     public IBackendManager getBackendManager() {
         return backendManager;
+    }
+
+    /**
+     * Sets the backend manager.
+     *
+     * @param manager the manager
+     */
+    public void setBackendManager(IBackendManager manager) {
+        backendManager = manager;
+        logger.info("BackendManager set.");
     }
 
     /**

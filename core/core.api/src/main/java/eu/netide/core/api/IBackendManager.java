@@ -88,6 +88,8 @@ public interface IBackendManager {
      */
     Long getLastMessageTime(Integer moduleId);
 
+    boolean isModuleDead(String moduleID, int timeout);
+
     /**
      * Gets the moduleId from a given module name.
      *
@@ -104,4 +106,5 @@ public interface IBackendManager {
      * @param id The id of the backend to remove
      */
     void removeBackend(int id);
+
 }

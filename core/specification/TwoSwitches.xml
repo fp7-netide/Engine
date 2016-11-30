@@ -6,8 +6,8 @@
   </Modules>
   <Composition>
     <ParallelCall resolutionPolicy="priority">
-      <ModuleCall module="SimpleSwitchA" priority="1"/>
-      <ModuleCall module="SimpleSwitchB" priority="2"/>
+      <ModuleCall module="SimpleSwitchA" priority="1" deadTimeOut="10"/>
+      <ModuleCall module="SimpleSwitchB" priority="2" deadTimeOut="10"/>
     </ParallelCall>
   </Composition>
 </CompositionSpecification>
