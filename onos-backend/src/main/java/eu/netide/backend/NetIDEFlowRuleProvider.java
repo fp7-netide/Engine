@@ -262,6 +262,10 @@ public class NetIDEFlowRuleProvider extends AbstractProvider implements FlowRule
 
             int moduleId = moduleHandler.getModuleId(applicationName);
 
+            if (moduleId == -1) {
+                moduleId = moduleHandler.getModuleId(BackendLayer.ONOS_APP_NAME);
+            }
+
             backendController.sendOpenFlowMessageToCore(mod, backendController.getLastXid().get(), dpid.value(), moduleId);
         }
 
