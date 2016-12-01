@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Implementation of ICompositionManager
@@ -321,5 +322,33 @@ public class CompositionManager implements ICompositionManager {
     public void setBypassUnsupportedMessages(boolean bypassUnsupportedMessages) {
         this.bypassUnsupportedMessages = bypassUnsupportedMessages;
         logger.info("Unsupported message bypass " + (bypassUnsupportedMessages ? "activated." : "deactivated."));
+    }
+
+    /**
+     * User readable flags of a module
+     *
+     * @param id The id of the backend
+     * @return A string that contains a user readable representation of the module flags
+     */
+    @Override
+    public String getModuleFlagString(String id) {
+        for (Module m : compositionSpecification.getModules())
+            if (m.getId().equals(id)) {
+                String rstr="";
+                int timeout = m.getDeadTimeOut();
+                boolean dead = backendManager.isModuleDead(id, timeout);
+                if(m.getFenceSupport())
+                    rstr+="FENCE ";
+                else
+                    rstr+="NOFENCE ";
+
+                if (dead)
+                    rstr+=String.format("DEAD (>%ds)", timeout);
+                else
+                    rstr+=String.format("ALIVE (<%ds)", timeout);
+
+                return rstr;
+            }
+        return "not in composition";
     }
 }

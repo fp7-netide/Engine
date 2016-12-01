@@ -25,4 +25,11 @@ public interface ICompositionManager {
      * @return composition specification xml
      */
     public String getCompositionSpecificationXml();
+
+    /**
+     * User readable flags of a module
+     * @param id The id of the backend
+     * @return A string that contains a user readable representation of the module flags
+     */
+    String getModuleFlagString(String id);
 }

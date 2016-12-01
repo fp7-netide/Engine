@@ -32,7 +32,7 @@ public class Module {
 
     protected String loaderIdentification;
 
-    protected boolean fenceSupport;
+    protected boolean fenceSupport=true;
 
     protected int deadTimeOut=-1;
 
