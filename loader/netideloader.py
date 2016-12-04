@@ -88,15 +88,15 @@ def start_package(args):
     else:
 
         ODL("").start()
-
-###### workaround for demo - dirty #######
-
-    mnpath = "bash -c \' sudo mn -c && cd " + p.path + "/Topology && sudo chmod +x UC2_IITSystem.py && sudo ./UC2_IITSystem.py $1 && cd ../ \' "
-
-    call(['tmux', 'new-window', '-n', "mn", '-t', 'NetIDE', mnpath])
-
-########
     time.sleep(1)
+###### workaround for demo - dirty #######
+    if args.mininet == "on":
+        mnpath = "bash -c \' sudo mn -c && cd " + p.path + "/Topology && sudo chmod +x UC2_IITSystem.py && sudo ./UC2_IITSystem.py $1 && cd ../ \' "
+
+        call(['tmux', 'new-window', '-n', "mn", '-t', 'NetIDE', mnpath])
+        time.sleep(1)
+########
+
 
     for c in p.controllers_for_node().items():
         print(c)
@@ -194,6 +194,7 @@ if __name__ == "__main__":
     parser_start.add_argument("--server", type=str, help="Choose one of {ODL, ryu}")
     parser_start.add_argument("--ofport", type=str, help="Choose port for of.")
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
+    parser_start.add_argument("-mininet", type=str, help="enter on to use mininet")
     parser_start.set_defaults(func=start_package, mode="all")
 
     parser_createHandlebars = subparsers.add_parser("genconfig", description="Generates application configurations from a parameter file.")
