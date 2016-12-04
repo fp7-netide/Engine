@@ -99,7 +99,7 @@ public class NetIDEPacketProvider extends AbstractProvider implements PacketProv
 
         DeviceId devId = packet.sendThrough();
         String scheme = devId.toString().split(":")[0];
-        int backendModuleId = moduleHandler.getModuleId(BackendLayer.MODULE_NAME);
+        int backendModuleId = moduleHandler.getModuleId(BackendLayer.ONOS_APP_NAME);
 
         if (!scheme.equals(this.id().scheme())) {
             throw new IllegalArgumentException(

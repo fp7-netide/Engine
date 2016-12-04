@@ -55,7 +55,6 @@
         <command>
             <action class="eu.netide.core.management.cli.ShowComposition" />
         </command>
-
     </command-bundle>
 
 </blueprint>

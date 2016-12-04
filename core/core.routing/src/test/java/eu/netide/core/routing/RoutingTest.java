@@ -115,6 +115,11 @@ public class RoutingTest {
         }
 
         @Override
+        public boolean isModuleDead(String moduleID, int timeout) {
+            return false;
+        }
+
+        @Override
         public int getModuleId(String moduleName) throws NoSuchElementException {
             return 0;
         }

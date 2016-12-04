@@ -22,10 +22,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class FIBManager implements IShimMessageListener, IFIBManager {
-    private final OFMessageReader<OFMessage> reader;
-
     private static final Logger log = LoggerFactory.getLogger(FIBManager.class);
-
+    private final OFMessageReader<OFMessage> reader;
     private IGlobalFIB globalFIB;
 
     private ICompositionManager compositionManager;
@@ -51,8 +49,11 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
         log.info("FIBManager received message from shim: " + message.getHeader().toString());
 
         List<Message> backendResults = compositionManager.processShimMessage(message, originId);
-        for (Message result : backendResults) {
-            handleResult(result);
+
+        if (backendResults != null) {
+            for (Message result : backendResults) {
+                handleResult(result);
+            }
         }
 
         if (message.getHeader().getMessageType() == MessageType.OPENFLOW) {
@@ -79,10 +80,11 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
                 ofParseError.printStackTrace();
             }
         }
-        if (backendResults == null)
+        if (backendResults == null) {
             return MessageHandlingResult.RESULT_PASS;
-        else
+        } else {
             return MessageHandlingResult.RESULT_PROCESSED;
+        }
     }
 
     @Override
