@@ -64,10 +64,9 @@ public class ZeroMQBaseConnector implements Runnable {
             // stopSocket.send(STOP_COMMAND);
             send(STOP_COMMAND, stopSocket);
             stopSocket.close();
-            context.term();
             try {
-                thread.interrupt();
                 thread.join();
+                context.term();
             } catch (InterruptedException e) {
                 log.error("", e);
             }

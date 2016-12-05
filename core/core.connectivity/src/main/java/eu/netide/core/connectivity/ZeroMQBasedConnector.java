@@ -33,7 +33,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
     public void Start() {
         context = ZMQ.context(1);
         thread = new Thread(this);
-        thread.setName("ZeroMQBasedConnector Receive Loop");
+        thread.setName("0MQ Receive Loop");
         thread.start();
     }
 
@@ -79,7 +79,7 @@ public class ZeroMQBasedConnector implements IShimConnector, IBackendConnector, 
         sendSocket.connect(CONTROL_ADDRESS);
         msg.send(sendSocket);
         sendSocket.close();
-        logger.info("Sent.");
+        //logger.debug("Sent.");
         return true;
     }
 

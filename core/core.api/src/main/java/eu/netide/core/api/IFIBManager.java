@@ -1,9 +1,10 @@
 package eu.netide.core.api;
 
-import eu.netide.lib.netip.Message;
-import org.onosproject.net.flow.FlowEntry;
+import org.javatuples.Pair;
+import org.projectfloodlight.openflow.protocol.OFFlowMod;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by msp on 1/13/16.
@@ -11,9 +12,16 @@ import java.util.List;
 public interface IFIBManager {
 
     /**
-     * Returns a list of installed FlowMods.
+     * Returns all FlowModEntries stored in the GlobalFIB.
      *
-     * @return The list of FlowMods.
+     * @return Set of FlowModEntries.
      */
-    List<FlowEntry> getFlowMods();
+    Set<IFlowModEntry> getFlowModEntries();
+
+    /**
+     * Returns all Intents identified by the GlobalFIB.
+     *
+     * @return Set of Intents.
+     */
+    Set<IIntent> getIntents();
 }

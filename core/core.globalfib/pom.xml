@@ -76,12 +76,6 @@
             <version>${onos.version}</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.onosproject</groupId>
-            <artifactId>onos-openflow</artifactId>
-            <version>${onos.version}</version>
-            <scope>provided</scope>
-        </dependency>
 
         <!-- For testing -->
         <dependency>
@@ -110,6 +104,7 @@
                         <Bundle-SymbolicName>${project.artifactId}
                         </Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
+                        <Bundle-Activator>eu.netide.core.globalfib.Activator</Bundle-Activator>
                         <Embed-Dependency>
                             *;scope=compile|runtime
                         </Embed-Dependency>

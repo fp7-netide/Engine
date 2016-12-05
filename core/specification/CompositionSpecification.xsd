@@ -67,7 +67,8 @@
       </xs:sequence>
       <xs:attribute name="id" type="xs:ID" use="required"/>
       <xs:attribute name="loaderIdentification" type="xs:string" use="required"/>
-      <xs:attribute name="noFenceSupport" type="xs:boolean" use="optional" />
+      <xs:attribute name="noFenceSupport" type="xs:boolean" use="optional" default="false"/>
+      <xs:attribute name="deadTimeOut" type="xs:int" default="0" use="optional" />
     </xs:complexType>
   </xs:element>
 

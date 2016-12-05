@@ -14,41 +14,30 @@
 
 package eu.netide.shim;
 
-import com.google.common.collect.Maps;
-import org.onosproject.net.packet.PacketContext;
-import org.onosproject.net.packet.PacketProcessor;
+import org.onlab.packet.Ethernet;
 import org.onosproject.openflow.controller.Dpid;
 import org.onosproject.openflow.controller.OpenFlowController;
-import org.onosproject.openflow.controller.OpenFlowEventListener;
+import org.onosproject.openflow.controller.OpenFlowMessageListener;
+import org.onosproject.openflow.controller.OpenFlowPacketContext;
 import org.onosproject.openflow.controller.OpenFlowSwitch;
 import org.onosproject.openflow.controller.OpenFlowSwitchListener;
+import org.onosproject.openflow.controller.PacketListener;
 import org.onosproject.openflow.controller.RoleState;
-import org.projectfloodlight.openflow.protocol.OFFactory;
 import org.projectfloodlight.openflow.protocol.OFFeaturesReply;
 import org.projectfloodlight.openflow.protocol.OFMessage;
-import org.projectfloodlight.openflow.protocol.OFPacketIn;
-import org.projectfloodlight.openflow.protocol.OFPacketInReason;
-import org.projectfloodlight.openflow.protocol.OFPortDesc;
 import org.projectfloodlight.openflow.protocol.OFPortDescStatsReply;
 import org.projectfloodlight.openflow.protocol.OFPortStatus;
 import org.projectfloodlight.openflow.protocol.OFVersion;
-import org.projectfloodlight.openflow.protocol.match.Match;
-import org.projectfloodlight.openflow.protocol.match.MatchField;
-import org.projectfloodlight.openflow.types.OFBufferId;
-import org.projectfloodlight.openflow.types.OFPort;
-import org.projectfloodlight.openflow.types.TableId;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Created by antonio on 08/02/16.
  */
-public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEventListener {
+public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowMessageListener, PacketListener {
 
     private final Logger log = getLogger(getClass());
 
@@ -69,6 +58,7 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
         Integer ofVersion = version.getWireVersion();
         shimController.setSupportedProtocol(ofVersion.byteValue());
         OFFeaturesReply featuresReply = shimController.getFeatureReply(sw);
+        controller.setRole(dpid, RoleState.MASTER);
         shimController.sendOpenFlowMessageToCore(featuresReply,featuresReply.getXid(),sw.getId(),0);
 
         //Create OFPortDescStatsReply for OF_13
@@ -103,10 +93,34 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
 
     }
 
-    //TODO: handle multimodule case
     @Override
-    public void handleMessage(Dpid dpid, OFMessage msg) {
+    public void handlePacket(OpenFlowPacketContext openFlowPacketContext) {
+
+        if (!isControlPacket(openFlowPacketContext.parsed())) {
+            openFlowPacketContext.block();
+        }
+
+    }
+
+    // Indicates whether this is a control packet, e.g. LLDP, BDDP
+    private boolean isControlPacket(Ethernet eth) {
+        short type = eth.getEtherType();
+        return type == Ethernet.TYPE_LLDP || type == Ethernet.TYPE_BSN;
+    }
+
+    @Override
+    public void handleIncomingMessage(Dpid dpid, OFMessage msg) {
+
         switch (msg.getType()) {
+            case PACKET_IN:
+                shimController.sendOpenFlowMessageToCore(msg, ShimLayer.getXId(), dpid.value(), 0);
+                break;
+            case FLOW_REMOVED:
+                shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
+                break;
+            case PORT_STATUS:
+                shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
+                break;
             case STATS_REPLY:
                 if (shimController.containsXid(msg.getXid())) {
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
@@ -125,9 +139,6 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
                 }
                 break;
-            case PACKET_IN:
-                shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), 0);
-                break;
             default:
                 if (shimController.containsXid(msg.getXid())) {
                     shimController.sendOpenFlowMessageToCore(msg, msg.getXid(), dpid.value(), shimController.getAndDeleteModuleId(msg.getXid()));
@@ -136,5 +147,10 @@ public class NetIDEDeviceListener implements OpenFlowSwitchListener, OpenFlowEve
                 }
                 break;
         }
+    }
+
+    @Override
+    public void handleOutgoingMessage(Dpid dpid, List<OFMessage> list) {
+
     }
 }
