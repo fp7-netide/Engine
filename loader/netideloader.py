@@ -64,7 +64,7 @@ def set_extraction_path(args):
 
 def createParam(args):
     p = Package(args.package, dataroot)
-    p.createParamFile(args.fp)
+    p.createParamFile(args.file)
 
 def start_package(args):
 
@@ -99,7 +99,6 @@ def start_package(args):
 
 
     for c in p.controllers_for_node().items():
-        print(c)
         c[1].start()
 
     time.sleep(2)
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     parser_start.add_argument("--server", type=str, help="Choose one of {ODL, ryu}")
     parser_start.add_argument("--ofport", type=str, help="Choose port for of.")
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
-    parser_start.add_argument("-mininet", type=str, help="enter on to use mininet")
+    parser_start.add_argument("--mininet", type=str, help="enter on to use mininet")
     parser_start.set_defaults(func=start_package, mode="all")
 
     parser_createHandlebars = subparsers.add_parser("genconfig", description="Generates application configurations from a parameter file.")

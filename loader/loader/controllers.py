@@ -86,7 +86,7 @@ class RyuShim(Base):
         list = util.getWindowList()
 
         if "RyuShim" not in list:
-            #6644 default for port listening
+            #6633 default for port listening
             newCmd = "bash -c \'cd ~/netide/Engine/ryu-shim/ && " + cmd + " --ofp-tcp-listen-port=" + self.port + " ryu-shim.py\'"
             call(['tmux', 'new-window', '-n', "RyuShim", '-t', 'NetIDE', newCmd])
 
@@ -277,7 +277,7 @@ class ODL(Base):
 
         if "ODL" not in list:
 
-            call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf'])
+            call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.5.0-Boron/bin/karaf'])
 
             time.sleep(odlCommands['sleepafter'])
         else:
