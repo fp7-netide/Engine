@@ -176,7 +176,7 @@ def compileHandlebar(path, appName, paramPath=""):
 
     output = template(appContent)
 
-    return output.lower()
+    return output
 
 
 class Chdir(object):
@@ -385,5 +385,5 @@ def check_sw_version(sw_name, req_version):
              return False
         #if they're the same check subversion
 
-    #At this point the actual version is greateror equal to the requirement 
+    #At this point the actual version is greateror equal to the requirement
     return True

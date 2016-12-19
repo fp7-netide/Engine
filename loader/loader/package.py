@@ -40,7 +40,7 @@ class Package(object):
     extractPath = ""
 
 
-    def __init__(self, prefix, dataroot, paramPath=""):
+    def __init__(self, prefix, dataroot, paramPath="", file_type="json"):
         self.dataroot = dataroot
         self.path = os.path.abspath(prefix)
         print(self.path)
@@ -91,7 +91,7 @@ class Package(object):
         self.cksum = hash.hexdigest()
 
 
-    def load_apps_and_controller(self):
+    def load_apps_and_controller(self, file_type="json"):
 
         for d in self.appNames:
                 nodes = []
@@ -107,7 +107,7 @@ class Package(object):
                         raise FileNotFoundError('Param file not found. Please use generate method first.')
 
                 content = util.compileHandlebar(self.path, d, self.paramPath)
-                self.generateParamFile(content, d)
+                self.generateParamFile(content, d, file_type)
 
 
                 for node, v in self.config.get("clients", {}).items():
@@ -265,9 +265,26 @@ class Package(object):
             content = util.compileHandlebar(self.path, name, paramPath)
             self.generateParamFile(content, name)
 
-    def generateParamFile(self, content, appName):
+    def generatePyParam(self, content, appName):
+        appPath = os.path.join(self.path, 'apps/' + appName + '/src/Configuration.py')
+
+        with open(appPath, 'w') as paramFile:
+            paramFile.write(content)
+
+    def generateParamFile(self, content, appName, file_type):
+
+        if file_type == "json":
+            self.generateJsonParam(content, appName)
+
+        if file_type == "py":
+            self.generatePyParam(content, appName)
 
 
+
+
+
+    def generateJsonParam(self, content, appName):
+        content = content.lower()
         #gets dictionary from handlebars generated file
         dict = {}
 
