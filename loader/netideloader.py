@@ -64,7 +64,7 @@ def set_extraction_path(args):
 
 def createParam(args):
     p = Package(args.package, dataroot)
-    p.createParamFile(args.fp)
+    p.createParamFile(args.file)
 
 def start_package(args):
 
@@ -73,7 +73,12 @@ def start_package(args):
 
     else:
         p = Package(args.package, dataroot)
-    if not p.load_apps_and_controller():
+
+    file_format = "json"
+    if not args.format == None:
+        file_format = args.format
+
+    if not p.load_apps_and_controller(file_format):
         logging.error("There's something wrong with the package")
         return 2
 
@@ -88,10 +93,17 @@ def start_package(args):
     else:
 
         ODL("").start()
+    time.sleep(1)
+###### workaround for demo - dirty #######
+    if args.mininet == "on":
+        mnpath = "bash -c \' sudo mn -c && cd " + p.path + "/Topology && sudo chmod +x UC2_IITSystem.py && sudo ./UC2_IITSystem.py $1 && cd ../ \' "
+
+        call(['tmux', 'new-window', '-n', "mn", '-t', 'NetIDE', mnpath])
+        time.sleep(1)
+########
 
 
     for c in p.controllers_for_node().items():
-
         c[1].start()
 
     time.sleep(2)
@@ -154,7 +166,7 @@ def generate(args):
         p = Package(args.package, dataroot, args.param)
     else:
         p = Package(args.package, dataroot)
-    if not p.load_apps_and_controller():
+    if not p.load_apps_and_controller(args.format):
         logging.error("There's something wrong with the package")
         return 2
 
@@ -183,13 +195,16 @@ if __name__ == "__main__":
 
     parser_start = subparsers.add_parser("run", description="Load a NetIDE package and start its applications")
     parser_start.add_argument("package", type=str, help="Package to load")
+    parser_start.add_argument("--format", type=str, help="Enter py or json to define the created parameter file format")
     parser_start.add_argument("--server", type=str, help="Choose one of {ODL, ryu}")
     parser_start.add_argument("--ofport", type=str, help="Choose port for of.")
     parser_start.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
+    parser_start.add_argument("--mininet", type=str, help="enter on to use mininet")
     parser_start.set_defaults(func=start_package, mode="all")
 
     parser_createHandlebars = subparsers.add_parser("genconfig", description="Generates application configurations from a parameter file.")
     parser_createHandlebars.add_argument("package", type=str, help="Package to use")
+    parser_createHandlebars.add_argument("format", type=str, help="Enter py or json to define the created parameter file format")
     parser_createHandlebars.add_argument("--param", type=str, help="Path to Param File which should be used to configure the package.")
     parser_createHandlebars.set_defaults(func=generate, mode="all")
 

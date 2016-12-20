@@ -136,7 +136,6 @@ class Ryu(Base):
 
         for a in self.applications:
 
-
             self.appNames.append(a.appName)
 
             appPath = os.path.join(a.path, a.entrypoint)
@@ -278,7 +277,7 @@ class ODL(Base):
 
         if "ODL" not in list:
 
-            call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.4.0-Beryllium/bin/karaf'])
+            call(['tmux', 'new-window', '-n', "ODL", '-t', 'NetIDE', '~/netide/distribution-karaf-0.5.0-Boron/bin/karaf'])
 
             time.sleep(odlCommands['sleepafter'])
         else:

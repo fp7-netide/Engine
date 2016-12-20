@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<java version="1.8.0_102" class="java.beans.XMLDecoder">
+ <object class="eu.netide.workbenchconfigurationeditor.model.CompositionModel">
+  <void property="ID">
+   <string>218a215f-df2d-456e-8183-51501b95374b</string>
+  </void>
+  <void property="compositionPath">
+   <string>platform:/resource/Usecase_2/composition/composition.xml</string>
+  </void>
+ </object>
+ <object class="eu.netide.workbenchconfigurationeditor.model.TopologyModel">
+  <void property="ID">
+   <string>dc61c61b-3ccb-48be-84bf-153f246c669c</string>
+  </void>
+  <void property="topologyPath">
+   <string>platform:/resource/Usecase_2/Usecase_2.topology</string>
+  </void>
+ </object>
+ <object class="java.util.ArrayList">
+  <void method="add">
+   <object class="eu.netide.workbenchconfigurationeditor.model.LaunchConfigurationModel">
+    <void property="ID">
+     <string>e1dedeb9-3085-439f-9916-eab84482c6ff</string>
+    </void>
+    <void property="appName">
+     <string>IITS_NetManager_13.py</string>
+    </void>
+    <void property="appPath">
+     <string>platform:/resource/Usecase_2/apps/iits_netmanager_13/src/IITS_NetManager_13.py</string>
+    </void>
+    <void property="appPort">
+     <string>7733</string>
+    </void>
+    <void property="clientController">
+     <string>Ryu</string>
+    </void>
+    <void property="flagApp">
+     <string></string>
+    </void>
+    <void property="flagBackend">
+     <string>--observe-links</string>
+    </void>
+    <void property="name">
+     <string>13NetManager</string>
+    </void>
+    <void property="platform">
+     <string>Network Engine</string>
+    </void>
+   </object>
+  </void>
+  <void method="add">
+   <object class="eu.netide.workbenchconfigurationeditor.model.LaunchConfigurationModel">
+    <void property="ID">
+     <string>e56b0417-ec74-4452-b12b-8a2e339ddaaf</string>
+    </void>
+    <void property="appName">
+     <string>IITS_NetManager.py</string>
+    </void>
+    <void property="appPath">
+     <string>platform:/resource/Usecase_2/apps/iits_netmanager/src/IITS_NetManager.py</string>
+    </void>
+    <void property="appPort">
+     <string>7733</string>
+    </void>
+    <void property="clientController">
+     <string>Ryu</string>
+    </void>
+    <void property="flagApp">
+     <string></string>
+    </void>
+    <void property="flagBackend">
+     <string>--observe-links</string>
+    </void>
+    <void property="name">
+     <string>NetManager</string>
+    </void>
+    <void property="platform">
+     <string>Network Engine</string>
+    </void>
+   </object>
+  </void>
+ </object>
+ <object class="java.util.ArrayList">
+  <void method="add">
+   <object class="eu.netide.workbenchconfigurationeditor.model.SshProfileModel">
+    <void property="appFolder">
+     <string></string>
+    </void>
+    <void property="appSource">
+     <string></string>
+    </void>
+    <void property="appTarget">
+     <string></string>
+    </void>
+    <void property="composite">
+     <string></string>
+    </void>
+    <void property="core">
+     <string></string>
+    </void>
+    <void property="engine">
+     <string></string>
+    </void>
+    <void property="host">
+     <string>192.168.56.101</string>
+    </void>
+    <void property="minConfigSource">
+     <string></string>
+    </void>
+    <void property="minConfigTarget">
+     <string></string>
+    </void>
+    <void property="odl">
+     <string></string>
+    </void>
+    <void property="port">
+     <string>22</string>
+    </void>
+    <void property="profileName">
+     <string>SSH_Localhost</string>
+    </void>
+    <void property="secondHost">
+     <string></string>
+    </void>
+    <void property="secondPort">
+     <string></string>
+    </void>
+    <void property="secondUsername">
+     <string></string>
+    </void>
+    <void property="sshIdFile">
+     <string>&quot;~/.ssh/id_rsa&quot;</string>
+    </void>
+    <void property="tools">
+     <string></string>
+    </void>
+    <void property="topology">
+     <string></string>
+    </void>
+    <void property="username">
+     <string>vagrant</string>
+    </void>
+   </object>
+  </void>
+  <void method="add">
+   <object class="eu.netide.workbenchconfigurationeditor.model.SshProfileModel">
+    <void property="appFolder">
+     <string></string>
+    </void>
+    <void property="appSource">
+     <string></string>
+    </void>
+    <void property="appTarget">
+     <string></string>
+    </void>
+    <void property="composite">
+     <string></string>
+    </void>
+    <void property="core">
+     <string></string>
+    </void>
+    <void property="engine">
+     <string></string>
+    </void>
+    <void property="host">
+     <string>192.168.56.101</string>
+    </void>
+    <void property="minConfigSource">
+     <string></string>
+    </void>
+    <void property="minConfigTarget">
+     <string></string>
+    </void>
+    <void property="odl">
+     <string></string>
+    </void>
+    <void property="port">
+     <string>22</string>
+    </void>
+    <void property="profileName">
+     <string>NewSSH</string>
+    </void>
+    <void property="secondHost">
+     <string></string>
+    </void>
+    <void property="secondPort">
+     <string></string>
+    </void>
+    <void property="secondUsername">
+     <string></string>
+    </void>
+    <void property="sshIdFile">
+     <string>&quot;~/.ssh/id_rsa&quot;</string>
+    </void>
+    <void property="tools">
+     <string></string>
+    </void>
+    <void property="topology">
+     <string></string>
+    </void>
+    <void property="username">
+     <string>vagrant</string>
+    </void>
+   </object>
+  </void>
+ </object>
+ <object class="eu.netide.workbenchconfigurationeditor.model.ShimModel">
+  <void property="ID">
+   <string>cf1d41a4-2578-4613-9d59-09cf730a0451</string>
+  </void>
+  <void property="port">
+   <string>6644</string>
+  </void>
+  <void property="shim">
+   <string>Ryu</string>
+  </void>
+ </object>
+</java>

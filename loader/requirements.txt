@@ -3,3 +3,4 @@ pyzmq
 pyyaml
 pybars3
 psutil
+ipaddr
