@@ -48,7 +48,7 @@ NETIDE_CORE_PORT = 5555
 HEARTBEAT_TIMEOUT = 5 #5 seconds
 
 logger = logging.getLogger('ryu-backend')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class BackendDatapath(controller.Datapath):
@@ -63,6 +63,7 @@ class BackendDatapath(controller.Datapath):
         self.id = id
         self.xid = 0
         self.netide_xid = 0
+        self.datapath_init= {}
         self.ofp_brick = ryu.base.app_manager.lookup_service_brick('ofp_event')
         self.set_state(HANDSHAKE_DISPATCHER)
         self.is_active = True
@@ -92,7 +93,7 @@ class BackendDatapath(controller.Datapath):
         fmt = self.ofproto.OFP_HEADER_PACK_STR
         buf = struct.pack(fmt, version, msg_type, msg_len, xid) + data
         #print hello.type
-        self.handle_event(netide_header, buf)
+        self.handle_event(netide_header, buf, self.ofproto)
         self.set_state(CONFIG_DISPATCHER)
 
     #Sends the reply from the switch back to the shim
@@ -120,7 +121,7 @@ class BackendDatapath(controller.Datapath):
 
 
     #Handles the events and sends them to the listening RYU Applications
-    def handle_event(self, header, msg):
+    def handle_event(self, header, msg, of_proto):
         #required_len = self.ofp.OFP_HEADER_SIZE
         ret = bytearray(msg)
         (version, msg_type, msg_len, xid) = ofproto_parser.header(ret)
@@ -150,6 +151,15 @@ class BackendDatapath(controller.Datapath):
                         self.state in dispatchers(handler)]
 
             for handler in handlers:
+                # we record that we received a feature reply from that specific device
+                if msg_type == of_proto.OFPT_FEATURES_REPLY:
+                    self.datapath_init[msg.datapath.id] = True
+
+                # we do not allow multipart messages until the feature_reply has been received (needed for OF1.3 or higher)
+                if of_proto.OFP_VERSION >= 0x04:
+                    if msg_type == of_proto.OFPT_MULTIPART_REPLY and msg.datapath.id not in self.datapath_init:
+                        break
+
                 handler(ev)
 
             # Resetting netide_xid to zero
@@ -300,8 +310,7 @@ class CoreConnection(threading.Thread):
                 self.of_datapath.of_hello_handler(decoded_header)
             else:
                 self.of_datapath = self.backend_info['datapaths'][decoded_header[NetIDEOps.NetIDE_header['DPID']]]
-
-            self.of_datapath.handle_event(decoded_header, message_data)
+            self.of_datapath.handle_event(decoded_header, message_data, self.ofproto)
 
         elif message_type is 'NETIDE_HELLO':
             if decoded_header is False:

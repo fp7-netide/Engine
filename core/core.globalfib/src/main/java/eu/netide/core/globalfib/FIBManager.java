@@ -62,7 +62,8 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
                 return MessageHandlingResult.RESULT_PASS;
 
             }
-
+        }
+         /*
             ChannelBuffer bb = ChannelBuffers.copiedBuffer(message.getPayload());
             try {
                 OFMessage ofmessage = reader.readFrom(bb);
@@ -73,13 +74,11 @@ public class FIBManager implements IShimMessageListener, IFIBManager {
                     // TODO: Change if method above actually handles the packet
                     //return MessageHandlingResult.RESULT_PROCESSED;
                     return MessageHandlingResult.RESULT_PASS;
-
-
                 }
             } catch (OFParseError ofParseError) {
                 ofParseError.printStackTrace();
             }
-        }
+        }*/
         if (backendResults == null) {
             return MessageHandlingResult.RESULT_PASS;
         } else {
